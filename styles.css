@@ -60,36 +60,6 @@ button:focus, select:focus, input:focus {
     box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);  /* Focus outline */
 }
 
-/* Table Styling */
-/*table {
-    width: 100%;
-    max-width: 800px;
-    border-collapse: collapse;
-    margin-top: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-th, td {
-    padding: 12px;
-    text-align: left;
-}
-
-th {
-    background-color: #4a90e2;
-    color: white;
-    font-weight: bold;
-    padding: 15px;
-}
-
-td {
-    background-color: #fff;
-    border-bottom: 1px solid #ddd;
-}
-
-tr:nth-child(even) td {
-    background-color: #f9f9f9;
-}*/
-
 /* Set the width for each column */
 table {
     width: 100%;
@@ -167,21 +137,27 @@ tbody tr:last-child td {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+    body {
+        font-size: 0.8em;  /* Slightly smaller font size for mobile */
+    }
+
     table {
-        width: 100%;
-        font-size: 0.9em;
+        font-size: 0.7em;  /* Adjusted font size for better fit */
     }
 
-    #filterContainer {
-        width: 90%;
-        flex-wrap: wrap;  /* Make filter controls stack on small screens */
-        justify-content: flex-start; /* Align to the left */
+    th, td {
+        padding: 3px; /* Less padding for small screens */
     }
 
-    button, select, input {
-        width: 100%;  /* Full width on smaller screens */
-        margin-bottom: 10px;  /* Space between filter elements */
+    /* Make the table headers stack on smaller screens for better readability */
+    th, td {
+        text-align: center;
+    }
+
+    /* Make links inside buttons larger and more spaced out on mobile */
+    button a {
+        font-size: 1.1em;
     }
 }
 
