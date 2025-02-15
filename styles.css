@@ -1,0 +1,226 @@
+/* General Body Styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f6;
+    color: #333;
+    align-items: center;
+    height: 100vh;
+    padding-top: 2px;
+}
+
+/* Filter Section */
+#filterContainer {
+    margin: 20px 0;
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;  /* Keeps buttons and selects inline */
+    align-items: center; /* Centers items vertically */
+    justify-content: center;
+}
+
+.filter-input {
+    display: inline-block; /* Makes the div inline */
+    margin-right: 10px; /* Optional: to add space between multiple inputs */
+}
+
+#searchContainer {
+    margin: 20px 0;
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: row;  /* Keeps buttons and selects inline */
+    align-items: center; /* Centers items vertically */
+    justify-content: center;
+}
+
+button, select, input {
+    padding: 10px 15px;
+    margin: 0 2px;
+    font-size: 1em;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    display: inline-block;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);  /* Subtle shadow for modern look */
+    transition: all 0.2s ease-in-out;  /* Smooth transitions for hover and focus */
+}
+
+button:active, select:active {
+    border-color: #4a90e2;
+}
+
+/* Focus States */
+button:focus, select:focus, input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);  /* Focus outline */
+}
+
+/* Table Styling */
+/*table {
+    width: 100%;
+    max-width: 800px;
+    border-collapse: collapse;
+    margin-top: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    background-color: #4a90e2;
+    color: white;
+    font-weight: bold;
+    padding: 15px;
+}
+
+td {
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+}
+
+tr:nth-child(even) td {
+    background-color: #f9f9f9;
+}*/
+
+/* Set the width for each column */
+table {
+    width: 100%;
+    border-collapse: collapse; /* To remove space between table cells */
+    table-layout: fixed; /* Ensures even column width distribution */
+}
+
+th, td {
+    border: 1px solid #ddd; /* Add borders to cells */
+    padding: 8px; /* Add padding for better readability */
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+/* Adjust column widths */
+th:nth-child(1), td:nth-child(1) {
+    width: 10%; /* Course Code */
+}
+
+th:nth-child(2), td:nth-child(2) {
+    width: 20%; /* Course Name */
+}
+
+th:nth-child(3), td:nth-child(3) {
+    width: 15%; /* Teacher(s) */
+}
+
+th:nth-child(4), td:nth-child(4) {
+    width: 6%; /* Credits */
+}
+
+th:nth-child(5), td:nth-child(5) {
+    width: 8%; /* Language */
+}
+
+th:nth-child(6), td:nth-child(6) {
+    width: 8%; /* Start Date */
+}
+
+th:nth-child(7), td:nth-child(7) {
+    width: 8%; /* End Date */
+}
+
+th:nth-child(8), td:nth-child(8) {
+    width: 8%; /* Enrollment From */
+}
+
+th:nth-child(9), td:nth-child(9) {
+    width: 8%; /* Enrollment To */
+}
+
+th:nth-child(10), td:nth-child(10) {
+    width: 25%; /* Prerequisites */
+}
+
+tr:hover td {
+    background-color: #f1f1f1;
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Styling for Empty Table Message */
+#courseList {
+    text-align: center;
+}
+
+#courseList p {
+    font-size: 1.2em;
+    color: #999;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    table {
+        width: 100%;
+        font-size: 0.9em;
+    }
+
+    #filterContainer {
+        width: 90%;
+        flex-wrap: wrap;  /* Make filter controls stack on small screens */
+        justify-content: flex-start; /* Align to the left */
+    }
+
+    button, select, input {
+        width: 100%;  /* Full width on smaller screens */
+        margin-bottom: 10px;  /* Space between filter elements */
+    }
+}
+
+/* General Link Styling */
+a {
+    color: #4a90e2; /* Soft blue color */
+    text-decoration: none; /* Remove underline */
+    transition: color 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+}
+
+/* Hover Effects */
+a:hover {
+    color: #d9534f; /* Change color on hover */
+    transform: scale(1.05); /* Slight scaling effect */
+}
+
+/* Active Link State */
+a:active {
+    color: #b32d35; /* Darker red when clicked */
+    transform: scale(1); /* Reset scaling when clicked */
+}
+
+/* Focus State for Accessibility */
+a:focus {
+    outline: 2px solid #4a90e2; /* Blue outline to indicate focus */
+    outline-offset: 2px; /* Space between link and outline */
+}
+
+/* Visited Links */
+a:visited {
+    color: #6f42c1; /* Purple color for visited links */
+}
+
+/* For links inside buttons or other elements */
+button a, .btn a {
+    color: inherit; /* Inherit color from button or parent element */
+    font-weight: normal; /* Reset font-weight */
+}
+
+button a:hover, .btn a:hover {
+    text-decoration: underline; /* Underline on hover within buttons */
+}

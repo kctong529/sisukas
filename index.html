@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Course Filter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="filterContainer">
+        <!-- Filter rules will be added here dynamically -->
+    </div>
+
+    <div id="searchContainer">
+        <button onclick="addFilter()">➕ Add Rule</button>
+        <select id="conditionType">
+            <option value="AND">AND</option>
+            <option value="OR">OR</option>
+        </select>
+        <button onclick="filterCourses()">🔍 Search</button>
+    </div>
+
+    <div id="courseCount"></div>
+    <table>
+        <thead>
+            <tr>
+                <th>Course Code</th>
+                <th>Course Name</th>
+                <th>Teacher(s)</th>
+                <th>Credits</th>
+                <th>Language</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Enrollment From</th>
+                <th>Enrollment To</th>
+                <th>Prerequisites</th>
+            </tr>
+        </thead>
+        <tbody id="courseList">
+            <!-- Filtered results will be inserted here -->
+        </tbody>
+    </table>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
