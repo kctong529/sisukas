@@ -238,10 +238,8 @@ function filterCourses() {
 
                 case "enrollment":
                     match = rule.type === "after"
-                        ? new Date(course.endDate) > new Date(rule.value)
-                        : rule.type === "before"
-                            ? new Date(course.endDate) < new Date(rule.value)
-                            : course.endDate.toLowerCase().includes(rule.value);
+                        ? new Date(course.enrolmentStartDate) > new Date(rule.value)
+                        : new Date(course.enrolmentEndDate) < new Date(rule.value);
                     break;
             }
 
