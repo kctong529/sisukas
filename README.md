@@ -56,7 +56,7 @@ Then, open `http://localhost:8000` in your browser.
 
 ### User Experience & Accessibility
 
-- [ ] Enhance responsive design for a smoother mobile experience. #2
+- [ ] https://github.com/kctong529/sisukas/issues/2
 - [ ] Introduce user management features (for login and personal data management).
 - [ ] Allow users to pin courses to keep them at the top.
 - [ ] Enable saving and loading of the current view (for logged-in users).
