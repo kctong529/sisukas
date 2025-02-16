@@ -92,6 +92,7 @@ To test the application on your local machine, follow these steps:
 
 ### Data Management & Updates
 
+- [ ] Use AWS CloudFront to cache `courses.json` and serve it from edge locations to reduce origin traffic and save on Fly.io pay-as-you-go costs. https://github.com/kctong529/sisukas/issues/9
 - [ ] Evaluate the feasibility and necessity of fetching the latest course information from the Aalto Open API, balancing between real-time updates and caching.
 - [ ] Support importing courses from a long string or fuzzy copied text.
 - [ ] Export filtered results with customizable fields (JSON, CSV, Excel).
