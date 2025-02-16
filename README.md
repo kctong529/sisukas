@@ -40,13 +40,34 @@ Sisukas is live at: [Sisukas](https://sisukas.fly.dev/)
 
 ## Running Locally
 
-To test the application locally, use a simple HTTP server:
+To test the application on your local machine, follow these steps:
 
-```sh
-python -m http.server 8000
-```
+1. **Clone the repository** to your local machine if you haven't already:
 
-Then, open `http://localhost:8000` in your browser.
+   ```sh
+   git clone https://github.com/kctong529/sisukas.git
+   cd sisukas
+   ```
+
+   Opening `index.html` is useful for testing CSS styles and layout.
+
+2. **Start a simple HTTP server** in your project directory:
+
+   If you have Python installed, you can use Python's built-in HTTP server:
+
+   ```sh
+   python -m http.server 8000
+   ```
+
+   This will start a local server on port 8000.
+
+3. **Open your browser** and go to the following URL:
+
+   ```sh
+   http://localhost:8000
+   ```
+
+   **Note**: `courses.json` is blocked when accessed directly via `file://` in the browser (due to browser security restrictions). The local server is required to load `courses.json` properly.
 
 ## To-Do List
 
