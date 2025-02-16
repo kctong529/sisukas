@@ -45,16 +45,18 @@ Then, open `http://localhost:8000` in your browser.
 ## To-Do List
 
 ### Core Functionality
-- [ ] Refactor the file structure to improve maintainability. #3
-- [ ] Enable filtering by course descriptions. #4
-- [ ] Automatically label periods based on course dates. #5
-- [ ] Add predefined filters such as "Starts in the future," "DSD curriculum," "CS minor," and "Finnish language course." #6
+
+- [ ] #3
+- [ ] #4
+- [ ] #5
+- [ ] #6
 - [ ] Implement support for nested sorting criteria.
 - [ ] Automatically generate a timeline based on course schedules.
 - [ ] Integrate a study calendar for better planning.
 
 ### User Experience & Accessibility
-- [ ] Enhance responsive design for a smoother mobile experience. #2
+
+- [ ] #2
 - [ ] Introduce user management features (for login and personal data management).
 - [ ] Allow users to pin courses to keep them at the top.
 - [ ] Enable saving and loading of the current view (for logged-in users).
@@ -62,6 +64,7 @@ Then, open `http://localhost:8000` in your browser.
 - [ ] Improve accessibility for a more inclusive user experience.
 
 ### Data Management & Updates
+
 - [ ] Evaluate the feasibility and necessity of fetching the latest course information from the Aalto Open API, balancing between real-time updates and caching.
 - [ ] Support importing courses from a long string or fuzzy copied text.
 - [ ] Export filtered results with customizable fields (JSON, CSV, Excel).
