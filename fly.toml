@@ -7,6 +7,13 @@ app = 'sisukas'
 primary_region = 'arn'
 
 [build]
+  # This ensures only relevant files trigger deployment, such as source code changes
+  ignore = [
+    "README.md",  # Exclude README.md from triggering deployment
+    "*.md",        # Exclude all markdown files from triggering deployment
+    "*.test.*",    # Exclude test files (if applicable)
+    "*.spec.*"     # Exclude spec files (if applicable)
+  ]
 
 [http_service]
   internal_port = 8080
