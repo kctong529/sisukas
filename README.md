@@ -46,17 +46,17 @@ Then, open `http://localhost:8000` in your browser.
 
 ### Core Functionality
 
-- [ ] Refactor the file structure to improve maintainability. #3 
-- [ ] Enable filtering by course descriptions. #4
-- [ ] Automatically label periods based on course dates. #5
-- [ ] Add predefined filters such as "Starts in the future," "DSD curriculum," "CS minor," and "Finnish language course." #6
+- [ ] Refactor the file structure to improve maintainability. https://github.com/kctong529/sisukas/issues/3
+- [ ] Enable filtering by course descriptions. https://github.com/kctong529/sisukas/issues/4
+- [ ] Automatically label periods based on course dates. https://github.com/kctong529/sisukas/issues/5
+- [ ] Add predefined filters such as "Starts in the future," "DSD curriculum," "CS minor," and "Finnish language course." https://github.com/kctong529/sisukas/issues/6
 - [ ] Implement support for nested sorting criteria.
 - [ ] Automatically generate a timeline based on course schedules.
 - [ ] Integrate a study calendar for better planning.
 
 ### User Experience & Accessibility
 
-- [ ] https://github.com/kctong529/sisukas/issues/2
+- [ ] Enhance responsive design for a smoother mobile experience. https://github.com/kctong529/sisukas/issues/2
 - [ ] Introduce user management features (for login and personal data management).
 - [ ] Allow users to pin courses to keep them at the top.
 - [ ] Enable saving and loading of the current view (for logged-in users).
