@@ -84,9 +84,9 @@ To test the application on your local machine, follow these steps:
 ### User Experience & Accessibility
 
 - [ ] Enhance responsive design for a smoother mobile experience. https://github.com/kctong529/sisukas/issues/2
+- [ ] Allow users to save filter sets on the server and generate a shareable link (no login required). https://github.com/kctong529/sisukas/issues/8
 - [ ] Introduce user management features (for login and personal data management).
 - [ ] Allow users to pin courses to keep them at the top.
-- [ ] Enable saving and loading of the current view (for logged-in users).
 - [ ] Add comment field where student feedbacks are shown.
 - [ ] Improve accessibility for a more inclusive user experience.
 
@@ -98,25 +98,32 @@ To test the application on your local machine, follow these steps:
 
 ## Contributing
 
-Thank you for your interest in contributing to Sisukas! To get started:
+We welcome contributions of all kinds! Whether you want to share ideas, report issues, or improve the code, your input is valuable. Here’s how you can get involved:
 
-1. Fork the repository.
-2. Make your changes.
-3. Submit a pull request.
+### 💬 Discuss & Brainstorm
 
-We also appreciate any stars ⭐ you give to the project to show your support!
+- Share ideas, ask questions, or start open-ended discussions in the [Discussions forum](https://github.com/kctong529/sisukas/discussions).
 
-### Where to Collaborate
+### 🛠 Improve & Fix
 
-To keep things organized and collaborate effectively, we use the following GitHub tools:
+- Help improve the documentation.
+- Monitor the [issue queue](https://github.com/kctong529/sisukas/issues) and [project backlog](https://github.com/users/kctong529/projects/1).
+- Claim tasks, check priorities, and track ongoing work.
 
-- **Issue Tracker**: For reporting bugs, submitting feature requests, or tracking ongoing work, head to our [Issue Tracker](https://github.com/kctong529/sisukas/issues).
-  You'll find a list of open and closed issues and be able to submit new ones.
+### 🚀 Suggest Features
 
-- **Task Management**: We use [GitHub Projects](https://github.com/users/kctong529/projects/1) to manage tasks and track progress. You can claim tasks, check on priorities, and view the status of ongoing work.
+- If you have an idea for a new feature or enhancement, create a new issue in the [project backlog](https://github.com/users/kctong529/projects/1).
 
-- **Discussions**: For more open-ended conversations, brainstorming ideas, or asking questions, visit our [Discussions page](https://github.com/kctong529/sisukas/discussions).
-  This is a great space to collaborate and engage with the community.
+### 🔧 Submitting Changes
+
+- Fork the repository, make your changes, and submit a pull request.
+- There are no strict formatting requirements for pull requests at the moment.
+
+### ⭐ Show Your Support
+
+Even if you’re not contributing code, you can support the project by giving it a ⭐ on GitHub! Every star helps increase visibility and encourages more contributions.
+
+Your contributions help shape the project, and we appreciate every effort—big or small! 🎉
 
 ## License
 
