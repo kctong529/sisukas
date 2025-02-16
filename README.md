@@ -1,64 +1,66 @@
 # Sisukas
 
-Sisukas is a web application designed to help students track and search for courses, their prerequisites, and course details in a user-friendly interface. Built as an alternative to the official SISU system, Sisukas addresses the frustration many students face with its limited filters and the annoying page design that only shows minimal course information without clicking through multiple links.
+A lightweight, fast alternative to the official SISU system for course filtering.
 
-Deployed live on: [Sisukas](https://sisukas.fly.dev/)
+## Why?
+Students are frustrated with the official SISU system due to:
+- **Limited filters**: Finding relevant courses requires excessive manual searching.
+- **Annoying navigation**: The system displays only minimal details unless you click into each course link.
+- **Slow performance**: Multiple requests slow down the experience.
+
+Sisukas provides a **faster, more user-friendly** way to browse and filter courses.
 
 ## Features
-- **Course Search**: Search for courses by various attributes like course name, teacher, and course code.
-- **Filters**: Apply multiple filters to narrow down course results and find the exact courses you're looking for.
-- **Fast Performance**: All data is loaded upfront, so no further requests are needed once the app is loaded, making it incredibly fast and responsive.
-- **Responsive Design**: The app is optimized for both desktop and mobile usage.
-- **Data Table**: View course details in a clean, organized table with columns for course code, name, teacher, and more.
-- **User-friendly UI**: The interface is simple, clean, and intuitive, making it easy to find and explore courses without dealing with the excessive clicks and limited filtering options of SISU.
+- **Fast & Efficient**: All data is preloaded, so there are no additional requests slowing down interactions.
+- **Better Filtering**:
+  - Filter by **start and end dates** to find courses in a specific period.
+  - Use **keywords in course codes or names** (e.g., `"CS"`, `"ELEC"`, `"MS"`, or `"Design"`) to narrow results.
+  - Exclude **exams** by filtering `"Lecture"` in course names.
+- **Compact & Clear Information**: No unnecessary clicks—important details are displayed immediately.
 
-## Recommended Use Case
-- **Filter by Start and End Date**: If you're looking for courses within a specific time frame, use the **start date** and **end date** filters to narrow down your search to courses available during the period you're interested in.
-- **Filter out Exams**: If you're not interested in exams and want to focus only on lectures, you can use the keyword **"Lecture"** in the course name filter to exclude exams from the search results.
+## Technical Stack
+- **Vanilla JavaScript**: Simple, lightweight, and runs efficiently in the browser.
+- **Static JSON Database**: Course data is loaded once at startup, ensuring quick performance.
 
-## Motivation
-Students are often frustrated with the SISU system's:
-- **Limited filters**: The official SISU system doesn't offer the flexibility to filter by multiple criteria easily.
-- **Annoying page layout**: Most of the information is hidden behind multiple links, making it tedious to explore course details.
-  
-Sisukas aims to solve these problems by providing a straightforward and comprehensive view of courses with better filtering options and less clicking. Additionally, the app is designed to be **fast**, as all the data is loaded at once without making additional requests, ensuring a smoother user experience.
+## Filtering Examples
+You can refine your search using various filtering techniques:
+- **Find courses in a specific period**: Define a **start** and **end** date.
+- **Search by department**: Use **"CS"**, **"ELEC"**, **"MS"** in course codes.
+- **Find design-related courses**: Use **"Design"** in course names.
+- **Exclude exams**: Use **"Lecture"** as a filter.
+- **(Upcoming Feature) Filter by description**: Search for courses with relevant topics.
 
-## Technologies Used
-- **Frontend**: Vanilla JavaScript, HTML, CSS
-- **Database**: Static database (can be expanded or replaced with dynamic data if required)
+## Deployment
+Sisukas is live at: [Sisukas](https://sisukas.fly.dev/)
 
-## How to Use
-1. Visit [Sisukas](https://sisukas.fly.dev/).
-2. Use the filters to search for specific courses by various criteria such as course name, teacher, and more.
-3. Use the **start date** and **end date** filters to narrow down the courses within a specific time period.
-4. Use the **course name** filter and enter **"Lecture"** to exclude exams from the results.
-5. View the results in the table below, with all relevant course information displayed directly.
+## Running Locally
+To test the application locally, use a simple HTTP server:
 
-## Setup and Development
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/your-username/sisukas.git
-    ```
+```sh
+python -m http.server 8000
+```
 
-2. Navigate into the project directory:
-    ```bash
-    cd sisukas
-    ```
+Then, open `http://localhost:8000` in your browser.
 
-3. Start a local server using Python (ensure you have Python installed):
-    ```bash
-    python -m http.server 8000
-    ```
+## To-Do List
+- [ ] Improve responsive design for better mobile support.
+- [ ] Refactor file structure for better maintainability.
+- [ ] Implement filtering based on course descriptions.
+- [ ] Label periods automatically based on course dates.
+- [ ] Add predefined filters like "Starts in the future", "DSD curriculum", "CS minor", "Finnish language course".
+- [ ] Add user management features.
+- [ ] Support importing courses from a long string or fuzzy copied text.
+- [ ] Generate an automatic timeline based on course schedules.
+- [ ] Integrate a study calendar feature.
+- [ ] Improve accessibility for better usability.
 
-4. Open a web browser and visit [http://localhost:8000](http://localhost:8000) to view the application locally.
+## Contribution
+Contributions are welcome! If you'd like to improve the project:
+1. Fork the repository.
+2. Make your changes.
+3. Submit a pull request.
 
-Note: Opening the `index.html` file directly in a browser might block the loading of `courses.json` due to security restrictions, so using a local server is recommended for testing.
-
-### Steps to Contribute:
-1. Fork the repo
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request with a description of the changes
+A ⭐ on the repository is always appreciated!
 
 ## License
-This project is open-source and available under the MIT License.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
