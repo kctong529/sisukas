@@ -17,18 +17,11 @@ Sisukas provides a **faster, more user-friendly** way to browse and filter cours
   - Use **keywords in course codes or names** (e.g., `"CS"`, `"ELEC"`, `"MS"`, or `"Design"`) to narrow results.
   - Exclude **exams** by filtering `"Lecture"` in course names.
 - **Compact & Clear Information**: No unnecessary clicks—important details are displayed immediately.
+- **(Upcoming Feature) Filter by description**: Search for courses with relevant topics.
 
 ## Technical Stack
 - **Vanilla JavaScript**: Simple, lightweight, and runs efficiently in the browser.
 - **Static JSON Database**: Course data is loaded once at startup, ensuring quick performance.
-
-## Filtering Examples
-You can refine your search using various filtering techniques:
-- **Find courses in a specific period**: Define a **start** and **end** date.
-- **Search by department**: Use **"CS"**, **"ELEC"**, **"MS"** in course codes.
-- **Find design-related courses**: Use **"Design"** in course names.
-- **Exclude exams**: Use **"Lecture"** as a filter.
-- **(Upcoming Feature) Filter by description**: Search for courses with relevant topics.
 
 ## Deployment
 Sisukas is live at: [Sisukas](https://sisukas.fly.dev/)
@@ -43,16 +36,19 @@ python -m http.server 8000
 Then, open `http://localhost:8000` in your browser.
 
 ## To-Do List
-- [ ] Improve responsive design for better mobile support.
-- [ ] Refactor file structure for better maintainability.
-- [ ] Implement filtering based on course descriptions.
-- [ ] Label periods automatically based on course dates.
-- [ ] Add predefined filters like "Starts in the future", "DSD curriculum", "CS minor", "Finnish language course".
-- [ ] Add user management features.
-- [ ] Support importing courses from a long string or fuzzy copied text.
-- [ ] Generate an automatic timeline based on course schedules.
-- [ ] Integrate a study calendar feature.
-- [ ] Improve accessibility for better usability.
+- [ ] Enhance responsive design for a smoother mobile experience.  
+- [ ] Refactor the file structure to improve maintainability.  
+- [ ] Enable filtering by course descriptions.  
+- [ ] Automatically label periods based on course dates.  
+- [ ] Add predefined filters such as "Starts in the future," "DSD curriculum," "CS minor," and "Finnish language course."  
+- [ ] Implement support for nested sorting criteria.  
+- [ ] Introduce user management features.  
+- [ ] Allow users to pin courses to keep them at the top.  
+- [ ] Enable saving and loading of the current view.  
+- [ ] Support importing courses from a long string or fuzzy copied text.  
+- [ ] Automatically generate a timeline based on course schedules.  
+- [ ] Integrate a study calendar for better planning.  
+- [ ] Improve accessibility for a more inclusive user experience.  
 
 ## Contribution
 Contributions are welcome! If you'd like to improve the project:
