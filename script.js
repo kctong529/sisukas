@@ -1,9 +1,12 @@
+import { loadCurricula, curriculaMap, isCourseInCurriculum } from './loadCurricula.js';
+
 let courses = [];
 
 async function loadCourses() {
     try {
         const response = await fetch('courses.json'); // Load JSON
         courses = await response.json();
+        await loadCurricula(); // Load JSON
         displayCourses(courses, false); // Display all initially
     } catch (error) {
         console.error("Error loading JSON:", error);
@@ -50,17 +53,30 @@ function addFilter() {
     const fieldSelect = document.createElement('select');
     fieldSelect.classList.add('filter-field');
     fieldSelect.setAttribute('onchange', 'handleFieldChange(this)'); // Use onchange here
-    fieldSelect.innerHTML = `
-        <option value="code">Course Code</option>
-        <option value="name">Course Name</option>
-        <option value="teacher">Teacher</option>
-        <option value="language">Language</option>
-        <option value="startDate">Start Date</option>
-        <option value="endDate">End Date</option>
-        <option value="credits">Credits</option>
-        <option value="level">Level</option>
-        <option value="enrollment">Enrollment Period</option>
-    `;
+
+    fieldSelect.innerHTML = ''; // Clear existing options
+
+    // Default options
+    const defaultOptions = [
+        { value: 'code', text: 'Course Code' },
+        { value: 'name', text: 'Course Name' },
+        { value: 'teacher', text: 'Teacher' },
+        { value: 'language', text: 'Language' },
+        { value: 'startDate', text: 'Start Date' },
+        { value: 'endDate', text: 'End Date' },
+        { value: 'credits', text: 'Credits' },
+        { value: 'level', text: 'Level' },
+        { value: 'enrollment', text: 'Enrollment Period' },
+        { value: 'major', text: 'Major Curriculum' }
+    ];
+
+    // Append default options first
+    defaultOptions.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option.value;
+        opt.textContent = option.text;
+        fieldSelect.appendChild(opt);
+    });
 
     // Create select element for filter types (contains, is, before, after)
     const typeSelect = document.createElement('select');
@@ -95,7 +111,6 @@ function handleFieldChange(fieldSelect) {
     const inputField = filterGroup.querySelector('.filter-input');
     const typeSelect = filterGroup.querySelector('.filter-type');
 
-    console.log("Field changed to: " + fieldSelect.value); // Debugging
     changeInputField(fieldSelect, inputField, typeSelect); // Update the input field
 }
 
@@ -106,7 +121,6 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
     typeSelect.innerHTML = ''; // Clear existing operator options
 
     const selectedField = fieldSelect.value;
-    console.log(selectedField);
 
     if (selectedField === 'language') {
         // Language field gets a dropdown
@@ -149,6 +163,52 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
             <option value="before">Before</option>
             <option value="after">After</option>
         `;
+    }  else if (selectedField === 'major') {
+        inputField.innerHTML = `
+            <input type="text" class="filter-value" placeholder="Enter value">
+        `;
+        typeSelect.innerHTML = '';
+
+        // Populate the dropdown with curriculum options
+        Object.keys(curriculaMap).forEach(curriculumCode => {
+            const curriculumName = curriculaMap[curriculumCode]?.name;
+            if (curriculumName) {
+                const opt = document.createElement('option');
+                opt.value = curriculumCode;
+                opt.textContent = curriculumName;
+                typeSelect.appendChild(opt);
+            }
+        });
+
+        // Set inputField's value to the first element in typeSelect
+        if (typeSelect.options.length > 0) {
+            const firstOptionValue = typeSelect.options[0].value;
+
+            // Update inputField with a text input and set its value to the first option's value
+            inputField.innerHTML = `
+                <input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">
+            `;
+        }
+
+        // Update the input field when the curriculum dropdown changes
+        typeSelect.addEventListener('change', function() {
+            const selectedCurriculum = typeSelect.value;
+            inputField.querySelector('.filter-value').value = selectedCurriculum;
+        });
+
+        const isCurriculumCodeValid = value => Object.keys(curriculaMap).some(key => key.toLowerCase() === value.toLowerCase());
+
+        // Dynamically update curriculum code if input is valid
+        const inputFieldElement = inputField.querySelector('.filter-value');
+        inputFieldElement.addEventListener('input', (e) => {
+            const value = e.target.value.trim();
+            if (isCurriculumCodeValid(value)) {
+                const option = typeSelect.querySelector(`option[value="${value}"]`);
+                if (option) {
+                    option.selected = true; // Set the option as selected
+                }
+            }
+        });
     } else {
         // Other fields get a text input
         inputField.innerHTML = `
@@ -173,83 +233,41 @@ function filterCourses() {
         return {
             field: filter.querySelector('.filter-field').value,
             type: filter.querySelector('.filter-type').value,
-            value: filter.querySelector('.filter-value').value.trim().toLowerCase()
+            value: filter.querySelector('.filter-value').value.trim()
         };
     });
 
-    const filtered = courses.filter(course => {
-        return filterRules.reduce((acc, rule, index) => {
-            let match = false;
-
-            switch (rule.field) {
-                case "code":
-                    match = rule.type === "contains"
-                        ? course.code.toLowerCase().includes(rule.value)
-                        : course.code.toLowerCase() === rule.value;
-                    break;
-
-                case "name":
-                    match = rule.type === "contains"
-                        ? course.name.en.toLowerCase().includes(rule.value)
-                        : course.name.en.toLowerCase() === rule.value;
-                    break;
-
-                case "teacher":
-                    match = course.teachers.some(teacher =>
-                        rule.type === "contains"
-                            ? teacher.toLowerCase().includes(rule.value)
-                            : teacher.toLowerCase() === rule.value
-                    );
-                    break;
-
-                case "language":
-                    match = course.languageOfInstructionCodes.includes(rule.value);
-                    break;
-
-                case "startDate":
-                    match = rule.type === "after"
-                        ? new Date(course.startDate) > new Date(rule.value)
-                        : rule.type === "before"
-                            ? new Date(course.startDate) < new Date(rule.value)
-                            : course.startDate.toLowerCase().includes(rule.value);
-                    break;
-
-                case "endDate":
-                    match = rule.type === "after"
-                        ? new Date(course.endDate) > new Date(rule.value)
-                        : rule.type === "before"
-                            ? new Date(course.endDate) < new Date(rule.value)
-                            : course.endDate.toLowerCase().includes(rule.value);
-                    break;
-
-                case "credits":
-                    match = rule.type === "is"
-                        ? course.credits.min === parseInt(rule.value)
-                        : course.credits.min >= parseInt(rule.value);
-                    break;
-
-                case "level":
-                    if (course.summary.level && course.summary.level.en) {
-                        match = course.summary.level.en.toLowerCase() === rule.value;
-                    } else {
-                        match = false; // or you can decide what behavior you want if level is not defined
-                    }
-                    break;
-
-                case "enrollment":
-                    match = rule.type === "after"
-                        ? new Date(course.enrolmentStartDate) > new Date(rule.value)
-                        : new Date(course.enrolmentEndDate) < new Date(rule.value);
-                    break;
-            }
-
-            return index === 0
-                ? match
-                : (conditionType === "AND" ? acc && match : acc || match);
-        }, conditionType === "AND");
-    });
-
+    const filtered = courses.filter(course => applyFilters(course, filterRules, conditionType));
     displayCourses(filtered, true);
 }
 
+function applyFilters(course, filterRules, conditionType) {
+    return filterRules.reduce((acc, rule, index) => {
+        const match = applyRule(course, rule);
+        return index === 0
+            ? match
+            : (conditionType === "AND" ? acc && match : acc || match);
+    }, conditionType === "AND");
+}
+
+function applyRule(course, rule) {
+    switch (rule.field) {
+        case "code": return rule.type === "contains" ? course.code.toLowerCase().includes(rule.value) : course.code.toLowerCase() === rule.value;
+        case "name": return rule.type === "contains" ? course.name.en.toLowerCase().includes(rule.value) : course.name.en.toLowerCase() === rule.value;
+        case "teacher": return course.teachers.some(teacher => rule.type === "contains" ? teacher.toLowerCase().includes(rule.value) : teacher.toLowerCase() === rule.value);
+        case "language": return course.languageOfInstructionCodes.includes(rule.value);
+        case "startDate": return rule.type === "after" ? new Date(course.startDate) > new Date(rule.value) : rule.type === "before" ? new Date(course.startDate) < new Date(rule.value) : course.startDate.includes(rule.value);
+        case "endDate": return rule.type === "after" ? new Date(course.endDate) > new Date(rule.value) : rule.type === "before" ? new Date(course.endDate) < new Date(rule.value) : course.endDate.includes(rule.value);
+        case "credits": return rule.type === "is" ? course.credits.min === parseInt(rule.value) : course.credits.min >= parseInt(rule.value);
+        case "level": return course.summary.level?.en === rule.value;
+        case "enrollment": return rule.type === "after" ? new Date(course.enrolmentStartDate) > new Date(rule.value) : new Date(course.enrolmentEndDate) < new Date(rule.value);
+        case "major": return isCourseInCurriculum(course.code, rule.value) || isCourseInCurriculum(course.code, rule.type);
+        default: return false;
+    }
+}
+
+window.addFilter = addFilter;
+window.handleFieldChange = handleFieldChange;
+window.removeFilter = removeFilter;
+window.filterCourses = filterCourses;
 window.onload = loadCourses;

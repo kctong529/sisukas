@@ -1,0 +1,75 @@
+curricula:
+  - code: DSD24
+    name: Digital Systems and Design (2024-2026)
+    courses:
+      - MS-A0111
+      - MS-A0011
+      - MS-A0211
+      - MS-A0503
+      - ELEC-A7200
+      - CS-A1110
+      - ELEC-A7100
+      - ELEC-C9801
+      - CS-A1140
+      - ELEC-C7222
+      - TU-A1300
+      - SCI-A1010
+      - ELEC-C5231
+      - LC-1117
+      - ELEC-C7420
+      - ELEC-C9620
+      - ELEC-C9822
+      - ELEC-C5310
+      - ELEC-C8201
+      - ELEC-E7840
+      - ELEC-E8001
+      - ELEC-C9410
+      - ELEC-C0302
+      - JOIN.bsc
+  - code: DSD22
+    name: Digital Systems and Design (2022-2024)
+    courses:
+      - MS-A0111
+      - MS-A0001
+      - MS-A0211
+      - MS-A0503
+      - ELEC-A7200
+      - CS-A1110
+      - ELEC-A7100
+      - CS-A1140
+      - ELEC-C9801
+      - CS-A1140
+      - ELEC-C5231
+      - ELEC-A7151
+      - SCI-A1010
+      - LC-1117
+      - TU-A1300
+      - CS-C1000
+      - CS-E4840
+      - CS-C3180
+      - CS-E4400
+      - CS-E4450
+      - AAN-C2007
+      - MEC-E1004
+      - AAN-C2012
+      - ELEC-E8701
+      - TU-C2010
+      - AXM-E0411
+      - MS-C1001
+      - ELEC-A7901
+      - ELEC-A4930
+      - CS-A1160
+      - ELEC-A7310
+      - ELEC-C9610
+      - ELEC-C9801
+      - ELEC-C7420
+      - ELEC‐C9600
+      - ELEC-C9821
+      - ELEC-C5310
+      - ELEC‐C8201
+      - ELEC-C7430
+      - ELEC-E8001
+      - ELEC‐C9410
+      - ELEC‐C0302
+      - ELEC-C9822
+      - JOIN.bsc
