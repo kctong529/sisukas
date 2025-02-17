@@ -11,7 +11,7 @@ export async function loadCurricula(filePath = 'curricula.yaml') {
 
         curriculaArray.forEach(curriculum => {
             const { code, courses, name } = curriculum;
-            curriculaMap[code] = {
+            curriculaMap[code.toUpperCase()] = {
                 name: name,
                 courses: new Set(courses),
             };
@@ -20,7 +20,7 @@ export async function loadCurricula(filePath = 'curricula.yaml') {
                 if (!courseIndex[course]) {
                     courseIndex[course] = new Set();
                 }
-                courseIndex[course].add(code);
+                courseIndex[course].add(code.toUpperCase());
             });
         });
     } catch (error) {

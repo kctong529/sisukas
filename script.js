@@ -203,7 +203,7 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
         inputFieldElement.addEventListener('input', (e) => {
             const value = e.target.value.trim();
             if (isCurriculumCodeValid(value)) {
-                const option = typeSelect.querySelector(`option[value="${value}"]`);
+                const option = typeSelect.querySelector(`option[value="${value.toUpperCase()}"]`);
                 if (option) {
                     option.selected = true; // Set the option as selected
                 }
@@ -252,8 +252,8 @@ function applyFilters(course, filterRules, conditionType) {
 
 function applyRule(course, rule) {
     switch (rule.field) {
-        case "code": return rule.type === "contains" ? course.code.toLowerCase().includes(rule.value) : course.code.toLowerCase() === rule.value;
-        case "name": return rule.type === "contains" ? course.name.en.toLowerCase().includes(rule.value) : course.name.en.toLowerCase() === rule.value;
+        case "code": return rule.type === "contains" ? course.code.toLowerCase().includes(rule.value.toLowerCase()) : course.code.toLowerCase() === rule.value.toLowerCase();
+        case "name": return rule.type === "contains" ? course.name.en.toLowerCase().includes(rule.value.toLowerCase()) : course.name.en.toLowerCase() === rule.value.toLowerCase();
         case "teacher": return course.teachers.some(teacher => rule.type === "contains" ? teacher.toLowerCase().includes(rule.value) : teacher.toLowerCase() === rule.value);
         case "language": return course.languageOfInstructionCodes.includes(rule.value);
         case "startDate": return rule.type === "after" ? new Date(course.startDate) > new Date(rule.value) : rule.type === "before" ? new Date(course.startDate) < new Date(rule.value) : course.startDate.includes(rule.value);
