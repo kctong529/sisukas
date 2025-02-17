@@ -77,6 +77,7 @@ To test the application on your local machine, follow these steps:
 - [ ] Enable filtering by course descriptions. https://github.com/kctong529/sisukas/issues/4
 - [ ] Automatically label periods based on course dates. https://github.com/kctong529/sisukas/issues/5
 - [ ] Add predefined filters such as "Starts in the future," "DSD curriculum," "CS minor," and "Finnish language course." https://github.com/kctong529/sisukas/issues/6
+- [ ] Add exclusion criteria such as "Not a math course"
 - [ ] Implement support for nested sorting criteria.
 - [ ] Automatically generate a timeline based on course schedules.
 - [ ] Integrate a study calendar for better planning.
