@@ -3,43 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Course Filter</title>
+    <title>Sisukas</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <link rel="stylesheet" href="styles.css">
+
 </head>
 <body>
-    <div id="filterContainer">
-        <!-- Filter rules will be added here dynamically -->
+    <div id="titleContainer">
+        <h1>Sisukas</h1>
     </div>
+    <div id="globalContainer">
+        <div id="filterContainer">
+            <!-- Filter rules will be added here dynamically -->
+        </div>
 
-    <div id="searchContainer">
-        <button onclick="addFilter()">➕ Add Rule</button>
-        <select id="conditionType">
-            <option value="AND">AND</option>
-            <option value="OR">OR</option>
-        </select>
-        <button onclick="filterCourses()">🔍 Search</button>
+        <div id="searchContainer">
+            <div id="searchGroup">
+                <button onclick="addFilter()">➕ Add Rule</button>
+                <select id="conditionType">
+                    <option value="AND">AND</option>
+                    <option value="OR">OR</option>
+                </select>
+                <button onclick="filterCourses()">🔍 Search</button>
+            </div>
+        </div>
+
+        <div id="courseCount"></div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th><span class="full-text">Course Code</span>
+                        <span class="abbreviated-text">code</span></th>
+                    <th><span class="full-text">Course Name</span>
+                        <span class="abbreviated-text">name</span></th>
+                    <th><span class="full-text">Teacher(s)</span>
+                        <span class="abbreviated-text">teachr</span></th>
+                    <th><span class="full-text">Credits</span>
+                        <span class="abbreviated-text">cr</span></th>
+                    <th><span class="full-text">Language</span>
+                        <span class="abbreviated-text">lang</span></th>
+                    <th><span class="full-text">Start Date</span>
+                        <span class="abbreviated-text">start</span></th>
+                    <th><span class="full-text">End Date</span>
+                        <span class="abbreviated-text">end</span></th>
+                    <th><span class="full-text">Enroll From</span>
+                        <span class="abbreviated-text">frm</span></th>
+                    <th><span class="full-text">Enroll To</span>
+                        <span class="abbreviated-text">to</span></th>
+                    <th><span class="full-text">Prerequisites</span>
+                        <span class="abbreviated-text">preq</span></th>
+                </tr>
+            </thead>
+            <tbody id="courseList">
+                <!-- Filtered results will be inserted here -->
+            </tbody>
+        </table>
     </div>
-
-    <div id="courseCount"></div>
-    <table>
-        <thead>
-            <tr>
-                <th>Course Code</th>
-                <th>Course Name</th>
-                <th>Teacher(s)</th>
-                <th>Credits</th>
-                <th>Language</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Enroll From</th>
-                <th>Enroll To</th>
-                <th>Prerequisites</th>
-            </tr>
-        </thead>
-        <tbody id="courseList">
-            <!-- Filtered results will be inserted here -->
-        </tbody>
-    </table>
 
     <script type="module" src="script.js"></script>
 

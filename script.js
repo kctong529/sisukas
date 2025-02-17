@@ -95,11 +95,11 @@ function addFilter() {
     `;
 
     // Append the elements to the filter group
+    filterGroup.innerHTML += `<button onclick="removeFilter(this)"><i class="bi bi-trash"></i></button>`;
+    filterContainer.appendChild(filterGroup);
     filterGroup.appendChild(fieldSelect);
     filterGroup.appendChild(typeSelect);
     filterGroup.appendChild(inputField);
-    filterGroup.innerHTML += `<button onclick="removeFilter(this)">❌</button>`;
-    filterContainer.appendChild(filterGroup);
 
     // Call the function initially to set the input field based on the default selection
     changeInputField(fieldSelect, inputField, typeSelect);
