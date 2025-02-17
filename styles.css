@@ -18,18 +18,32 @@ body {
 #titleContainer {
     float: right;
     align-items: right;
-    padding: 6px 5% 0 0;
+    padding: 2px 5% 0 0;
 }
 
 h1 {
     font-size: clamp(20px, 4vw, 48px);
 }
 
+h2 {
+    font-size: clamp(10px, 2vw, 24px);
+    font-weight: normal;
+    margin-top: clamp(-36px, -3vw, -12px);
+    color: #888888;
+}
+
+p {
+    font-family: cursive;
+    font-size: 1.2em;
+    color: #888888;
+    padding-left: 2%;
+}
+
 /* Container Styling */
 #globalContainer {
     position: absolute;
     width: 100%;
-    margin-top: 6%;
+    margin-top: 8%;
 }
 
 #filterContainer, #searchContainer {
