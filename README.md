@@ -116,6 +116,11 @@ We welcome contributions of all kinds! Whether you want to share ideas, report i
 
 - If you have an idea for a new feature or enhancement, create a new issue in the [project backlog](https://github.com/users/kctong529/projects/1).
 
+### 📖 Add Your Own Curriculum
+
+- Anyone can contribute by populating the YAML file(s) with their own curriculum—it only takes a few minutes!
+- This is a simple way to expand the project and help others by sharing useful learning information.
+
 ### 🔧 Submitting Changes
 
 - Fork the repository, make your changes, and submit a pull request.

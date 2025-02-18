@@ -1,6 +1,7 @@
 html, body {
     overflow-x: hidden;
     width: 100%;
+    min-width: 100vw;
 }
 
 /* General Body Styling */
@@ -97,6 +98,9 @@ table {
 th, td {
     border: 1px solid #ddd;
     text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
     padding: 6px 1px;
 }
 
@@ -115,6 +119,7 @@ th:nth-child(7), td:nth-child(7) { width: 8%; }
 th:nth-child(8), td:nth-child(8) { width: 10%; }
 th:nth-child(9), td:nth-child(9) { width: 8%; }
 th:nth-child(10), td:nth-child(10) { width: 25%; }
+td:nth-child(10) { text-align: left; padding-left: 3px; }
 
 tr:hover td {
     background-color: #f1f1f1;
