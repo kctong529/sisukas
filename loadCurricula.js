@@ -5,29 +5,22 @@ export let courseIndex = {};
 
 export async function loadCurricula(filePath = 'curricula.yaml') {
     const cachedTimestamp = localStorage.getItem('curriculaTimestamp');
+    const timestamp = cachedTimestamp || new Date().toUTCString(); // Use the cached timestamp or the current timestamp
+
+    const urlWithTimestamp = `${filePath}?timestamp=${timestamp}`; // Append timestamp to the URL
+
     try {
-        // Make a request with the `If-Modified-Since` header to check if the file has changed
-        const response = await fetch(filePath, {
-            headers: {
-                'If-Modified-Since': cachedTimestamp || 'Thu, 01 Jan 1970 00:00:00 GMT'  // Initial timestamp for the first fetch
-            }
-        });
-
-        if (response.status === 304) {
-            // If the response is 304 (Not Modified), use cached data
-            console.log('Using cached curricula data');
-            return;
-        }
-
-        // If file has been modified, proceed to parse it
+        const response = await fetch(urlWithTimestamp);
         const text = await response.text();
         const data = yaml.load(text);
 
         const fileTimestamp = response.headers.get('Last-Modified');
-        
-        // Cache the new timestamp
-        localStorage.setItem('curriculaTimestamp', fileTimestamp);
 
+        // Cache the new timestamp
+        if (fileTimestamp) {
+            localStorage.setItem('curriculaTimestamp', fileTimestamp); // Update the timestamp in localStorage
+        }
+        
         const curriculaArray = data.curricula;
 
         curriculaArray.forEach(curriculum => {
