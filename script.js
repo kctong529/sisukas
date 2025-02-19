@@ -114,121 +114,115 @@ function handleFieldChange(fieldSelect) {
     changeInputField(fieldSelect, inputField, typeSelect); // Update the input field
 }
 
+// Updates the input field with a new element
+function updateInputField(inputField, htmlContent) {
+    inputField.innerHTML = htmlContent;
+}
 
-// Changes the input field and operator dropdown based on selected field
+// Updates the operator dropdown with options
+function updateOperatorDropdown(typeSelect, options) {
+    typeSelect.innerHTML = options.map(option => `<option value="${option.toLowerCase()}">${option}</option>`).join('');
+}
+
+// Populate the curriculum options into the dropdown
+function populateCurriculumDropdown(typeSelect) {
+    Object.keys(curriculaMap).forEach(curriculumCode => {
+        const curriculumName = curriculaMap[curriculumCode]?.name;
+        if (curriculumName) {
+            const opt = document.createElement('option');
+            opt.value = curriculumCode;
+            opt.textContent = curriculumName;
+            typeSelect.appendChild(opt);
+        }
+    });
+}
+
+// Handles the input and operator updates based on the selected field
 function changeInputField(fieldSelect, inputField, typeSelect) {
     inputField.innerHTML = ''; // Clear existing input
     typeSelect.innerHTML = ''; // Clear existing operator options
 
     const selectedField = fieldSelect.value;
 
-    if (selectedField === 'language') {
-        // Language field gets a dropdown
-        inputField.innerHTML = `
-            <select class="filter-value">
-                <option value="en">English</option>
-                <option value="fi">Finnish</option>
-                <option value="sv">Swedish</option>
-            </select>
-        `;
-        typeSelect.innerHTML = `
-            <option value="is">Is</option>
-        `;
-    } else if (selectedField === 'credits') {
-        inputField.innerHTML = `
-            <input type="text" class="filter-value" placeholder="Enter value">
-        `;
-        typeSelect.innerHTML = `
-            <option value="is">Is</option>
-        `;
-    } else if (selectedField === 'level') {
-        // Language field gets a dropdown
-        inputField.innerHTML = `
-            <select class="filter-value">
-                <option value="basic-studies">Basic Studies</option>
-                <option value="intermediate-studies">Intermediate Studies</option>
-                <option value="advanced-studies">Advanced Studies</option>
-                <option value="other-studies">Other Studies</option>
-            </select>
-        `;
-        typeSelect.innerHTML = `
-            <option value="is">Is</option>
-        `;
-    } else if (selectedField === 'startDate' || selectedField === 'endDate') {
-        // Date fields get a date picker
-        inputField.innerHTML = `
-            <input type="date" class="filter-value">
-        `;
-        typeSelect.innerHTML = `
-            <option value="before">Before</option>
-            <option value="after">After</option>
-        `;
-    } else if (selectedField === 'enrollment') {
-        // Date fields get a date picker
-        inputField.innerHTML = `
-            <input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">
-        `;
+    switch (selectedField) {
+        case 'language':
+            updateInputField(inputField, `
+                <select class="filter-value">
+                    <option value="en">English</option>
+                    <option value="fi">Finnish</option>
+                    <option value="sv">Swedish</option>
+                </select>
+            `);
+            updateOperatorDropdown(typeSelect, ['Is']);
+            break;
 
-        typeSelect.innerHTML = `
-            <option value="on">On</option>
-            <option value="before">Before</option>
-            <option value="after">After</option>
-        `;
-    } else if (selectedField === 'major') {
-        inputField.innerHTML = `
-            <input type="text" class="filter-value" placeholder="Enter value">
-        `;
-        typeSelect.innerHTML = '';
+        case 'credits':
+            updateInputField(inputField, `
+                <input type="text" class="filter-value" placeholder="Enter value">
+            `);
+            updateOperatorDropdown(typeSelect, ['Is']);
+            break;
 
-        // Populate the dropdown with curriculum options
-        Object.keys(curriculaMap).forEach(curriculumCode => {
-            const curriculumName = curriculaMap[curriculumCode]?.name;
-            if (curriculumName) {
-                const opt = document.createElement('option');
-                opt.value = curriculumCode;
-                opt.textContent = curriculumName;
-                typeSelect.appendChild(opt);
+        case 'level':
+            updateInputField(inputField, `
+                <select class="filter-value">
+                    <option value="basic-studies">Basic Studies</option>
+                    <option value="intermediate-studies">Intermediate Studies</option>
+                    <option value="advanced-studies">Advanced Studies</option>
+                    <option value="other-studies">Other Studies</option>
+                </select>
+            `);
+            updateOperatorDropdown(typeSelect, ['Is']);
+            break;
+
+        case 'startDate':
+        case 'endDate':
+            updateInputField(inputField, `<input type="date" class="filter-value">`);
+            updateOperatorDropdown(typeSelect, ['Before', 'After']);
+            break;
+
+        case 'enrollment':
+            updateInputField(inputField, `
+                <input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">
+            `);
+            updateOperatorDropdown(typeSelect, ['On', 'Before', 'After']);
+            break;
+
+        case 'major':
+            updateInputField(inputField, `<input type="text" class="filter-value" placeholder="Enter value">`);
+            populateCurriculumDropdown(typeSelect);
+            
+            if (typeSelect.options.length > 0) {
+                const firstOptionValue = typeSelect.options[0].value;
+                updateInputField(inputField, `
+                    <input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">
+                `);
             }
-        });
 
-        // Set inputField's value to the first element in typeSelect
-        if (typeSelect.options.length > 0) {
-            const firstOptionValue = typeSelect.options[0].value;
+            // Update the input field when the curriculum dropdown changes
+            typeSelect.addEventListener('change', () => {
+                const selectedCurriculum = typeSelect.value;
+                inputField.querySelector('.filter-value').value = selectedCurriculum;
+            });
 
-            // Update inputField with a text input and set its value to the first option's value
-            inputField.innerHTML = `
-                <input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">
-            `;
-        }
-
-        // Update the input field when the curriculum dropdown changes
-        typeSelect.addEventListener('change', function() {
-            const selectedCurriculum = typeSelect.value;
-            inputField.querySelector('.filter-value').value = selectedCurriculum;
-        });
-
-        const isCurriculumCodeValid = value => Object.keys(curriculaMap).some(key => key.toLowerCase() === value.toLowerCase());
-
-        // Dynamically update curriculum code if input is valid
-        const inputFieldElement = inputField.querySelector('.filter-value');
-        inputFieldElement.addEventListener('input', (e) => {
-            const value = e.target.value.trim();
-            if (isCurriculumCodeValid(value)) {
-                const option = typeSelect.querySelector(`option[value="${value.toUpperCase()}"]`);
-                if (option) {
-                    option.selected = true; // Set the option as selected
+            // Validate curriculum code input
+            const inputFieldElement = inputField.querySelector('.filter-value');
+            inputFieldElement.addEventListener('input', (e) => {
+                const value = e.target.value.trim();
+                const isValidCurriculumCode = value => Object.keys(curriculaMap).some(key => key.toLowerCase() === value.toLowerCase());
+                if (isValidCurriculumCode(value)) {
+                    const option = typeSelect.querySelector(`option[value="${value.toUpperCase()}"]`);
+                    if (option) {
+                        option.selected = true; // Set the option as selected
+                    }
                 }
-            }
-        });
-    } else {
-        // Other fields get a text input
-        inputField.innerHTML = `
-            <input type="text" class="filter-value" placeholder="Enter value">
-        `;
-        typeSelect.innerHTML = `
-            <option value="contains">Contains</option>
-            <option value="is">Is</option>
-        `;
+            });
+            break;
+
+        default:
+            updateInputField(inputField, `<input type="text" class="filter-value" placeholder="Enter value">`);
+            updateOperatorDropdown(typeSelect, ['Contains', 'Is']);
+            break;
     }
 }
 
