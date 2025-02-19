@@ -30,8 +30,12 @@ h2 {
     font-size: clamp(10px, 2vw, 24px);
     font-weight: normal;
     margin-top: clamp(-36px, -3vw, -12px);
-    a {
+    a, a:visited {
         color: #888888;
+    }
+
+    a:hover {
+        color: #d9534f;
     }
 }
 
@@ -153,7 +157,7 @@ a {
     transition: color 0.3s, transform 0.2s;
 }
 
-a:hover {
+a:hover, a:visited:hover {
     color: #d9534f;
     transform: scale(1.05);
 }

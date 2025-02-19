@@ -154,7 +154,7 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
         typeSelect.innerHTML = `
             <option value="is">Is</option>
         `;
-    } else if (selectedField === 'startDate' || selectedField === 'endDate' || selectedField === 'enrollment') {
+    } else if (selectedField === 'startDate' || selectedField === 'endDate') {
         // Date fields get a date picker
         inputField.innerHTML = `
             <input type="date" class="filter-value">
@@ -163,7 +163,18 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
             <option value="before">Before</option>
             <option value="after">After</option>
         `;
-    }  else if (selectedField === 'major') {
+    } else if (selectedField === 'enrollment') {
+        // Date fields get a date picker
+        inputField.innerHTML = `
+            <input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">
+        `;
+
+        typeSelect.innerHTML = `
+            <option value="on">On</option>
+            <option value="before">Before</option>
+            <option value="after">After</option>
+        `;
+    } else if (selectedField === 'major') {
         inputField.innerHTML = `
             <input type="text" class="filter-value" placeholder="Enter value">
         `;
@@ -260,9 +271,12 @@ function applyRule(course, rule) {
         case "endDate": return rule.type === "after" ? new Date(course.endDate) > new Date(rule.value) : rule.type === "before" ? new Date(course.endDate) < new Date(rule.value) : course.endDate.includes(rule.value);
         case "credits": return rule.type === "is" ? course.credits.min === parseInt(rule.value) : course.credits.min >= parseInt(rule.value);
         case "level": return course.summary.level?.en === rule.value;
-        case "enrollment": return rule.type === "after" ? new Date(course.enrolmentStartDate) > new Date(rule.value) : new Date(course.enrolmentEndDate) < new Date(rule.value);
         case "major": return isCourseInCurriculum(course.code, rule.value) || isCourseInCurriculum(course.code, rule.type);
-        default: return false;
+        case "enrollment": return rule.type === "after" 
+            ? new Date(course.enrolmentStartDate) > new Date(rule.value) 
+            : rule.type === "before" 
+            ? new Date(course.enrolmentEndDate) < new Date(rule.value) 
+            : new Date(course.enrolmentStartDate) <= new Date(rule.value) && new Date(course.enrolmentEndDate) >= new Date(rule.value);
     }
 }
 

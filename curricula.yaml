@@ -73,3 +73,88 @@ curricula:
       - ELEC‐C0302
       - ELEC-C9822
       - JOIN.bsc
+  - code: AR24
+    name: Automation and Robotics (2024-2026)
+    courses:
+      - MS-A0003
+      - MS-A0004
+      - MS-A0009
+      - MS-A0103
+      - MS-A0104
+      - MS-A0109
+      - MS-A0203
+      - MS-A0204
+      - MS-A0209
+      - MS-A0502
+      - MS-A0503
+      - MS-A0509
+      - MS-C1420
+      - ELEC-A9110
+      - ELEC-A4130
+      - CS-A1110
+      - ELEC-A4010
+      - ELEC-A7200
+      - ELEC-A5140
+      - LC-5001
+      - LC-7001
+      - LC-5002
+      - LC-7002
+      - ELEC-A0110
+      - ELEC-A0120
+      - ELEC-C0110
+      - ELEC3014.kand
+      - ELEC-A7100
+      - ELEC-C1110
+      - ELEC-C8202
+      - ELEC-C8203
+      - ELEC-C8204
+      - ELEC-C1230
+      - ELEC-C1310
+      - ELEC-C1320
+      - ELEC-C1240
+      - KON-C2003
+      - ELEC-C9620
+  - code: IT24
+    name: Information Technology (2024-2026)
+    courses:
+      - MS-A0003
+      - MS-A0004
+      - MS-A0009
+      - MS-A0103
+      - MS-A0104
+      - MS-A0109
+      - MS-A0203
+      - MS-A0204
+      - MS-A0209
+      - MS-A0502
+      - MS-A0503
+      - MS-A0509
+      - MS-C1420
+      - ELEC-A9110
+      - ELEC-A4130
+      - CS-A1111
+      - CS-A1110
+      - ELEC-A4010
+      - ELEC-A7200
+      - ELEC-A5140
+      - LC-5001
+      - LC-7001
+      - LC-5002
+      - LC-7002
+      - ELEC-A0110
+      - ELEC-A0120
+      - ELEC-C0110
+      - ELEC3015.kand
+      - ELEC-A7100
+      - ELEC-C7110
+      - ELEC-C7250
+      - ELEC-C5231
+      - ELEC-C5220
+      - CS-C3240
+      - ELEC-C5341
+      - ELEC-C5213
+      - ELEC-C5250
+      - ELEC-C7241
+      - ELEC-C7310
+      - ELEC-C7231
+      - ELEC-C7320
