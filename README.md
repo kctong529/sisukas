@@ -1,6 +1,6 @@
 # Sisukas
 
-A lightweight, fast alternative to the official SISU system for course filtering.
+A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.fly.dev/).
 
 ## Why?
 
@@ -33,10 +33,6 @@ The course data (`courses.json`) was retrieved using the **Aalto Open API**, fol
 The data was obtained using the `GET /courseunitrealisations` endpoint, with the parameter: `startTimeAfter=2024-01-01`.
 
 Currently, the app uses a cached version of this data to ensure fast performance without making additional API calls.
-
-## Deployment
-
-Sisukas is live at: [Sisukas](https://sisukas.fly.dev/)
 
 ## Running Locally
 
