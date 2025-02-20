@@ -259,7 +259,13 @@ function filterCourses() {
         };
     });
 
-    const filtered = courses.filter(course => applyFilters(course, filterRules, conditionType));
+    let filtered = courses.filter(course => applyFilters(course, filterRules, conditionType));
+
+    const showUnique = document.getElementById("uniqueToggle").checked;
+    if (showUnique) {
+        filtered = getUniqueCourses(filtered);
+    }
+
     displayCourses(filtered, true);
 }
 
@@ -269,7 +275,7 @@ function applyFilters(course, filterRules, conditionType) {
         return index === 0
             ? match
             : (conditionType === "AND" ? acc && match : acc || match);
-    }, conditionType === "AND");
+        }, conditionType === "AND");
 }
 
 function applyRule(course, rule) {
@@ -290,6 +296,34 @@ function applyRule(course, rule) {
             ? new Date(course.enrolmentEndDate) < new Date(rule.value) 
             : new Date(course.enrolmentStartDate) <= new Date(rule.value) && new Date(course.enrolmentEndDate) >= new Date(rule.value);
     }
+}
+
+function getUniqueCourses(courses) {
+    const uniqueCoursesMap = new Map();
+
+    courses.forEach(course => {
+        const courseCode = course.code.toLowerCase();
+        const isTeaching = course.type.includes("teaching");
+
+        if (uniqueCoursesMap.has(courseCode)) {
+            const existingCourse = uniqueCoursesMap.get(courseCode);
+            const existingIsTeaching = existingCourse.type.includes("teaching");
+
+            // If the existing one is not teaching but the new one is, replace it
+            if (!existingIsTeaching && isTeaching) {
+                uniqueCoursesMap.set(courseCode, course);
+            }
+            // If both are teaching, keep the one with the later start date
+            else if (isTeaching && course.startDate > existingCourse.startDate) {
+                uniqueCoursesMap.set(courseCode, course);
+            }
+        } else {
+            // Add the course if it's not already in the map
+            uniqueCoursesMap.set(courseCode, course);
+        }
+    });
+    
+    return Array.from(uniqueCoursesMap.values());
 }
 
 window.addFilter = addFilter;

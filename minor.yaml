@@ -41,3 +41,99 @@ curricula:
       - CS-E4580
       - ELEC-A7100
       - ELEC-A7151
+  - code: MATH24
+    name: Mathematics (2024-2026)
+    courses:
+      - MS-A0001
+      - MS-A0002
+      - MS-A0003
+      - MS-A0004
+      - MS-A0009
+      - MS-A0011
+      - MS-A0101
+      - MS-A0102
+      - MS-A0103
+      - MS-A0104
+      - MS-A0107
+      - MS-A0108
+      - MS-A0109
+      - MS-A0111
+      - MS-A0201
+      - MS-A0202
+      - MS-A0203
+      - MS-A0204
+      - MS-A0205
+      - MS-A0209
+      - MS-A0211
+      - MS-A0301
+      - MS-A0305
+      - MS-A0309
+      - MS-A0311
+      - MS-A0401
+      - MS-A0402
+      - MS-A0409
+      - MS-A0501
+      - MS-A0502
+      - MS-A0503
+      - MS-A0504
+      - MS-A0509
+      - MS-C1001
+      - MS-C1081
+      - MS-C1300
+      - MS-C1342
+      - MS-C1350
+      - MS-C1420
+      - MS-C1530
+      - MS-C1541
+      - MS-C1650
+      - MS-C2105
+      - MS-C2111
+      - MS-E1000
+      - AXM-E0411
+  - code: MATH22
+    name: Mathematics (2022-2024)
+    courses:
+      - MS-A0001
+      - MS-A0002
+      - MS-A0003
+      - MS-A0004
+      - MS-A0009
+      - MS-A0011
+      - MS-A0101
+      - MS-A0102
+      - MS-A0103
+      - MS-A0104
+      - MS-A0107
+      - MS-A0108
+      - MS-A0109
+      - MS-A0111
+      - MS-A0201
+      - MS-A0202
+      - MS-A0203
+      - MS-A0204
+      - MS-A0205
+      - MS-A0209
+      - MS-A0211
+      - MS-A0301
+      - MS-A0305
+      - MS-A0309
+      - MS-A0311
+      - MS-A0401
+      - MS-A0402
+      - MS-A0409
+      - MS-A0501
+      - MS-A0502
+      - MS-A0503
+      - MS-A0504
+      - MS-A0509
+      - MS-C1001
+      - MS-C1081
+      - MS-C1300
+      - MS-C1342
+      - MS-C1350
+      - MS-C1420
+      - MS-C1530
+      - MS-C1541
+      - MS-C1650
+      - MS-E1000
+      - AXM-E0411
