@@ -16,6 +16,19 @@ body {
     height: 100vh;
 }
 
+/* Hide the scrollbar but still allow scrolling */
+html {
+  scrollbar-width: none; /* For Firefox */
+}
+
+body {
+  -ms-overflow-style: none; /* For Internet Explorer */
+}
+
+body::-webkit-scrollbar {
+  display: none; /* For Chrome, Safari, and Edge */
+}
+
 #titleContainer {
     float: right;
     align-items: right;
