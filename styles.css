@@ -73,19 +73,42 @@ h2 {
 }
 
 /* Filter and Input Styling */
-.filter-input, button, select, input {
+.filter-input, button, select, input{
+    -webkit-appearance: none; /* Remove default iOS styling */
     display: inline-block;
+    background-color: #fff;
+    appearance: none;
+    font-size: 1em;
+    cursor: pointer;
+    height: 2.7em;
+    vertical-align: middle;
+    text-align: start; /* Align text consistently */
+}
+
+button, select {
     margin: 0 2px;
 }
 
+input {
+    width: 7em;
+}
+
+input[type="date"] {
+    width: auto; /* or set a specific width if needed */
+}
+
 button, select, input {
-    padding: 6px;
-    font-size: 1em;
+    box-sizing: border-box;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     border: 1px solid #ddd;
     border-radius: 4px;
-    background-color: #fff;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding-left: 0.7em;
+    padding-right: 0.7em;
+}
+
+input[type="date"] {
+    -webkit-align-items: center;
+    display: -webkit-inline-flex;
 }
 
 /* Button and Input Active/Focus States */
@@ -96,7 +119,7 @@ button:active, select:active, button:focus, select:focus, input:focus {
 }
 
 /* Filter Element Widths */
-.filter-field { width: max-width: 200px; min-width: 80px; width: 20%; }
+.filter-field { width: max-width: 200px; min-width: 80px; width: 18%; }
 .filter-type { width: max-width: 200px; min-width: 80px; width: 15%; }
 
 /* Table Styling */

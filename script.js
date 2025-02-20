@@ -44,20 +44,14 @@ function displayCourses(courses, filtersApplied) {
   }
 }
 
+// Adds a new filter block
 function addFilter() {
     const filterContainer = document.getElementById('filterContainer');
     const filterGroup = document.createElement('div');
     filterGroup.classList.add('filter-group');
 
     // Create select element for fields
-    const fieldSelect = document.createElement('select');
-    fieldSelect.classList.add('filter-field');
-    fieldSelect.setAttribute('onchange', 'handleFieldChange(this)'); // Use onchange here
-
-    fieldSelect.innerHTML = ''; // Clear existing options
-
-    // Default options
-    const defaultOptions = [
+    const fieldSelect = createSelect('filter-field', 'handleFieldChange(this)', [
         { value: 'code', text: 'Course Code' },
         { value: 'name', text: 'Course Name' },
         { value: 'teacher', text: 'Teacher' },
@@ -66,46 +60,46 @@ function addFilter() {
         { value: 'endDate', text: 'End Date' },
         { value: 'credits', text: 'Credits' },
         { value: 'level', text: 'Level' },
-        { value: 'enrollment', text: 'Enrollment Period' },
-        { value: 'major', text: 'Major Curriculum' }
-    ];
-
-    // Append default options first
-    defaultOptions.forEach(option => {
-        const opt = document.createElement('option');
-        opt.value = option.value;
-        opt.textContent = option.text;
-        fieldSelect.appendChild(opt);
-    });
+        { value: 'enrollment', text: 'Enrollment' },
+        { value: 'major', text: 'Major' }
+    ]);
 
     // Create select element for filter types (contains, is, before, after)
-    const typeSelect = document.createElement('select');
-    typeSelect.classList.add('filter-type');
+    const typeSelect = createSelect('filter-type', '', [
+        { value: 'contains', text: 'Contains' },
+        { value: 'is', text: 'Is' }
+    ]);
 
     // Create an input field container
     const inputField = document.createElement('div');
     inputField.classList.add('filter-input');
+    inputField.innerHTML = `<input type="text" class="filter-value" placeholder="Enter value">`;
 
-    inputField.innerHTML = `
-        <input type="text" class="filter-value" placeholder="Enter value">
-    `;
-    typeSelect.innerHTML = `
-        <option value="contains">Contains</option>
-        <option value="is">Is</option>
-    `;
-
-    // Append the elements to the filter group
+    // Append elements to filter group
     filterGroup.innerHTML += `<button onclick="removeFilter(this)"><i class="bi bi-trash"></i></button>`;
     filterContainer.appendChild(filterGroup);
     filterGroup.appendChild(fieldSelect);
     filterGroup.appendChild(typeSelect);
     filterGroup.appendChild(inputField);
 
-    // Call the function initially to set the input field based on the default selection
+    // Call changeInputField to initialize the input and operator dropdown
     changeInputField(fieldSelect, inputField, typeSelect);
 }
 
-// This function will be triggered when the fieldSelect value changes
+// Creates a <select> element with options from a provided array of objects
+function createSelect(className, onChange, options) {
+    const select = document.createElement('select');
+    select.classList.add(className);
+    if (onChange) select.setAttribute('onchange', onChange); // Set onchange if provided
+
+    select.innerHTML = options.map(option => 
+        `<option value="${option.value}">${option.text}</option>`
+    ).join('');
+    
+    return select;
+}
+
+// Handles field change event and updates the filter
 function handleFieldChange(fieldSelect) {
     const filterGroup = fieldSelect.closest('.filter-group');
     const inputField = filterGroup.querySelector('.filter-input');
@@ -121,108 +115,123 @@ function updateInputField(inputField, htmlContent) {
 
 // Updates the operator dropdown with options
 function updateOperatorDropdown(typeSelect, options) {
-    typeSelect.innerHTML = options.map(option => `<option value="${option.toLowerCase()}">${option}</option>`).join('');
+    typeSelect.innerHTML = options.map(option => 
+        `<option value="${option.toLowerCase()}">${option}</option>`
+    ).join('');
 }
 
 // Populate the curriculum options into the dropdown
-function populateCurriculumDropdown(typeSelect) {
-    Object.keys(curriculaMap).forEach(curriculumCode => {
-        const curriculumName = curriculaMap[curriculumCode]?.name;
-        if (curriculumName) {
-            const opt = document.createElement('option');
-            opt.value = curriculumCode;
-            opt.textContent = curriculumName;
-            typeSelect.appendChild(opt);
-        }
+function populateCurriculumDropdown(typeSelect, inputField) {
+    // Helper function to create and append options
+    const createOption = (value, text) => {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = text;
+        typeSelect.appendChild(opt);
+    };
+
+    // Clear existing options and populate new ones
+    typeSelect.innerHTML = '';
+    Object.entries(curriculaMap).forEach(([code, { name }]) => {
+        if (name) createOption(code, name);
     });
+
+    // Sync input field with dropdown selection
+    const syncInputWithDropdown = () => {
+        const filterValueInput = inputField.querySelector('.filter-value');
+        if (!filterValueInput) return;
+
+        // Update input when dropdown changes
+        typeSelect.addEventListener('change', () => {
+            filterValueInput.value = typeSelect.value;
+        });
+
+        // Update dropdown when input changes
+        filterValueInput.addEventListener('input', (e) => {
+            const value = e.target.value.trim().toUpperCase();
+            const isValidCurriculumCode = Object.keys(curriculaMap).includes(value);
+
+            if (isValidCurriculumCode) {
+                typeSelect.value = value;
+            } else {
+                typeSelect.value = ''; // Reset dropdown selection if invalid
+            }
+        });
+    };
+
+    // Call sync function after DOM updates
+    setTimeout(syncInputWithDropdown, 0);
 }
 
-// Handles the input and operator updates based on the selected field
+// Handles input and operator updates based on selected field
 function changeInputField(fieldSelect, inputField, typeSelect) {
     inputField.innerHTML = ''; // Clear existing input
     typeSelect.innerHTML = ''; // Clear existing operator options
 
     const selectedField = fieldSelect.value;
 
-    switch (selectedField) {
-        case 'language':
-            updateInputField(inputField, `
+    const commonOptions = {
+        language: {
+            inputHTML: `
                 <select class="filter-value">
                     <option value="en">English</option>
                     <option value="fi">Finnish</option>
                     <option value="sv">Swedish</option>
-                </select>
-            `);
-            updateOperatorDropdown(typeSelect, ['Is']);
-            break;
-
-        case 'credits':
-            updateInputField(inputField, `
-                <input type="text" class="filter-value" placeholder="Enter value">
-            `);
-            updateOperatorDropdown(typeSelect, ['Is']);
-            break;
-
-        case 'level':
-            updateInputField(inputField, `
+                </select>`,
+            operators: ['Is']
+        },
+        credits: {
+            inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
+            operators: ['Is']
+        },
+        level: {
+            inputHTML: `
                 <select class="filter-value">
                     <option value="basic-studies">Basic Studies</option>
                     <option value="intermediate-studies">Intermediate Studies</option>
                     <option value="advanced-studies">Advanced Studies</option>
                     <option value="other-studies">Other Studies</option>
-                </select>
-            `);
-            updateOperatorDropdown(typeSelect, ['Is']);
-            break;
-
-        case 'startDate':
-        case 'endDate':
-            updateInputField(inputField, `<input type="date" class="filter-value">`);
-            updateOperatorDropdown(typeSelect, ['Before', 'After']);
-            break;
-
-        case 'enrollment':
-            updateInputField(inputField, `
-                <input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">
-            `);
-            updateOperatorDropdown(typeSelect, ['On', 'Before', 'After']);
-            break;
-
-        case 'major':
-            updateInputField(inputField, `<input type="text" class="filter-value" placeholder="Enter value">`);
-            populateCurriculumDropdown(typeSelect);
-            
-            if (typeSelect.options.length > 0) {
-                const firstOptionValue = typeSelect.options[0].value;
-                updateInputField(inputField, `
-                    <input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">
-                `);
+                </select>`,
+            operators: ['Is']
+        },
+        startDate: {
+            inputHTML: `<input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">`,
+            operators: ['Before', 'After']
+        },
+        endDate: {
+            inputHTML: `<input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">`,
+            operators: ['Before', 'After']
+        },
+        enrollment: {
+            inputHTML: `<input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">`,
+            operators: ['On', 'Before', 'After']
+        },
+        major: {
+            inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
+            operators: [],
+            customHandler: () => {
+                populateCurriculumDropdown(typeSelect, inputField);
             }
+        }
+    };
 
-            // Update the input field when the curriculum dropdown changes
-            typeSelect.addEventListener('change', () => {
-                const selectedCurriculum = typeSelect.value;
-                inputField.querySelector('.filter-value').value = selectedCurriculum;
-            });
+    const defaultOptions = {
+        inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
+        operators: ['Contains', 'Is']
+    };
 
-            // Validate curriculum code input
-            const inputFieldElement = inputField.querySelector('.filter-value');
-            inputFieldElement.addEventListener('input', (e) => {
-                const value = e.target.value.trim();
-                const isValidCurriculumCode = value => Object.keys(curriculaMap).some(key => key.toLowerCase() === value.toLowerCase());
-                if (isValidCurriculumCode(value)) {
-                    const option = typeSelect.querySelector(`option[value="${value.toUpperCase()}"]`);
-                    if (option) {
-                        option.selected = true; // Set the option as selected
-                    }
-                }
-            });
-            break;
+    const fieldConfig = commonOptions[selectedField] || defaultOptions;
 
-        default:
-            updateInputField(inputField, `<input type="text" class="filter-value" placeholder="Enter value">`);
-            updateOperatorDropdown(typeSelect, ['Contains', 'Is']);
-            break;
+    updateInputField(inputField, fieldConfig.inputHTML);
+    updateOperatorDropdown(typeSelect, fieldConfig.operators);
+
+    // Call custom handler if available (e.g., for major)
+    if (fieldConfig.customHandler) {
+        fieldConfig.customHandler();
+        const firstOptionValue = typeSelect.options[0].value;
+        updateInputField(inputField, 
+            `<input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">`
+        );
     }
 }
 
