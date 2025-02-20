@@ -61,10 +61,11 @@ function addFilter() {
         { value: 'credits', text: 'Credits' },
         { value: 'level', text: 'Level' },
         { value: 'enrollment', text: 'Enrollment' },
-        { value: 'major', text: 'Major' }
+        { value: 'major', text: 'Major' },
+        { value: 'minor', text: 'Minor' }
     ]);
 
-    // Create select element for filter types (contains, is, before, after)
+    // Create select element for filter types
     const typeSelect = createSelect('filter-type', '', [
         { value: 'contains', text: 'Contains' },
         { value: 'is', text: 'Is' }
@@ -121,7 +122,7 @@ function updateOperatorDropdown(typeSelect, options) {
 }
 
 // Populate the curriculum options into the dropdown
-function populateCurriculumDropdown(typeSelect, inputField) {
+function populateCurriculumDropdown(typeSelect, inputField, curriculumType) {
     // Helper function to create and append options
     const createOption = (value, text) => {
         const opt = document.createElement('option');
@@ -132,7 +133,7 @@ function populateCurriculumDropdown(typeSelect, inputField) {
 
     // Clear existing options and populate new ones
     typeSelect.innerHTML = '';
-    Object.entries(curriculaMap).forEach(([code, { name }]) => {
+    Object.entries(curriculaMap[curriculumType]).forEach(([code, { name }]) => {
         if (name) createOption(code, name);
     });
 
@@ -149,7 +150,7 @@ function populateCurriculumDropdown(typeSelect, inputField) {
         // Update dropdown when input changes
         filterValueInput.addEventListener('input', (e) => {
             const value = e.target.value.trim().toUpperCase();
-            const isValidCurriculumCode = Object.keys(curriculaMap).includes(value);
+            const isValidCurriculumCode = Object.keys(curriculaMap[curriculumType]).includes(value);
 
             if (isValidCurriculumCode) {
                 typeSelect.value = value;
@@ -210,7 +211,14 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
             inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
             operators: [],
             customHandler: () => {
-                populateCurriculumDropdown(typeSelect, inputField);
+                populateCurriculumDropdown(typeSelect, inputField, 'major');
+            }
+        },
+        minor: {
+            inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
+            operators: [],
+            customHandler: () => {
+                populateCurriculumDropdown(typeSelect, inputField, 'minor');
             }
         }
     };
@@ -274,7 +282,8 @@ function applyRule(course, rule) {
         case "endDate": return rule.type === "after" ? new Date(course.endDate) > new Date(rule.value) : rule.type === "before" ? new Date(course.endDate) < new Date(rule.value) : course.endDate.includes(rule.value);
         case "credits": return rule.type === "is" ? course.credits.min === parseInt(rule.value) : course.credits.min >= parseInt(rule.value);
         case "level": return course.summary.level?.en === rule.value;
-        case "major": return isCourseInCurriculum(course.code, rule.value) || isCourseInCurriculum(course.code, rule.type);
+        case "major": return isCourseInCurriculum(course.code, rule.value, "major") || isCourseInCurriculum(course.code, rule.type, "major");
+        case "minor": return isCourseInCurriculum(course.code, rule.value, "minor") || isCourseInCurriculum(course.code, rule.type, "minor");
         case "enrollment": return rule.type === "after" 
             ? new Date(course.enrolmentStartDate) > new Date(rule.value) 
             : rule.type === "before" 
