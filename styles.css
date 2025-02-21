@@ -1,5 +1,5 @@
 html, body {
-    overflow-x: hidden;
+/*    overflow-x: hidden;*/
     width: 100%;
     min-width: 100vw;
 }
@@ -7,6 +7,7 @@ html, body {
 /* General Body Styling */
 body {
     margin: 0;
+    overflow-x: hidden;
     font-family: sans-serif;
     font-size: clamp(10px, 1.3vw, 15px);
     background-color: #f4f7f6;
@@ -69,7 +70,7 @@ h2 {
 #globalContainer {
     position: absolute;
     width: 100%;
-    margin-top: 15%;
+    margin-top: 9em;
 }
 
 #filterContainer, #searchContainer {
@@ -132,7 +133,7 @@ button:active, select:active, button:focus, select:focus, input:focus {
 }
 
 /* Filter Element Widths */
-.filter-field { width: max-width: 200px; min-width: 80px; width: 18%; }
+.filter-field { width: max-width: 200px; min-width: 80px; width: 20%; }
 .filter-type { width: max-width: 200px; min-width: 80px; width: 15%; }
 
 .switch {
@@ -189,7 +190,7 @@ button:active, select:active, button:focus, select:focus, input:focus {
     top: -8em;
     left: 2%;
     flex-wrap: wrap;
-    gap: 4px; /* Space between the periods */
+    gap: 2px; /* Space between the periods */
     padding: 2px;
 }
 
@@ -361,11 +362,22 @@ button a:hover, .btn a:hover {
 
 /* Responsive Styling */
 @media (max-width: 900px) {
-  .full-text {
+  th .full-text {
     display: none;
   }
 
-  .abbreviated-text {
+  th .abbreviated-text {
     display: inline;
   }
+}
+
+/* Custom Responsive Styling for .period */
+@media (max-width: 620px) {
+    .period .full-text {
+        display: none;
+    }
+
+    .period .abbreviated-text {
+        display: inline;
+    }
 }

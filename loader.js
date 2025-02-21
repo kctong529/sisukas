@@ -102,7 +102,18 @@ function renderPeriods() {
             const periodDiv = document.createElement('div');
             periodDiv.classList.add('period');
             periodDiv.dataset.period = period.period + ' ' + year.year;
-            periodDiv.textContent = period.period;
+
+            const fullTextSpan = document.createElement('span');
+            fullTextSpan.classList.add('full-text');
+            fullTextSpan.textContent = period.period;
+            
+            const abbreviatedSpan = document.createElement('span');
+            abbreviatedSpan.classList.add('abbreviated-text');
+            abbreviatedSpan.textContent = period.period.substring(7); // Skip first 7 characters
+            
+            periodDiv.appendChild(fullTextSpan);
+            periodDiv.appendChild(abbreviatedSpan);
+
             yearDiv.appendChild(periodDiv);  // Append period div to year div
         });
 
