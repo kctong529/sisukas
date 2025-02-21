@@ -56,16 +56,16 @@ function addFilter() {
     const fieldSelect = createSelect('filter-field', 'handleFieldChange(this)', [
         { value: 'code', text: 'Course Code' },
         { value: 'name', text: 'Course Name' },
-        { value: 'teacher', text: 'Teacher' },
-        { value: 'language', text: 'Language' },
+        { value: 'period', text: 'Period'},
         { value: 'startDate', text: 'Start Date' },
         { value: 'endDate', text: 'End Date' },
-        { value: 'period', text: 'Period'},
-        { value: 'credits', text: 'Credits' },
-        { value: 'level', text: 'Level' },
-        { value: 'enrollment', text: 'Enrollment' },
         { value: 'major', text: 'Major' },
-        { value: 'minor', text: 'Minor' }
+        { value: 'minor', text: 'Minor' },
+        { value: 'enrollment', text: 'Enrollment' },
+        { value: 'teacher', text: 'Teacher' },
+        { value: 'language', text: 'Language' },
+        { value: 'credits', text: 'Credits' },
+        { value: 'level', text: 'Level' }
     ]);
 
     // Create select element for filter types
@@ -355,7 +355,7 @@ function applyPeriodFilter(course, rule) {
         case "strictly contained":
             // Course spans the whole described period(s)
             return (earliestStart <= courseStart && courseStart <= earliestEnd
-                && latestEnd <= courseEnd && courseEnd <= latestEnd);
+                && latestStart <= courseEnd && courseEnd <= latestEnd);
         case "overlaps":
             // Course overlaps with at least one period
             return (courseStart <= latestEnd && courseEnd >= earliestStart);
