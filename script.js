@@ -1,4 +1,5 @@
-import { loadCurricula, curriculaMap, isCourseInCurriculum } from './loadCurricula.js';
+import { loadPrograms, loadPeriods, periodsData, curriculaMap, isCourseInCurriculum } from './loader.js';
+import { initializeDragSelect, removeEventHandlers } from './dragSelect.js';
 
 let courses = [];
 
@@ -6,7 +7,8 @@ async function loadCourses() {
     try {
         const response = await fetch('courses.json'); // Load JSON
         courses = await response.json();
-        await loadCurricula(); // Load JSON
+        await loadPrograms(); // Load JSON
+        await loadPeriods();
         displayCourses(courses, false); // Display all initially
     } catch (error) {
         console.error("Error loading JSON:", error);
@@ -58,6 +60,7 @@ function addFilter() {
         { value: 'language', text: 'Language' },
         { value: 'startDate', text: 'Start Date' },
         { value: 'endDate', text: 'End Date' },
+        { value: 'period', text: 'Period'},
         { value: 'credits', text: 'Credits' },
         { value: 'level', text: 'Level' },
         { value: 'enrollment', text: 'Enrollment' },
@@ -211,14 +214,40 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
             inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
             operators: [],
             customHandler: () => {
+                // removeEventHandlers();
                 populateCurriculumDropdown(typeSelect, inputField, 'major');
+                const firstOptionValue = typeSelect.options[0].value;
+                updateInputField(inputField, 
+                    `<input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">`
+                );
             }
         },
         minor: {
             inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
             operators: [],
             customHandler: () => {
+                // removeEventHandlers();
                 populateCurriculumDropdown(typeSelect, inputField, 'minor');
+                const firstOptionValue = typeSelect.options[0].value;
+                updateInputField(inputField, 
+                    `<input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">`
+                );
+            }
+        },
+        period: {
+            inputHTML: `<input type="text" class="filter-value" placeholder="Select period(s)">`,
+            operators: ['Fully Contained', 'Strictly Contained', 'Overlaps'],
+            customHandler: () => {
+                const periodsContainer = document.getElementById('periods-container');
+                periodsContainer.style.display = 'flex';
+
+                initializeDragSelect((selectedPeriods) => {
+                    // Update the input field with the selected periods
+                    const filterValueInput = inputField.querySelector('.filter-value');
+                    filterValueInput.value = selectedPeriods.join(', '); // Display as comma-separated values
+                    console.log('Updated input with:', selectedPeriods);
+                });
+
             }
         }
     };
@@ -236,10 +265,8 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
     // Call custom handler if available (e.g., for major)
     if (fieldConfig.customHandler) {
         fieldConfig.customHandler();
-        const firstOptionValue = typeSelect.options[0].value;
-        updateInputField(inputField, 
-            `<input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">`
-        );
+    } else {
+        // removeEventHandlers();
     }
 }
 
@@ -290,12 +317,69 @@ function applyRule(course, rule) {
         case "level": return course.summary.level?.en === rule.value;
         case "major": return isCourseInCurriculum(course.code, rule.value, "major") || isCourseInCurriculum(course.code, rule.type, "major");
         case "minor": return isCourseInCurriculum(course.code, rule.value, "minor") || isCourseInCurriculum(course.code, rule.type, "minor");
+        case "period": return applyPeriodFilter(course, rule);
         case "enrollment": return rule.type === "after" 
             ? new Date(course.enrolmentStartDate) > new Date(rule.value) 
             : rule.type === "before" 
             ? new Date(course.enrolmentEndDate) < new Date(rule.value) 
             : new Date(course.enrolmentStartDate) <= new Date(rule.value) && new Date(course.enrolmentEndDate) >= new Date(rule.value);
     }
+}
+
+// Apply period filter based on the rule value
+function applyPeriodFilter(course, rule) {
+    // Extract the period names from the rule value (e.g., "Period III 2024-25, Period IV 2024-25, Period V 2024-25")
+    const periodNames = rule.value.split(", ");
+    
+    // Get the period details for each period name
+    const periods = periodNames.map(periodName => getPeriodDates(periodName));
+    
+    if (!periods || periods.length === 0) return false;
+
+    // Extract dates from the selected periods
+    const startDates = periods.map(period => new Date(period.start_date));
+    const endDates = periods.map(period => new Date(period.end_date));
+
+    // Get the required dates
+    const earliestStart = new Date(Math.min(...startDates));
+    const latestEnd = new Date(Math.max(...endDates));
+    const earliestEnd = new Date(Math.min(...endDates));
+    const latestStart = new Date(Math.max(...startDates));
+    const courseStart = new Date(course.startDate);
+    const courseEnd = new Date(course.endDate);
+
+    switch (rule.type) {
+        case "fully contained":
+            // Course fully within all periods
+            return (earliestStart <= courseStart && courseEnd <= latestEnd);
+        case "strictly contained":
+            // Course spans the whole described period(s)
+            return (earliestStart <= courseStart && courseStart <= earliestEnd
+                && latestEnd <= courseEnd && courseEnd <= latestEnd);
+        case "overlaps":
+            // Course overlaps with at least one period
+            return (courseStart <= latestEnd && courseEnd >= earliestStart);
+        default:
+            return false;
+    }
+}
+
+// Helper function to get the period start and end dates from the period name (e.g., "Period III 2024-25")
+function getPeriodDates(periodName) {
+    const year = periodName.slice(-7);  // Extract the last 7 characters for the year (e.g., "2024-25")
+    const period = periodName.slice(0, -8).trim();  // Extract everything before the last space for the period (e.g., "Period IV")
+    
+    let periodDates = null;
+    
+    // Find the period data based on year and period
+    const periodData = periodsData.periods
+        .find(item => item.year === year)  // Find the correct year object
+        ?.periods.find(p => p.period === period);  // Find the matching period within the year
+
+    if (periodData) {
+        return { start_date: periodData.start_date, end_date: periodData.end_date };
+    }
+    return null;  // Return null if no matching period found
 }
 
 function getUniqueCourses(courses) {
@@ -331,3 +415,4 @@ window.handleFieldChange = handleFieldChange;
 window.removeFilter = removeFilter;
 window.filterCourses = filterCourses;
 window.onload = loadCourses;
+window.getPeriodDates = getPeriodDates;
