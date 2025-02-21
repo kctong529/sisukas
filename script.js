@@ -1,5 +1,5 @@
-import { loadPrograms, loadPeriods, periodsData, curriculaMap, isCourseInCurriculum } from './loader.js';
-import { initializeDragSelect, removeEventHandlers } from './dragSelect.js';
+import { loadPrograms, loadPeriods, periodsData, curriculaMap, isCourseInCurriculum } from './loader.js?v=0.1';
+import { initializeDragSelect, removeEventHandlers } from './dragSelect.js?v=0.1';
 
 let courses = [];
 
