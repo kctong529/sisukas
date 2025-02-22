@@ -6,25 +6,22 @@ A lightweight, fast alternative to the official SISU system for course filtering
 
 Students are frustrated with the official SISU system due to:
 - **Limited filters**: Finding relevant courses requires excessive manual searching.
-- **Annoying navigation**: The system displays only minimal details unless you click into each course link.
+- **Annoying navigation**: It displays only minimal details unless you click into each link.
 - **Slow performance**: Multiple requests slow down the experience.
 
 Sisukas provides a **faster, more user-friendly** way to browse and filter courses.
-
-## The Filters You Need
-
 - **Fast and Efficient**: All data is preloaded, no additional requests.
 - **Periods**: Intuitive drag-and-drop selection across the year.
 - **Boolean Logic**: Combine filters with AND, OR for more refined results.
-- **Keyword**: Narrow down results with keywords in course codes or names (e.g., "CS", "Design").
+- **Keyword**: Narrow down results with keywords in course codes or names.
 - **Date**: Filter courses by start and end dates to target specific time frames.
 - **Major & Minor**: Predefined course lists for specific degrees.
 
-## Balance of Details
+## Balance
 
 - **Compact**: All course information you'd need at a glance, no extra clicks.
-- **Unique Only Toggle**: See only one entry per course code, consolidating multiple instances into a single row.
-- **Responsive Design**: Fully optimized for desktop and mobile devices, ensuring smooth and intuitive navigation across all platforms.
+- **Unique Toggle**: Show one entry per course code, merging duplicates.
+- **Responsive Design**: Fully optimized for desktop and mobile devices.
 
 ## Technical Stack
 
