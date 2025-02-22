@@ -134,21 +134,20 @@ button:active, select:active, button:focus, select:focus, input:focus {
 
 /* Filter Element Widths */
 .filter-field {
-  max-width: 200px;
+  max-width: 120px;
   min-width: 80px;
-  width: 20%;
 }
 
 .filter-type {
-  max-width: 200px;
+  max-width: 308px;
   min-width: 80px;
-  width: 15%;
+  width: 26%;
 }
 
 .filter-input {
-  max-width: 200px;
-  min-width: 100px;
-  width: 17%;
+  max-width: 320px;
+  min-width: 120px;
+  width: 20%;
 }
 
 .filter-value {
