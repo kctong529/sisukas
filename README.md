@@ -14,12 +14,19 @@ Sisukas provides a **faster, more user-friendly** way to browse and filter cours
 ## Features
 
 - **Fast**: All data is preloaded, so there are no additional requests slowing down interactions.
-- **Better Filtering**:
-  - Filter by **start and end dates** to find courses in a specific period.
-  - Use **keywords in course codes or names** (e.g., `"CS"`, `"ELEC"`, `"MS"`, or `"Design"`) to narrow results.
-  - Exclude **exams** by filtering `"Lecture"` in course names.
-- **Compact Information**: No unnecessary clicks—important details are displayed immediately.
-- **(Upcoming Feature) Filter by description**: Search for courses with relevant topics.
+- **Intuitive Drag-select Periods**: Select periods from the timetable using drag-to-select functionality. Filters include:
+   - **Strictly Contained**: Filters courses that fully fit within the selected period.
+   - **Full Contained**: Filters courses that include the selected period.
+   - **Overlaps**: Filters courses that overlap with the selected period.
+- **Flexible Filter Logic with Boolean Algebra**: Apply filters based on boolean algebra. Combine multiple criteria using logical operators like AND and OR for refined search results.
+- **Keyword Filtering**:
+   - Use **keywords in course codes or names** (e.g., "CS", "ELEC", "MS", "Design") to narrow down results.
+   - Exclude **exams** by specifying "Lecture" in course name filters.
+- **Major & Minor-Specific Course Filters**: Predefined course lists available for specific majors and minors. Users can filter courses based on their degree program requirements.
+- **Date Range Filtering**: Filter courses by start and end dates to target specific time frames.
+- **Compact Information Display**: Access essential course details at a glance without unnecessary clicks.
+- **Unique Only Toggle**: Display only one row per course code, consolidating multiple instances into a single representative entry.
+- **Responsive Interface**: Fully responsive design optimized for both desktop and mobile. Enjoy a smooth and user-friendly experience across devices.
 
 ## Technical Stack
 
