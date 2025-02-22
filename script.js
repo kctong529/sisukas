@@ -1,5 +1,5 @@
-import { loadPrograms, loadPeriods, periodsData, curriculaMap, isCourseInCurriculum } from './loader.js?v=0.1';
-import { initializeDragSelect, removeEventHandlers } from './dragSelect.js?v=0.1';
+import { loadPrograms, loadPeriods, periodsData, curriculaMap, isCourseInCurriculum } from './loader.js?v=0.2';
+import { initializeDragSelect, removeEventHandlers } from './dragSelect.js?v=0.2';
 
 let courses = [];
 
@@ -52,6 +52,15 @@ function addFilter() {
     const filterGroup = document.createElement('div');
     filterGroup.classList.add('filter-group');
 
+    // Add AND/OR selector only if it's not the first rule
+    if (filterContainer.children.length > 0) {
+        const operatorSelect = createSelect('filter-boolean', '', [
+            { value: 'AND', text: 'AND' },
+            { value: 'OR', text: 'OR' }
+        ]);
+        filterGroup.appendChild(operatorSelect);
+    }
+
     // Create select element for fields
     const fieldSelect = createSelect('filter-field', 'handleFieldChange(this)', [
         { value: 'code', text: 'Course Code' },
@@ -80,11 +89,11 @@ function addFilter() {
     inputField.innerHTML = `<input type="text" class="filter-value" placeholder="Enter value">`;
 
     // Append elements to filter group
-    filterGroup.innerHTML += `<button onclick="removeFilter(this)"><i class="bi bi-trash"></i></button>`;
     filterContainer.appendChild(filterGroup);
     filterGroup.appendChild(fieldSelect);
     filterGroup.appendChild(typeSelect);
     filterGroup.appendChild(inputField);
+    filterGroup.innerHTML += `<button onclick="removeFilter(this)"><i class="bi bi-trash"></i></button>`;
 
     // Call changeInputField to initialize the input and operator dropdown
     changeInputField(fieldSelect, inputField, typeSelect);
@@ -299,19 +308,54 @@ function removeFilter(button) {
 
 function filterCourses() {
     const filters = document.querySelectorAll('.filter-group');
-    const conditionType = document.getElementById('conditionType').value;
+    const showUnique = document.getElementById("uniqueToggle").checked;
 
-    const filterRules = Array.from(filters).map(filter => {
-        return {
-            field: filter.querySelector('.filter-field').value,
-            type: filter.querySelector('.filter-type').value,
-            value: filter.querySelector('.filter-value').value.trim()
-        };
+    // Group filters by OR
+    const filterGroups = [];
+    let currentGroup = [];
+
+    filters.forEach(filter => {
+        const field = filter.querySelector('.filter-field').value;
+        const type = filter.querySelector('.filter-type').value;
+        const value = filter.querySelector('.filter-value').value.trim();
+        
+        if (!value) {
+          console.warn(`Empty value for field: ${field}`);
+          return;  // Skip empty filters
+        }
+        
+        const rule = { field, type, value };
+
+        const booleanOperator = filter.querySelector('.filter-boolean')?.value;
+        if (booleanOperator === 'AND') {
+            currentGroup.push(rule);
+        } else {
+            // Push current group and start a new one
+            if (currentGroup.length > 0) {
+                filterGroups.push(currentGroup);
+            }
+            currentGroup = [rule];
+        }
+        console.log("Current group: ");
+        console.log(currentGroup);
+        console.log("Filter groups: ");
+        console.log(filterGroups);
     });
 
-    let filtered = courses.filter(course => applyFilters(course, filterRules, conditionType));
+    // Push the last group
+    if (currentGroup.length > 0) {
+        filterGroups.push(currentGroup);
+    }
 
-    const showUnique = document.getElementById("uniqueToggle").checked;
+    // Collect union of all filter group results
+    const allResults = new Set();
+    filterGroups.forEach(group => {
+        const groupFiltered = courses.filter(course => applyFilters(course, group));
+        groupFiltered.forEach(course => allResults.add(course));
+    });
+
+    let filtered = Array.from(allResults);
+
     if (showUnique) {
         filtered = getUniqueCourses(filtered);
     }
@@ -319,13 +363,8 @@ function filterCourses() {
     displayCourses(filtered, true);
 }
 
-function applyFilters(course, filterRules, conditionType) {
-    return filterRules.reduce((acc, rule, index) => {
-        const match = applyRule(course, rule);
-        return index === 0
-            ? match
-            : (conditionType === "AND" ? acc && match : acc || match);
-        }, conditionType === "AND");
+function applyFilters(course, filterRules) {
+    return filterRules.every(rule => applyRule(course, rule));
 }
 
 function applyRule(course, rule) {

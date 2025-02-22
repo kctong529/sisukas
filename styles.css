@@ -87,6 +87,14 @@ h2 {
 }
 
 /* Filter and Input Styling */
+.filter-boolean {
+    position: absolute;
+}
+
+.filter-field {
+    margin-left: 4.3em;
+}
+
 .filter-input, button, select, input{
     -webkit-appearance: none; /* Remove default iOS styling */
     display: inline-block;
@@ -99,16 +107,8 @@ h2 {
     text-align: start; /* Align text consistently */
 }
 
-button, select {
-    margin: 0 2px;
-}
-
-input {
-    width: 7em;
-}
-
-input[type="date"] {
-    width: auto; /* or set a specific width if needed */
+button, select, .filter-input {
+    margin: 0 0.1em;
 }
 
 button, select, input {
@@ -133,8 +133,28 @@ button:active, select:active, button:focus, select:focus, input:focus {
 }
 
 /* Filter Element Widths */
-.filter-field { width: max-width: 200px; min-width: 80px; width: 20%; }
-.filter-type { width: max-width: 200px; min-width: 80px; width: 15%; }
+.filter-field {
+  max-width: 200px;
+  min-width: 80px;
+  width: 20%;
+}
+
+.filter-type {
+  max-width: 200px;
+  min-width: 80px;
+  width: 15%;
+}
+
+.filter-input {
+  max-width: 200px;
+  min-width: 100px;
+  width: 17%;
+}
+
+.filter-value {
+  width: 100%; /* The input field fills the whole width of the container */
+  box-sizing: border-box; /* Ensure padding does not affect width */
+}
 
 .switch {
     position: relative;
