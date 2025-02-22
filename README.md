@@ -13,20 +13,32 @@ Sisukas provides a **faster, more user-friendly** way to browse and filter cours
 
 ## Features
 
-- **Fast**: All data is preloaded, so there are no additional requests slowing down interactions.
-- **Intuitive Drag-select Periods**: Select periods from the timetable using drag-to-select functionality. Filters include:
-   - **Strictly Contained**: Filters courses that fully fit within the selected period.
-   - **Full Contained**: Filters courses that include the selected period.
-   - **Overlaps**: Filters courses that overlap with the selected period.
-- **Flexible Filter Logic with Boolean Algebra**: Apply filters based on boolean algebra. Combine multiple criteria using logical operators like AND and OR for refined search results.
-- **Keyword Filtering**:
-   - Use **keywords in course codes or names** (e.g., "CS", "ELEC", "MS", "Design") to narrow down results.
-   - Exclude **exams** by specifying "Lecture" in course name filters.
-- **Major & Minor-Specific Course Filters**: Predefined course lists available for specific majors and minors. Users can filter courses based on their degree program requirements.
-- **Date Range Filtering**: Filter courses by start and end dates to target specific time frames.
-- **Compact Information Display**: Access essential course details at a glance without unnecessary clicks.
-- **Unique Only Toggle**: Display only one row per course code, consolidating multiple instances into a single representative entry.
-- **Responsive Interface**: Fully responsive design optimized for both desktop and mobile. Enjoy a smooth and user-friendly experience across devices.
+### Fast and Efficient
+
+- **Preloaded Data**: All data is preloaded, reducing delays from additional requests for smooth interactions.
+
+### Intuitive Period Selection
+
+- Select periods from the timetable using drag-to-select functionality. 
+- Filters include:
+  - **Strictly Contained**: Courses precisely fitting within the selected period.
+  - **Full Contained**: Courses that include the selected period.
+  - **Overlaps**: Courses that overlap with the selected period.
+
+### Powerful Filtering Options
+
+- **Flexible Filter Logic**: Combine filters with boolean operators (AND, OR) for refined results.
+- **Keyword and Date Filtering**: Use keywords in course codes or names (e.g., "CS", "Design") and filter by specific date ranges to narrow down your search.
+- **Major & Minor-Specific Filters**: Predefined course lists tailored to specific degree programs.
+
+### Streamlined Course Details
+
+- **Compact Display**: Essential course details are available at a glance, reducing unnecessary clicks.
+- **Unique Only Toggle**: Consolidates multiple instances of the same course into a single entry.
+
+### Responsive Design
+
+- **Optimized for All Devices**: Fully responsive interface that ensures a smooth and user-friendly experience across desktop and mobile platforms.
 
 ## Technical Stack
 
@@ -78,8 +90,8 @@ To test the application on your local machine, follow these steps:
 
 - [ ] Refactor the file structure to improve maintainability. https://github.com/kctong529/sisukas/issues/3
 - [ ] Enable filtering by course descriptions. https://github.com/kctong529/sisukas/issues/4
-- [ ] Automatically label periods based on course dates. https://github.com/kctong529/sisukas/issues/5
-- [ ] Add predefined filters such as "Starts in the future," "DSD curriculum," "CS minor," and "Finnish language course." https://github.com/kctong529/sisukas/issues/6
+- [x] Support filtering by periods based on mapping to dates. https://github.com/kctong529/sisukas/issues/5
+- [x] Add predefined filters for major and minor curricula. https://github.com/kctong529/sisukas/issues/6
 - [ ] Add exclusion criteria such as "Not a math course"
 - [ ] Implement support for nested sorting criteria.
 - [ ] Automatically generate a timeline based on course schedules.
@@ -87,7 +99,7 @@ To test the application on your local machine, follow these steps:
 
 ### User Experience & Accessibility
 
-- [ ] Enhance responsive design for a smoother mobile experience. https://github.com/kctong529/sisukas/issues/2
+- [x] Enhance responsive design for a smoother mobile experience. https://github.com/kctong529/sisukas/issues/2
 - [ ] Allow users to save filter sets on the server and generate a shareable link (no login required). https://github.com/kctong529/sisukas/issues/8
 - [ ] Introduce user management features (for login and personal data management).
 - [ ] Allow users to pin courses to keep them at the top.
