@@ -11,34 +11,20 @@ Students are frustrated with the official SISU system due to:
 
 Sisukas provides a **faster, more user-friendly** way to browse and filter courses.
 
-## Features
+## The Filters You Need
 
-### Fast and Efficient
+- **Fast and Efficient**: All data is preloaded, no additional requests.
+- **Periods**: Intuitive drag-and-drop selection across the year.
+- **Boolean Logic**: Combine filters with AND, OR for more refined results.
+- **Keyword**: Narrow down results with keywords in course codes or names (e.g., "CS", "Design").
+- **Date**: Filter courses by start and end dates to target specific time frames.
+- **Major & Minor**: Predefined course lists for specific degrees.
 
-- **Preloaded Data**: All data is preloaded, reducing delays from additional requests for smooth interactions.
+## Balance of Details
 
-### Intuitive Period Selection
-
-- Select periods from the timetable using drag-to-select functionality. 
-- Filters include:
-  - **Strictly Contained**: Courses precisely fitting within the selected period.
-  - **Full Contained**: Courses that include the selected period.
-  - **Overlaps**: Courses that overlap with the selected period.
-
-### Powerful Filtering Options
-
-- **Flexible Filter Logic**: Combine filters with boolean operators (AND, OR) for refined results.
-- **Keyword and Date Filtering**: Use keywords in course codes or names (e.g., "CS", "Design") and filter by specific date ranges to narrow down your search.
-- **Major & Minor-Specific Filters**: Predefined course lists tailored to specific degree programs.
-
-### Streamlined Course Details
-
-- **Compact Display**: Essential course details are available at a glance, reducing unnecessary clicks.
-- **Unique Only Toggle**: Consolidates multiple instances of the same course into a single entry.
-
-### Responsive Design
-
-- **Optimized for All Devices**: Fully responsive interface that ensures a smooth and user-friendly experience across desktop and mobile platforms.
+- **Compact**: All course information you'd need at a glance, no extra clicks.
+- **Unique Only Toggle**: See only one entry per course code, consolidating multiple instances into a single row.
+- **Responsive Design**: Fully optimized for desktop and mobile devices, ensuring smooth and intuitive navigation across all platforms.
 
 ## Technical Stack
 
