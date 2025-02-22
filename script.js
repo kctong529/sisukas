@@ -108,6 +108,22 @@ function handleFieldChange(fieldSelect) {
     const filterGroup = fieldSelect.closest('.filter-group');
     const inputField = filterGroup.querySelector('.filter-input');
     const typeSelect = filterGroup.querySelector('.filter-type');
+    const periodsContainer = document.getElementById('periods-container');
+
+    // Check previous selection
+    const lastSelectedField = fieldSelect.dataset.lastSelectedField;
+
+    if (fieldSelect.value === 'period') {
+        removeEventHandlers();
+    }
+    
+    // If the previous selection was 'period' and the new one is different, hide the container
+    if (lastSelectedField === 'period' && fieldSelect.value !== 'period') {
+        periodsContainer.style.display = 'none';
+    }
+
+    // Store the current selection for future comparison
+    fieldSelect.dataset.lastSelectedField = fieldSelect.value;
 
     changeInputField(fieldSelect, inputField, typeSelect); // Update the input field
 }
@@ -214,7 +230,6 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
             inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
             operators: [],
             customHandler: () => {
-                // removeEventHandlers();
                 populateCurriculumDropdown(typeSelect, inputField, 'major');
                 const firstOptionValue = typeSelect.options[0].value;
                 updateInputField(inputField, 
@@ -226,7 +241,6 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
             inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
             operators: [],
             customHandler: () => {
-                // removeEventHandlers();
                 populateCurriculumDropdown(typeSelect, inputField, 'minor');
                 const firstOptionValue = typeSelect.options[0].value;
                 updateInputField(inputField, 
@@ -265,13 +279,22 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
     // Call custom handler if available (e.g., for major)
     if (fieldConfig.customHandler) {
         fieldConfig.customHandler();
-    } else {
-        // removeEventHandlers();
     }
 }
 
 function removeFilter(button) {
-    button.parentElement.remove();
+    const filterGroup = button.closest('.filter-group');
+    filterGroup.remove();
+
+    // Check if any remaining filters are using 'period'
+    const fieldSelects = document.querySelectorAll('.filter-field');
+    const periodsContainer = document.getElementById('periods-container');
+
+    const isPeriodUsed = Array.from(fieldSelects).some(select => select.value === 'period');
+
+    if (!isPeriodUsed) {
+        periodsContainer.style.display = 'none';
+    }
 }
 
 function filterCourses() {
