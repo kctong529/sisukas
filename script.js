@@ -225,7 +225,7 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
         },
         startDate: {
             inputHTML: `<input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">`,
-            operators: ['Before', 'After']
+            operators: ['After', 'Before']
         },
         endDate: {
             inputHTML: `<input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">`,
@@ -259,7 +259,7 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
         },
         period: {
             inputHTML: `<input type="text" class="filter-value" placeholder="Select period(s)">`,
-            operators: ['Fully Contained', 'Strictly Contained', 'Overlaps'],
+            operators: ['Is In', 'Equals', 'Overlaps'],
             customHandler: () => {
                 const periodsContainer = document.getElementById('periods-container');
                 periodsContainer.style.display = 'flex';
@@ -411,10 +411,10 @@ function applyPeriodFilter(course, rule) {
     const courseEnd = new Date(course.endDate);
 
     switch (rule.type) {
-        case "fully contained":
+        case "is in":
             // Course fully within all periods
             return (earliestStart <= courseStart && courseEnd <= latestEnd);
-        case "strictly contained":
+        case "equals":
             // Course spans the whole described period(s)
             return (earliestStart <= courseStart && courseStart <= earliestEnd
                 && latestStart <= courseEnd && courseEnd <= latestEnd);
