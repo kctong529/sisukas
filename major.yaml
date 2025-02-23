@@ -138,7 +138,7 @@ curricula:
       - CS-E4650
       - CS-E5710
       - CS-E4840
-  - code: QuanTechT24
+  - code: QuanTech24
     name: Quantum Technology (2024-2026)
     courses:
       - MS-A0111
@@ -175,7 +175,7 @@ curricula:
       - PHYS-C0240
       - CS-C3260
       - CS-E4680
-  - code: QuanTechT22
+  - code: QuanTech22
     name: Quantum Technology (2022-2024)
     courses:
       - MS-A0111
