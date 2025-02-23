@@ -73,7 +73,322 @@ curricula:
       - ELEC‐C0302
       - ELEC-C9822
       - JOIN.bsc
-  - code: AR24
+  - code: DataSci24
+    name: Data Science (2024-2026)
+    courses:
+      - MS-A0111
+      - MS-A0011
+      - MS-A0503
+      - MS-A0402
+      - MS-A0211
+      - CS-A1110
+      - CS-A1120
+      - CS-C2105
+      - CS-A1140
+      - CS-A1155
+      - CS-A1160
+      - TU-A1300
+      - SCI-A1010
+      - LC-1117
+      - CS-C3120
+      - MS-C2105
+      - MS-C1620
+      - CS-C3240
+      - CS-C2160
+      - CS-E5480
+      - CS-E5710
+      - CS-C3250
+      - JOIN.bsc
+      - CS-E3190
+      - MS-C2128
+      - CS-E4715
+      - CS-E4650
+      - CS-E4890
+      - CS-E4800
+      - CS-E4840
+  - code: DataSci22
+    name: Data Science (2022-2024)
+    courses:
+      - MS-A0111
+      - MS-A0001
+      - MS-A0503
+      - MS-A0402
+      - MS-A0211
+      - CS-A1110
+      - CS-A1120
+      - CS-C2105
+      - CS-A1140
+      - CS-A1155
+      - SCI-A1010
+      - LC-1117
+      - TU-A1300
+      - CS-C3120
+      - MS-C1342
+      - MS-C1620
+      - CS-C3240
+      - CS-C2160
+      - CS-E4800
+      - CS-E5480
+      - CS-C3250
+      - JOIN.bsc
+      - CS-E3190
+      - MS-C2128
+      - MS-C2105
+      - CS-E4710
+      - CS-E4650
+      - CS-E5710
+      - CS-E4840
+  - code: QuanTechT24
+    name: Quantum Technology (2024-2026)
+    courses:
+      - MS-A0111
+      - MS-A0011
+      - MS-A0503
+      - MS-A0211
+      - MS-A0311
+      - CS-A1110
+      - CS-A1120
+      - CS-C3240
+      - CS-A1140
+      - ENG-A1003
+      - PHYS-C0110
+      - TU-A1300
+      - SCI-A1010
+      - LC-1117
+      - ELEC-C9420
+      - MS-C1350
+      - ELEC-D9130
+      - PHYS-C0256
+      - PHYS-C0253
+      - PHYS-C0250
+      - ELEC-C9440
+      - PHYS-C0258
+      - PHYS-C0254
+      - JOIN.bsc
+      - ELEC-E3240
+      - PHYS-E0525
+      - ELEC-E3230
+      - PHYS-E0410
+      - PHYS-E0554
+      - PHYS-E0555
+      - PHYS-E0556
+      - PHYS-C0240
+      - CS-C3260
+      - CS-E4680
+  - code: QuanTechT22
+    name: Quantum Technology (2022-2024)
+    courses:
+      - MS-A0111
+      - MS-A0001
+      - MS-A0503
+      - MS-A0211
+      - MS-A0311
+      - CS-A1110
+      - CS-A1120
+      - CS-C3240
+      - CS-A1140
+      - ENG-A1003
+      - SCI-A1010
+      - LC-1117
+      - TU-A1300
+      - CS-C1000
+      - CS-C3180
+      - AAN-C2007
+      - AAN-C2012
+      - TU-C2010
+      - ELEC-A7901
+      - ELEC-A4930
+      - 25C00200
+      - ELEC-C9420
+      - MS-C1350
+      - ELEC-C9430
+      - PHYS-C0256
+      - PHYS-C0252
+      - PHYS-C0250
+      - ELEC-C9440
+      - PHYS-C0258
+      - PHYS-C0254
+      - JOIN.bsc
+      - ELEC-E3240
+      - PHYS-E0525
+      - ELEC-E3230
+      - PHYS-E0414
+      - PHYS-E0541
+      - PHYS-C0240
+      - AXM-C0109
+      - CS-C3260
+      - CS-E4680
+  - code: CompEng24
+    name: Computational Engineering (2024-2026)
+    courses:
+      - MS-A0111
+      - MS-A0011
+      - MS-A0503
+      - MS-A0211
+      - MS-A0311
+      - CS-A1110
+      - CS-A1120
+      - CS-A1140
+      - ENG-A2001
+      - ENG-A1003
+      - PHYS-C0110
+      - TU-A1300
+      - SCI-A1010
+      - LC-1117
+      - COE-C1002
+      - COE-C1003
+      - COE-C2001
+      - COE-C2003
+      - COE-C2007
+      - COE-C2004
+      - COE-C3005
+      - COE-C3010
+      - JOIN.bsc
+      - COE-C2002
+      - MS-C2105
+      - MS-A0402
+      - MS-C2111
+      - MS-C1342
+      - MS-C1350
+      - MS-C2128
+      - ELEC-D9130
+  - code: CompEng22
+    name: Computational Engineering (2022-2024)
+    courses:
+      - MS-A0111
+      - MS-A0001
+      - MS-A0503
+      - MS-A0211
+      - MS-A0311
+      - CS-A1110
+      - CS-A1120
+      - CS-A1140
+      - ENG-A2001
+      - ENG-A1003
+      - SCI-A1010
+      - LC-1117
+      - TU-A1300
+      - CS-C1000
+      - ELEC-A7901
+      - ELEC-A4930
+      - 25C00200
+      - AXM-C0109
+      - COE-C1002
+      - COE-C1003
+      - COE-C2001
+      - COE-C2003
+      - COE-C2007
+      - COE-C2004
+      - COE-C3005
+      - COE-C3010
+      - JOIN.bsc
+      - COE-C2002
+      - MS-C2105
+      - MS-A0402
+      - MS-C2111
+      - MS-C1342
+      - MS-C1350
+      - MS-C2128
+      - ELEC-C943
+  - code: ChemEng24
+    name: Chemical Engineering (2024-2026)
+    courses:
+      - MS-A0111
+      - MS-A0011
+      - MS-A0503
+      - MS-A0211
+      - MS-C2105
+      - CS-A1110
+      - CS-A1120
+      - CS-A1140
+      - ENG-A2001
+      - ENG-A1003
+      - PHYS-C0110
+      - TU-A1300
+      - SCI-A1010
+      - LC-1117
+      - CHEM-A1030
+      - CHEM-A1211
+      - CHEM-C1240
+      - CHEM-A1290
+      - CHEM-C1300
+      - CHEM-C2340
+      - ELEC-D8710
+      - CHEM-C1230
+      - CHEM-C2330
+      - CHEM-C2310
+      - CHEM-A1630
+      - CHEM-E1180
+      - CHEM-C3420
+      - JOIN.bsc
+  - code: ChemEng22
+    name: Chemical Engineering (2022-2024)
+    courses:
+      - MS-A0111
+      - MS-A0001
+      - MS-A0503
+      - MS-A0211
+      - MS-C2105
+      - CS-A1110
+      - CS-A1120
+      - CS-A1140
+      - ENG-A2001
+      - ENG-A1003
+      - SCI-A1010
+      - LC-1117
+      - TU-A1300
+      - CS-C1000
+      - CS-E4840
+      - CS-C3180
+      - CS-E4400
+      - AAN-C2007
+      - AAN-C2012
+      - AXM-E0411
+      - ELEC-A7901
+      - ELEC-A4930
+      - 25C00200
+      - CHEM-C1220
+      - CHEM-C1240
+      - CHEM-C1300
+      - CHEM-C1230
+      - CHEM-C2310
+      - CHEM-C2330
+      - CHEM-C2340
+      - ELEC-D8710
+      - CHEM-E1100
+      - CHEM-C3420
+      - CHEM-A1610
+      - JOIN.bsc
+  - code: CompE24
+    name: Computer Engineering (2024-2026)
+    courses:
+      - MS-A0111
+      - MS-A0011
+      - MS-A0211
+      - MS-A0503
+      - ELEC-A7200
+      - CS-A1110
+      - CS-A1120
+      - ELEC-A7100
+      - CS-A1140
+      - CS-C3240
+      - PHYS-C0110
+      - SCI-A1010
+      - LC-1117
+      - TU-A1300
+      - ELEC-C9620
+      - ELEC-C7420
+      - ELEC-D9130
+      - ELEC-C7440
+      - ELEC-E7555
+      - ELEC-C5231
+      - ELEC-E9540
+      - ELEC-D9420
+      - ELEC-C9510
+      - ELEC-E8001
+      - ELEC-C7222
+      - JOIN.bsc
+  - code: AutoRobo24
     name: Automation and Robotics (2024-2026)
     courses:
       - MS-A0003
@@ -114,7 +429,7 @@ curricula:
       - ELEC-C1240
       - KON-C2003
       - ELEC-C9620
-  - code: IT24
+  - code: InfoTech24
     name: Information Technology (2024-2026)
     courses:
       - MS-A0003
