@@ -5,7 +5,7 @@ let periodElements = [];
 
 // Callback to update input with selected periods
 let updateInputCallback = () => {};
-let eventHandlers = [];
+const eventHandlers = [];
 
 // Initialize drag selection logic and setup event handlers
 export function initializeDragSelect(callback) {

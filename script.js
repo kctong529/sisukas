@@ -431,10 +431,10 @@ function getPeriodDates(periodName) {
     const year = periodName.slice(-7);  // Extract the last 7 characters for the year (e.g., "2024-25")
     const period = periodName.slice(0, -8).trim();  // Extract everything before the last space for the period (e.g., "Period IV")
     
-    let periodDates = null;
+    let periodData = null;
     
     // Find the period data based on year and period
-    const periodData = periodsData.periods
+    periodData = periodsData.periods
         .find(item => item.year === year)  // Find the correct year object
         ?.periods.find(p => p.period === period);  // Find the matching period within the year
 
