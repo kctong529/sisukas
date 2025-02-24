@@ -16,7 +16,7 @@ async function loadCourses() {
 }
 
 function displayCourses(courses, filtersApplied) {
-  const container = document.getElementById('courseList');
+  const container = document.getElementById('course-list');
   container.innerHTML = ''; // Clear previous results
 
   courses.forEach(course => {
@@ -38,7 +38,7 @@ function displayCourses(courses, filtersApplied) {
   });
 
   // Update the number of filtered courses
-  const courseCountDiv = document.getElementById('courseCount');
+  const courseCountDiv = document.getElementById('course-count');
   if (filtersApplied) {
     courseCountDiv.innerHTML = `Total filtered courses: ${courses.length}`;
   } else {
@@ -48,7 +48,7 @@ function displayCourses(courses, filtersApplied) {
 
 // Adds a new filter block
 function addFilter() {
-    const filterContainer = document.getElementById('filterContainer');
+    const filterContainer = document.getElementById('filter-container');
     const filterGroup = document.createElement('div');
     filterGroup.classList.add('filter-group');
 

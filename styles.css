@@ -1,5 +1,5 @@
+/* Combine shared html, body styles */
 html, body {
-/*    overflow-x: hidden;*/
     width: 100%;
     min-width: 100vw;
 }
@@ -15,24 +15,20 @@ body {
     justify-content: center; /* Center content horizontally */
     align-items: center;
     height: 100vh;
+    -ms-overflow-style: none; /* For Internet Explorer */
 }
 
 /* Hide the scrollbar but still allow scrolling */
 html {
-  scrollbar-width: none; /* For Firefox */
-}
-
-body {
-  -ms-overflow-style: none; /* For Internet Explorer */
+    scrollbar-width: none; /* For Firefox */
 }
 
 body::-webkit-scrollbar {
   display: none; /* For Chrome, Safari, and Edge */
 }
 
-#titleContainer {
+#title-container {
     float: right;
-    align-items: right;
     padding: 2px 5% 0 0;
 }
 
@@ -40,47 +36,97 @@ h1 {
     font-size: clamp(20px, 4vw, 48px);
 }
 
+/* Link Styling */
+a {
+    color: #4a90e2;
+    text-decoration: none;
+    transition: color 0.3s, transform 0.2s;
+}
+
+button a {
+    color: inherit;
+    font-weight: normal;
+}
+
+h2 a {
+    color: #888;
+}
+
+a:visited {
+    color: #6f42c1;
+}
+
+a:active {
+    color: #b32d35;
+    transform: scale(1);
+}
+
+a:focus {
+    outline: 2px solid #4a90e2;
+    outline-offset: 2px;
+}
+
+a:hover {
+    color: #d9534f;
+    transform: scale(1.05);
+}
+
+.btn a {
+    color: inherit;
+    font-weight: normal;
+}
+
 h2 {
     font-size: clamp(10px, 2vw, 24px);
     font-weight: normal;
     margin-top: clamp(-36px, -3vw, -12px);
-    a, a:visited {
-        color: #888888;
-    }
+}
 
-    a:hover {
-        color: #d9534f;
-    }
+h2 a:visited {
+    color: #888;
+}
+
+h2 a:hover {
+    color: #d9534f;
+}
+
+button a:hover, .btn a:hover {
+    text-decoration: underline;
+}
+
+a:visited:hover {
+    color: #d9534f;
+    transform: scale(1.05);
 }
 
 #dedication {
     font-family: cursive;
     font-size: 1.2em;
-    color: #888888;
+    color: #888;
     padding-left: 2%;
 }
 
-#footerText {
+#footer-text {
     font-size: 0.9em;
     color: #777;
     margin: 2%;
 }
 
 /* Container Styling */
-#globalContainer {
+#global-container {
     position: absolute;
     width: 100%;
     margin-top: 9em;
 }
 
-#filterContainer, #searchContainer {
+#filter-container, #search-container {
     display: flex;
     flex-direction: column;
     padding-left: 1.7%;
     padding-bottom: 12px;
 }
 
-#courseCount {
+#course-count {
     position: relative;
     float: right;
     margin: -20px 15px 0 0;
@@ -91,12 +137,7 @@ h2 {
     position: absolute;
 }
 
-.filter-field {
-    margin-left: 4.3em;
-}
-
 .filter-input, button, select, input{
-    -webkit-appearance: none; /* Remove default iOS styling */
     display: inline-block;
     background-color: #fff;
     appearance: none;
@@ -113,7 +154,7 @@ button, select, .filter-input {
 
 button, select, input {
     box-sizing: border-box;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
     border: 1px solid #ddd;
     border-radius: 4px;
     padding-left: 0.7em;
@@ -121,38 +162,39 @@ button, select, input {
 }
 
 input[type="date"] {
-    -webkit-align-items: center;
-    display: -webkit-inline-flex;
+    align-items: center;
+    display: inline-flex;
 }
 
 /* Button and Input Active/Focus States */
 button:active, select:active, button:focus, select:focus, input:focus {
     border-color: #4a90e2;
-    box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+    box-shadow: 0 0 5px rgb(74 144 226 / 50%);
     outline: none;
 }
 
 /* Filter Element Widths */
 .filter-field {
-  max-width: 120px;
-  min-width: 80px;
+    margin-left: 4.3em;
+    max-width: 120px;
+    min-width: 80px;
 }
 
 .filter-type {
-  max-width: 308px;
-  min-width: 80px;
-  width: 26%;
+    max-width: 308px;
+    min-width: 80px;
+    width: 26%;
 }
 
 .filter-input {
-  max-width: 320px;
-  min-width: 120px;
-  width: 20%;
+    max-width: 320px;
+    min-width: 120px;
+    width: 20%;
 }
 
 .filter-value {
-  width: 100%; /* The input field fills the whole width of the container */
-  box-sizing: border-box; /* Ensure padding does not affect width */
+    width: 100%; /* The input field fills the whole width of the container */
+    box-sizing: border-box; /* Ensure padding does not affect width */
 }
 
 .switch {
@@ -173,16 +215,13 @@ button:active, select:active, button:focus, select:focus, input:focus {
 .slider {
     position: absolute;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background-color: #ccc;
     transition: .4s;
     border-radius: 20px;
 }
 
-.slider:before {
+.slider::before {
     position: absolute;
     content: "";
     height: 14px;
@@ -236,7 +275,7 @@ button:active, select:active, button:focus, select:focus, input:focus {
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
     border: 1px solid #ddd;
     border-radius: 4px;
     padding-left: 0.7em;
@@ -254,7 +293,7 @@ button:active, select:active, button:focus, select:focus, input:focus {
 .period:hover {
     background-color: #eee;
     border-color: #888;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
 }
 
 /* Selected state */
@@ -262,7 +301,7 @@ button:active, select:active, button:focus, select:focus, input:focus {
     background-color: #08D;
     color: white;
     border-color: #DDD;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 8px rgb(0 0 0 / 20%);
 }
 
 /* Active state during dragging (optional) */
@@ -281,7 +320,7 @@ input:checked + .slider {
     background-color: #4caf50;
 }
 
-input:checked + .slider:before {
+input:checked + .slider::before {
     transform: translateX(20px);
 }
 
@@ -317,58 +356,23 @@ th:nth-child(7), td:nth-child(7) { width: 8%; }
 th:nth-child(8), td:nth-child(8) { width: 10%; }
 th:nth-child(9), td:nth-child(9) { width: 8%; }
 th:nth-child(10), td:nth-child(10) { width: 25%; }
-td:nth-child(10) { text-align: left; padding-left: 3px; }
+
+td:nth-child(10) {
+    text-align: left;
+    padding-left: 3px; }
 
 tr:hover td {
     background-color: #f1f1f1;
 }
 
-tbody tr:last-child td {
-}
-
 /* Empty Table Message */
-#courseList {
+#course-list {
     text-align: center;
 }
 
-#courseList p {
+#course-list p {
     font-size: 1.2em;
     color: #999;
-}
-
-/* Link Styling */
-a {
-    color: #4a90e2;
-    text-decoration: none;
-    transition: color 0.3s, transform 0.2s;
-}
-
-a:hover, a:visited:hover {
-    color: #d9534f;
-    transform: scale(1.05);
-}
-
-a:active {
-    color: #b32d35;
-    transform: scale(1);
-}
-
-a:focus {
-    outline: 2px solid #4a90e2;
-    outline-offset: 2px;
-}
-
-a:visited {
-    color: #6f42c1;
-}
-
-button a, .btn a {
-    color: inherit;
-    font-weight: normal;
-}
-
-button a:hover, .btn a:hover {
-    text-decoration: underline;
 }
 
 .abbreviated-text {
@@ -380,7 +384,7 @@ button a:hover, .btn a:hover {
 }
 
 /* Responsive Styling */
-@media (max-width: 900px) {
+@media (width <= 900px) {
   th .full-text {
     display: none;
   }
@@ -391,7 +395,7 @@ button a:hover, .btn a:hover {
 }
 
 /* Custom Responsive Styling for .period */
-@media (max-width: 620px) {
+@media (width <= 620px) {
     .period .full-text {
         display: none;
     }
