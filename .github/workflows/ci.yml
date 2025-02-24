@@ -28,7 +28,7 @@ jobs:
         run: |
           npm init -y
           npm install --save-dev eslint stylelint htmlhint stylelint-config-standard
-          npm install --save-dev jest babel-jest @babel/core @babel/preset-env
+          npm install --save-dev jest jest-environment-jsdom babel-jest @babel/core @babel/preset-env
 
       - name: Enable ES Modules in package.json
         run: |
@@ -36,7 +36,7 @@ jobs:
 
       - name: Install dependencies
         run: npm install
-        
+
       - name: Lint HTML
         run: npx htmlhint "**/*.html"
 
