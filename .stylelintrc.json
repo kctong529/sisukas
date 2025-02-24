@@ -1,0 +1,7 @@
+{
+  "extends": "stylelint-config-standard",
+  "rules": {
+    "string-quotes": "double",
+    "block-no-empty": true
+  }
+}
