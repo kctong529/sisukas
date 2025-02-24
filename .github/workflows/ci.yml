@@ -29,6 +29,7 @@ jobs:
           npm init -y
           npm install --save-dev eslint stylelint htmlhint stylelint-config-standard
           npm install --save-dev jest jest-environment-jsdom babel-jest @babel/core @babel/preset-env
+          npm install --save-dev js-yaml
 
       - name: Enable ES Modules in package.json
         run: |
@@ -47,4 +48,4 @@ jobs:
         run: npx eslint "**/*.js"
 
       - name: Run Unit Tests
-        run: npx jest --coverage
+        run: node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage

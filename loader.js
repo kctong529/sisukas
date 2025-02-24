@@ -1,4 +1,13 @@
-import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
+import { getYaml } from './yamlLoader.js';
+
+let yaml;
+
+async function loadYaml() {
+  if (!yaml) {  // Only load if not already loaded
+    yaml = await getYaml();
+  }
+  return yaml;
+}
 
 // Generic data structures to store program and course data
 export let curriculaMap = {
