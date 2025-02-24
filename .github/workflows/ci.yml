@@ -27,7 +27,7 @@ jobs:
       - name: Install Dependencies
         run: |
           npm init -y
-          npm install eslint stylelint htmlhint jest babel-jest @babel/core @babel/preset-env --save-dev
+          npm install eslint stylelint htmlhint jest stylelint-config-standard babel-jest @babel/core @babel/preset-env --save-dev
 
       - name: Lint HTML
         run: npx htmlhint "**/*.html"
