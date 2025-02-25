@@ -1,4 +1,4 @@
-import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/+esm';
+import yaml from 'js-yaml';
 
 // Generic data structures to store program and course data
 export let curriculaMap = {
@@ -12,27 +12,56 @@ export let courseIndex = {
 
 export let periodsData = [];
 
-// Helper function to load and process any YAML file
-const loadYamlFile = async (filePath) => {
-    const cachedTimestamp = localStorage.getItem(`${filePath}Timestamp`);
-    const timestamp = cachedTimestamp || new Date().toUTCString();
-    const urlWithTimestamp = `${filePath}?timestamp=${timestamp}`;
+// Fetches the YAML data from a file, appending a timestamp to the URL
+export const fetchYaml = async (url) => {
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+    return { text, headers: response.headers };
+  } catch (error) {
+    console.error(`Error fetching ${url}:`, error);
+    return null;
+  }
+};
 
-    try {
-        const response = await fetch(urlWithTimestamp);
-        const text = await response.text();
-        const data = yaml.load(text);
+// Retrieves the cached timestamp from localStorage
+export const getCachedTimestamp = (filePath) => {
+  return localStorage.getItem(`${filePath}Timestamp`);
+};
 
-        const fileTimestamp = response.headers.get('Last-Modified');
-        if (fileTimestamp) {
-            localStorage.setItem(`${filePath}Timestamp`, fileTimestamp);
-        }
+// Stores the new timestamp in localStorage
+export const setCachedTimestamp = (filePath, timestamp) => {
+  localStorage.setItem(`${filePath}Timestamp`, timestamp);
+};
 
-        return data || {};
-    } catch (error) {
-        console.error(`Error loading ${filePath}:`, error);
-        return {};
-    }
+// Processes YAML data into an object (using js-yaml)
+export const parseYaml = (yamlText) => {
+  try {
+    return yaml.load(yamlText);
+  } catch (error) {
+    console.error('Error parsing YAML:', error);
+    return {};
+  }
+};
+
+// High-level loadYamlFile function utilizing the above smaller functions
+export const loadYamlFile = async (filePath) => {
+  const cachedTimestamp = getCachedTimestamp(filePath);
+
+  // Fetch the YAML file with timestamp for cache invalidation
+  const { text: yamlText, headers } = await fetchYaml(`${filePath}?timestamp=${cachedTimestamp || new Date().toUTCString()}`);
+  if (!yamlText) return {};
+
+  // Parse the YAML content
+  const data = parseYaml(yamlText);
+
+  // Check for the 'Last-Modified' header to decide if we need to update the cache
+  const fileTimestamp = headers.get('Last-Modified');
+  if (fileTimestamp && fileTimestamp !== cachedTimestamp) {
+    setCachedTimestamp(filePath, fileTimestamp);  // Update cache with the new timestamp
+  }
+
+  return data;
 };
 
 // Load programs (major/minor) data
@@ -41,8 +70,8 @@ export async function loadPrograms() {
     curriculaMap = { major: {}, minor: {} };
     courseIndex = { major: {}, minor: {} };
 
-    const majorPrograms = await loadYamlFile('major.yaml');
-    const minorPrograms = await loadYamlFile('minor.yaml');
+    const majorPrograms = await loadYamlFile('data/major.yaml');
+    const minorPrograms = await loadYamlFile('data/minor.yaml');
 
     // Function to process and categorize program data
     const processPrograms = (programsArray, type) => {
@@ -73,7 +102,7 @@ export async function loadPrograms() {
 
 // Load academic periods (e.g., terms or semesters) data
 export async function loadPeriods() {
-    periodsData = await loadYamlFile('periods.yaml');
+    periodsData = await loadYamlFile('data/periods.yaml');
 
     // Populate the periods container in the UI
     renderPeriods();
