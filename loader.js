@@ -1,5 +1,5 @@
 import { getYaml } from './yamlLoader.js';
-let yaml = await getYaml();
+const yaml = await getYaml();
 
 // Generic data structures to store program and course data
 export let curriculaMap = {
