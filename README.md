@@ -73,6 +73,7 @@ To test the application on your local machine, follow these steps:
 
 - [ ] Refactor the file structure to improve maintainability. https://github.com/kctong529/sisukas/issues/3
 - [ ] Enable filtering by course descriptions. https://github.com/kctong529/sisukas/issues/4
+- [ ] Enable filtering by organization.
 - [x] Support filtering by periods based on mapping to dates. https://github.com/kctong529/sisukas/issues/5
 - [x] Add predefined filters for major and minor curricula. https://github.com/kctong529/sisukas/issues/6
 - [ ] Add exclusion criteria such as "Not a math course"
@@ -95,6 +96,11 @@ To test the application on your local machine, follow these steps:
 - [ ] Evaluate the feasibility and necessity of fetching the latest course information from the Aalto Open API, balancing between real-time updates and caching.
 - [ ] Support importing courses from a long string or fuzzy copied text.
 - [ ] Export filtered results with customizable fields (JSON, CSV, Excel).
+
+### Development & Maintenance  
+- [ ] Draft guidelines for Package Management (including `npm ci` and `js-yaml` usage).
+- [ ] Evaluate and decide between test packages (choose Vitest after trying Jest).
+- [ ] Create a draft set of unit tests with comprehensive coverage.
 
 ## Contributing
 
