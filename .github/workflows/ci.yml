@@ -49,3 +49,25 @@ jobs:
 
       - name: Run Unit Tests
         run: node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' # Deploy only when pushed to main branch
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Flyctl
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          export PATH="$HOME/.fly/bin:$PATH"
+
+      - name: Deploy to Fly.io
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          fly auth token $FLY_API_TOKEN
+          fly deploy --config fly.toml --remote-only
+          
