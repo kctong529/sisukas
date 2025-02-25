@@ -30,13 +30,13 @@ jobs:
           npm ci
 
       - name: Lint HTML
-        run: npx htmlhint "**/*.html"
+        run: npm run htmllint
 
       - name: Lint CSS
-        run: npx stylelint "**/*.css"
+        run: npm run stylelint
 
       - name: Lint JavaScript
-        run: npx eslint "**/*.js"
+        run: npm run eslint
 
       - name: Run Unit Tests
         run: npm run test

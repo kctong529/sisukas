@@ -10,7 +10,11 @@
   },
   "scripts": {
     "test": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "htmllint": "htmlhint '**/*.html' --config config/.htmlhintrc.json",
+    "stylelint": "stylelint '**/*.css' --config config/.stylelintrc.json",
+    "eslint": "eslint . --config config/eslint.config.js"
+    
   },
   "dependencies": {
     "js-yaml": "^4.1.0"
