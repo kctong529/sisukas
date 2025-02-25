@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { expect, test } from 'vitest';
 import { createSelect } from '../domUtils.js';
 
 test('createSelect generates a select element with the correct options', () => {
