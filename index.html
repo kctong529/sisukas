@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sisukas</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css?v=0.5">
+</head>
+<body>
+    <div id="title-container">
+        <h1>Sisukas</h1>
+        <h2><a href="https://github.com/kctong529/sisukas">since 2025</a></h2>
+    </div>
+    <p id="dedication">// Dedicated to every cursed soul in Hel</p>
+    <div id="global-container">
+        <div id="periods-container">
+            <span id="year">2024-25</span>
+            <div class="period" data-period="Period I">Period I</div>
+            <div class="period" data-period="Period II">Period II</div>
+            <div class="period" data-period="Period III">Period III</div>
+        </div>
+        <div id="filter-container">
+            <!-- Filter rules will be added here dynamically -->
+        </div>
+
+        <div id="search-container">
+            <div id="searchGroup">
+                <button onclick="addFilter()">➕ Add Rule</button>
+                <button onclick="filterCourses()">🔍 Search</button>
+                <!-- Toggle Switch for Showing Unique Courses -->
+                <label class="switch">
+                    <input type="checkbox" id="uniqueToggle">
+                    <span class="slider round"></span>
+                </label>
+                <span class="toggle-label">Unique Only</span>
+            </div>
+        </div>
+
+        <div id="course-count"></div>
+        <table>
+            <thead>
+                <tr>
+                    <th><span class="full-text">Course Code</span>
+                        <span class="abbreviated-text">code</span></th>
+                    <th><span class="full-text">Course Name</span>
+                        <span class="abbreviated-text">name</span></th>
+                    <th><span class="full-text">Teacher(s)</span>
+                        <span class="abbreviated-text">teachr</span></th>
+                    <th><span class="full-text">Credits</span>
+                        <span class="abbreviated-text">cr</span></th>
+                    <th><span class="full-text">Language</span>
+                        <span class="abbreviated-text">lang</span></th>
+                    <th><span class="full-text">Start Date</span>
+                        <span class="abbreviated-text">start</span></th>
+                    <th><span class="full-text">End Date</span>
+                        <span class="abbreviated-text">end</span></th>
+                    <th><span class="full-text">Enroll From</span>
+                        <span class="abbreviated-text">frm</span></th>
+                    <th><span class="full-text">Enroll To</span>
+                        <span class="abbreviated-text">to</span></th>
+                    <th><span class="full-text">Prerequisites</span>
+                        <span class="abbreviated-text">preq</span></th>
+                </tr>
+            </thead>
+            <tbody id="course-list">
+                <!-- Filtered results will be inserted here -->
+            </tbody>
+        </table>
+        <footer>
+            <p id="footer-text">© 2025 Sisukas. All rights reserved.</p>
+        </footer>
+
+    </div>
+
+    <script type="module" src="src/script.js?v=0.5"></script>
+
+</body>
+</html>
