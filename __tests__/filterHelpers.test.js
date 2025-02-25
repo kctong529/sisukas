@@ -129,182 +129,207 @@ describe('filterHelpers', () => {
     };
 
     describe('applyCodeFilter', () => {
-        it('should match course code (contains)', () => {
+        it('should return true if course code contains the specified value', () => {
             expect(applyCodeFilter(course, { type: 'contains', value: 'CS' })).toBe(true);
         });
 
-        it('should not match course code (contains)', () => {
+        it('should return false if course code does not contain the specified value', () => {
             expect(applyCodeFilter(course, { type: 'contains', value: 'CSC' })).toBe(false);
         });
 
-        it('should match course code (exact)', () => {
+        it('should be case insensitive when checking if course code contains the specified value', () => {
+            expect(applyCodeFilter(course, { type: 'contains', value: 'cs' })).toBe(true);
+        });
+
+        it('should return true if course code matches exactly', () => {
             expect(applyCodeFilter(course, { type: 'exact', value: 'CS-A1120' })).toBe(true);
         });
 
-        it('should not match incorrect course code', () => {
+        it('should return false if course code does not match exactly', () => {
             expect(applyCodeFilter(course, { type: 'exact', value: 'CS-A1110' })).toBe(false);
+        });
+
+        it('should be case insensitive when checking for exact match', () => {
+            expect(applyCodeFilter(course, { type: 'exact', value: 'cs-a1120' })).toBe(true);
         });
     });
 
+
     describe('applyNameFilter', () => {
-        it('should match course name (contains)', () => {
+        it('should return true if course name contains the specified value', () => {
             expect(applyNameFilter(course, { type: 'contains', value: 'Prog' })).toBe(true);
         });
 
-        it('should not match course name (contains)', () => {
+        it('should be case insensitive when checking if course name contains the specified value', () => {
+            expect(applyNameFilter(course, { type: 'contains', value: 'prog' })).toBe(true);
+        });
+
+        it('should return false if course name does not contain the specified value', () => {
             expect(applyNameFilter(course, { type: 'contains', value: 'Computer Programming' })).toBe(false);
         });
 
-        it('should match course name (exact)', () => {
+        it('should return true if course name matches exactly', () => {
             expect(applyNameFilter(course, { type: 'exact', value: 'Programming 2, Lecture' })).toBe(true);
         });
 
-        it('should not match incorrect course name', () => {
+        it('should be case insensitive when checking for exact name match', () => {
+            expect(applyNameFilter(course, { type: 'exact', value: 'programming 2, lecture' })).toBe(true);
+        });
+
+        it('should return false if course name does not match exactly', () => {
             expect(applyNameFilter(course, { type: 'exact', value: 'Signals and Systems, Lecture' })).toBe(false);
         });
     });
 
     describe('applyTeacherFilter', () => {
-        it('should match teacher name (contains)', () => {
+        it('should return true if teacher name contains the specified value', () => {
             expect(applyTeacherFilter(course, { type: 'contains', value: 'Lukas' })).toBe(true);
         });
 
-        it('should match teacher name (exact)', () => {
+        it('should be case insensitive when checking if teacher name contains the specified value', () => {
+            expect(applyTeacherFilter(course, { type: 'contains', value: 'lukas' })).toBe(true);
+        });
+
+        it('should return true if teacher name matches exactly', () => {
             expect(applyTeacherFilter(course, { type: 'exact', value: 'Johan Lukas Ahrenberg' })).toBe(true);
         });
 
-        it('should not match incorrect teacher name', () => {
+        it('should be case insensitive when checking for exact teacher name match', () => {
+            expect(applyTeacherFilter(course, { type: 'exact', value: 'johan lukas ahrenberg' })).toBe(true);
+        });
+
+        it('should return false if teacher name does not match exactly', () => {
             expect(applyTeacherFilter(course, { type: 'exact', value: 'Stephan' })).toBe(false);
         });
     });
 
     describe('applyLanguageFilter', () => {
-        it('should match language code', () => {
+        it('should return true if course language code matches the specified value', () => {
             expect(applyLanguageFilter(course, { value: 'en' })).toBe(true);
         });
 
-        it('should not match incorrect language code', () => {
+        it('should return false if course language code does not match the specified value', () => {
             expect(applyLanguageFilter(course, { value: 'sv' })).toBe(false);
         });
     });
 
     describe('applyStartDateFilter', () => {
-        it('should match start date after', () => {
+        it('should return true if course start date is after the specified date', () => {
             expect(applyStartDateFilter(course, { type: 'after', value: '2025-01-01' })).toBe(true);
         });
 
-        it('should not match start date before', () => {
+        it('should return false if course start date is before the specified date', () => {
             expect(applyStartDateFilter(course, { type: 'before', value: '2025-01-01' })).toBe(false);
         });
     });
 
     describe('applyEndDateFilter', () => {
-        it('should match end date before', () => {
+        it('should return true if course end date is before the specified date', () => {
             expect(applyEndDateFilter(course, { type: 'before', value: '2025-06-01' })).toBe(true);
         });
 
-        it('should not match end date after', () => {
+        it('should return false if course end date is after the specified date', () => {
             expect(applyEndDateFilter(course, { type: 'after', value: '2025-06-01' })).toBe(false);
         });
     });
 
     describe('applyEnrollmentFilter', () => {
-        it('should match enrollment after', () => {
+        it('should return true if enrollment start date is after the specified date', () => {
             expect(applyEnrollmentFilter(course, { type: 'after', value: '2025-01-25' })).toBe(true);
         });
 
-        it('should not match enrollment after', () => {
+        it('should return false if enrollment start date is after the specified date', () => {
             expect(applyEnrollmentFilter(course, { type: 'after', value: '2025-05-01' })).toBe(false);
         });
 
-        it('should match enrollment before', () => {
+        it('should return true if enrollment end date is before the specified date', () => {
             expect(applyEnrollmentFilter(course, { type: 'before', value: '2025-03-05' })).toBe(true);
         });
 
-        it('should not match enrollment before', () => {
+        it('should return false if enrollment end date is before the specified date', () => {
             expect(applyEnrollmentFilter(course, { type: 'before', value: '2025-01-01' })).toBe(false);
         });
 
-        it('should match enrollment on', () => {
+        it('should return true if the specified date is within the enrollment period', () => {
             expect(applyEnrollmentFilter(course, { type: 'on', value: '2025-02-10' })).toBe(true);
         });
 
-        it('should not match enrollment outside range', () => {
+        it('should return false if the specified date is outside the enrollment period', () => {
             expect(applyEnrollmentFilter(course, { type: 'on', value: '2025-03-10' })).toBe(false);
         });
     });
 
     describe('applyCreditsFilter', () => {
-        it('should match exact credits', () => {
+        it('should return true for matching credits', () => {
             expect(applyCreditsFilter(course, { type: 'is', value: '5' })).toBe(true);
         });
 
-        it('should not match different credits', () => {
+        it('should return false for non-matching credits', () => {
             expect(applyCreditsFilter(course, { type: 'is', value: '6' })).toBe(false);
         });
     });
 
     describe('applyLevelFilter', () => {
-        it('should match level', () => {
+        it('should return true for matching level', () => {
             expect(applyLevelFilter(course, { value: 'Intermediate Studies' })).toBe(true);
         });
 
-        it('should not match incorrect level', () => {
+        it('should return false for non-matching level', () => {
             expect(applyLevelFilter(course, { value: 'Basic Studies' })).toBe(false);
         });
     });
 
     describe('applyCurriculumFilter', () => {
-        it('should not match major course', () => {
+        it('should return false for non-matching major curriculum', () => {
             expect(applyCurriculumFilter(course, { type: "DSD22", value: "DSD25" }, 'major', curriculaMap)).toBe(false);
         });
 
-        it('should match minor course', () => {
+        it('should return true for matching minor curriculum', () => {
             expect(applyCurriculumFilter(course, { type: "CS22 (SCI3031)", value: "CS" }, 'minor', curriculaMap)).toBe(true);
         });
 
-        it('should not match an unknown curriculum', () => {
+        it('should return false for unknown curriculum', () => {
             expect(applyCurriculumFilter(course, { type: "ABC", value: "ABC" }, 'degree', curriculaMap)).toBe(false);
         });
     });
 
     describe('applyPeriodFilter', () => {
-        it('should match period is in', () => {
+        it('should return true when period is in the specified range', () => {
             const rule = { type: 'is in', value: 'Period III 2024-25, Period IV 2024-25, Period V 2024-25' };
             expect(applyPeriodFilter(course, rule, periodsData)).toBe(true);
         });
 
-        it('should not match too narrow periods', () => {
+        it('should return false when period is not in the specified range', () => {
             const rule = { type: 'is in', value: 'Period IV 2024-25' };
             expect(applyPeriodFilter(course, rule, periodsData)).toBe(false);
         });
 
-        it('should match period equals', () => {
+        it('should return true for exact period match', () => {
             const rule = { type: 'equals', value: 'Period IV 2024-25, Period V 2024-25' };
             expect(applyPeriodFilter(course, rule, periodsData)).toBe(true);
         });
 
-        it('should not match unequal periods', () => {
+        it('should return false for unequal period match', () => {
             const rule = { type: 'equals', value: 'Period III 2024-25, Period IV 2024-25, Period V 2024-25' };
             expect(applyPeriodFilter(course, rule, periodsData)).toBe(false);
         });
 
-        it('should match period overlaps', () => {
+        it('should return true when period overlaps', () => {
             const rule = { type: 'overlaps', value: 'Period IV 2024-25' };
             expect(applyPeriodFilter(course, rule, periodsData)).toBe(true);
         });
 
-        it('should not match period without overlaps', () => {
+        it('should return false when period does not overlap', () => {
             const rule = { type: 'overlaps', value: 'Period III 2024-25' };
             expect(applyPeriodFilter(course, rule, periodsData)).toBe(false);
         });
 
-        it('should not match undefined period', () => {
+        it('should return false for undefined period', () => {
             const rule = { type: 'overlaps', value: 'Period VI 2024-25' };
             expect(applyPeriodFilter(course, rule, periodsData)).toBe(false);
         });
 
-        it('should not match period with undefined type', () => {
+        it('should return false for unsupported period type', () => {
             const rule = { type: 'outside', value: 'Period V 2024-25' };
             expect(applyPeriodFilter(course, rule, periodsData)).toBe(false);
         });
