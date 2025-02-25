@@ -1,8 +1,3 @@
-import { jest } from '@jest/globals';
-
-// Mock yamlLoader.js
-jest.mock('../__mocks__/yamlLoader.js');
-
 const allowedCourses = [
   'MS-A0111', 'MS-A0011', 'MS-A0211', 'MS-A0503', 
   'ELEC-A7200', 'CS-A1110', 'ELEC-A7100', 'ELEC-C9801', 

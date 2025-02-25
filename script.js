@@ -24,7 +24,6 @@ async function loadCourses() {
         await loadPrograms(); // Load JSON
         await loadPeriods();
         displayCourses(courses, false); // Display all initially
-        console.log(curriculaMap);
     } catch (error) {
         console.error("Error loading JSON:", error);
     }
@@ -381,8 +380,8 @@ function applyRule(course, rule) {
         case "credits": return applyCreditsFilter(course, rule);
         case "level": return applyLevelFilter(course, rule);
         case "period": return applyPeriodFilter(course, rule, periodsData);
-        case "major": return applyCurriculumFilter(course, rule, "major");
-        case "minor": return applyCurriculumFilter(course, rule, "minor");
+        case "major": return applyCurriculumFilter(course, rule, "major", curriculaMap);
+        case "minor": return applyCurriculumFilter(course, rule, "minor", curriculaMap);
     }
 }
 
