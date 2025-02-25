@@ -1,8 +1,5 @@
 {
   "type": "module",
-  "dependencies": {
-    "js-yaml": "^4.1.0"
-  },
   "devDependencies": {
     "eslint": "^9.21.0",
     "htmlhint": "^1.1.4",
@@ -14,5 +11,8 @@
   "scripts": {
     "test": "vitest",
     "coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
   }
 }

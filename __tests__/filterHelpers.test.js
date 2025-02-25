@@ -13,7 +13,7 @@ import {
     applyCurriculumFilter,
     applyPeriodFilter,
     isCourseInCurriculum
-} from '../filterHelpers';
+} from '../src/filterHelpers';
 
 describe('filterHelpers', () => {
     const course = {

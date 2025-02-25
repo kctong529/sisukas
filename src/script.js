@@ -1,6 +1,6 @@
-import { loadPrograms, loadPeriods, periodsData, curriculaMap } from './loader.js?v=0.3';
-import { initializeDragSelect, removeEventHandlers } from './dragSelect.js?v=0.2';
-import { createSelect } from './domUtils.js?v=0.2';
+import { loadPrograms, loadPeriods, periodsData, curriculaMap } from './loader.js?v=0.5';
+import { initializeDragSelect, removeEventHandlers } from './dragSelect.js?v=0.5';
+import { createSelect } from './domUtils.js?v=0.5';
 import { 
     applyCodeFilter,
     applyNameFilter,
@@ -13,7 +13,7 @@ import {
     applyLevelFilter,
     applyPeriodFilter,
     applyCurriculumFilter
-} from './filterHelpers.js?v=0.1';
+} from './filterHelpers.js?v=0.5';
 
 let courses = [];
 
