@@ -1,5 +1,19 @@
-import { loadPrograms, loadPeriods, periodsData, curriculaMap, isCourseInCurriculum } from './loader.js?v=0.2';
+import { loadPrograms, loadPeriods, periodsData, curriculaMap } from './loader.js?v=0.3';
 import { initializeDragSelect, removeEventHandlers } from './dragSelect.js?v=0.2';
+import { createSelect } from './domUtils.js?v=0.2';
+import { 
+    applyCodeFilter,
+    applyNameFilter,
+    applyTeacherFilter,
+    applyLanguageFilter,
+    applyStartDateFilter,
+    applyEndDateFilter,
+    applyEnrollmentFilter,
+    applyCreditsFilter,
+    applyLevelFilter,
+    applyPeriodFilter,
+    applyCurriculumFilter
+} from './filterHelpers.js?v=0.1';
 
 let courses = [];
 
@@ -10,6 +24,7 @@ async function loadCourses() {
         await loadPrograms(); // Load JSON
         await loadPeriods();
         displayCourses(courses, false); // Display all initially
+        console.log(curriculaMap);
     } catch (error) {
         console.error("Error loading JSON:", error);
     }
@@ -97,19 +112,6 @@ function addFilter() {
 
     // Call changeInputField to initialize the input and operator dropdown
     changeInputField(fieldSelect, inputField, typeSelect);
-}
-
-// Creates a <select> element with options from a provided array of objects
-function createSelect(className, onChange, options) {
-    const select = document.createElement('select');
-    select.classList.add(className);
-    if (onChange) select.setAttribute('onchange', onChange); // Set onchange if provided
-
-    select.innerHTML = options.map(option => 
-        `<option value="${option.value}">${option.text}</option>`
-    ).join('');
-    
-    return select;
 }
 
 // Handles field change event and updates the filter
@@ -369,79 +371,19 @@ function applyFilters(course, filterRules) {
 
 function applyRule(course, rule) {
     switch (rule.field) {
-        case "code": return rule.type === "contains" ? course.code.toLowerCase().includes(rule.value.toLowerCase()) : course.code.toLowerCase() === rule.value.toLowerCase();
-        case "name": return rule.type === "contains" ? course.name.en.toLowerCase().includes(rule.value.toLowerCase()) : course.name.en.toLowerCase() === rule.value.toLowerCase();
-        case "teacher": return course.teachers.some(teacher => rule.type === "contains" ? teacher.toLowerCase().includes(rule.value) : teacher.toLowerCase() === rule.value);
-        case "language": return course.languageOfInstructionCodes.includes(rule.value);
-        case "startDate": return rule.type === "after" ? new Date(course.startDate) > new Date(rule.value) : rule.type === "before" ? new Date(course.startDate) < new Date(rule.value) : course.startDate.includes(rule.value);
-        case "endDate": return rule.type === "after" ? new Date(course.endDate) > new Date(rule.value) : rule.type === "before" ? new Date(course.endDate) < new Date(rule.value) : course.endDate.includes(rule.value);
-        case "credits": return rule.type === "is" ? course.credits.min === parseInt(rule.value) : course.credits.min >= parseInt(rule.value);
-        case "level": return course.summary.level?.en === rule.value;
-        case "major": return isCourseInCurriculum(course.code, rule.value, "major") || isCourseInCurriculum(course.code, rule.type, "major");
-        case "minor": return isCourseInCurriculum(course.code, rule.value, "minor") || isCourseInCurriculum(course.code, rule.type, "minor");
-        case "period": return applyPeriodFilter(course, rule);
-        case "enrollment": return rule.type === "after" 
-            ? new Date(course.enrolmentStartDate) > new Date(rule.value) 
-            : rule.type === "before" 
-            ? new Date(course.enrolmentEndDate) < new Date(rule.value) 
-            : new Date(course.enrolmentStartDate) <= new Date(rule.value) && new Date(course.enrolmentEndDate) >= new Date(rule.value);
+        case "code": return applyCodeFilter(course, rule);
+        case "name": return applyNameFilter(course, rule);
+        case "teacher": return applyTeacherFilter(course, rule);
+        case "language": return applyLanguageFilter(course, rule);
+        case "startDate": return applyStartDateFilter(course, rule);
+        case "endDate": return applyStartDateFilter(course, rule);
+        case "enrollment": return applyEnrollmentFilter(course, rule);
+        case "credits": return applyCreditsFilter(course, rule);
+        case "level": return applyLevelFilter(course, rule);
+        case "period": return applyPeriodFilter(course, rule, periodsData);
+        case "major": return applyCurriculumFilter(course, rule, "major");
+        case "minor": return applyCurriculumFilter(course, rule, "minor");
     }
-}
-
-// Apply period filter based on the rule value
-function applyPeriodFilter(course, rule) {
-    // Extract the period names from the rule value (e.g., "Period III 2024-25, Period IV 2024-25, Period V 2024-25")
-    const periodNames = rule.value.split(", ");
-    
-    // Get the period details for each period name
-    const periods = periodNames.map(periodName => getPeriodDates(periodName));
-    
-    if (!periods || periods.length === 0) return false;
-
-    // Extract dates from the selected periods
-    const startDates = periods.map(period => new Date(period.start_date));
-    const endDates = periods.map(period => new Date(period.end_date));
-
-    // Get the required dates
-    const earliestStart = new Date(Math.min(...startDates));
-    const latestEnd = new Date(Math.max(...endDates));
-    const earliestEnd = new Date(Math.min(...endDates));
-    const latestStart = new Date(Math.max(...startDates));
-    const courseStart = new Date(course.startDate);
-    const courseEnd = new Date(course.endDate);
-
-    switch (rule.type) {
-        case "is in":
-            // Course fully within all periods
-            return (earliestStart <= courseStart && courseEnd <= latestEnd);
-        case "equals":
-            // Course spans the whole described period(s)
-            return (earliestStart <= courseStart && courseStart <= earliestEnd
-                && latestStart <= courseEnd && courseEnd <= latestEnd);
-        case "overlaps":
-            // Course overlaps with at least one period
-            return (courseStart <= latestEnd && courseEnd >= earliestStart);
-        default:
-            return false;
-    }
-}
-
-// Helper function to get the period start and end dates from the period name (e.g., "Period III 2024-25")
-function getPeriodDates(periodName) {
-    const year = periodName.slice(-7);  // Extract the last 7 characters for the year (e.g., "2024-25")
-    const period = periodName.slice(0, -8).trim();  // Extract everything before the last space for the period (e.g., "Period IV")
-    
-    let periodData = null;
-    
-    // Find the period data based on year and period
-    periodData = periodsData.periods
-        .find(item => item.year === year)  // Find the correct year object
-        ?.periods.find(p => p.period === period);  // Find the matching period within the year
-
-    if (periodData) {
-        return { start_date: periodData.start_date, end_date: periodData.end_date };
-    }
-    return null;  // Return null if no matching period found
 }
 
 function getUniqueCourses(courses) {
@@ -477,4 +419,3 @@ window.handleFieldChange = handleFieldChange;
 window.removeFilter = removeFilter;
 window.filterCourses = filterCourses;
 window.onload = loadCourses;
-window.getPeriodDates = getPeriodDates;
