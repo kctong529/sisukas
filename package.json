@@ -14,7 +14,7 @@
     "coverage": "vitest run --coverage --config config/vitest.config.js",
     "htmllint": "htmlhint '**/*.html' --config config/.htmlhintrc.json",
     "stylelint": "stylelint '**/*.css' --config config/.stylelintrc.json",
-    "eslint": "eslint . --config config/eslint.config.js"
+    "eslint": "eslint . --config config/.eslintrc.js"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"
