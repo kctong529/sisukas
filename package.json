@@ -1,0 +1,18 @@
+{
+  "type": "module",
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.21.0",
+    "htmlhint": "^1.1.4",
+    "jsdom": "^26.0.0",
+    "stylelint": "^16.14.1",
+    "stylelint-config-standard": "^37.0.0",
+    "vitest": "^3.0.7"
+  },
+  "scripts": {
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
+  }
+}

@@ -1,3 +1,5 @@
+import { expect, test } from 'vitest'
+
 const allowedCourses = [
   'MS-A0111', 'MS-A0011', 'MS-A0211', 'MS-A0503', 
   'ELEC-A7200', 'CS-A1110', 'ELEC-A7100', 'ELEC-C9801', 
