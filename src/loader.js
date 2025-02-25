@@ -41,8 +41,8 @@ export async function loadPrograms() {
     curriculaMap = { major: {}, minor: {} };
     courseIndex = { major: {}, minor: {} };
 
-    const majorPrograms = await loadYamlFile('major.yaml');
-    const minorPrograms = await loadYamlFile('minor.yaml');
+    const majorPrograms = await loadYamlFile('data/major.yaml');
+    const minorPrograms = await loadYamlFile('data/minor.yaml');
 
     // Function to process and categorize program data
     const processPrograms = (programsArray, type) => {
@@ -73,7 +73,7 @@ export async function loadPrograms() {
 
 // Load academic periods (e.g., terms or semesters) data
 export async function loadPeriods() {
-    periodsData = await loadYamlFile('periods.yaml');
+    periodsData = await loadYamlFile('data/periods.yaml');
 
     // Populate the periods container in the UI
     renderPeriods();

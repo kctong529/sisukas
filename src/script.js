@@ -19,7 +19,7 @@ let courses = [];
 
 async function loadCourses() {
     try {
-        const response = await fetch('courses.json'); // Load JSON
+        const response = await fetch('data/courses.json'); // Load JSON
         courses = await response.json();
         await loadPrograms(); // Load JSON
         await loadPeriods();

@@ -1,6 +1,7 @@
 {
   "type": "module",
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.0.7",
     "eslint": "^9.21.0",
     "htmlhint": "^1.1.4",
     "jsdom": "^26.0.0",
@@ -9,12 +10,11 @@
     "vitest": "^3.0.7"
   },
   "scripts": {
-    "test": "vitest",
-    "coverage": "vitest run --coverage",
+    "test": "vitest --config config/vitest.config.js",
+    "coverage": "vitest run --coverage --config config/vitest.config.js",
     "htmllint": "htmlhint '**/*.html' --config config/.htmlhintrc.json",
     "stylelint": "stylelint '**/*.css' --config config/.stylelintrc.json",
     "eslint": "eslint . --config config/eslint.config.js"
-    
   },
   "dependencies": {
     "js-yaml": "^4.1.0"
