@@ -1,5 +1,7 @@
 # Sisukas
 
+[![CI Pipeline](https://github.com/kctong529/sisukas/actions/workflows/ci.yml/badge.svg)](https://github.com/kctong529/sisukas/actions/workflows/ci.yml)
+
 A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.fly.dev/).
 
 ## Why?
@@ -47,19 +49,36 @@ To test the application on your local machine, follow these steps:
    cd sisukas
    ```
 
+2. **Install dependencies** using npm:
+
+   ```sh
+   npm ci
+   ```
+
+3. **Build the project with Vite**:
+
+   To build the project, run:
+
+   ```sh
+   npm run build
+   ```
+
+   This will bundle the project for production. After the build is complete, you'll have the necessary static files in the `/dist` folder.
+
    Opening `index.html` is useful for testing CSS styles and layout.
 
-2. **Start a simple HTTP server** in your project directory:
+4. **Start a simple HTTP server** in your project directory:
 
    If you have Python installed, you can use Python's built-in HTTP server:
 
    ```sh
+   cd dist
    python -m http.server 8000
    ```
 
-   This will start a local server on port 8000.
+   This will start a local server on port 8000. Alternatively, you can serve the files using any HTTP server of your choice.
 
-3. **Open your browser** and go to the following URL:
+5. **Open your browser** and go to the following URL:
 
    ```sh
    http://localhost:8000
