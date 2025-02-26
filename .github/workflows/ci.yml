@@ -76,7 +76,7 @@ jobs:
         id: deployment
         with:
           token: '${{ github.token }}'
-          environment-url: http://my-app-url.com
+          environment-url: https://sisukas.fly.dev/
           environment: production
 
       - name: Deploy on Fly.io
@@ -89,7 +89,7 @@ jobs:
         uses: chrnorm/deployment-status@v2
         with:
           token: '${{ github.token }}'
-          environment-url: http://my-app-url.com
+          environment-url: https://sisukas.fly.dev/
           state: 'success'
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
 
@@ -98,6 +98,6 @@ jobs:
         uses: chrnorm/deployment-status@v2
         with:
           token: '${{ github.token }}'
-          environment-url: http://my-app-url.com
+          environment-url: https://sisukas.fly.dev/
           state: 'failure'
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
