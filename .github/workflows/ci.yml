@@ -73,3 +73,10 @@ jobs:
         run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Report Deployment Status to GitHub
+        uses: peter-evans/deployment-status@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          deployment_id: ${{ steps.deploy.outputs.deployment_id }}
+          state: success
