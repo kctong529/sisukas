@@ -12,15 +12,23 @@ import {
     applyCreditsFilter,
     applyLevelFilter,
     applyPeriodFilter,
-    applyCurriculumFilter
+    applyCurriculumFilter,
+    applyOrganizationFilter
 } from './filterHelpers.js?v=0.5';
 
 let courses = [];
+let organizationNames = new Set();
 
 async function loadCourses() {
     try {
         const response = await fetch('data/courses.json'); // Load JSON
         courses = await response.json();
+        organizationNames = new Set(
+          courses
+            .map(course => course.organizationName.en)
+            .filter(name => name) // Filter out empty or undefined names
+        );
+
         await loadPrograms(); // Load JSON
         await loadPeriods();
         displayCourses(courses, false); // Display all initially
@@ -85,6 +93,7 @@ function addFilter() {
         { value: 'major', text: 'Major' },
         { value: 'minor', text: 'Minor' },
         { value: 'enrollment', text: 'Enrollment' },
+        { value: 'organization', text: 'Organization' },
         { value: 'teacher', text: 'Teacher' },
         { value: 'language', text: 'Language' },
         { value: 'credits', text: 'Credits' },
@@ -193,6 +202,49 @@ function populateCurriculumDropdown(typeSelect, inputField, curriculumType) {
     setTimeout(syncInputWithDropdown, 0);
 }
 
+// Populate the organization options into the dropdown
+function populateOrganizationDropdown(typeSelect, inputField) {
+    // Helper function to create and append options
+    const createOption = (value, text) => {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = text;
+        typeSelect.appendChild(opt);
+    };
+
+    // Clear existing options and populate new ones
+    typeSelect.innerHTML = '';
+    organizationNames.forEach(name => {
+        if (name) createOption(name, name);
+    });
+
+    // Sync input field with dropdown selection
+    const syncInputWithDropdown = () => {
+        const filterValueInput = inputField.querySelector('.filter-value');
+        if (!filterValueInput) return;
+
+        // Update input when dropdown changes
+        typeSelect.addEventListener('change', () => {
+            filterValueInput.value = typeSelect.value;
+        });
+
+        // Update dropdown when input changes
+        filterValueInput.addEventListener('input', (e) => {
+            const value = e.target.value.trim();
+            const isValidOrganization = organizationNames.includes(value);
+
+            if (isValidOrganization) {
+                typeSelect.value = value;
+            } else {
+                typeSelect.value = ''; // Reset dropdown selection if invalid
+            }
+        });
+    };
+
+    // Call sync function after DOM updates
+    setTimeout(syncInputWithDropdown, 0);
+}
+
 // Handles input and operator updates based on selected field
 function changeInputField(fieldSelect, inputField, typeSelect) {
     inputField.innerHTML = ''; // Clear existing input
@@ -273,7 +325,18 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
                 });
 
             }
-        }
+        },
+        organization: {
+            inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
+            operators: [],
+            customHandler: () => {
+                populateOrganizationDropdown(typeSelect, inputField);
+                const firstOptionValue = typeSelect.options[0].value;
+                updateInputField(inputField, 
+                    `<input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">`
+                );
+            }
+        },
     };
 
     const defaultOptions = {
@@ -382,6 +445,7 @@ function applyRule(course, rule) {
         case "period": return applyPeriodFilter(course, rule, periodsData);
         case "major": return applyCurriculumFilter(course, rule, "major", curriculaMap);
         case "minor": return applyCurriculumFilter(course, rule, "minor", curriculaMap);
+        case "organization": return applyOrganizationFilter(course, rule);
     }
 }
 
