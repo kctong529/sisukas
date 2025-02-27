@@ -66,6 +66,12 @@ export function applyLevelFilter(course, rule) {
     return course.summary.level?.en === rule.value;
 }
 
+// Helper function for 'organization' field filter
+export function applyOrganizationFilter(course, rule) {
+    return course.organizationName.en === rule.value
+        || course.organizationName.en === rule.type;
+}
+
 // Helper function for 'major' or 'minor' field filter
 export function applyCurriculumFilter(course, rule, type, curriculaMap) {
     return isCourseInCurriculum(course.code, rule.value, type, curriculaMap)
