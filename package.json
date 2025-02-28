@@ -14,7 +14,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest --config config/vitest.config.js",
+    "test": "vitest --reporter=verbose --config config/vitest.config.js",
     "coverage": "vitest run --coverage --config config/vitest.config.js",
     "htmllint": "htmlhint '**/*.html' --config config/.htmlhintrc.json",
     "stylelint": "stylelint '**/*.css' --config config/.stylelintrc.json",
