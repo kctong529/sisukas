@@ -131,86 +131,86 @@ describe('filterHelpers', () => {
     };
 
     describe('applyCodeFilter', () => {
-        it('should return true if course code contains the specified value', () => {
+        it('should return true if course code contains the value', () => {
             expect(applyCodeFilter(course, { relation: 'contains', value: 'CS' })).toBe(true);
         });
 
-        it('should return false if course code does not contain the specified value', () => {
+        it('should return false if course code does not contain the value', () => {
             expect(applyCodeFilter(course, { relation: 'contains', value: 'CSC' })).toBe(false);
         });
 
-        it('should be case insensitive when checking if course code contains the specified value', () => {
+        it('should be case insensitive when checking if course code contains the value', () => {
             expect(applyCodeFilter(course, { relation: 'contains', value: 'cs' })).toBe(true);
         });
 
         it('should return true if course code matches exactly', () => {
-            expect(applyCodeFilter(course, { relation: 'exact', value: 'CS-A1120' })).toBe(true);
+            expect(applyCodeFilter(course, { relation: 'is', value: 'CS-A1120' })).toBe(true);
         });
 
         it('should return false if course code does not match exactly', () => {
-            expect(applyCodeFilter(course, { relation: 'exact', value: 'CS-A1110' })).toBe(false);
+            expect(applyCodeFilter(course, { relation: 'is', value: 'CS-A1110' })).toBe(false);
         });
 
-        it('should be case insensitive when checking for exact match', () => {
-            expect(applyCodeFilter(course, { relation: 'exact', value: 'cs-a1120' })).toBe(true);
+        it('should be case insensitive when checking for is match', () => {
+            expect(applyCodeFilter(course, { relation: 'is', value: 'cs-a1120' })).toBe(true);
         });
     });
 
 
     describe('applyNameFilter', () => {
-        it('should return true if course name contains the specified value', () => {
+        it('should return true if course name contains the value', () => {
             expect(applyNameFilter(course, { relation: 'contains', value: 'Prog' })).toBe(true);
         });
 
-        it('should be case insensitive when checking if course name contains the specified value', () => {
+        it('should be case insensitive when checking if course name contains the value', () => {
             expect(applyNameFilter(course, { relation: 'contains', value: 'prog' })).toBe(true);
         });
 
-        it('should return false if course name does not contain the specified value', () => {
+        it('should return false if course name does not contain the value', () => {
             expect(applyNameFilter(course, { relation: 'contains', value: 'Computer Programming' })).toBe(false);
         });
 
         it('should return true if course name matches exactly', () => {
-            expect(applyNameFilter(course, { relation: 'exact', value: 'Programming 2, Lecture' })).toBe(true);
+            expect(applyNameFilter(course, { relation: 'is', value: 'Programming 2, Lecture' })).toBe(true);
         });
 
-        it('should be case insensitive when checking for exact name match', () => {
-            expect(applyNameFilter(course, { relation: 'exact', value: 'programming 2, lecture' })).toBe(true);
+        it('should be case insensitive when checking for is name match', () => {
+            expect(applyNameFilter(course, { relation: 'is', value: 'programming 2, lecture' })).toBe(true);
         });
 
         it('should return false if course name does not match exactly', () => {
-            expect(applyNameFilter(course, { relation: 'exact', value: 'Signals and Systems, Lecture' })).toBe(false);
+            expect(applyNameFilter(course, { relation: 'is', value: 'Signals and Systems, Lecture' })).toBe(false);
         });
     });
 
     describe('applyTeacherFilter', () => {
-        it('should return true if teacher name contains the specified value', () => {
+        it('should return true if teacher name contains the value', () => {
             expect(applyTeacherFilter(course, { relation: 'contains', value: 'Lukas' })).toBe(true);
         });
 
-        it('should be case insensitive when checking if teacher name contains the specified value', () => {
+        it('should be case insensitive when checking if teacher name contains the value', () => {
             expect(applyTeacherFilter(course, { relation: 'contains', value: 'lukas' })).toBe(true);
         });
 
         it('should return true if teacher name matches exactly', () => {
-            expect(applyTeacherFilter(course, { relation: 'exact', value: 'Johan Lukas Ahrenberg' })).toBe(true);
+            expect(applyTeacherFilter(course, { relation: 'is', value: 'Johan Lukas Ahrenberg' })).toBe(true);
         });
 
-        it('should be case insensitive when checking for exact teacher name match', () => {
-            expect(applyTeacherFilter(course, { relation: 'exact', value: 'johan lukas ahrenberg' })).toBe(true);
+        it('should be case insensitive when checking for is teacher name match', () => {
+            expect(applyTeacherFilter(course, { relation: 'is', value: 'johan lukas ahrenberg' })).toBe(true);
         });
 
         it('should return false if teacher name does not match exactly', () => {
-            expect(applyTeacherFilter(course, { relation: 'exact', value: 'Stephan' })).toBe(false);
+            expect(applyTeacherFilter(course, { relation: 'is', value: 'Stephan' })).toBe(false);
         });
     });
 
     describe('applyLanguageFilter', () => {
-        it('should return true if course language code matches the specified value', () => {
+        it('should return true if course language code matches the value', () => {
             expect(applyLanguageFilter(course, { value: 'en' })).toBe(true);
         });
 
-        it('should return false if course language code does not match the specified value', () => {
+        it('should return false if course language code does not match the value', () => {
             expect(applyLanguageFilter(course, { value: 'sv' })).toBe(false);
         });
     });
@@ -306,7 +306,7 @@ describe('filterHelpers', () => {
             expect(applyPeriodFilter(course, rule, periodsData)).toBe(false);
         });
 
-        it('should return true for exact period match', () => {
+        it('should return true for is period match', () => {
             const rule = { relation: 'equals', value: 'Period IV 2024-25, Period V 2024-25' };
             expect(applyPeriodFilter(course, rule, periodsData)).toBe(true);
         });

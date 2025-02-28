@@ -37,7 +37,7 @@ async function loadCourseData() {
     return response.json();
 }
 
-function extractOrganizationNames(courses) {
+export function extractOrganizationNames(courses) {
     return new Set(courses.map(course => course.organizationName.en).filter(name => name));
 }
 
@@ -134,7 +134,7 @@ function createRelationSelect() {
 function createInputField() {
     const inputField = document.createElement('div');
     inputField.classList.add('filter-input');
-    inputField.innerHTML = `<input type="text" class="filter-value" placeholder="Enter value">`;
+    inputField.innerHTML = INPUT_HTMLS.input;
     return inputField;
 }
 
@@ -333,23 +333,32 @@ function removeFilterRule(button) {
     }
 }
 
-function createFilterGroups(filters) {
+export function createRuleFromFilter(filter) {
+    const field = filter.querySelector('.filter-field').value;
+    const relation = filter.querySelector('.filter-relation').value;
+    const value = filter.querySelector('.filter-value').value.trim();
+    
+    if (!value) {
+        console.warn(`Empty value for field: ${field}`);
+        return null;
+    }
+    
+    return { field, relation, value };
+}
+
+export function createFilterGroups(filters) {
     const filterGroups = [];
     let currentGroup = [];
 
     filters.forEach(filter => {
-        const field = filter.querySelector('.filter-field').value;
-        const relation = filter.querySelector('.filter-relation').value;
-        const value = filter.querySelector('.filter-value').value.trim();
-        
-        if (!value) {
-            console.warn(`Empty value for field: ${field}`);
-            return;
-        }
-        
-        const rule = { field, relation, value };
+        const rule = createRuleFromFilter(filter);
+
+        // Skip this filter if the rule is null (because value was empty)
+        if (!rule) return;
 
         const booleanOperator = filter.querySelector('.filter-boolean')?.value;
+
+        // Group rules based on the booleanOperator
         if (booleanOperator === 'AND') {
             currentGroup.push(rule);
         } else {
@@ -360,6 +369,7 @@ function createFilterGroups(filters) {
         }
     });
 
+    // Push the last group if not empty
     if (currentGroup.length > 0) {
         filterGroups.push(currentGroup);
     }

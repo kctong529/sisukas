@@ -1,23 +1,33 @@
+function applyRelation(value1, value2, relation) {
+    // Normalize values for comparison (e.g., case-insensitivity)
+    const normalizedValue1 = typeof value1 === "string" ? value1.toLowerCase() : value1;
+    const normalizedValue2 = typeof value2 === "string" ? value2.toLowerCase() : value2;
+
+    switch (relation) {
+        case "contains":
+            return normalizedValue1.includes(normalizedValue2);
+        case "is":
+            return normalizedValue1 === normalizedValue2;
+        default:
+            return false;
+    }
+}
+
 // Helper function for the 'code' field filter
 export function applyCodeFilter(course, rule) {
-    return rule.relation === "contains"
-        ? course.code.toLowerCase().includes(rule.value.toLowerCase())
-        : course.code.toLowerCase() === rule.value.toLowerCase();
+    return applyRelation(course.code, rule.value, rule.relation);
 }
 
 // Helper function for the 'name' field filter
 export function applyNameFilter(course, rule) {
-    return rule.relation === "contains"
-        ? course.name.en.toLowerCase().includes(rule.value.toLowerCase())
-        : course.name.en.toLowerCase() === rule.value.toLowerCase();
+    return applyRelation(course.name.en, rule.value, rule.relation);
 }
 
 // Helper function for the 'teacher' field filter
 export function applyTeacherFilter(course, rule) {
     return course.teachers.some(teacher =>
-        rule.relation === "contains"
-            ? teacher.toLowerCase().includes(rule.value.toLowerCase())
-            : teacher.toLowerCase() === rule.value.toLowerCase());
+        applyRelation(teacher, rule.value, rule.relation)
+    );
 }
 
 // Helper function for the 'language' field filter
@@ -68,8 +78,7 @@ export function applyLevelFilter(course, rule) {
 
 // Helper function for 'organization' field filter
 export function applyOrganizationFilter(course, rule) {
-    return course.organizationName.en === rule.value
-        || course.organizationName.en === rule.relation;
+    return course.organizationName.en === rule.value;
 }
 
 // Helper function for 'major' or 'minor' field filter
