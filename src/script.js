@@ -370,11 +370,7 @@ function removeFilter(button) {
     }
 }
 
-function filterCourses() {
-    const filters = document.querySelectorAll('.filter-group');
-    const showUnique = document.getElementById("uniqueToggle").checked;
-
-    // Group filters by OR
+function createFilterGroups(filters) {
     const filterGroups = [];
     let currentGroup = [];
 
@@ -384,8 +380,8 @@ function filterCourses() {
         const value = filter.querySelector('.filter-value').value.trim();
         
         if (!value) {
-          console.warn(`Empty value for field: ${field}`);
-          return;  // Skip empty filters
+            console.warn(`Empty value for field: ${field}`);
+            return;
         }
         
         const rule = { field, relation, value };
@@ -394,28 +390,37 @@ function filterCourses() {
         if (booleanOperator === 'AND') {
             currentGroup.push(rule);
         } else {
-            // Push current group and start a new one
             if (currentGroup.length > 0) {
                 filterGroups.push(currentGroup);
             }
             currentGroup = [rule];
         }
-        console.log("Current group: ");
-        console.log(currentGroup);
-        console.log("Filter groups: ");
-        console.log(filterGroups);
     });
 
-    // Push the last group
     if (currentGroup.length > 0) {
         filterGroups.push(currentGroup);
     }
 
-    // Collect union of all filter group results
+    return filterGroups;
+}
+
+function evaluateBooleanLogic(course, filterGroups) {
+    return filterGroups.some(group => 
+        group.every(rule => applyRule(course, rule))
+    );
+}
+
+function filterCourses() {
+    const filters = document.querySelectorAll('.filter-group');
+    const showUnique = document.getElementById("uniqueToggle").checked;
+
+    const filterGroups = createFilterGroups(filters);
+
     const allResults = new Set();
-    filterGroups.forEach(group => {
-        const groupFiltered = courses.filter(course => applyFilters(course, group));
-        groupFiltered.forEach(course => allResults.add(course));
+    courses.forEach(course => {
+        if (evaluateBooleanLogic(course, filterGroups)) {
+            allResults.add(course);
+        }
     });
 
     let filtered = Array.from(allResults);
