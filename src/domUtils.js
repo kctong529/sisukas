@@ -1,29 +1,38 @@
 /**
- * Creates a <select> element with specified options and event handling.
+ * Creates a new <select> element with the specified class, event handler, and options.
  * 
- * @param {string} className - The CSS class to be applied to the <select> element.
- * @param {string} onChange - The function (or function name) to be called when the selection changes.
- * @param {Array} options - An array of objects representing the options to be added to the <select> element. 
- *        Each object should have `value` and `text` properties for the option's value and display text, respectively.
+ * @param {string} className - The class name to be added to the <select> element for styling.
+ * @param {string} onChange - The onchange event handler to be assigned to the <select> element.
+ *                             This should be a string representing the function call (e.g., 'handleSelectChange()').
+ * @param {Array} options - An array of option objects to populate the <select> element.
+ *                          Each object should have:
+ *                              - value: The value attribute of the <option>
+ *                              - text: The visible text of the <option>
  * 
- * @returns {HTMLElement} The created <select> element.
+ * @returns {HTMLSelectElement} - The newly created <select> element with the specified options.
  */
 export function createSelect(className, onChange, options) {
-    // Create the <select> element.
     const select = document.createElement('select');
-    
-    // Add the provided className to the <select> element for styling.
-    select.classList.add(className);
+    if (className) select.classList.add(className);
+    if (onChange) select.setAttribute('onchange', onChange);
 
-    // Set onChange as the onchange event handler for the <select>.
-    select.setAttribute('onchange', onChange);
-
-    // Populate the <select> element with <option> elements based on the provided options.
-    // The options array is mapped to <option> elements and joined into a string to be injected into the innerHTML.
-    select.innerHTML = options.map(option => 
-        `<option value="${option.value}">${option.text}</option>`
-    ).join('');  // Join options without any separator to form a single string.
-
-    // Return the constructed <select> element.
+    populateSelect(select, options);
     return select;
+}
+
+/**
+ * Populates an existing <select> element with <option> elements based on the provided options.
+ * If the <select> already has options, they are cleared before adding the new ones.
+ * 
+ * @param {HTMLSelectElement} selectElement - The existing <select> element to be populated.
+ * @param {Array} options - An array of option objects used to populate the <select> element.
+ *                          Each object should have:
+ *                              - value: The value attribute of the <option>
+ *                              - text: The visible text of the <option>
+ */
+export function populateSelect(selectElement, options) {
+    selectElement.innerHTML = '';
+    selectElement.innerHTML = options.map(option => 
+        `<option value="${option.value}">${option.text}</option>`
+    ).join('');
 }
