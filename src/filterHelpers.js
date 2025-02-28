@@ -1,13 +1,13 @@
 // Helper function for the 'code' field filter
 export function applyCodeFilter(course, rule) {
-    return rule.type === "contains"
+    return rule.relation === "contains"
         ? course.code.toLowerCase().includes(rule.value.toLowerCase())
         : course.code.toLowerCase() === rule.value.toLowerCase();
 }
 
 // Helper function for the 'name' field filter
 export function applyNameFilter(course, rule) {
-    return rule.type === "contains"
+    return rule.relation === "contains"
         ? course.name.en.toLowerCase().includes(rule.value.toLowerCase())
         : course.name.en.toLowerCase() === rule.value.toLowerCase();
 }
@@ -15,7 +15,7 @@ export function applyNameFilter(course, rule) {
 // Helper function for the 'teacher' field filter
 export function applyTeacherFilter(course, rule) {
     return course.teachers.some(teacher =>
-        rule.type === "contains"
+        rule.relation === "contains"
             ? teacher.toLowerCase().includes(rule.value.toLowerCase())
             : teacher.toLowerCase() === rule.value.toLowerCase());
 }
@@ -28,7 +28,7 @@ export function applyLanguageFilter(course, rule) {
 // Helper function for the 'startDate' field filter
 export function applyStartDateFilter(course, rule) {
     const courseStart = new Date(course.startDate);
-    if (rule.type === "after") {
+    if (rule.relation === "after") {
         return courseStart > new Date(rule.value);
     }
     return courseStart < new Date(rule.value);
@@ -37,7 +37,7 @@ export function applyStartDateFilter(course, rule) {
 // Helper function for the 'endDate' field filter
 export function applyEndDateFilter(course, rule) {
     const courseEnd = new Date(course.endDate);
-    if (rule.type === "after") {
+    if (rule.relation === "after") {
         return courseEnd > new Date(rule.value);
     }
     return courseEnd < new Date(rule.value);
@@ -48,9 +48,9 @@ export function applyEnrollmentFilter(course, rule) {
     const startDate = new Date(course.enrolmentStartDate);
     const endDate = new Date(course.enrolmentEndDate);
     const currDate = new Date(rule.value);
-    if (rule.type === "after") {
+    if (rule.relation === "after") {
         return startDate > currDate;
-    } else if (rule.type === "before") {
+    } else if (rule.relation === "before") {
         return endDate < currDate;
     }
     return startDate <= currDate && endDate >= currDate;
@@ -69,13 +69,13 @@ export function applyLevelFilter(course, rule) {
 // Helper function for 'organization' field filter
 export function applyOrganizationFilter(course, rule) {
     return course.organizationName.en === rule.value
-        || course.organizationName.en === rule.type;
+        || course.organizationName.en === rule.relation;
 }
 
 // Helper function for 'major' or 'minor' field filter
-export function applyCurriculumFilter(course, rule, type, curriculaMap) {
-    return isCourseInCurriculum(course.code, rule.value, type, curriculaMap)
-        || isCourseInCurriculum(course.code, rule.type, type, curriculaMap);
+export function applyCurriculumFilter(course, rule, curriculumType, curriculaMap) {
+    return isCourseInCurriculum(course.code, rule.value, curriculumType, curriculaMap)
+        || isCourseInCurriculum(course.code, rule.relation, curriculumType, curriculaMap);
 }
 
 // Helper function for the 'period' field filter
@@ -96,7 +96,7 @@ export function applyPeriodFilter(course, rule, periodsData) {
     const courseStart = new Date(course.startDate);
     const courseEnd = new Date(course.endDate);
 
-    switch (rule.type) {
+    switch (rule.relation) {
         case "is in":
             return (earliestStart <= courseStart && courseEnd <= latestEnd);
         case "equals":

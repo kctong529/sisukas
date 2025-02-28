@@ -1,6 +1,6 @@
-import { loadPrograms, loadPeriods, periodsData, curriculaMap } from './yamlCache.js?v=0.5';
-import { initializeDragSelect, removeEventHandlers } from './dragSelect.js?v=0.5';
-import { createSelect } from './domUtils.js?v=0.5';
+import { loadPrograms, loadPeriods, periodsData, curriculaMap } from './yamlCache.js';
+import { initializeDragSelect, removeEventHandlers } from './dragSelect.js';
+import { createSelect } from './domUtils.js';
 import { 
     applyCodeFilter,
     applyNameFilter,
@@ -14,7 +14,7 @@ import {
     applyPeriodFilter,
     applyCurriculumFilter,
     applyOrganizationFilter
-} from './filterHelpers.js?v=0.5';
+} from './filterHelpers.js';
 
 let courses = [];
 let organizationNames = new Set();
@@ -100,8 +100,8 @@ function addFilter() {
         { value: 'level', text: 'Level' }
     ]);
 
-    // Create select element for filter types
-    const typeSelect = createSelect('filter-type', '', [
+    // Create select element for filter relations
+    const relationSelect = createSelect('filter-relation', '', [
         { value: 'contains', text: 'Contains' },
         { value: 'is', text: 'Is' }
     ]);
@@ -114,19 +114,19 @@ function addFilter() {
     // Append elements to filter group
     filterContainer.appendChild(filterGroup);
     filterGroup.appendChild(fieldSelect);
-    filterGroup.appendChild(typeSelect);
+    filterGroup.appendChild(relationSelect);
     filterGroup.appendChild(inputField);
     filterGroup.innerHTML += `<button onclick="removeFilter(this)"><i class="bi bi-trash"></i></button>`;
 
     // Call changeInputField to initialize the input and operator dropdown
-    changeInputField(fieldSelect, inputField, typeSelect);
+    changeInputField(fieldSelect, inputField, relationSelect);
 }
 
 // Handles field change event and updates the filter
 function handleFieldChange(fieldSelect) {
     const filterGroup = fieldSelect.closest('.filter-group');
     const inputField = filterGroup.querySelector('.filter-input');
-    const typeSelect = filterGroup.querySelector('.filter-type');
+    const relationSelect = filterGroup.querySelector('.filter-relation');
     const periodsContainer = document.getElementById('periods-container');
 
     // Check previous selection
@@ -144,7 +144,7 @@ function handleFieldChange(fieldSelect) {
     // Store the current selection for future comparison
     fieldSelect.dataset.lastSelectedField = fieldSelect.value;
 
-    changeInputField(fieldSelect, inputField, typeSelect); // Update the input field
+    changeInputField(fieldSelect, inputField, relationSelect); // Update the input field
 }
 
 // Updates the input field with a new element
@@ -153,24 +153,24 @@ function updateInputField(inputField, htmlContent) {
 }
 
 // Updates the operator dropdown with options
-function updateOperatorDropdown(typeSelect, options) {
-    typeSelect.innerHTML = options.map(option => 
+function updateOperatorDropdown(relationSelect, options) {
+    relationSelect.innerHTML = options.map(option => 
         `<option value="${option.toLowerCase()}">${option}</option>`
     ).join('');
 }
 
 // Populate the curriculum options into the dropdown
-function populateCurriculumDropdown(typeSelect, inputField, curriculumType) {
+function populateCurriculumDropdown(relationSelect, inputField, curriculumType) {
     // Helper function to create and append options
     const createOption = (value, text) => {
         const opt = document.createElement('option');
         opt.value = value;
         opt.textContent = text;
-        typeSelect.appendChild(opt);
+        relationSelect.appendChild(opt);
     };
 
     // Clear existing options and populate new ones
-    typeSelect.innerHTML = '';
+    relationSelect.innerHTML = '';
     Object.entries(curriculaMap[curriculumType]).forEach(([code, { name }]) => {
         if (name) createOption(code, name);
     });
@@ -181,8 +181,8 @@ function populateCurriculumDropdown(typeSelect, inputField, curriculumType) {
         if (!filterValueInput) return;
 
         // Update input when dropdown changes
-        typeSelect.addEventListener('change', () => {
-            filterValueInput.value = typeSelect.value;
+        relationSelect.addEventListener('change', () => {
+            filterValueInput.value = relationSelect.value;
         });
 
         // Update dropdown when input changes
@@ -191,9 +191,9 @@ function populateCurriculumDropdown(typeSelect, inputField, curriculumType) {
             const isValidCurriculumCode = Object.keys(curriculaMap[curriculumType]).includes(value);
 
             if (isValidCurriculumCode) {
-                typeSelect.value = value;
+                relationSelect.value = value;
             } else {
-                typeSelect.value = ''; // Reset dropdown selection if invalid
+                relationSelect.value = ''; // Reset dropdown selection if invalid
             }
         });
     };
@@ -203,17 +203,17 @@ function populateCurriculumDropdown(typeSelect, inputField, curriculumType) {
 }
 
 // Populate the organization options into the dropdown
-function populateOrganizationDropdown(typeSelect, inputField) {
+function populateOrganizationDropdown(relationSelect, inputField) {
     // Helper function to create and append options
     const createOption = (value, text) => {
         const opt = document.createElement('option');
         opt.value = value;
         opt.textContent = text;
-        typeSelect.appendChild(opt);
+        relationSelect.appendChild(opt);
     };
 
     // Clear existing options and populate new ones
-    typeSelect.innerHTML = '';
+    relationSelect.innerHTML = '';
     organizationNames.forEach(name => {
         if (name) createOption(name, name);
     });
@@ -224,8 +224,8 @@ function populateOrganizationDropdown(typeSelect, inputField) {
         if (!filterValueInput) return;
 
         // Update input when dropdown changes
-        typeSelect.addEventListener('change', () => {
-            filterValueInput.value = typeSelect.value;
+        relationSelect.addEventListener('change', () => {
+            filterValueInput.value = relationSelect.value;
         });
 
         // Update dropdown when input changes
@@ -234,9 +234,9 @@ function populateOrganizationDropdown(typeSelect, inputField) {
             const isValidOrganization = organizationNames.includes(value);
 
             if (isValidOrganization) {
-                typeSelect.value = value;
+                relationSelect.value = value;
             } else {
-                typeSelect.value = ''; // Reset dropdown selection if invalid
+                relationSelect.value = ''; // Reset dropdown selection if invalid
             }
         });
     };
@@ -246,9 +246,9 @@ function populateOrganizationDropdown(typeSelect, inputField) {
 }
 
 // Handles input and operator updates based on selected field
-function changeInputField(fieldSelect, inputField, typeSelect) {
+function changeInputField(fieldSelect, inputField, relationSelect) {
     inputField.innerHTML = ''; // Clear existing input
-    typeSelect.innerHTML = ''; // Clear existing operator options
+    relationSelect.innerHTML = ''; // Clear existing operator options
 
     const selectedField = fieldSelect.value;
 
@@ -292,8 +292,8 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
             inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
             operators: [],
             customHandler: () => {
-                populateCurriculumDropdown(typeSelect, inputField, 'major');
-                const firstOptionValue = typeSelect.options[0].value;
+                populateCurriculumDropdown(relationSelect, inputField, 'major');
+                const firstOptionValue = relationSelect.options[0].value;
                 updateInputField(inputField, 
                     `<input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">`
                 );
@@ -303,8 +303,8 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
             inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
             operators: [],
             customHandler: () => {
-                populateCurriculumDropdown(typeSelect, inputField, 'minor');
-                const firstOptionValue = typeSelect.options[0].value;
+                populateCurriculumDropdown(relationSelect, inputField, 'minor');
+                const firstOptionValue = relationSelect.options[0].value;
                 updateInputField(inputField, 
                     `<input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">`
                 );
@@ -330,8 +330,8 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
             inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
             operators: [],
             customHandler: () => {
-                populateOrganizationDropdown(typeSelect, inputField);
-                const firstOptionValue = typeSelect.options[0].value;
+                populateOrganizationDropdown(relationSelect, inputField);
+                const firstOptionValue = relationSelect.options[0].value;
                 updateInputField(inputField, 
                     `<input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">`
                 );
@@ -347,7 +347,7 @@ function changeInputField(fieldSelect, inputField, typeSelect) {
     const fieldConfig = commonOptions[selectedField] || defaultOptions;
 
     updateInputField(inputField, fieldConfig.inputHTML);
-    updateOperatorDropdown(typeSelect, fieldConfig.operators);
+    updateOperatorDropdown(relationSelect, fieldConfig.operators);
 
     // Call custom handler if available (e.g., for major)
     if (fieldConfig.customHandler) {
@@ -380,7 +380,7 @@ function filterCourses() {
 
     filters.forEach(filter => {
         const field = filter.querySelector('.filter-field').value;
-        const type = filter.querySelector('.filter-type').value;
+        const relation = filter.querySelector('.filter-relation').value;
         const value = filter.querySelector('.filter-value').value.trim();
         
         if (!value) {
@@ -388,7 +388,7 @@ function filterCourses() {
           return;  // Skip empty filters
         }
         
-        const rule = { field, type, value };
+        const rule = { field, relation, value };
 
         const booleanOperator = filter.querySelector('.filter-boolean')?.value;
         if (booleanOperator === 'AND') {
