@@ -90,21 +90,18 @@ To test the application on your local machine, follow these steps:
 
 ### Core Functionality
 
-- [ ] Refactor the file structure to improve maintainability. https://github.com/kctong529/sisukas/issues/3
 - [ ] Enable filtering by course descriptions. https://github.com/kctong529/sisukas/issues/4
-- [ ] Enable filtering by organization.
-- [x] Support filtering by periods based on mapping to dates. https://github.com/kctong529/sisukas/issues/5
-- [x] Add predefined filters for major and minor curricula. https://github.com/kctong529/sisukas/issues/6
-- [ ] Add exclusion criteria such as "Not a math course"
+- [ ] Refactor organization filter rule. https://github.com/kctong529/sisukas/issues/15
+- [ ] Add exclusion criteria such as "Not a math course".
 - [ ] Implement support for nested sorting criteria.
 - [ ] Automatically generate a timeline based on course schedules.
 - [ ] Integrate a study calendar for better planning.
 
 ### User Experience & Accessibility
 
-- [x] Enhance responsive design for a smoother mobile experience. https://github.com/kctong529/sisukas/issues/2
-- [ ] Allow users to save filter sets on the server and generate a shareable link (no login required). https://github.com/kctong529/sisukas/issues/8
-- [ ] Introduce user management features (for login and personal data management).
+- [x] Enhance responsive design. https://github.com/kctong529/sisukas/issues/2
+- [ ] Allow users to save filter sets. https://github.com/kctong529/sisukas/issues/8
+- [ ] Introduce user management features.
 - [ ] Allow users to pin courses to keep them at the top.
 - [ ] Add comment field where student feedbacks are shown.
 - [ ] Improve accessibility for a more inclusive user experience.
@@ -116,10 +113,12 @@ To test the application on your local machine, follow these steps:
 - [ ] Support importing courses from a long string or fuzzy copied text.
 - [ ] Export filtered results with customizable fields (JSON, CSV, Excel).
 
-### Development & Maintenance  
-- [ ] Draft guidelines for Package Management (including `npm ci` and `js-yaml` usage).
-- [ ] Evaluate and decide between test packages (choose Vitest after trying Jest).
-- [ ] Create a draft set of unit tests with comprehensive coverage.
+### Development & Maintenance
+- [ ] Refactor file structure. https://github.com/kctong529/sisukas/issues/3
+- [ ] Define and document terminology across the system. https://github.com/kctong529/sisukas/issues/14
+- [ ] Draft guidelines for package management.
+- [ ] Evaluate and choose test packages.
+- [ ] Create a draft set of unit tests.
 
 ## Contributing
 
