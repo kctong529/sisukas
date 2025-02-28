@@ -1,7 +1,7 @@
 import { loadPrograms, loadPeriods, periodsData, curriculaMap } from './yamlCache.js';
 import { initializeDragSelect, removeEventHandlers } from './dragSelect.js';
 import { createSelect, populateSelect } from './domUtils.js';
-import { 
+import {
     applyCodeFilter,
     applyNameFilter,
     applyTeacherFilter,
@@ -16,34 +16,49 @@ import {
     applyOrganizationFilter
 } from './filterHelpers.js';
 
+import { FILTER_FIELDS, INPUT_HTMLS } from './constant.js';
+
 let courses = [];
 let organizationNames = new Set();
 
 async function loadCourses() {
     try {
-        const response = await fetch('data/courses.json'); // Load JSON
-        courses = await response.json();
-        organizationNames = new Set(
-          courses
-            .map(course => course.organizationName.en)
-            .filter(name => name) // Filter out empty or undefined names
-        );
-
-        await loadPrograms(); // Load JSON
-        await loadPeriods();
-        displayCourses(courses, false); // Display all initially
+        courses = await loadCourseData();
+        organizationNames = extractOrganizationNames(courses);
+        await loadAdditionalData();
+        displayCourses(courses);
     } catch (error) {
         console.error("Error loading JSON:", error);
     }
 }
 
-function displayCourses(courses, filtersApplied) {
-  const container = document.getElementById('course-list');
-  container.innerHTML = ''; // Clear previous results
+async function loadCourseData() {
+    const response = await fetch('data/courses.json');
+    return response.json();
+}
 
-  courses.forEach(course => {
-    const courseLink = `https://sisu.aalto.fi/student/courseunit/${course.courseUnitId}/brochure`; // Construct the course brochure URL
-    const row = `<tr>
+function extractOrganizationNames(courses) {
+    return new Set(courses.map(course => course.organizationName.en).filter(name => name));
+}
+
+async function loadAdditionalData() {
+    await loadPrograms();
+    await loadPeriods();
+}
+
+function displayCourses(courses, filtersApplied=false) {
+    const container = document.getElementById('course-list');
+    container.innerHTML = ''; // Clear previous results
+
+    courses.forEach(course => {
+        container.insertAdjacentHTML('beforeend', createCourseRow(course));
+    });
+    updateCourseCount(courses, filtersApplied);
+}
+
+function createCourseRow(course) {
+    const courseLink = `https://sisu.aalto.fi/student/courseunit/${course.courseUnitId}/brochure`;
+    return `<tr>
       <td>${course.code}</td>
       <td><a href="${courseLink}" target="_blank">${course.name.en}</a></td>
       <td>${course.teachers.join(", ")}</td>
@@ -55,17 +70,11 @@ function displayCourses(courses, filtersApplied) {
       <td>${course.enrolmentEndDate}</td>
       <td>${course.summary.prerequisites ? course.summary.prerequisites.en : 'None'}</td>
     </tr>`;
+}
 
-    container.insertAdjacentHTML('beforeend', row);
-  });
-
-  // Update the number of filtered courses
-  const courseCountDiv = document.getElementById('course-count');
-  if (filtersApplied) {
-    courseCountDiv.innerHTML = `Total filtered courses: ${courses.length}`;
-  } else {
-    courseCountDiv.innerHTML = `Total courses: ${courses.length}`;
-  }
+function updateCourseCount(courses, filtersApplied) {
+    const courseCountDiv = document.getElementById('course-count');
+    courseCountDiv.innerHTML = `Total ${filtersApplied ? 'filtered' : ''} courses: ${courses.length}`;
 }
 
 // Helper function to create and return filter rule element
@@ -92,50 +101,41 @@ function createFilterRule(booleanSelect, fieldSelect, relationSelect, inputField
 // Adds a new filter rule
 function addFilterRule() {
     const filterContainer = document.getElementById('filter-container');
+    const booleanSelect = filterContainer.children.length > 0 ? createBooleanSelect() : null;
+    const fieldSelect = createFieldSelect();
+    const relationSelect = createRelationSelect();
+    const inputField = createInputField();
 
-    // Create AND/OR selector if it's not the first rule
-    let booleanSelect = null;
-    if (filterContainer.children.length > 0) {
-        booleanSelect = createSelect('filter-boolean', '', [
-            { value: 'AND', text: 'AND' },
-            { value: 'OR', text: 'OR' }
-        ]);
-    }
-
-    // Create select element for fields
-    const fieldSelect = createSelect('filter-field', 'handleFieldChange(this)', [
-        { value: 'code', text: 'Course Code' },
-        { value: 'name', text: 'Course Name' },
-        { value: 'period', text: 'Period'},
-        { value: 'startDate', text: 'Start Date' },
-        { value: 'endDate', text: 'End Date' },
-        { value: 'major', text: 'Major' },
-        { value: 'minor', text: 'Minor' },
-        { value: 'enrollment', text: 'Enrollment' },
-        { value: 'organization', text: 'Organization' },
-        { value: 'teacher', text: 'Teacher' },
-        { value: 'language', text: 'Language' },
-        { value: 'credits', text: 'Credits' },
-        { value: 'level', text: 'Level' }
-    ]);
-
-    // Create select element for filter relations
-    const relationSelect = createSelect('filter-relation', '', [
-        { value: 'contains', text: 'Contains' },
-        { value: 'is', text: 'Is' }
-    ]);
-
-    // Create input field container
-    const inputField = document.createElement('div');
-    inputField.classList.add('filter-input');
-    inputField.innerHTML = `<input type="text" class="filter-value" placeholder="Enter value">`;
-
-    // Call helper function to create and return filter rule element
     const filterRule = createFilterRule(booleanSelect, fieldSelect, relationSelect, inputField);
     filterContainer.appendChild(filterRule);
 
     // Initialize the input and operator dropdown
     changeInputField(fieldSelect, inputField, relationSelect);
+}
+
+function createBooleanSelect() {
+    return createSelect('filter-boolean', '', [
+        { value: 'AND', text: 'AND' },
+        { value: 'OR', text: 'OR' }
+    ]);
+}
+
+function createFieldSelect() {
+    return createSelect('filter-field', 'handleFieldChange(this)', FILTER_FIELDS);
+}
+
+function createRelationSelect() {
+    return createSelect('filter-relation', '', [
+        { value: 'contains', text: 'Contains' },
+        { value: 'is', text: 'Is' }
+    ]);
+}
+
+function createInputField() {
+    const inputField = document.createElement('div');
+    inputField.classList.add('filter-input');
+    inputField.innerHTML = `<input type="text" class="filter-value" placeholder="Enter value">`;
+    return inputField;
 }
 
 // Handles field change event and updates the filter
@@ -232,42 +232,31 @@ function changeInputField(fieldSelect, inputField, relationSelect) {
 
     const commonOptions = {
         language: {
-            inputHTML: `
-                <select class="filter-value">
-                    <option value="en">English</option>
-                    <option value="fi">Finnish</option>
-                    <option value="sv">Swedish</option>
-                </select>`,
+            inputHTML: INPUT_HTMLS.language,
             operators: ['Is']
         },
         credits: {
-            inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
+            inputHTML: INPUT_HTMLS.input,
             operators: ['Is']
         },
         level: {
-            inputHTML: `
-                <select class="filter-value">
-                    <option value="basic-studies">Basic Studies</option>
-                    <option value="intermediate-studies">Intermediate Studies</option>
-                    <option value="advanced-studies">Advanced Studies</option>
-                    <option value="other-studies">Other Studies</option>
-                </select>`,
+            inputHTML: INPUT_HTMLS.level,
             operators: ['Is']
         },
         startDate: {
-            inputHTML: `<input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">`,
+            inputHTML: INPUT_HTMLS.date,
             operators: ['After', 'Before']
         },
         endDate: {
-            inputHTML: `<input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">`,
+            inputHTML: INPUT_HTMLS.date,
             operators: ['Before', 'After']
         },
         enrollment: {
-            inputHTML: `<input type="date" class="filter-value" value="${new Date().toISOString().split('T')[0]}">`,
+            inputHTML: INPUT_HTMLS.date,
             operators: ['On', 'Before', 'After']
         },
         major: {
-            inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
+            inputHTML: INPUT_HTMLS.input,
             operators: [],
             customHandler: () => {
                 populateCurriculumDropdown(relationSelect, inputField, 'major');
@@ -278,7 +267,7 @@ function changeInputField(fieldSelect, inputField, relationSelect) {
             }
         },
         minor: {
-            inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
+            inputHTML: INPUT_HTMLS.input,
             operators: [],
             customHandler: () => {
                 populateCurriculumDropdown(relationSelect, inputField, 'minor');
@@ -329,7 +318,7 @@ function changeInputField(fieldSelect, inputField, relationSelect) {
     }
 }
 
-function removeFilter(button) {
+function removeFilterRule(button) {
     const filterRule = button.closest('.filter-rule');
     filterRule.remove();
 
@@ -458,6 +447,6 @@ function getUniqueCourses(courses) {
 
 window.addFilterRule = addFilterRule;
 window.handleFieldChange = handleFieldChange;
-window.removeFilter = removeFilter;
+window.removeFilterRule = removeFilterRule;
 window.filterCourses = filterCourses;
 window.onload = loadCourses;
