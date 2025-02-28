@@ -203,46 +203,19 @@ function populateCurriculumDropdown(relationSelect, inputField, curriculumType) 
 }
 
 // Populate the organization options into the dropdown
-function populateOrganizationDropdown(relationSelect, inputField) {
-    // Helper function to create and append options
+function populateOrganizationDropdown(inputField) {
+    const filterValueInput = inputField.querySelector('.filter-value');
     const createOption = (value, text) => {
         const opt = document.createElement('option');
         opt.value = value;
         opt.textContent = text;
-        relationSelect.appendChild(opt);
+        filterValueInput.appendChild(opt);
     };
 
-    // Clear existing options and populate new ones
-    relationSelect.innerHTML = '';
-    organizationNames.forEach(name => {
-        if (name) createOption(name, name);
+    const sortedOrganizationNames = Array.from(organizationNames).sort();
+    sortedOrganizationNames.forEach(name => {
+        createOption(name, name);
     });
-
-    // Sync input field with dropdown selection
-    const syncInputWithDropdown = () => {
-        const filterValueInput = inputField.querySelector('.filter-value');
-        if (!filterValueInput) return;
-
-        // Update input when dropdown changes
-        relationSelect.addEventListener('change', () => {
-            filterValueInput.value = relationSelect.value;
-        });
-
-        // Update dropdown when input changes
-        filterValueInput.addEventListener('input', (e) => {
-            const value = e.target.value.trim();
-            const isValidOrganization = organizationNames.includes(value);
-
-            if (isValidOrganization) {
-                relationSelect.value = value;
-            } else {
-                relationSelect.value = ''; // Reset dropdown selection if invalid
-            }
-        });
-    };
-
-    // Call sync function after DOM updates
-    setTimeout(syncInputWithDropdown, 0);
 }
 
 // Handles input and operator updates based on selected field
@@ -327,14 +300,10 @@ function changeInputField(fieldSelect, inputField, relationSelect) {
             }
         },
         organization: {
-            inputHTML: `<input type="text" class="filter-value" placeholder="Enter value">`,
-            operators: [],
+            inputHTML: `<select class="filter-value"></select>`,
+            operators: ['Is'],
             customHandler: () => {
-                populateOrganizationDropdown(relationSelect, inputField);
-                const firstOptionValue = relationSelect.options[0].value;
-                updateInputField(inputField, 
-                    `<input type="text" class="filter-value" placeholder="Enter value" value="${firstOptionValue}">`
-                );
+                populateOrganizationDropdown(inputField);
             }
         },
     };
