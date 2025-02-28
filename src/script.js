@@ -68,19 +68,38 @@ function displayCourses(courses, filtersApplied) {
   }
 }
 
-// Adds a new filter block
-function addFilter() {
-    const filterContainer = document.getElementById('filter-container');
-    const filterGroup = document.createElement('div');
-    filterGroup.classList.add('filter-group');
+// Helper function to create and return filter rule element
+function createFilterRule(booleanSelect, fieldSelect, relationSelect, inputField) {
+    const filterRule = document.createElement('div');
+    filterRule.classList.add('filter-rule');
 
-    // Add AND/OR selector only if it's not the first rule
+    // Append AND/OR selector if it's not the first rule
+    if (booleanSelect) {
+        filterRule.appendChild(booleanSelect);
+    }
+
+    // Append the rest of the filter elements
+    filterRule.appendChild(fieldSelect);
+    filterRule.appendChild(relationSelect);
+    filterRule.appendChild(inputField);
+
+    // Add delete button to the filter rule
+    filterRule.innerHTML += `<button onclick="removeFilterRule(this)"><i class="bi bi-trash"></i></button>`;
+
+    return filterRule;
+}
+
+// Adds a new filter rule
+function addFilterRule() {
+    const filterContainer = document.getElementById('filter-container');
+
+    // Create AND/OR selector if it's not the first rule
+    let booleanSelect = null;
     if (filterContainer.children.length > 0) {
-        const operatorSelect = createSelect('filter-boolean', '', [
+        booleanSelect = createSelect('filter-boolean', '', [
             { value: 'AND', text: 'AND' },
             { value: 'OR', text: 'OR' }
         ]);
-        filterGroup.appendChild(operatorSelect);
     }
 
     // Create select element for fields
@@ -106,27 +125,24 @@ function addFilter() {
         { value: 'is', text: 'Is' }
     ]);
 
-    // Create an input field container
+    // Create input field container
     const inputField = document.createElement('div');
     inputField.classList.add('filter-input');
     inputField.innerHTML = `<input type="text" class="filter-value" placeholder="Enter value">`;
 
-    // Append elements to filter group
-    filterContainer.appendChild(filterGroup);
-    filterGroup.appendChild(fieldSelect);
-    filterGroup.appendChild(relationSelect);
-    filterGroup.appendChild(inputField);
-    filterGroup.innerHTML += `<button onclick="removeFilter(this)"><i class="bi bi-trash"></i></button>`;
+    // Call helper function to create and return filter rule element
+    const filterRule = createFilterRule(booleanSelect, fieldSelect, relationSelect, inputField);
+    filterContainer.appendChild(filterRule);
 
-    // Call changeInputField to initialize the input and operator dropdown
+    // Initialize the input and operator dropdown
     changeInputField(fieldSelect, inputField, relationSelect);
 }
 
 // Handles field change event and updates the filter
 function handleFieldChange(fieldSelect) {
-    const filterGroup = fieldSelect.closest('.filter-group');
-    const inputField = filterGroup.querySelector('.filter-input');
-    const relationSelect = filterGroup.querySelector('.filter-relation');
+    const filterRule = fieldSelect.closest('.filter-rule');
+    const inputField = filterRule.querySelector('.filter-input');
+    const relationSelect = filterRule.querySelector('.filter-relation');
     const periodsContainer = document.getElementById('periods-container');
 
     // Check previous selection
@@ -314,8 +330,8 @@ function changeInputField(fieldSelect, inputField, relationSelect) {
 }
 
 function removeFilter(button) {
-    const filterGroup = button.closest('.filter-group');
-    filterGroup.remove();
+    const filterRule = button.closest('.filter-rule');
+    filterRule.remove();
 
     // Check if any remaining filters are using 'period'
     const fieldSelects = document.querySelectorAll('.filter-field');
@@ -369,7 +385,7 @@ function evaluateBooleanLogic(course, filterGroups) {
 }
 
 function filterCourses() {
-    const filters = document.querySelectorAll('.filter-group');
+    const filters = document.querySelectorAll('.filter-rule');
     const showUnique = document.getElementById("uniqueToggle").checked;
 
     const filterGroups = createFilterGroups(filters);
@@ -440,7 +456,7 @@ function getUniqueCourses(courses) {
     return Array.from(uniqueCoursesMap.values());
 }
 
-window.addFilter = addFilter;
+window.addFilterRule = addFilterRule;
 window.handleFieldChange = handleFieldChange;
 window.removeFilter = removeFilter;
 window.filterCourses = filterCourses;
