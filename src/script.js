@@ -1,6 +1,6 @@
 import { loadPrograms, loadPeriods, periodsData, curriculaMap } from './yamlCache.js';
 import { initializeDragSelect, removeEventHandlers } from './dragSelect.js';
-import { createSelect } from './domUtils.js';
+import { createSelect, populateSelect } from './domUtils.js';
 import { 
     applyCodeFilter,
     applyNameFilter,
@@ -161,19 +161,12 @@ function updateOperatorDropdown(relationSelect, options) {
 
 // Populate the curriculum options into the dropdown
 function populateCurriculumDropdown(relationSelect, inputField, curriculumType) {
-    // Helper function to create and append options
-    const createOption = (value, text) => {
-        const opt = document.createElement('option');
-        opt.value = value;
-        opt.textContent = text;
-        relationSelect.appendChild(opt);
-    };
-
-    // Clear existing options and populate new ones
-    relationSelect.innerHTML = '';
-    Object.entries(curriculaMap[curriculumType]).forEach(([code, { name }]) => {
-        if (name) createOption(code, name);
+    // Map the curriculum data into an array of option objects
+    const options = Object.entries(curriculaMap[curriculumType]).map(([code, { name }]) => {
+        return { value: code, text: name };
     });
+
+    populateSelect(relationSelect, options);
 
     // Sync input field with dropdown selection
     const syncInputWithDropdown = () => {
@@ -204,18 +197,14 @@ function populateCurriculumDropdown(relationSelect, inputField, curriculumType) 
 
 // Populate the organization options into the dropdown
 function populateOrganizationDropdown(inputField) {
-    const filterValueInput = inputField.querySelector('.filter-value');
-    const createOption = (value, text) => {
-        const opt = document.createElement('option');
-        opt.value = value;
-        opt.textContent = text;
-        filterValueInput.appendChild(opt);
-    };
-
-    const sortedOrganizationNames = Array.from(organizationNames).sort();
-    sortedOrganizationNames.forEach(name => {
-        createOption(name, name);
+    // Map the organization names into an array of option objects
+    const options = Array.from(organizationNames).sort().map(name => {
+        return { value: name, text: name };
     });
+
+    // Populate the select element with the options
+    const filterValueInput = inputField.querySelector('.filter-value');
+    populateSelect(filterValueInput, options);
 }
 
 // Handles input and operator updates based on selected field
