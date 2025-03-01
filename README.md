@@ -4,12 +4,8 @@
 
 A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.fly.dev/).
 
-## Why?
-
-Students are frustrated with the official SISU system due to:
-- **Limited filters**: Finding relevant courses requires excessive manual searching.
-- **Annoying navigation**: It displays only minimal details unless you click into each link.
-- **Slow performance**: Multiple requests slow down the experience.
+> [!IMPORTANT]
+> If you're a university student in the Finnish education system, you’ve likely encountered the frustrations of the SISU system. With limited filters, navigation that hides key details behind multiple clicks, and a confusing pagination system that makes it easy to lose track, finding courses can feel unnecessarily tedious. Slow performance only adds to the hassle, making the whole experience more cumbersome than it needs to be.
 
 Sisukas provides a **faster, more user-friendly** way to browse and filter courses.
 - **Fast and Efficient**: All data is preloaded, no additional requests.
@@ -27,7 +23,7 @@ Sisukas provides a **faster, more user-friendly** way to browse and filter cours
 The Sisukas app is built with Vanilla JavaScript, chosen for its simplicity, lightweight nature, and fast performance in the browser. To ensure quick access, it loads Static JSON Data once at startup, eliminating the need for repeated API calls. The app's development process is optimized with the Vite build tool, which supports ECMAScript modules and handles cache invalidation efficiently. Vitest is used to perform fast, reliable unit tests, ensuring that key features like filtering, sorting, and data handling work correctly with minimal overhead. Finally, for deployment, Fly.io distributes the app across multiple edge locations for global access, while Docker ensures consistent, containerized environments.
 
 > [!NOTE]
-> The course data (`courses.json`) was retrieved using the **Aalto Open API**, following the instructions at [3scale Aalto Open API Docs](https://3scale.apps.ocp4.aalto.fi/docs/swagger/open_courses_sisu).
+> The course data (`courses.json`) was retrieved using the Aalto Open API, following the instructions at [3scale Aalto Open API Docs](https://3scale.apps.ocp4.aalto.fi/docs/swagger/open_courses_sisu).
 
 > The data was obtained using the `GET /courseunitrealisations` endpoint, with the parameter: `startTimeAfter=2024-01-01`.
 
