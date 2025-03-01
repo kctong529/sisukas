@@ -25,21 +25,17 @@ Sisukas provides a **faster, more user-friendly** way to browse and filter cours
 - **Unique Toggle**: Show one entry per course code, merging duplicates.
 - **Responsive Design**: Fully optimized for desktop and mobile devices.
 
-## Technical Stack
+## How It Works
 
-- **Vanilla JavaScript**: Simple, lightweight, and runs efficiently in the browser.
-- **Static JSON Data**: Course data is loaded once at startup, avoiding unnecessary API calls and ensuring quick access.
-- **Vite**: Fast build tool that supports ECMAScript modules, optimizing the build process without worrying about cache invalidation.
-- **Vitest**: Provides fast, reliable unit tests, ensuring critical features like filtering, sorting, and data handling are working as expected with minimal overhead.
-- **Fly.io**: Deploys the app globally across multiple edge locations, ensuring fast access for users, and is powered by Docker for consistent, containerized environments.
+The Sisukas app is built with Vanilla JavaScript, chosen for its simplicity, lightweight nature, and fast performance in the browser. To ensure quick access, it loads Static JSON Data once at startup, eliminating the need for repeated API calls. The app's development process is optimized with the Vite build tool, which supports ECMAScript modules and handles cache invalidation efficiently. Vitest is used to perform fast, reliable unit tests, ensuring that key features like filtering, sorting, and data handling work correctly with minimal overhead. Finally, for deployment, Fly.io distributes the app across multiple edge locations for global access, while Docker ensures consistent, containerized environments.
 
-## Data Source
+> [!NOTE]
+> The course data (`courses.json`) was retrieved using the **Aalto Open API**, following the instructions at [3scale Aalto Open API Docs](https://3scale.apps.ocp4.aalto.fi/docs/swagger/open_courses_sisu).
 
-The course data (`courses.json`) was retrieved using the **Aalto Open API**, following the instructions at [3scale Aalto Open API Docs](https://3scale.apps.ocp4.aalto.fi/docs/swagger/open_courses_sisu).
+> The data was obtained using the `GET /courseunitrealisations` endpoint, with the parameter: `startTimeAfter=2024-01-01`.
 
-The data was obtained using the `GET /courseunitrealisations` endpoint, with the parameter: `startTimeAfter=2024-01-01`.
-
-Currently, the app uses a cached version of this data to ensure fast performance without making additional API calls.
+> [!IMPORTANT]
+> Currently, the app uses a cached version of this data to ensure fast performance without making additional API calls. There is no guarantee that the loaded data is the latest information.
 
 ## Running Locally
 
