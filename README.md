@@ -47,36 +47,21 @@ To test the application on your local machine, follow these steps:
    npm ci
    ```
 
-3. **Build the project with Vite**:
+3. **Start the development server**:
 
-   To build the project, run:
-
-   ```sh
-   npm run build
-   ```
-
-   This will bundle the project for production. After the build is complete, you'll have the necessary static files in the `/dist` folder.
-
-   Opening `index.html` is useful for testing CSS styles and layout.
-
-4. **Start a simple HTTP server** in your project directory:
-
-   If you have Python installed, you can use Python's built-in HTTP server:
+   To run the app locally, use the following command:
 
    ```sh
-   cd dist
-   python -m http.server 8000
+   npm run dev
    ```
 
-   This will start a local server on port 8000. Alternatively, you can serve the files using any HTTP server of your choice.
+   This will start the Vite development server and provide a URL in the console (e.g., `http://localhost:5173`). Simply open this URL in your browser.
 
-5. **Open your browser** and go to the following URL:
+> [!NOTE]
+> If you're interested in building the app for production, you can run `npm run build`. This will bundle the project for production and create the necessary static files in the `/dist` folder. You can serve the files from the `/dist` directory using any HTTP server of your choice (e.g. `python -m http.server`).
 
-   ```sh
-   http://localhost:8000
-   ```
-
-   **Note**: `courses.json` is blocked when accessed directly via `file://` in the browser (due to browser security restrictions). The local server is required to load `courses.json` properly.
+> [!TIP]
+> `courses.json` is blocked when accessed directly via `file://` in the browser (due to browser security restrictions). Using the local server ensures proper loading of `courses.json`.
 
 ## To-Do List
 
