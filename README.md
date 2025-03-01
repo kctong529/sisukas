@@ -28,7 +28,10 @@ Sisukas provides a **faster, more user-friendly** way to browse and filter cours
 ## Technical Stack
 
 - **Vanilla JavaScript**: Simple, lightweight, and runs efficiently in the browser.
-- **Static JSON Database**: Course data is loaded once at startup, ensuring quick performance.
+- **Static JSON Data**: Course data is loaded once at startup, avoiding unnecessary API calls and ensuring quick access.
+- **Vite**: Fast build tool that supports ECMAScript modules, optimizing the build process without worrying about cache invalidation.
+- **Vitest**: Provides fast, reliable unit tests, ensuring critical features like filtering, sorting, and data handling are working as expected with minimal overhead.
+- **Fly.io**: Deploys the app globally across multiple edge locations, ensuring fast access for users, and is powered by Docker for consistent, containerized environments.
 
 ## Data Source
 
