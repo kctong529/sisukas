@@ -19,11 +19,8 @@ Sisukas provides a **faster, more user-friendly** way to browse and filter cours
 - **Date**: Filter courses by start and end dates to target specific time frames.
 - **Major & Minor**: Predefined course lists for specific degrees.
 
-## Balance
-
-- **Compact**: All course information you'd need at a glance, no extra clicks.
-- **Unique Toggle**: Show one entry per course code, merging duplicates.
-- **Responsive Design**: Fully optimized for desktop and mobile devices.
+> [!NOTE]
+> We are targeting the delicate balance for the right amount of information in the Sisukas app. It features a compact layout that displays all necessary course details at a glance, with no extra clicks. A unique toggle merges duplicate entries, showing only one per course code. The app is designed with responsiveness in mind, ensuring seamless performance across both desktop and mobile devices.
 
 ## How It Works
 
