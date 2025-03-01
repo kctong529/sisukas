@@ -5,18 +5,18 @@
 A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.fly.dev/).
 
 > [!IMPORTANT]
-> If you're a university student in the Finnish education system, you’ve likely encountered the frustrations of the SISU system. With limited filters, navigation that hides key details behind multiple clicks, and a confusing pagination system that makes it easy to lose track, finding courses can feel unnecessarily tedious. Slow performance only adds to the hassle, making the whole experience more cumbersome than it needs to be.
+> If you're a university student in the Finnish education system, you’ve likely encountered the frustrations of the SISU system. With limited filters, navigation that hides key details behind multiple clicks, and a confusing pagination system that makes it easy to lose track, finding courses can be unnecessarily tedious. Slow performance only adds to the hassle, making the whole experience more cumbersome than it needs to be. On top of that, the lack of curriculum information makes planning your studies more difficult.
 
-Sisukas provides a **faster, more user-friendly** way to browse and filter courses.
-- **Fast and Efficient**: All data is preloaded, no additional requests.
-- **Periods**: Intuitive drag-and-drop selection across the year.
-- **Boolean Logic**: Combine filters with AND, OR for more refined results.
-- **Keyword**: Narrow down results with keywords in course codes or names.
-- **Date**: Filter courses by start and end dates to target specific time frames.
-- **Major & Minor**: Predefined course lists for specific degrees.
+Sisukas offers a faster, more intuitive way to browse and filter courses:
+
+- Quick response with preloaded data, with no additional requests
+- Intuitive drag-and-drop selection across periods
+- Refined search using Boolean logic (AND, OR) for more specific results
+- Filter courses by start and end dates to focus on specific time frames
+- Predefined course lists for specific majors and minors
 
 > [!NOTE]
-> We are targeting the delicate balance for the right amount of information in the Sisukas app. It features a compact layout that displays all necessary course details at a glance, with no extra clicks. A unique toggle merges duplicate entries, showing only one per course code. The app is designed with responsiveness in mind, ensuring seamless performance across both desktop and mobile devices.
+> Sisukas strikes the right balance in presenting course information. It features a compact layout that displays all necessary course details at a glance, with no extra clicks. A unique toggle merges duplicate entries, showing only one per course code. The app is fully responsive, ensuring smooth performance across both desktop and mobile devices.
 
 ## How It Works
 
