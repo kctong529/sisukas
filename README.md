@@ -90,35 +90,35 @@ To test the application on your local machine, follow these steps:
 
 ### Core Functionality
 
-- [ ] Enable filtering by course descriptions. https://github.com/kctong529/sisukas/issues/4
-- [ ] Refactor organization filter rule. https://github.com/kctong529/sisukas/issues/15
-- [ ] Add exclusion criteria such as "Not a math course".
-- [ ] Implement support for nested sorting criteria.
+- [ ] Implement filtering by course descriptions. https://github.com/kctong529/sisukas/issues/4
+- [ ] Refactor the organization filter rule. https://github.com/kctong529/sisukas/issues/15
+- [ ] Add exclusion criteria, such as "Not a math course".
+- [ ] Support nested sorting criteria.
 - [ ] Automatically generate a timeline based on course schedules.
-- [ ] Integrate a study calendar for better planning.
+- [ ] Integrate a study calendar to assist with planning.
 
 ### User Experience & Accessibility
 
-- [x] Enhance responsive design. https://github.com/kctong529/sisukas/issues/2
-- [ ] Allow users to save filter sets. https://github.com/kctong529/sisukas/issues/8
-- [ ] Introduce user management features.
-- [ ] Allow users to pin courses to keep them at the top.
-- [ ] Add comment field where student feedbacks are shown.
-- [ ] Improve accessibility for a more inclusive user experience.
+- [x] Improve responsive design for better usability across devices. https://github.com/kctong529/sisukas/issues/2
+- [ ] Enable users to save and reuse filter sets. https://github.com/kctong529/sisukas/issues/8
+- [ ] Implement user management features.
+- [ ] Allow users to pin selected courses to keep them at the top of the list.
+- [ ] Add a comment field where student feedback is shown.
+- [ ] Enhance accessibility for a more inclusive user experience.
 
 ### Data Management & Updates
 
-- [ ] Use AWS CloudFront to cache `courses.json` and serve it from edge locations to reduce origin traffic and save on Fly.io pay-as-you-go costs. https://github.com/kctong529/sisukas/issues/9
-- [ ] Evaluate the feasibility and necessity of fetching the latest course information from the Aalto Open API, balancing between real-time updates and caching.
-- [ ] Support importing courses from a long string or fuzzy copied text.
-- [ ] Export filtered results with customizable fields (JSON, CSV, Excel).
+- [ ] Use AWS CloudFront to cache `courses.json` and serve it from edge locations. https://github.com/kctong529/sisukas/issues/9
+- [ ] Evaluate the balanece between performance and caching of fetching real-time course information.
+- [ ] Support importing courses from a long string or loosely formatted copied text.
+- [ ] Enable exporting filtered results with customizable fields in JSON, CSV, and Excel formats.
 
 ### Development & Maintenance
-- [ ] Refactor file structure. https://github.com/kctong529/sisukas/issues/3
+- [ ] Refactor the project and file structure for better maintainability. https://github.com/kctong529/sisukas/issues/3
 - [ ] Define and document terminology across the system. https://github.com/kctong529/sisukas/issues/14
-- [ ] Draft guidelines for package management.
-- [ ] Evaluate and choose test packages.
-- [ ] Create a draft set of unit tests.
+- [ ] Write unit tests for core filtering functionalities. https://github.com/kctong529/sisukas/issues/16
+- [ ] Establish guidelines for package management.
+- [ ] Evaluate and select appropriate testing frameworks.
 
 ## Contributing
 
