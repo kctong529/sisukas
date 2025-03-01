@@ -23,9 +23,7 @@ Sisukas offers a faster, more intuitive way to browse and filter courses:
 The Sisukas app is built with Vanilla JavaScript, chosen for its simplicity, lightweight nature, and fast performance in the browser. To ensure quick access, it loads Static JSON Data once at startup, eliminating the need for repeated API calls. The app's development process is optimized with the Vite build tool, which supports ECMAScript modules and handles cache invalidation efficiently. Vitest is used to perform fast, reliable unit tests, ensuring that key features like filtering, sorting, and data handling work correctly with minimal overhead. Finally, for deployment, Fly.io distributes the app across multiple edge locations for global access, while Docker ensures consistent, containerized environments.
 
 > [!NOTE]
-> The course data (`courses.json`) was retrieved using the Aalto Open API, following the instructions at [3scale Aalto Open API Docs](https://3scale.apps.ocp4.aalto.fi/docs/swagger/open_courses_sisu).
-
-> The data was obtained using the `GET /courseunitrealisations` endpoint, with the parameter: `startTimeAfter=2024-01-01`.
+> The course data (`courses.json`) was retrieved using the Aalto Open API, following the instructions at [3scale Aalto Open API Docs](https://3scale.apps.ocp4.aalto.fi/docs/swagger/open_courses_sisu). The data was obtained using the `GET /courseunitrealisations` endpoint, with the parameter: `startTimeAfter=2024-01-01`.
 
 > [!IMPORTANT]
 > Currently, the app uses a cached version of this data to ensure fast performance without making additional API calls. There is no guarantee that the loaded data is the latest information.
@@ -34,28 +32,11 @@ The Sisukas app is built with Vanilla JavaScript, chosen for its simplicity, lig
 
 To test the application on your local machine, follow these steps:
 
-1. **Clone the repository** to your local machine if you haven't already:
+1. Clone the repository: `git clone https://github.com/kctong529/sisukas.git`
+2. Install dependencies: `cd sisukas; npm ci`
+3. Start the server: `npm run dev`
 
-   ```sh
-   git clone https://github.com/kctong529/sisukas.git
-   cd sisukas
-   ```
-
-2. **Install dependencies** using npm:
-
-   ```sh
-   npm ci
-   ```
-
-3. **Start the development server**:
-
-   To run the app locally, use the following command:
-
-   ```sh
-   npm run dev
-   ```
-
-   This will start the Vite development server and provide a URL in the console (e.g., `http://localhost:5173`). Simply open this URL in your browser.
+This will start the Vite development server and provide a URL in the console (e.g., `http://localhost:5173`). Simply open this URL in your browser.
 
 > [!NOTE]
 > If you're interested in building the app for production, you can run `npm run build`. This will bundle the project for production and create the necessary static files in the `/dist` folder. You can serve the files from the `/dist` directory using any HTTP server of your choice (e.g. `python -m http.server`).
