@@ -22,10 +22,7 @@ jobs:
       - name: Show current repo files
         run: ls -la
 
-      - name: Parse enrolmentStartDate and enrolmentEndDate
+      - name: Parse enrolment dates for all courses
         run: |
-          echo "enrolmentStartDate:"
-          jq -r '.enrolmentStartDate' public/data/courses.json
+          jq -r '.[] | "\(.id): \(.enrolmentStartDate) → \(.enrolmentEndDate)"' public/data/courses.json
 
-          echo "enrolmentEndDate:"
-          jq -r '.enrolmentEndDate' public/data/courses.json
