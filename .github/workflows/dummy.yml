@@ -2,9 +2,6 @@ name: Dummy Test Workflow
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - workflow-test  # only runs on this branch when pushed
 
 jobs:
   test_job:
