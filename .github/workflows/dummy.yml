@@ -21,4 +21,5 @@ jobs:
         run: ls -la
 
       - name: Print an environment variable example
-        run: echo "Repository: $GITHUB_REPOSITORY"
+        run: |
+          echo "Repository: $GITHUB_REPOSITORY"
