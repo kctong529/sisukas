@@ -12,7 +12,8 @@ curl -X POST 'https://api.resend.com/emails' \
   -H 'Content-Type: application/json' \
   -d "$(jq -n \
     --arg from "newsletter@sisukas.eu" \
+    --arg to "Sisukas Subscribers <kichun.tong@aalto.fi>" \
     --argjson bcc "$email_list" \
     --arg subject "Sisukas Newsletter - Upcoming Courses" \
     --arg html_content "$html_content" \
-    '{from: $from, to: "subscribers@sisukas.eu", bcc: $bcc, subject: $subject, html: $html_content}')"
+    '{from: $from, to: $to, bcc: $bcc, subject: $subject, html: $html_content}')"
