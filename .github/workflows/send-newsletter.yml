@@ -1,0 +1,32 @@
+name: Send Newsletter
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - workflow-test
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout workflow-test branch
+        uses: actions/checkout@v4
+        with:
+          ref: workflow-test
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Generate newsletter HTML
+        run: |
+          python scripts/generate_newsletter.py
+
+      - name: Send newsletter
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: |
+          chmod +x scripts/send_newsletter.sh
+          ./scripts/send_newsletter.sh

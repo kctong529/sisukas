@@ -2,9 +2,6 @@ name: Parse Courses Workflow
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - workflow-test
 
 jobs:
   parse_courses:
