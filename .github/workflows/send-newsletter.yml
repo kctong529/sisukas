@@ -15,14 +15,29 @@ jobs:
         with:
           ref: workflow-test
 
+      - name: Set up SSH for recipients repo
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.RECIPIENTS_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Clone private recipients repo
+        run: |
+          git clone git@github.com:sisukas-org/sisukas-recipients.git
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      
-      - name: Generate newsletter HTML
+
+      - name: Generate newsletter content
         run: |
           python scripts/generate_newsletter.py
+
+      - name: Move email list into expected location
+        run: |
+          cp sisukas-recipients/email_list.txt email_list.txt
 
       - name: Send newsletter
         env:
