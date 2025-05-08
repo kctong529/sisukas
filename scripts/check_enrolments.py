@@ -24,8 +24,10 @@ for course in courses:
             start_date = datetime.strptime(start_str, "%Y-%m-%d").date()
             end_date = datetime.strptime(end_str, "%Y-%m-%d").date()
 
-            # Filter: Exclude courses starting more than 2 months ago, and include courses ending within 3 weeks
-            if start_date >= two_months_ago and end_date <= three_weeks_from_today:
+            # Filter: 
+            # 1. Exclude courses that started more than 2 months ago
+            # 2. Include courses where the enrolment ends within the next 3 weeks but not in the past
+            if start_date >= two_months_ago and today <= end_date <= three_weeks_from_today:
                 print(f'{course["id"]}: {start_str} → {end_str}')
 
         except ValueError as e:
