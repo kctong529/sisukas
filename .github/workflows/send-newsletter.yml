@@ -9,10 +9,8 @@ jobs:
   send:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout workflow-test branch
+      - name: Checkout main branch
         uses: actions/checkout@v4
-        with:
-          ref: workflow-test
 
       - name: Set up SSH for recipients repo
         run: |
