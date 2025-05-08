@@ -16,13 +16,10 @@ jobs:
         with:
           ref: workflow-test
 
-      - name: Install jq
-        run: sudo apt-get install -y jq
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
-      - name: Show current repo files
-        run: ls -la
-
-      - name: Parse enrolment dates for all courses
-        run: |
-          jq -r '.[] | "\(.id): \(.enrolmentStartDate) → \(.enrolmentEndDate)"' public/data/courses.json
-
+      - name: Run enrolment checker
+        run: python scripts/check_enrolments.py
