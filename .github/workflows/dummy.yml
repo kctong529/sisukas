@@ -1,7 +1,7 @@
 name: Dummy Test Workflow
 
 on:
-  workflow_dispatch:
+  workflow_dispatch
 
 jobs:
   test_job:
