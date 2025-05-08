@@ -1,0 +1,31 @@
+name: Parse Courses Workflow
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - workflow-test
+
+jobs:
+  parse_courses:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout workflow-test branch
+        uses: actions/checkout@v4
+        with:
+          ref: workflow-test
+
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      - name: Show current repo files
+        run: ls -la
+
+      - name: Parse enrolmentStartDate and enrolmentEndDate
+        run: |
+          echo "enrolmentStartDate:"
+          jq -r '.enrolmentStartDate' public/data/courses.json
+
+          echo "enrolmentEndDate:"
+          jq -r '.enrolmentEndDate' public/data/courses.json
