@@ -21,7 +21,7 @@ jobs:
           echo "${{ secrets.RECIPIENTS_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan github.com >> ~/.ssh/known_hosts
-          
+
       - name: Clone private recipients repo
         run: |
           git clone git@github.com:kctong529/sisukas-newsletter-recipients.git
@@ -37,7 +37,7 @@ jobs:
 
       - name: Move email list into expected location
         run: |
-          cp sisukas-recipients/email_list.txt email_list.txt
+          cp sisukas-newsletter-recipients/email_list.txt email_list.txt
 
       - name: Send newsletter
         env:
