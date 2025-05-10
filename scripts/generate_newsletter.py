@@ -39,6 +39,12 @@ def split_exam_and_other_courses(courses):
             other_courses.append(course)
     return exam_courses, other_courses
 
+def format_date_range(start, end):
+    """Format date range as 'd.m.–d.m.' without year, or 'N/A'."""
+    if start and end:
+        return f"{start.day}.{start.month} – {end.day}.{end.month}"
+    return "N/A"
+
 def deduplicate_courses(courses):
     """Remove duplicate courses based on course code, name, and dates."""
     seen = set()
@@ -63,12 +69,10 @@ def generate_table_header():
     return """
     <thead>
         <tr>
-            <th>Course Code</th>
+            <th style="width: 20%; word-break: break-word; white-space: normal;">Course Code</th>
             <th>Course Name</th>
-            <th>Start Date</th>
-            <th>End Date</th>
-            <th>Enrolment Start</th>
-            <th>Enrolment End</th>
+            <th style="width: 13%; word-break: break-word; white-space: normal;">Course Dates</th>
+            <th style="width: 13%; word-break: break-word; white-space: normal;">Enrolment Period</th>
         </tr>
     </thead>
     """
@@ -85,14 +89,15 @@ def generate_course_row(course):
 
     course_link = f"https://sisu.aalto.fi/student/courseunit/{course_unit_id}/brochure"
 
+    course_dates = format_date_range(start_date, end_date)
+    enrolment_dates = format_date_range(enrolment_start, enrolment_end)
+
     return f"""
     <tr>
-        <td>{course_code}</td>
+        <td style="width: 20%; word-break: break-word; white-space: normal;">{course_code}</td>
         <td><a href="{course_link}" target="_blank">{course_name_en}</a></td>
-        <td>{start_date if start_date else 'N/A'}</td>
-        <td>{end_date if end_date else 'N/A'}</td>
-        <td>{enrolment_start if enrolment_start else 'N/A'}</td>
-        <td>{enrolment_end if enrolment_end else 'N/A'}</td>
+        <td style="width: 13%; word-break: break-word; white-space: normal;">{course_dates}</td>
+        <td style="width: 13%; word-break: break-word; white-space: normal;">{enrolment_dates}</td>
     </tr>
     """
 
@@ -112,54 +117,113 @@ def generate_html(exam_courses, other_courses):
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Upcoming Course Enrolments</title>
         <style>
-            .container table {{
+            table {{
                 border-collapse: collapse;
-                width: 90%;
+                width: 98%;
                 margin: 20px auto;
             }}
-            th, td {{ border: 1px solid #ccc; padding: 10px; text-align: left; }}
-            th {{ background-color: #610396; color: white; }}
-            h2 {{ text-align: center; color: #610396; }}
-            body {{ font-family: Arial, sans-serif; background-color: #f4f4f4; }}
-            .container {{ width: 90%; margin: 20px auto; padding: 20px; background-color: white; }}
-            a {{ color: #610396; text-decoration: none; }}
-            a:hover {{ text-decoration: underline; }}
-            details {{ margin: 20px auto; width: 100%; }}
-            summary {{ font-weight: bold; margin: 10px 0; cursor: pointer; }}
+            h2 {{
+                text-align: center;
+                color: #610396;
+            }}
+            body {{
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+            }}
+            a {{
+                color: #610396;
+                text-decoration: none;
+            }}
+            a:hover {{
+                text-decoration: underline;
+            }}
+            hr {{
+                border: 0;
+                border-top: 1px solid #ddd;
+                margin: 40px 0;
+            }}
+            .content-wrapper {{
+                background-color: #ffffff;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                margin-top: 20px;
+            }}
+            .newsletter-table {{
+                border-collapse: collapse;
+                width: 100%;
+                margin-top: 20px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }}
+            .newsletter-table th, .newsletter-table td {{
+                border: 1px solid #ccc;
+                padding: 6px;
+                text-align: left;
+            }}
+            .newsletter-table th {{
+                background-color: #610396;
+                color: white;
+            }}
         </style>
     </head>
     <body>
-        <div class="container">
-            <h2>{newsletter_title}</h2>
-            <p>Stay informed about upcoming course enrolment periods at Aalto. Below, you’ll find a list of courses with enrolment periods closing soon — make sure to check them out in time.</p>
-            
-            <h3>📅 Upcoming Course Enrolments</h3>
-            <table>
-            """
-    html_content += generate_table_header()
+        <table width="100%" cellpadding="0" cellspacing="0" class="content-wrapper">
+            <tr>
+                <td align="center">
+                    <table width="600">
+                        <tr>
+                            <td>
+                                <h2>{newsletter_title}</h2>
+                                <p>Stay informed about upcoming course enrolment periods at Aalto. Below, you’ll find a list of courses with enrolment periods closing soon — make sure to check them out in time.</p>
 
-    for course in other_courses:
-        html_content += generate_course_row(course)
+                                <h3>📅 Upcoming Course Enrolments</h3>
+                                <table class="newsletter-table">
+                                    {generate_table_header()}
+    """
+
+    if other_courses:
+        for course in other_courses:
+            html_content += generate_course_row(course)
+    else:
+        html_content += "<tr><td colspan='4'>No upcoming course enrolments.</td></tr>"
+
+    html_content += f"""
+                                </table>
+
+                                <p>Thanks for staying organised with Sisukas — wishing you a smooth and successful semester ahead!</p>
+                                <hr>
+
+                                <p style="margin-top: 20px; font-size: 13px; color: #777; text-align: center;">
+                                    🚀 Built by students, for students: 
+                                    <a href="https://sisukas.fly.dev/" target="_blank" style="color: #610396;">Sisukas</a> — a lightweight, fast alternative to the SISU system for course filtering. 
+                                    Nothing more, nothing less (for now). You can also contribute on 
+                                    <a href="https://github.com/kctong529/sisukas" target="_blank" style="color: #610396;">GitHub</a>.
+                                </p>
+                                <hr>
+
+                                <h3>📝 Upcoming Exams</h3>
+                                <table class="newsletter-table">
+                                    {generate_table_header()}
+    """
+
+    if exam_courses:
+        for course in exam_courses:
+            html_content += generate_course_row(course)
+    else:
+        html_content += "<tr><td colspan='4'>No upcoming exams.</td></tr>"
 
     html_content += """
-            </table>
-            
-            <details>
-              <summary>📝 Show Exams ({})</summary>
-              <table>
-                """.format(len(exam_courses))
-
-    html_content += generate_table_header()
-
-    for course in exam_courses:
-        html_content += generate_course_row(course)
-
-    html_content += """
-              </table>
-            </details>
-
-            <p>🚀 Thanks for staying organised with Sisukas — wishing you a smooth and successful semester ahead!</p>
-        </div>
+                                </table>
+                                <hr>
+                                <p style="font-size: 13px; color: #777; text-align: center;">
+                                For questions or feedback, please contact us at <a href="mailto:kichun.tong@aalto.fi" style="color: #610396;">kichun.tong@aalto.fi</a>.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
     </body>
     </html>
     """
