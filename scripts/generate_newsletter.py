@@ -39,6 +39,24 @@ def split_exam_and_other_courses(courses):
             other_courses.append(course)
     return exam_courses, other_courses
 
+def deduplicate_courses(courses):
+    """Remove duplicate courses based on course code, name, and dates."""
+    seen = set()
+    unique_courses = []
+    for course in courses:
+        key = (
+            course.get('code'),
+            course['name'].get('en'),
+            course.get('startDate'),
+            course.get('endDate'),
+            course.get('enrolmentStartDate'),
+            course.get('enrolmentEndDate')
+        )
+        if key not in seen:
+            seen.add(key)
+            unique_courses.append(course)
+    return unique_courses
+
 # HTML generation functions
 def generate_table_header():
     """Generate the header for the course enrolment table."""
@@ -163,6 +181,9 @@ def main():
     # Filter the courses
     filtered_courses = filter_courses(courses, two_months_ago, three_weeks_from_today, today)
 
+    # Deduplicate them
+    filtered_courses = deduplicate_courses(filtered_courses)
+    
     # Sort the courses by enrolment end date
     filtered_courses.sort(key=lambda x: parse_date(x.get("enrolmentEndDate")))
 
