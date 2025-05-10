@@ -27,6 +27,18 @@ def filter_courses(courses, start_threshold, end_threshold, today):
                 filtered_courses.append(course)
     return filtered_courses
 
+def split_exam_and_other_courses(courses):
+    """Split courses into exam courses and other courses based on 'exam' in the name."""
+    exam_courses = []
+    other_courses = []
+    for course in courses:
+        name_en = course['name'].get('en', '').lower()
+        if 'exam' in name_en:
+            exam_courses.append(course)
+        else:
+            other_courses.append(course)
+    return exam_courses, other_courses
+
 # HTML generation functions
 def generate_table_header():
     """Generate the header for the course enrolment table."""
@@ -66,9 +78,15 @@ def generate_course_row(course):
     </tr>
     """
 
-def generate_html(courses):
+def generate_html(exam_courses, other_courses):
     """Generate the full HTML content for the newsletter."""
-    html_content = """
+
+    today = datetime.today()
+    year = today.year
+    week_number = today.isocalendar().week
+    newsletter_title = f"Sisukas Newsletter ({year} Week {week_number})"
+
+    html_content = f"""
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -76,31 +94,53 @@ def generate_html(courses):
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Upcoming Course Enrolments</title>
         <style>
-            table { border-collapse: collapse; width: 80%; margin: 20px auto; }
-            th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-            th { background-color: #610396; color: white; }
-            h2 { text-align: center; color: #610396; }
-            body { font-family: Arial, sans-serif; background-color: #f4f4f4; }
-            .container { width: 90%; margin: 20px auto; padding: 20px; background-color: white; }
-            a { color: #610396; text-decoration: none; }
-            a:hover { text-decoration: underline; }
+            .container table {{
+                border-collapse: collapse;
+                width: 90%;
+                margin: 20px auto;
+            }}
+            th, td {{ border: 1px solid #ccc; padding: 10px; text-align: left; }}
+            th {{ background-color: #610396; color: white; }}
+            h2 {{ text-align: center; color: #610396; }}
+            body {{ font-family: Arial, sans-serif; background-color: #f4f4f4; }}
+            .container {{ width: 90%; margin: 20px auto; padding: 20px; background-color: white; }}
+            a {{ color: #610396; text-decoration: none; }}
+            a:hover {{ text-decoration: underline; }}
+            details {{ margin: 20px auto; width: 100%; }}
+            summary {{ font-weight: bold; margin: 10px 0; cursor: pointer; }}
         </style>
     </head>
     <body>
         <div class="container">
-            <h2>🎉 Your Upcoming Course Enrolments Are Here!</h2>
-            <p>Hey there! Ready to level up your semester? Check out these courses with upcoming enrolment deadlines. Don’t miss out – they’re just a click away!</p>
+            <h2>{newsletter_title}</h2>
+            <p>Stay informed about upcoming course enrolment periods at Aalto. Below, you’ll find a list of courses with enrolment periods closing soon — make sure to check them out in time.</p>
+            
+            <h3>📅 Upcoming Course Enrolments</h3>
             <table>
-                """
+            """
     html_content += generate_table_header()
 
-    # Add course rows to the table
-    for course in courses:
+    for course in other_courses:
         html_content += generate_course_row(course)
 
     html_content += """
             </table>
-            <p>🚀 Thanks for using Sisukas! We hope this helps you stay on track. Happy learning!</p>
+            
+            <details>
+              <summary>📝 Show Exams ({})</summary>
+              <table>
+                """.format(len(exam_courses))
+
+    html_content += generate_table_header()
+
+    for course in exam_courses:
+        html_content += generate_course_row(course)
+
+    html_content += """
+              </table>
+            </details>
+
+            <p>🚀 Thanks for staying organised with Sisukas — wishing you a smooth and successful semester ahead!</p>
         </div>
     </body>
     </html>
@@ -126,8 +166,11 @@ def main():
     # Sort the courses by enrolment end date
     filtered_courses.sort(key=lambda x: parse_date(x.get("enrolmentEndDate")))
 
+    # Split the courses into exam and other
+    exam_courses, other_courses = split_exam_and_other_courses(filtered_courses)
+
     # Generate the HTML content
-    html_content = generate_html(filtered_courses)
+    html_content = generate_html(exam_courses, other_courses)
 
     # Write the HTML to a file
     with open("public/newsletter.html", "w") as f:
