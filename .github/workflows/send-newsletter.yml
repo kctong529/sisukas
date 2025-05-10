@@ -2,7 +2,7 @@ name: Send Newsletter
 
 on:
   schedule:
-    - cron: '49 7 * * 6'
+    - cron: '49 8 * * 6'
   workflow_dispatch:
 
 jobs:
