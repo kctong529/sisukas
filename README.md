@@ -18,6 +18,9 @@ Sisukas offers a faster, more intuitive way to browse and filter courses:
 > [!NOTE]
 > Sisukas strikes the right balance in presenting course information. It features a compact layout that displays all necessary course details at a glance, with no extra clicks. A unique toggle merges duplicate entries, showing only one per course code. The app is fully responsive, ensuring smooth performance across both desktop and mobile devices.
 
+> [!TIP]
+> Want to stay informed about important course details, key registration deadlines, and exam schedules? Sisukas now features a public newsletter! Check out the latest issue or subscribe [here](https://sisukas.fly.dev/newsletter.html)
+
 ## How It Works
 
 The Sisukas app is built with Vanilla JavaScript, chosen for its simplicity, lightweight nature, and fast performance in the browser. To ensure quick access, it loads Static JSON Data once at startup, eliminating the need for repeated API calls. The app's development process is optimized with the Vite build tool, which supports ECMAScript modules and handles cache invalidation efficiently. Vitest is used to perform fast, reliable unit tests, ensuring that key features like filtering, sorting, and data handling work correctly with minimal overhead. Finally, for deployment, Fly.io distributes the app across multiple edge locations for global access, while Docker ensures consistent, containerized environments.
@@ -67,9 +70,17 @@ This will start the Vite development server and provide a URL in the console (e.
 ### Data Management & Updates
 
 - [ ] Use AWS CloudFront to cache `courses.json` and serve it from edge locations. https://github.com/kctong529/sisukas/issues/9
-- [ ] Evaluate the balanece between performance and caching of fetching real-time course information.
+- [ ] Write a workflow to fetch the course API, compare against the latest cached data, generate a diff report, and automatically commit updates.
+- [ ] Evaluate the balance between performance and caching of fetching real-time course information.
 - [ ] Support importing courses from a long string or loosely formatted copied text.
 - [ ] Enable exporting filtered results with customizable fields in JSON, CSV, and Excel formats.
+
+### Newsletter & Announcements
+
+- [x] Implement a GitHub Action to send newsletter updates automatically when a new issue is published.
+- [ ] Build management workflow to support drafting, previewing, and scheduling issues.
+- [ ] Add basic email subscription management system (unsubscribe, preferences, email validation).
+- [ ] Build a proper newsletter archive viewer for past issues, and ensure old issues are cleaned up and consistent in Markdown + HTML formats.
 
 ### Development & Maintenance
 - [ ] Refactor the project and file structure for better maintainability. https://github.com/kctong529/sisukas/issues/3
