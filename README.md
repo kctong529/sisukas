@@ -19,7 +19,7 @@ Sisukas offers a faster, more intuitive way to browse and filter courses:
 > Sisukas strikes the right balance in presenting course information. It features a compact layout that displays all necessary course details at a glance, with no extra clicks. A unique toggle merges duplicate entries, showing only one per course code. The app is fully responsive, ensuring smooth performance across both desktop and mobile devices.
 
 > [!TIP]
-> Want to stay informed about important course details, key registration deadlines, and exam schedules? Sisukas now features a public newsletter! Check out the latest issue or subscribe [here](https://sisukas.fly.dev/newsletter.html)
+> Want to stay informed about important course details, key registration deadlines, and exam schedules? Sisukas now features a public newsletter! Check out the latest issue or subscribe [here](https://sisukas.fly.dev/newsletter.html).
 
 ## How It Works
 
@@ -70,7 +70,7 @@ This will start the Vite development server and provide a URL in the console (e.
 ### Data Management & Updates
 
 - [ ] Use AWS CloudFront to cache `courses.json` and serve it from edge locations. https://github.com/kctong529/sisukas/issues/9
-- [ ] Write a workflow to fetch the course API, compare against the latest cached data, generate a diff report, and automatically commit updates.
+- [ ] Write a workflow to fetch the course API, with diff report and automatically commit.
 - [ ] Evaluate the balance between performance and caching of fetching real-time course information.
 - [ ] Support importing courses from a long string or loosely formatted copied text.
 - [ ] Enable exporting filtered results with customizable fields in JSON, CSV, and Excel formats.
