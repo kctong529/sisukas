@@ -473,3 +473,52 @@ curricula:
       - ELEC-C7310
       - ELEC-C7231
       - ELEC-C7320
+  - code: CS24
+    name: Computer Science, Tietotekniikka (2024-2026)
+    courses:
+      - CS-A1110
+      - CS-A1120
+      - CS-A1140
+      - MS-A0401
+      - MS-A0409
+      - MS-A0102
+      - MS-A0109
+      - MS-A0002
+      - MS-A0009
+      - MS-A0202
+      - MS-A0209
+      - MS-A0502
+      - MS-A0509
+      - PHYS-A1131
+      - PHYS-A1141
+      - TU-A1100
+      - TU-A1200
+      - SCI-A0001
+      - CS-A0100
+      - LC-5001
+      - LC-7001
+      - LC-5002
+      - LC-7002
+      - TU-A1160
+      - CHEM-A1020
+      - NBE-C3001
+      - CS-A1150
+      - CS-C2100
+      - CS-C2120
+      - CS-C2130
+      - CS-C2140
+      - CS-C2161
+      - SCI-C1002
+      - SCI3027.kand
+      - SCI.kyps
+      - CS-C3100
+      - CS-C3120
+      - CS-C3130
+      - CS-C3140
+      - CS-C3150
+      - CS-C3170
+      - CS-C3240
+      - CS-E4580
+      - CS-E4700
+      - MS-C1343
+      - ELEC-C7241
