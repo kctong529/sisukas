@@ -25,6 +25,9 @@ def filter_courses(courses, start_threshold, end_threshold, today):
             # Ensure the course is within the date range
             if start_date >= start_threshold and end_date <= end_threshold:
                 filtered_courses.append(course)
+            # Include courses that will open registration soon
+            elif today <= start_date <= end_threshold:
+                filtered_courses.append(course)
     return filtered_courses
 
 def split_exam_and_other_courses(courses):
