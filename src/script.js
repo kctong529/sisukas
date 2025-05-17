@@ -455,8 +455,110 @@ function getUniqueCourses(courses) {
     return Array.from(uniqueCoursesMap.values());
 }
 
+function exportFilters() {
+    const rules = Array.from(document.querySelectorAll("#filter-container .filter-rule"));
+    const filters = rules.map(rule => {
+        const booleanSelect = rule.querySelector(".filter-boolean");
+        const fieldSelect = rule.querySelector(".filter-field");
+        const relationSelect = rule.querySelector(".filter-relation");
+        const valueInput = rule.querySelector(".filter-value");
+
+        return {
+            boolean: booleanSelect ? booleanSelect.value : null,
+            field: fieldSelect.value,
+            relation: relationSelect.value,
+            value: valueInput.value
+        };
+    });
+
+    return filters;
+}
+
+function logFilters() {
+    const filters = exportFilters();
+    console.log(JSON.stringify(filters, null, 2));
+}
+
+function saveFiltersToFile() {
+    const filters = exportFilters();
+    const jsonString = JSON.stringify(filters, null, 2);
+
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "filters.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+function loadFiltersFromJson(filters) {
+    filters.forEach(filter => {
+        addFilterRule(); // adds a new filter rule row
+
+        // Get the last added rule
+        const rules = document.querySelectorAll("#filter-container .filter-rule");
+        const newRule = rules[rules.length - 1];
+
+        // Set field
+        const fieldSelect = newRule.querySelector(".filter-field");
+        fieldSelect.value = filter.field;
+        handleFieldChange(fieldSelect); // if necessary
+
+        // Set relation
+        const relationSelect = newRule.querySelector(".filter-relation");
+        relationSelect.value = filter.relation;
+
+        // Set boolean (if exists)
+        const booleanSelect = newRule.querySelector(".filter-boolean");
+        if (booleanSelect && filter.boolean) {
+            booleanSelect.value = filter.boolean;
+        }
+
+        // Set value
+        const valueInput = newRule.querySelector(".filter-value");
+        if (valueInput) {
+            valueInput.value = filter.value;
+        }
+    });
+
+    // Finally trigger the search
+    filterCourses();
+}
+
+function loadFiltersFromFile() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json";
+
+    input.onchange = event => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const filters = JSON.parse(e.target.result);
+                loadFiltersFromJson(filters);
+            } catch (err) {
+                console.error("Failed to parse JSON file:", err);
+                alert("Invalid JSON file.");
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    input.click();
+}
+
 window.addFilterRule = addFilterRule;
 window.handleFieldChange = handleFieldChange;
 window.removeFilterRule = removeFilterRule;
 window.filterCourses = filterCourses;
 window.onload = loadCourses;
+window.logFilters = logFilters;
+window.saveFiltersToFile = saveFiltersToFile;
+window.loadFiltersFromJson = loadFiltersFromJson;
+window.loadFiltersFromFile = loadFiltersFromFile;
