@@ -11,7 +11,7 @@ def parse_date(date_str: str) -> datetime.date:
             return None
     return None  # Return None if the date_str is None or empty
 
-def filter_courses(courses, start_threshold, end_threshold, today):
+def filter_courses(courses, start_threshold, start_threshold_2, end_threshold, today):
     """Filter courses based on the enrolment start and end dates."""
     filtered_courses = []
     for course in courses:
@@ -26,7 +26,7 @@ def filter_courses(courses, start_threshold, end_threshold, today):
             if start_date >= start_threshold and end_date <= end_threshold:
                 filtered_courses.append(course)
             # Include courses that will open registration soon
-            elif today <= start_date <= end_threshold:
+            elif today <= start_date <= start_threshold_2:
                 filtered_courses.append(course)
     return filtered_courses
 
@@ -41,6 +41,22 @@ def split_exam_and_other_courses(courses):
         else:
             other_courses.append(course)
     return exam_courses, other_courses
+
+def split_upcoming_open_and_deadlines(courses, threshold):
+    """
+    Split courses into:
+    - upcoming_open: enrolment closes after the threshold date
+    - upcoming_close: enrolment is already close or closes before the threshold
+    """
+    upcoming_open = []
+    upcoming_close = []
+    for course in courses:
+        end_date = parse_date(course.get('enrolmentEndDate'))
+        if end_date and end_date <= threshold:
+            upcoming_close.append(course)
+        else:
+            upcoming_open.append(course)
+    return upcoming_open, upcoming_close
 
 def format_date_range(start, end):
     """Format date range as 'd.m.–d.m.' without year, or 'N/A'."""
@@ -104,7 +120,25 @@ def generate_course_row(course):
     </tr>
     """
 
-def generate_html(exam_courses, other_courses):
+def generate_category_table(title, courses):
+    """Generate an HTML table for a category of courses."""
+    html = f"""
+        <h3>{title}</h3>
+        <table class="newsletter-table">
+            {generate_table_header()}
+    """
+
+    if courses:
+        for course in courses:
+            html += generate_course_row(course)
+    else:
+        html += "<tr><td colspan='4'>No courses in this category.</td></tr>"
+
+    html += "</table><hr>"
+
+    return html
+
+def generate_html(upcoming_open, upcoming_close, exam_courses):
     """Generate the full HTML content for the newsletter."""
 
     today = datetime.today()
@@ -178,46 +212,26 @@ def generate_html(exam_courses, other_courses):
                             <td>
                                 <h2>{newsletter_title}</h2>
                                 <p>Stay informed about upcoming course enrolment periods at Aalto. Below, you’ll find a list of courses with enrolment periods closing soon — make sure to check them out in time.</p>
-
-                                <h3>📅 Upcoming Course Enrolments</h3>
-                                <table class="newsletter-table">
-                                    {generate_table_header()}
     """
-
-    if other_courses:
-        for course in other_courses:
-            html_content += generate_course_row(course)
-    else:
-        html_content += "<tr><td colspan='4'>No upcoming course enrolments.</td></tr>"
 
     html_content += f"""
-                                </table>
+        {generate_category_table("📅 Upcoming Course Enrolment Deadlines", upcoming_close)}
 
-                                <p>Thanks for staying organised with Sisukas — wishing you a smooth and successful semester ahead!</p>
-                                <hr>
+        {generate_category_table("📅 Enrolments Opening Soon or Recently", upcoming_open)}
 
-                                <p style="margin-top: 20px; font-size: 13px; color: #777; text-align: center;">
-                                    🚀 Built by students, for students: 
-                                    <a href="https://sisukas.fly.dev/" target="_blank" style="color: #610396;">Sisukas</a> — a lightweight, fast alternative to the SISU system for course filtering. 
-                                    Nothing more, nothing less (for now). You can also contribute on 
-                                    <a href="https://github.com/kctong529/sisukas" target="_blank" style="color: #610396;">GitHub</a>.
-                                </p>
-                                <hr>
+        <p>Thanks for staying organised with Sisukas — wishing you a smooth and successful semester ahead!</p>
+        <hr>
+        <p style="margin-top: 20px; font-size: 13px; color: #777; text-align: center;">
+            🚀 Built by students, for students: 
+            <a href="https://sisukas.fly.dev/" target="_blank" style="color: #610396;">Sisukas</a> — a lightweight, fast alternative to the SISU system for course filtering. 
+            Nothing more, nothing less (for now). You can also contribute on 
+            <a href="https://github.com/kctong529/sisukas" target="_blank" style="color: #610396;">GitHub</a>.
+        </p>
 
-                                <h3>📝 Upcoming Exams</h3>
-                                <table class="newsletter-table">
-                                    {generate_table_header()}
+        {generate_category_table("📝 Upcoming Exams", exam_courses)}
     """
 
-    if exam_courses:
-        for course in exam_courses:
-            html_content += generate_course_row(course)
-    else:
-        html_content += "<tr><td colspan='4'>No upcoming exams.</td></tr>"
-
     html_content += """
-                                </table>
-                                <hr>
                                 <p style="font-size: 13px; color: #777; text-align: center;">
                                 For questions or feedback, please contact us at <a href="mailto:kichun.tong@aalto.fi" style="color: #610396;">kichun.tong@aalto.fi</a>.
                                 </p>
@@ -237,8 +251,9 @@ def main():
     """Main logic to filter courses and generate the HTML newsletter."""
     today = datetime.today().date()
 
-    # Date thresholds for the next 2 months and 3 weeks
+    # Date thresholds
     two_months_ago = today - timedelta(days=60)
+    two_weeks_from_day = today + timedelta(weeks=2)
     three_weeks_from_today = today + timedelta(weeks=3)
 
     # Load the courses JSON
@@ -246,7 +261,7 @@ def main():
         courses = json.load(f)
 
     # Filter the courses
-    filtered_courses = filter_courses(courses, two_months_ago, three_weeks_from_today, today)
+    filtered_courses = filter_courses(courses, two_months_ago, two_weeks_from_day, three_weeks_from_today, today)
 
     # Deduplicate them
     filtered_courses = deduplicate_courses(filtered_courses)
@@ -257,8 +272,11 @@ def main():
     # Split the courses into exam and other
     exam_courses, other_courses = split_exam_and_other_courses(filtered_courses)
 
+    # Split other courses into those with future enrolment opens and those closing soon/already open
+    upcoming_open, upcoming_close = split_upcoming_open_and_deadlines(other_courses, three_weeks_from_today)
+
     # Generate the HTML content
-    html_content = generate_html(exam_courses, other_courses)
+    html_content = generate_html(upcoming_open, upcoming_close, exam_courses)
 
     # Write the HTML to a file
     with open("public/newsletter.html", "w") as f:
