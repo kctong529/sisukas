@@ -52,10 +52,21 @@ jobs:
         id: issue
         run: echo "number=$(date +%V)" >> $GITHUB_OUTPUT
 
-      - name: Commit and push wrapped newsletter
+      - name: Check for changes and commit if needed
+        id: check-commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add public/newsletter.html
-          git commit -m "Update Week ${{ steps.issue.outputs.number }} newsletter" || echo "No changes to commit"
-          git push origin main
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            echo "commit-made=false" >> $GITHUB_OUTPUT
+          else
+            git commit -m "Update Week ${{ steps.issue.outputs.number }} newsletter"
+            git push origin main
+            echo "commit-made=true" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Log if deploy triggered by newsletter commit
+        if: steps.check-commit.outputs.commit-made == 'true'
+        run: echo "Deploying since a newsletter commit was made"

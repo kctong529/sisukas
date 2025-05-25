@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+  workflow_run:
+    workflows: ["Send Newsletter"]
+    types:
+      - completed
 
 jobs:
   build-and-deploy:
@@ -16,6 +20,31 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Determine if deploy should run
+        id: should_deploy
+        run: |
+          COMMIT_AUTHOR="$(git log -1 --pretty=format:'%an')"
+          COMMIT_MESSAGE="$(git log -1 --pretty=%B)"
+          echo "Latest commit by: $COMMIT_AUTHOR"
+          echo "Message: $COMMIT_MESSAGE"
+
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "Triggered by push — proceed"
+            echo "proceed=true" >> $GITHUB_OUTPUT
+          elif [[ "$COMMIT_AUTHOR" == "github-actions[bot]" && "$COMMIT_MESSAGE" == Update\ Week*newsletter ]]; then
+            echo "Triggered by newsletter commit — proceed"
+            echo "proceed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No newsletter commit — skipping deploy"
+            echo "proceed=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Stop job if no deploy needed
+        if: steps.should_deploy.outputs.proceed == 'false'
+        run: |
+          echo "Skipping build & deploy — no new newsletter commit"
+          exit 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
