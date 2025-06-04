@@ -1,0 +1,22 @@
+name: Check Course Updates
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check_course_updates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+      - name: Install dependencies
+        run: pip install requests
+      - name: Fetch latest courses
+        env:
+          AALTO_USER_KEY: ${{ secrets.AALTO_USER_KEY }}
+        run: python scripts/fetch_latest_courses.py
+      - name: Report changes
+        run: python scripts/report_course_changes.py
