@@ -1,3 +1,4 @@
+// Import all required modules and helper functions
 import { loadPrograms, loadPeriods, periodsData, curriculaMap } from './yamlCache.js';
 import { initializeDragSelect, removeEventHandlers } from './dragSelect.js';
 import { createSelect, populateSelect } from './domUtils.js';
@@ -18,15 +19,30 @@ import {
 
 import { FILTER_FIELDS, INPUT_HTMLS } from './constant.js';
 
-let courses = [];
-let organizationNames = new Set();
+// Global state variables
+let courses = []; // Stores all courses loaded from JSON
+let organizationNames = new Set(); // Unique organization names
+let filteredCourses = []; // Stores currently filtered courses
+let currentSortColumn = "courseName"; // Default sort column
+let sortDirection = 1; // 1 = ascending, -1 = descending
 
+// Main initialization function
 async function loadCourses() {
     try {
+        // Load course data and initialize filteredCourses with all courses
         courses = await loadCourseData();
+        filteredCourses = [...courses]; // Shallow copy of all courses
+
+        // Extract organization names for filtering
         organizationNames = extractOrganizationNames(courses);
+
+        // Load additional required data
         await loadAdditionalData();
-        displayCourses(courses);
+
+        // Sort by default column (courseName ascending) and display
+        sortCourses();
+        displayCourses(filteredCourses, false);
+        updateSortIndicators(currentSortColumn, sortDirection);
     } catch (error) {
         console.error("Error loading JSON:", error);
     }
@@ -46,16 +62,46 @@ async function loadAdditionalData() {
     await loadPeriods();
 }
 
-function displayCourses(courses, filtersApplied=false) {
+// Helper to extract sortable value from course based on column
+function getSortableValue(course, column) {
+    switch (column) {
+        case 'courseCode':
+            return course.code.toLowerCase().trim();
+        case 'courseName':
+            return course.name.en.toLowerCase().trim();
+        case 'teachers':
+            return course.teachers.join(", ").toLowerCase().trim();
+        case 'credits':
+            return course.credits.min;
+        case 'language':
+            return course.languageOfInstructionCodes.join(", ").toLowerCase();
+        case 'startDate':
+            return new Date(course.startDate);
+        case 'endDate':
+            return new Date(course.endDate);
+        case 'enrollFrom':
+            return new Date(course.enrolmentStartDate);
+        case 'enrollTo':
+            return new Date(course.enrolmentEndDate);
+        case 'prerequisites':
+            return (course.summary.prerequisites ? course.summary.prerequisites.en : '').toLowerCase();
+        default:
+            return '';
+    }
+}
+
+// Display courses in the table
+function displayCourses(coursesToDisplay, filtersApplied=false) {
     const container = document.getElementById('course-list');
     container.innerHTML = ''; // Clear previous results
 
-    courses.forEach(course => {
+    coursesToDisplay.forEach(course => {
         container.insertAdjacentHTML('beforeend', createCourseRow(course));
     });
-    updateCourseCount(courses, filtersApplied);
+    updateCourseCount(coursesToDisplay, filtersApplied);
 }
 
+// Create HTML for a single course row
 function createCourseRow(course) {
     const courseLink = `https://sisu.aalto.fi/student/courseunit/${course.courseUnitId}/brochure`;
     return `<tr>
@@ -72,6 +118,7 @@ function createCourseRow(course) {
     </tr>`;
 }
 
+// Update the course count display
 function updateCourseCount(courses, filtersApplied) {
     const courseCountDiv = document.getElementById('course-count');
     courseCountDiv.innerHTML = `Total ${filtersApplied ? 'filtered' : ''} courses: ${courses.length}`;
@@ -383,26 +430,35 @@ function evaluateBooleanLogic(course, filterGroups) {
     );
 }
 
+// Filter courses based on current filter rules
 function filterCourses() {
     const filters = document.querySelectorAll('.filter-rule');
     const showUnique = document.getElementById("uniqueToggle").checked;
 
-    const filterGroups = createFilterGroups(filters);
+    if (filters.length === 0) {
+        // No filters - show all courses (optionally unique only)
+        filteredCourses = showUnique ? getUniqueCourses(courses) : [...courses];
+    } else {
+        // Apply filter rules
+        const filterGroups = createFilterGroups(filters);
+        const allResults = new Set();
+        
+        courses.forEach(course => {
+            if (evaluateBooleanLogic(course, filterGroups)) {
+                allResults.add(course);
+            }
+        });
 
-    const allResults = new Set();
-    courses.forEach(course => {
-        if (evaluateBooleanLogic(course, filterGroups)) {
-            allResults.add(course);
-        }
-    });
-
-    let filtered = Array.from(allResults);
-
-    if (showUnique) {
-        filtered = getUniqueCourses(filtered);
+        filteredCourses = showUnique ? getUniqueCourses(Array.from(allResults)) : Array.from(allResults);
     }
+}
 
-    displayCourses(filtered, true);
+// Handle search button click - applies filters and maintains current sort
+function onSearchButtonClick() {
+    filterCourses(); // Apply current filters
+    sortCourses(); // Maintain current sort order
+    displayCourses(filteredCourses, true);
+    updateSortIndicators(currentSortColumn, sortDirection);
 }
 
 function applyFilters(course, filterRules) {
@@ -453,6 +509,51 @@ function getUniqueCourses(courses) {
     });
     
     return Array.from(uniqueCoursesMap.values());
+}
+
+// Helper function to sort courses based on current settings
+function sortCourses(coursesToSort = filteredCourses, column = currentSortColumn, direction = sortDirection) {
+    return coursesToSort.sort((a, b) => {
+        const valueA = getSortableValue(a, column);
+        const valueB = getSortableValue(b, column);
+        
+        // Handle both string and number/date comparisons
+        if (typeof valueA === 'string') {
+            return valueA.localeCompare(valueB) * direction;
+        } else {
+            return (valueA - valueB) * direction;
+        }
+    });
+}
+
+// Handle column header clicks for sorting
+function handleColumnSort(column) {
+    // Toggle direction if clicking same column, otherwise reset to ascending
+    if (currentSortColumn === column) {
+        sortDirection *= -1;
+    } else {
+        // New column, default to ascending
+        currentSortColumn = column;
+        sortDirection = 1;
+    }
+
+    sortCourses(); // Re-sort with new parameters
+    displayCourses(filteredCourses, true);
+    updateSortIndicators(currentSortColumn, sortDirection);
+}
+
+// Update sort indicators in the UI
+function updateSortIndicators(column, direction) {
+    // Remove all existing indicators
+    document.querySelectorAll('th').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+    });
+    
+    // Add indicator to current column
+    const header = document.querySelector(`th[data-column="${column}"]`);
+    if (header) {
+        header.classList.add(direction === 1 ? 'sort-asc' : 'sort-desc');
+    }
 }
 
 function exportFilters() {
@@ -526,6 +627,9 @@ function loadFiltersFromJson(filters) {
 
     // Finally trigger the search
     filterCourses();
+    sortCourses();
+    displayCourses(filteredCourses, true);
+    updateSortIndicators(currentSortColumn, sortDirection);
 }
 
 function loadFiltersFromFile() {
@@ -556,9 +660,23 @@ function loadFiltersFromFile() {
 window.addFilterRule = addFilterRule;
 window.handleFieldChange = handleFieldChange;
 window.removeFilterRule = removeFilterRule;
+window.displayCourses = displayCourses;
 window.filterCourses = filterCourses;
-window.onload = loadCourses;
 window.logFilters = logFilters;
 window.saveFiltersToFile = saveFiltersToFile;
 window.loadFiltersFromJson = loadFiltersFromJson;
 window.loadFiltersFromFile = loadFiltersFromFile;
+window.onSearchButtonClick = onSearchButtonClick;
+
+// Initialize on page load
+window.onload = function() {
+    loadCourses();
+    
+    // Add click handlers to column headers
+    document.querySelectorAll('th[data-column]').forEach(th => {
+        th.addEventListener('click', () => {
+            const column = th.getAttribute('data-column');
+            handleColumnSort(column);
+        });
+    });
+};
