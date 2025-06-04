@@ -343,6 +343,29 @@ th, td {
 
 th {
     background-color: #f2f2f2;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+}
+
+th.sort-asc::after {
+    font-size: 0.7em;
+    content: " ↑";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+}
+
+th.sort-desc::after {
+    font-size: 0.7em;
+    content: " ↓";
+    position: absolute;
+    top: 2px;
+    right: 2px;
+}
+
+th:hover {
+    background-color: #eee;
 }
 
 /* Column Widths */
