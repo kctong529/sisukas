@@ -27,7 +27,7 @@
         <div id="search-container">
             <div id="searchGroup">
                 <button onclick="addFilterRule()">➕ Add Rule</button>
-                <button onclick="filterCourses()">🔍 Search</button>
+                <button onclick="onSearchButtonClick()">🔍 Search</button>
                 <!-- Toggle Switch for Showing Unique Courses -->
                 <label class="switch">
                     <input type="checkbox" id="uniqueToggle">
@@ -44,25 +44,35 @@
         <table>
             <thead>
                 <tr>
-                    <th><span class="full-text">Course Code</span>
+                    <th data-column="courseCode">
+                        <span class="full-text">Course Code</span>
                         <span class="abbreviated-text">code</span></th>
-                    <th><span class="full-text">Course Name</span>
+                    <th data-column="courseName">
+                        <span class="full-text">Course Name</span>
                         <span class="abbreviated-text">name</span></th>
-                    <th><span class="full-text">Teacher(s)</span>
+                    <th data-column="teachers">
+                        <span class="full-text">Teacher(s)</span>
                         <span class="abbreviated-text">teachr</span></th>
-                    <th><span class="full-text">Credits</span>
+                    <th data-column="credits">
+                        <span class="full-text">Credits</span>
                         <span class="abbreviated-text">cr</span></th>
-                    <th><span class="full-text">Language</span>
+                    <th data-column="language">
+                        <span class="full-text">Language</span>
                         <span class="abbreviated-text">lang</span></th>
-                    <th><span class="full-text">Start Date</span>
+                    <th data-column="startDate">
+                        <span class="full-text">Start Date</span>
                         <span class="abbreviated-text">start</span></th>
-                    <th><span class="full-text">End Date</span>
+                    <th data-column="endDate">
+                        <span class="full-text">End Date</span>
                         <span class="abbreviated-text">end</span></th>
-                    <th><span class="full-text">Enroll From</span>
+                    <th data-column="enrollFrom">
+                        <span class="full-text">Enroll From</span>
                         <span class="abbreviated-text">frm</span></th>
-                    <th><span class="full-text">Enroll To</span>
+                    <th data-column="enrollTo">
+                        <span class="full-text">Enroll To</span>
                         <span class="abbreviated-text">to</span></th>
-                    <th><span class="full-text">Prerequisites</span>
+                    <th data-column="prerequisites">
+                        <span class="full-text">Prerequisites</span>
                         <span class="abbreviated-text">preq</span></th>
                 </tr>
             </thead>
