@@ -365,7 +365,7 @@ th.sort-desc::after {
 }
 
 th:hover {
-    background-color: #eeeeee;
+    background-color: #eee;
 }
 
 /* Column Widths */
