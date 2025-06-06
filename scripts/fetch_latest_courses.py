@@ -6,7 +6,7 @@ import sys
 def main():
     api_key = os.getenv("AALTO_USER_KEY")
     if not api_key:
-        print("ERROR: AALT_USER_KEY environment variable not set", file=sys.stderr)
+        print("ERROR: AALTO_USER_KEY environment variable not set", file=sys.stderr)
         sys.exit(1)
 
     url = "https://course.api.aalto.fi:443/api/sisu/v1/courseunitrealisations"
