@@ -1,0 +1,412 @@
+{
+  "timestamp": "2025-06-06T20:06:27.133802",
+  "summary": {
+    "added": 2,
+    "removed": 0,
+    "updated": 32
+  },
+  "details": {
+    "added": [
+      {
+        "code": "ECON-E6000",
+        "name": "Math Camp, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "ELO-E1216",
+        "name": "Sound and Environment, Lecture",
+        "credits": 3
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "CHEM3050.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-10-08",
+            "2025-12-14"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM3050.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-02-11",
+            "2026-05-15"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM3049.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-10-08",
+            "2025-12-14"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM3049.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-02-11",
+            "2026-05-15"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM3048.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-10-08",
+            "2025-12-14"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM3048.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-02-11",
+            "2026-05-15"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-E1366",
+        "name": "Capstone: Accounting, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-08-04",
+            "2025-06-16"
+          ],
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-08-11"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-E1366",
+        "name": "Capstone: Accounting, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2026-01-26",
+            "2025-12-15"
+          ],
+          [
+            "Enrolment End",
+            "2026-02-16",
+            "2026-02-02"
+          ]
+        ]
+      },
+      {
+        "code": "AARTS-A0220",
+        "name": "Comic Art Project, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-05-15",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1114",
+        "name": "Communicating Technology (o,w), Lecture (H03)",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-08",
+            "2025-09-01"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-C3415",
+        "name": "Electrochemistry of Materials, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2026-01-06"
+          ]
+        ]
+      },
+      {
+        "code": "ENY-C2002",
+        "name": "Energy and environment, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-27",
+            "2025-10-13"
+          ]
+        ]
+      },
+      {
+        "code": "LC-6341",
+        "name": "German Grammar 1, Lecture",
+        "changes": [
+          [
+            "Name",
+            "German Grammar 1, Lecture",
+            "German Grammar 1, Lecture (Self-study)"
+          ]
+        ]
+      },
+      {
+        "code": "LC-6351",
+        "name": "German Grammar 2 (w), Lecture",
+        "changes": [
+          [
+            "Name",
+            "German Grammar 2 (w), Lecture",
+            "German Grammar 2 (w), Lecture (Self-study)"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1117",
+        "name": "Integrated Oral and Written Skills (o,w), Lecture (integrated with BSc in Quantum Technology year 1)",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-14",
+            "2025-11-21"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-A1030",
+        "name": "Laboratory and Chemical Safety, Independent Study",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2026-05-09",
+            "2025-08-01"
+          ],
+          [
+            "Enrolment End",
+            "2026-06-13",
+            "2026-06-30"
+          ]
+        ]
+      },
+      {
+        "code": "TU-E3010",
+        "name": "Leading as Practice D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2026-01-12"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-C3410",
+        "name": "Nanomaterials, Exam",
+        "changes": [
+          [
+            "Start Date",
+            "2025-12-10",
+            "2026-02-19"
+          ],
+          [
+            "End Date",
+            "2025-12-10",
+            "2026-02-19"
+          ],
+          [
+            "Enrolment Start",
+            "2025-10-11",
+            "2025-12-19"
+          ],
+          [
+            "Enrolment End",
+            "2025-12-03",
+            "2026-02-12"
+          ]
+        ]
+      },
+      {
+        "code": "ENG-C2000 ",
+        "name": "Planet and human: responsibility in technology, arts and business, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-08-25"
+          ]
+        ]
+      },
+      {
+        "code": "TU-C1022",
+        "name": "Product management project, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2026-01-04"
+          ]
+        ]
+      },
+      {
+        "code": "TU-E2014",
+        "name": "Service-based Value Creation D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2026-01-05"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Working Life, Lecture",
+            "Swedish for Working Life, (V01 Online) Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Working Life, Lecture",
+            "Swedish for Working Life, (V02 Online) Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Working Life, Lecture",
+            "Swedish for Working Life, (V03 Online) Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Working Life, Lecture",
+            "Swedish for Working Life, (V04 Online) Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Working Life, Lecture",
+            "Swedish for Working Life, (V05 Online) Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Working Life, Lecture",
+            "Swedish for Working Life, (H04 Summer) Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Working Life, Lecture",
+            "Swedish for Working Life, (V06 Online) Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Working Life, Lecture",
+            "Swedish for Working Life, (H01 Contact) Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Working Life, Lecture",
+            "Swedish for Working Life, (H03 Contact) Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Working Life, Lecture",
+            "Swedish for Working Life, (H02 Contact) Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "ENG-C2005 ",
+        "name": "Towards sustainable solutions, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-01-07",
+            "2026-01-08"
+          ],
+          [
+            "End Date",
+            "2026-04-01",
+            "2026-04-02"
+          ]
+        ]
+      }
+    ]
+  }
+}
