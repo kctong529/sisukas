@@ -2,6 +2,9 @@ name: Check Course Updates
 
 on:
   workflow_dispatch:
+  schedule:
+    # Run daily at 6 AM UTC
+    - cron: '0 6 * * *'
 
 jobs:
   check_course_updates:
@@ -22,6 +25,66 @@ jobs:
         env:
           AALTO_USER_KEY: ${{ secrets.AALTO_USER_KEY }}
         run: python scripts/fetch_latest_courses.py
-        
-      - name: Report changes
-        run: python scripts/report_course_changes.py
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          python scripts/report_course_changes.py
+          echo "Exit code: $?"
+        continue-on-error: true
+
+      - name: Update database and commit changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          # Replace old database with new data
+          cp latest_fetch.json public/data/courses.json
+          
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Add changes
+          git add public/data/courses.json logs/
+
+          # Create descriptive commit message
+          ADDED="${{ steps.check_changes.outputs.added_count }}"
+          REMOVED="${{ steps.check_changes.outputs.removed_count }}"
+          UPDATED="${{ steps.check_changes.outputs.updated_count }}"
+
+          COMMIT_MSG="Update course database: +$ADDED -$REMOVED ~$UPDATED courses"
+
+          # Commit and push
+          git commit -m "$COMMIT_MSG"
+          git push
+          
+      - name: Create Issue for Major Changes
+        if: steps.check_changes.outputs.has_changes == 'true' && (steps.check_changes.outputs.added_count > 10 || steps.check_changes.outputs.removed_count > 5)
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const added = parseInt('${{ steps.check_changes.outputs.added_count }}');
+            const removed = parseInt('${{ steps.check_changes.outputs.removed_count }}');
+            const updated = parseInt('${{ steps.check_changes.outputs.updated_count }}');
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Major Course Database Changes Detected`,
+              body: `A significant number of course changes were detected:
+              
+              - **Added:** ${added} courses
+              - **Removed:** ${removed} courses  
+              - **Updated:** ${updated} courses
+              
+              Please review the changes in the latest commit and the detailed logs.`,
+              labels: ['course-updates', 'needs-review']
+            });
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ steps.check_changes.outputs.has_changes }}" == "true" ]; then
+            echo "Course database updated successfully"
+          else
+            echo "No changes detected - database is up to date"
+          fi
