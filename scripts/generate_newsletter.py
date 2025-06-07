@@ -252,16 +252,16 @@ def main():
     today = datetime.today().date()
 
     # Date thresholds
-    two_months_ago = today - timedelta(days=60)
+    three_months_ago = today - timedelta(days=90)
     two_weeks_from_day = today + timedelta(weeks=2)
-    three_weeks_from_today = today + timedelta(weeks=3)
+    three_weeks_from_day = today + timedelta(weeks=3)
 
     # Load the courses JSON
     with open("public/data/courses.json") as f:
         courses = json.load(f)
 
     # Filter the courses
-    filtered_courses = filter_courses(courses, two_months_ago, two_weeks_from_day, three_weeks_from_today, today)
+    filtered_courses = filter_courses(courses, three_months_ago, two_weeks_from_day, three_weeks_from_day, today)
 
     # Deduplicate them
     filtered_courses = deduplicate_courses(filtered_courses)
@@ -273,7 +273,7 @@ def main():
     exam_courses, other_courses = split_exam_and_other_courses(filtered_courses)
 
     # Split other courses into those with future enrolment opens and those closing soon/already open
-    upcoming_open, upcoming_close = split_upcoming_open_and_deadlines(other_courses, three_weeks_from_today)
+    upcoming_open, upcoming_close = split_upcoming_open_and_deadlines(other_courses, three_weeks_from_day)
 
     # Generate the HTML content
     html_content = generate_html(upcoming_open, upcoming_close, exam_courses)
