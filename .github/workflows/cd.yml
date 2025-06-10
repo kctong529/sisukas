@@ -12,66 +12,92 @@ on:
       - completed
 
 jobs:
-  build-and-deploy:
-    name: Build and Deploy to Fly.io
+  determine-deployment:
+    name: Deployment needed
     runs-on: ubuntu-latest
-
-    permissions:
-      deployments: write
-
+    outputs:
+      should_deploy: ${{ steps.direct_push.conclusion == 'success' || steps.newsletter_check.conclusion == 'success' || steps.course_check.conclusion == 'success' }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Determine if deploy should run
-        id: should_deploy
+      - name: Check direct push
+        id: direct_push
+        if: github.event_name == 'push'
         run: |
-          COMMIT_AUTHOR="$(git log -1 --pretty=format:'%an')"
-          COMMIT_MESSAGE="$(git log -1 --pretty=%B)"
-          echo "Latest commit by: $COMMIT_AUTHOR"
-          echo "Message: $COMMIT_MESSAGE"
-
-          if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "Triggered by push — proceed"
-            echo "proceed=true" >> $GITHUB_OUTPUT
-          elif [[ "$COMMIT_AUTHOR" == "github-actions[bot]" ]]; then
-            if [[ "$COMMIT_MESSAGE" =~ ^"Update Week "[0-9]+" newsletter" ]] || \
-               [[ "$COMMIT_MESSAGE" =~ ^"Update course database: " ]]; then
-              echo "Triggered by automated commit ($COMMIT_MESSAGE) - proceeding with deploy"
-              echo "proceed=true" >> $GITHUB_OUTPUT
-            else
-              echo "Automated commit doesn't match deployment criteria - skipping deploy"
-              echo "proceed=false" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "Non-automated commit not from direct push - skipping deploy"
-            echo "proceed=false" >> $GITHUB_OUTPUT
-          fi
-          
-      - name: Stop job if no deploy needed
-        if: steps.should_deploy.outputs.proceed == 'false'
-        run: |
-          echo "Skipping build & deploy — no new newsletter commit"
+          echo "Direct push to main - deploying"
           exit 0
 
+      - name: Check newsletter update
+        id: newsletter_check
+        if: github.event_name == 'workflow_run' && contains(github.event.workflow_run.head_commit.message, 'Update Week') && contains(github.event.workflow_run.head_commit.message, 'newsletter')
+        run: |
+          echo "Newsletter update detected - deploying"
+          exit 0
+
+      - name: Check course database update
+        id: course_check
+        if: github.event_name == 'workflow_run' && startsWith(github.event.workflow_run.head_commit.message, 'Update course database:')
+        run: |
+          echo "Course database update detected - deploying"
+          exit 0
+          
+  build:
+    name: Build Application
+    needs: determine-deployment
+    if: needs.determine-deployment.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      build-complete: ${{ steps.build.outputs.result }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
       - name: Install Dependencies
         run: |
-          npm init -y
           npm ci
 
       - name: Build with Vite
-        run: npm run build
+        id: build
+        run: |
+          npm run build
+          echo "result=success" >> $GITHUB_OUTPUT
 
       - name: List Files
         run: ls -la
 
-      - name: Setup Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+  deploy:
+    name: Deploy to Production
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    environment: 
+      name: production
+      url: https://sisukas.fly.dev/
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: List Files
+        run: ls -la
 
       - uses: chrnorm/deployment-action@v2
         name: Create GitHub deployment
@@ -80,6 +106,9 @@ jobs:
           token: '${{ github.token }}'
           environment-url: https://sisukas.fly.dev/
           environment: production
+
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy on Fly.io
         run: flyctl deploy --remote-only
