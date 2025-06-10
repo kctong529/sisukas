@@ -5,7 +5,9 @@ on:
     branches:
       - main
   workflow_run:
-    workflows: ["Send Newsletter"]
+    workflows: 
+      - "Send Newsletter"
+      - "Check Course Updates"
     types:
       - completed
 
@@ -32,11 +34,17 @@ jobs:
           if [[ "${{ github.event_name }}" == "push" ]]; then
             echo "Triggered by push — proceed"
             echo "proceed=true" >> $GITHUB_OUTPUT
-          elif [[ "$COMMIT_AUTHOR" == "github-actions[bot]" && "$COMMIT_MESSAGE" == Update\ Week*newsletter ]]; then
-            echo "Triggered by newsletter commit — proceed"
-            echo "proceed=true" >> $GITHUB_OUTPUT
+          elif [[ "$COMMIT_AUTHOR" == "github-actions[bot]" ]]; then
+            if [[ "$COMMIT_MESSAGE" =~ ^"Update Week "[0-9]+" newsletter" ]] || \
+               [[ "$COMMIT_MESSAGE" =~ ^"Update course database: " ]]; then
+              echo "Triggered by automated commit ($COMMIT_MESSAGE) - proceeding with deploy"
+              echo "proceed=true" >> $GITHUB_OUTPUT
+            else
+              echo "Automated commit doesn't match deployment criteria - skipping deploy"
+              echo "proceed=false" >> $GITHUB_OUTPUT
+            fi
           else
-            echo "No newsletter commit — skipping deploy"
+            echo "Non-automated commit not from direct push - skipping deploy"
             echo "proceed=false" >> $GITHUB_OUTPUT
           fi
           
