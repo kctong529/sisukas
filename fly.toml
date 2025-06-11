@@ -14,6 +14,16 @@ primary_region = 'arn'
   min_machines_running = 0
   processes = ['app']
 
+  # For JSON files - enable ETags and conditional requests
+  [[http_service.http_response.headers]]
+    patterns = ["*.json"]
+    headers = {
+      # Allow conditional requests (ETags work automatically)
+      "Cache-Control" = "public, max-age=0, must-revalidate",
+      # Fly.io will automatically add ETag headers for static files
+      # No need to specify ETag manually - it's generated from file content
+    }
+
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
