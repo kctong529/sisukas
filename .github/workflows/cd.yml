@@ -16,31 +16,47 @@ jobs:
     name: Deployment needed
     runs-on: ubuntu-latest
     outputs:
-      should_deploy: ${{ steps.direct_push.conclusion == 'success' || steps.newsletter_check.conclusion == 'success' || steps.course_check.conclusion == 'success' }}
+      should_deploy: ${{ env.DEPLOY == 'true' }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 3
+          # For workflow_run events, checkout the triggering commit
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Check direct push
         id: direct_push
         if: github.event_name == 'push'
         run: |
           echo "Direct push to main - deploying"
-          exit 0
+          echo "DEPLOY=true" >> $GITHUB_ENV
 
-      - name: Check newsletter update
-        id: newsletter_check
-        if: github.event_name == 'workflow_run' && contains(github.event.workflow_run.head_commit.message, 'Update Week') && contains(github.event.workflow_run.head_commit.message, 'newsletter')
-        run: |
-          echo "Newsletter update detected - deploying"
-          exit 0
 
-      - name: Check course database update
-        id: course_check
-        if: github.event_name == 'workflow_run' && startsWith(github.event.workflow_run.head_commit.message, 'Update course database:')
+      - name: Check workflow_run trigger
+        id: workflow_run_check
+        if: github.event_name == 'workflow_run'
         run: |
-          echo "Course database update detected - deploying"
-          exit 0
+          echo "Workflow run event detected"
+          echo "Triggering workflow: ${{ github.event.workflow_run.name }}"
+          echo "Head SHA: ${{ github.event.workflow_run.head_sha }}"
+          
+          # Get the actual commit message from the SHA
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s" ${{ github.event.workflow_run.head_sha }})
+          echo "Commit message: $COMMIT_MESSAGE"
+          
+          # Check for newsletter updates
+          if [[ "$COMMIT_MESSAGE" == *"Update Week"* && "$COMMIT_MESSAGE" == *"newsletter"* ]]; then
+            echo "Newsletter update detected - deploying"
+            echo "DEPLOY=true" >> $GITHUB_ENV
+          # Check for course database updates
+          elif [[ "$COMMIT_MESSAGE" == "Update course database:"* ]]; then
+            echo "Course database update detected - deploying"
+            echo "DEPLOY=true" >> $GITHUB_ENV
+          else
+            echo "No deployment trigger found in commit message: $COMMIT_MESSAGE"
+            echo "DEPLOY=false" >> $GITHUB_ENV
+          fi
           
   build:
     name: Build Application
