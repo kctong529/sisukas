@@ -1,0 +1,262 @@
+{
+  "timestamp": "2025-06-12T06:21:48.481773",
+  "summary": {
+    "added": 5,
+    "removed": 1,
+    "updated": 17
+  },
+  "details": {
+    "added": [
+      {
+        "code": "MUO-C0125",
+        "name": "Ceramics and Glass Seminar, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "MS-E1215",
+        "name": "Elliptic Partial Differential Equations D, Project",
+        "credits": 5
+      },
+      {
+        "code": "AAE-E3110",
+        "name": "Hydrogen Technology D, Exam",
+        "credits": 5
+      },
+      {
+        "code": "AAE-E3110",
+        "name": "Hydrogen Technology D, Exam",
+        "credits": 5
+      },
+      {
+        "code": "MS-E1210",
+        "name": "Sobolev Spaces D, Project",
+        "credits": 5
+      }
+    ],
+    "removed": [
+      {
+        "code": "MUO-E5043",
+        "name": "Experimental Design, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "LC-1310",
+        "name": "Academic Communication for MSc Students (o,w), Lecture (Zoom group)",
+        "changes": [
+          [
+            "Name",
+            "Academic Communication for MSc Students (o,w), Lecture (Zoom group)",
+            "Academic Communication for MSc Students (o,w), Lecture (Zoom group, MSc students from CHEM, ELEC, ENG, SCI, BIZ)"
+          ]
+        ]
+      },
+      {
+        "code": "LCA-1022",
+        "name": "Academic Writing (w), Lecture (for ARTS master's students writing their thesis)",
+        "changes": [
+          [
+            "Start Date",
+            "2026-04-21",
+            "2026-04-20"
+          ],
+          [
+            "End Date",
+            "2026-05-25",
+            "2026-06-01"
+          ]
+        ]
+      },
+      {
+        "code": "CIV-E2080",
+        "name": "Design Process Management D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-06"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7210",
+        "name": "Finnish 1, Exam",
+        "changes": [
+          [
+            "Name",
+            "Finnish 1, Exam",
+            "Finnish 1, Exam, Open uni"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7210",
+        "name": "Finnish 1, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Finnish 1, Lecture",
+            "Finnish 1, Lecture, contact teaching, Oct-Dec, Open uni"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7220",
+        "name": "Finnish 2, Exam",
+        "changes": [
+          [
+            "Name",
+            "Finnish 2, Exam",
+            "Finnish 2, Exam, Open uni"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7220",
+        "name": "Finnish 2, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Finnish 2, Lecture",
+            "Finnish 2, Online teaching, Sep-Nov, Open uni"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7220",
+        "name": "Finnish 2, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Finnish 2, Lecture",
+            "Finnish 2, Lecture, contact teaching, Oct-Dec, Open uni"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7230",
+        "name": "Finnish 3, Exam",
+        "changes": [
+          [
+            "Name",
+            "Finnish 3, Exam",
+            "Finnish 3, Exam, Open uni"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7230",
+        "name": "Finnish 3, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Finnish 3, Lecture",
+            "Finnish 3, Online teaching, Sep-Nov, Open uni"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7230",
+        "name": "Finnish 3, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Finnish 3, Lecture",
+            "Finnish 3, Online teaching,  Oct-Dec, Open uni"
+          ]
+        ]
+      },
+      {
+        "code": "TU-C2010",
+        "name": "Introduction to Strategic Management, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-18"
+          ]
+        ]
+      },
+      {
+        "code": "MUO-C3021",
+        "name": "Materials and Casting in Ceramics, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2025-12-15"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1120",
+        "name": "Online Persuasive Presentations for Engineers (o), Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-01-05",
+            "2026-01-12"
+          ],
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2026-01-06"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o), Lecture  (V18-19)",
+        "changes": [
+          [
+            "Start Date",
+            "2026-01-05",
+            "2026-01-12"
+          ],
+          [
+            "End Date",
+            "2026-02-15",
+            "2026-02-20"
+          ],
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2026-01-06"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o), Lecture (V33-34)",
+        "changes": [
+          [
+            "Start Date",
+            "2026-04-13",
+            "2026-04-20"
+          ],
+          [
+            "End Date",
+            "2026-06-07",
+            "2026-06-01"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1335",
+        "name": "Preparing for the Doctoral Defence (o), Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-10",
+            "2025-09-03"
+          ],
+          [
+            "End Date",
+            "2025-10-01",
+            "2025-10-15"
+          ]
+        ]
+      }
+    ]
+  }
+}
