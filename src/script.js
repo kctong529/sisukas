@@ -875,6 +875,19 @@ function loadFiltersFromFile() {
     input.click();
 }
 
+function setupEnterKeyHandler() {
+    // Use event delegation on the filter container
+    const filterContainer = document.getElementById('filter-container');
+    
+    filterContainer.addEventListener('keydown', function(event) {
+        // Check if the event target is a filter input field and Enter was pressed
+        if (event.target.classList.contains('filter-value') && event.key === 'Enter') {
+            event.preventDefault();
+            onSearchButtonClick();
+        }
+    });
+}
+
 window.addFilterRule = addFilterRule;
 window.handleFieldChange = handleFieldChange;
 window.removeFilterRule = removeFilterRule;
@@ -897,4 +910,7 @@ window.onload = function() {
             handleColumnSort(column);
         });
     });
+    
+    // Add Enter key handler for filter inputs
+    setupEnterKeyHandler();
 };
