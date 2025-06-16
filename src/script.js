@@ -26,6 +26,208 @@ let filteredCourses = []; // Stores currently filtered courses
 let currentSortColumn = "courseName"; // Default sort column
 let sortDirection = 1; // 1 = ascending, -1 = descending
 
+// IndexedDB-based ETag cache for large files
+class LargeFileETagCache {
+    constructor(dbName = 'etag-cache', version = 1) {
+        this.dbName = dbName;
+        this.version = version;
+        this.db = null;
+    }
+
+    // Initialize IndexedDB
+    async init() {
+        if (this.db) return this.db;
+
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(this.dbName, this.version);
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                this.db = request.result;
+                resolve(this.db);
+            };
+
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+
+                // Create object store for cached files
+                if (!db.objectStoreNames.contains('files')) {
+                    const store = db.createObjectStore('files', { keyPath: 'url' });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+        });
+    }
+
+    // Get cached data
+    async getCache(url) {
+        await this.init();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['files'], 'readonly');
+            const store = transaction.objectStore('files');
+            const request = store.get(url);
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve(request.result);
+        });
+    }
+
+    // Save data to cache
+    async setCache(url, etag, data) {
+        await this.init();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['files'], 'readwrite');
+            const store = transaction.objectStore('files');
+
+            const cacheItem = {
+                url,
+                etag,
+                data,
+                timestamp: Date.now(),
+                size: JSON.stringify(data).length
+            };
+
+            const request = store.put(cacheItem);
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve();
+        });
+    }
+
+    // Main fetch method with ETag support
+    async fetch(url) {
+        try {
+            const cached = await this.getCache(url);
+            const headers = {};
+
+            // Add If-None-Match header if we have a cached ETag
+            if (cached?.etag) {
+                headers['If-None-Match'] = cached.etag;
+            }
+
+            console.log(`Fetching ${url}${cached ? ' (checking for updates...)' : ' (first time)'}`);
+
+            const response = await fetch(url, { headers });
+
+            // 304 = Not Modified - use cached data
+            if (response.status === 304) {
+                console.log(`${url} - Not modified, using cached data (${Math.round(cached.size / 1024 / 1024)}MB)`);
+                return cached.data;
+            }
+
+            // New data available
+            if (response.ok) {
+                const etag = response.headers.get('ETag');
+                const data = await response.json();
+
+                const sizeMB = Math.round(JSON.stringify(data).length / 1024 / 1024);
+                console.log(`${url} - Downloaded ${sizeMB}MB, ETag: ${etag}`);
+
+                // Cache the new data
+                await this.setCache(url, etag, data);
+
+                return data;
+            }
+
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        } catch (error) {
+            console.error(`Failed to fetch ${url}:`, error);
+
+            // Fall back to cached data if available
+            const cached = await this.getCache(url);
+            if (cached?.data) {
+                console.log(`Using stale cached data for ${url}`);
+                return cached.data;
+            }
+
+            throw error;
+        }
+    }
+
+    // Clear cache for a specific URL
+    async clearCache(url) {
+        await this.init();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['files'], 'readwrite');
+            const store = transaction.objectStore('files');
+            const request = store.delete(url);
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve();
+        });
+    }
+
+    // Clear all cache
+    async clearAllCache() {
+        await this.init();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['files'], 'readwrite');
+            const store = transaction.objectStore('files');
+            const request = store.clear();
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => resolve();
+        });
+    }
+
+    // Get cache info for debugging
+    async getCacheInfo() {
+        await this.init();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['files'], 'readonly');
+            const store = transaction.objectStore('files');
+            const request = store.getAll();
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                const info = {};
+                request.result.forEach(item => {
+                    info[item.url] = {
+                        etag: item.etag,
+                        size: `${Math.round(item.size / 1024 / 1024)}MB`,
+                        cached: new Date(item.timestamp).toLocaleString()
+                    };
+                });
+                resolve(info);
+            };
+        });
+    }
+
+    // Clean old cache entries (optional)
+    async cleanOldCache(maxAgeMs = 7 * 24 * 60 * 60 * 1000) { // 7 days
+        await this.init();
+
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction(['files'], 'readwrite');
+            const store = transaction.objectStore('files');
+            const index = store.index('timestamp');
+
+            const cutoffTime = Date.now() - maxAgeMs;
+            const range = IDBKeyRange.upperBound(cutoffTime);
+
+            const request = index.openCursor(range);
+
+            request.onerror = () => reject(request.error);
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    cursor.delete();
+                    cursor.continue();
+                } else {
+                    resolve();
+                }
+            };
+        });
+    }
+}
+
+const cache = new LargeFileETagCache();
+
 // Main initialization function
 async function loadCourses() {
     try {
@@ -49,9 +251,25 @@ async function loadCourses() {
 }
 
 async function loadCourseData() {
-    const response = await fetch('data/courses.json');
-    return response.json();
+    try {
+        const courses = await cache.fetch('/data/courses.json');
+        console.log('Courses loaded:', courses.length);
+        return courses;
+    } catch (error) {
+        console.error('Failed to load courses:', error);
+        throw error;
+    }
 }
+
+// Debug helpers
+window.debugCache = () => {
+    console.table(cache.getCacheInfo());
+};
+
+window.clearCache = async () => {
+    await cache.clearAllCache();
+    console.log('Cache cleared');
+};
 
 export function extractOrganizationNames(courses) {
     return new Set(courses.map(course => course.organizationName.en).filter(name => name));

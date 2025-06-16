@@ -1,0 +1,260 @@
+{
+  "timestamp": "2025-06-13T06:21:29.451755",
+  "summary": {
+    "added": 13,
+    "removed": 1,
+    "updated": 15
+  },
+  "details": {
+    "added": [
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "MUO-C1075",
+        "name": "Critical Issues in Fashion, Independent study",
+        "credits": 3
+      },
+      {
+        "code": "ELO-E5226",
+        "name": "Developing a designer-oriented concept (TeaK), Lectures",
+        "credits": 5
+      },
+      {
+        "code": "MUO-C0006",
+        "name": "History of Innovations and Design, Independent study",
+        "credits": 3
+      },
+      {
+        "code": "JOIN-A0005",
+        "name": "International student tutoring, Lectures",
+        "credits": 2
+      },
+      {
+        "code": "JOIN-A0005",
+        "name": "International student tutoring, Lectures",
+        "credits": 2
+      },
+      {
+        "code": "CS-C2170",
+        "name": "Modern and Emerging Programming Languages, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "CS-C2170",
+        "name": "Modern and Emerging Programming Languages, Online teaching",
+        "credits": 5
+      },
+      {
+        "code": "EEA-EV007",
+        "name": "Multi-Three-Phase Motor Drives: Modeling, Design, and Implementation D, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "MUO-C0143",
+        "name": "Surface Pattern Design, Independent study",
+        "credits": 3
+      },
+      {
+        "code": "CS-C3170",
+        "name": "Web Software Development, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "CS-C3170",
+        "name": "Web Software Development, Online teaching",
+        "credits": 5
+      },
+      {
+        "code": "CS-C3170",
+        "name": "Web Software Development, Online teaching",
+        "credits": 5
+      }
+    ],
+    "removed": [
+      {
+        "code": "MLI20A013",
+        "name": "Orientation to University Studies, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "AABL-A1300",
+        "name": "Corporate financial management and reporting, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Corporate financial management and reporting, Lecture",
+            "Corporate financial management and reporting, Blended teaching"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7210",
+        "name": "Finnish 1, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-15",
+            "2025-09-22"
+          ],
+          [
+            "End Date",
+            "2025-11-21",
+            "2025-11-28"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7240",
+        "name": "Finnish 4, Online teaching, Open uni",
+        "changes": [
+          [
+            "Name",
+            "Finnish 4, Online teaching, Open uni",
+            "Finnish 4, Online teaching, Sep-Oct, Open uni"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7323",
+        "name": "Finnish Conversation 1, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Finnish Conversation 1, Lecture",
+            "Finnish Conversation 1, Online teaching, Open uni"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7271",
+        "name": "Finnish for Work, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Finnish for Work, Lecture",
+            "Finnish for Work, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "MLI66B101",
+        "name": "French Business Communication 1a, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-08-06",
+            "2025-08-15"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-6310",
+        "name": "German 1, Lecture",
+        "changes": [
+          [
+            "Name",
+            "German 1, Lecture",
+            "German 1, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-6320",
+        "name": "German 2, Lecture",
+        "changes": [
+          [
+            "Name",
+            "German 2, Lecture",
+            "German 2, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "MLI62A101",
+        "name": "German Business Communication 1a, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-08-06",
+            "2025-08-15"
+          ]
+        ]
+      },
+      {
+        "code": "A32A00130",
+        "name": "Introduction to Business Law, Exam",
+        "changes": [
+          [
+            "Start Date",
+            "2025-12-02",
+            "2025-11-19"
+          ],
+          [
+            "End Date",
+            "2025-12-02",
+            "2025-11-19"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E8009",
+        "name": "Research-based animation, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-08-01",
+            "2025-08-15"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-5410",
+        "name": "Swedish for Technology, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Technology, Lecture",
+            "Swedish for Technology, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-5003",
+        "name": "Swedish for Working Life, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Swedish for Working Life, Lecture",
+            "Swedish for Working Life, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "PHYS-A1121",
+        "name": "Thermodynamics, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-15"
+          ]
+        ]
+      },
+      {
+        "code": "AARTS-A0223",
+        "name": "Watercolour Workshop, Contact teaching",
+        "changes": [
+          [
+            "End Date",
+            "2025-08-06",
+            "2025-08-15"
+          ]
+        ]
+      }
+    ]
+  }
+}

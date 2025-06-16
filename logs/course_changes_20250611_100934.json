@@ -1,0 +1,112 @@
+{
+  "timestamp": "2025-06-11T10:09:34.853266",
+  "summary": {
+    "added": 10,
+    "removed": 2,
+    "updated": 3
+  },
+  "details": {
+    "added": [
+      {
+        "code": "ECON-L4400",
+        "name": "Advanced Econometrics 4 D, Exam",
+        "credits": 5
+      },
+      {
+        "code": "ECON-L4400",
+        "name": "Advanced Econometrics 4 D, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "ECON-L2100",
+        "name": "Advanced Microeconomics 1 D, Exam",
+        "credits": 5
+      },
+      {
+        "code": "ECON-L2100",
+        "name": "Advanced Microeconomics 1 D, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "ECON-L2200",
+        "name": "Advanced Microeconomics 2 D, Exam",
+        "credits": 5
+      },
+      {
+        "code": "ECON-L2200",
+        "name": "Advanced Microeconomics 2 D, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "ECON-L2400",
+        "name": "Advanced Microeconomics 4 D, Exam",
+        "credits": 5
+      },
+      {
+        "code": "ECON-L2400",
+        "name": "Advanced Microeconomics 4 D, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "ALC-7240",
+        "name": "Finnish 4, Exam, Open uni",
+        "credits": 3
+      },
+      {
+        "code": "ISM-A1111",
+        "name": "Introduction to Generative AI, Essay",
+        "credits": 3
+      }
+    ],
+    "removed": [
+      {
+        "code": "CHEM-C2245",
+        "name": "Inorganic Chemistry Book Exam, Exam"
+      },
+      {
+        "code": "CHEM-C2245",
+        "name": "Inorganic Chemistry Book Exam, Exam"
+      }
+    ],
+    "updated": [
+      {
+        "code": "ARTS-A0103",
+        "name": "Academic Learning Skills, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-09-08"
+          ]
+        ]
+      },
+      {
+        "code": "ALC-7240",
+        "name": "Finnish 4, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Finnish 4, Lecture",
+            "Finnish 4, Online teaching, Open uni"
+          ],
+          [
+            "End Date",
+            "2025-10-31",
+            "2025-10-20"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o), Lecture",
+        "changes": [
+          [
+            "Name",
+            "Online Presentations Skills for Engineers (o), Lecture",
+            "Online Presentations Skills for Engineers (o) V02, Lecture"
+          ]
+        ]
+      }
+    ]
+  }
+}

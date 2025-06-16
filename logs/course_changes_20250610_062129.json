@@ -1,0 +1,512 @@
+{
+  "timestamp": "2025-06-10T06:21:29.070946",
+  "summary": {
+    "added": 15,
+    "removed": 0,
+    "updated": 37
+  },
+  "details": {
+    "added": [
+      {
+        "code": "ARTS-A0638",
+        "name": "Exhibition pass, Autumn, Independent project",
+        "credits": 3
+      },
+      {
+        "code": "ARTS-A0638",
+        "name": "Exhibition pass, Project",
+        "credits": 3
+      },
+      {
+        "code": "AXM-E0105",
+        "name": "External Collaborations, Future Sustainable Solutions (3 cr)",
+        "credits": 3
+      },
+      {
+        "code": "ARTS-A0105",
+        "name": "Information and Communication Technology, Sj\u00e4lvst\u00e4ndigt projekt",
+        "credits": 2
+      },
+      {
+        "code": "TU-C3010",
+        "name": "Introduction to Project Management, Exam",
+        "credits": 5
+      },
+      {
+        "code": "PHYS-E0430",
+        "name": "Magnetism and Spintronics D, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "AMNGT-A1001",
+        "name": "Management of organizations, Blended teaching",
+        "credits": 6
+      },
+      {
+        "code": "AMARK-A0001",
+        "name": "Marketing management, Online teaching",
+        "credits": 6
+      },
+      {
+        "code": "PHYS-E0525",
+        "name": "Microscopy of Nanomaterials D, Exam",
+        "credits": 5
+      },
+      {
+        "code": "PHYS-E0525",
+        "name": "Microscopy of Nanomaterials D, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "ELO-E2539",
+        "name": "Negotiation Skills, Contracts and IP -management, Lectures",
+        "credits": 3
+      },
+      {
+        "code": "TU-E5070",
+        "name": "Principles of Product Management, Independent study",
+        "credits": 3
+      },
+      {
+        "code": "TU-E5070",
+        "name": "Principles of Product Management, Independent study",
+        "credits": 3
+      },
+      {
+        "code": "TU-C2091",
+        "name": "Starting Up, Independent study",
+        "credits": 1
+      },
+      {
+        "code": "TU-C2091",
+        "name": "Starting Up, Independent study",
+        "credits": 1
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "ELO-E2537",
+        "name": "AV Business, Budgeting & Financial Management, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "PHYS-E0510",
+        "name": "Advanced Computational Methods in Physics D, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Advanced Computational Methods in Physics D, Lecture",
+            "Advanced Computational Methods in Physics D, Hybrid course"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1207",
+        "name": "Advanced Course in Aesthetics of Documentary Film Editing, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1212",
+        "name": "Advanced MA-laboratory 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E3056",
+        "name": "Associative Visual Narration, Exhibition, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS3013.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Bachelor's Thesis and Seminar, Lecture",
+            "Bachelor's Thesis and Seminar, 2. study year"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS3013.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Bachelor's Thesis and Seminar, Lecture",
+            "Bachelor's Thesis and Seminar, Bachelor's thesis"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS3017.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Bachelor's Thesis and Seminar, Lecture",
+            "Bachelor's Thesis and Seminar, Bachelor's thesis"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS3017.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Bachelor's Thesis and Seminar, Lecture",
+            "Bachelor's Thesis and Seminar, Bachelor's thesis"
+          ]
+        ]
+      },
+      {
+        "code": "A23E24001",
+        "name": "Brand Management, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Brand Management, Lecture",
+            "Brand Management, Blended teaching"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-L2010",
+        "name": "Cellulose Chemistry D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-06-14",
+            "2025-08-08"
+          ]
+        ]
+      },
+      {
+        "code": "AMNGT-A4003",
+        "name": "Communication and Interaction Skills in Business, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Communication and Interaction Skills in Business, Lecture",
+            "Communication and Interaction Skills in Business, Blended teaching"
+          ]
+        ]
+      },
+      {
+        "code": "AMNGT-A4003",
+        "name": "Communication and Interaction Skills in Business, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Communication and Interaction Skills in Business, Lecture",
+            "Communication and Interaction Skills in Business, Blended teaching"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-E8424",
+        "name": "Distributed Generation Technologies, Exam",
+        "changes": [
+          [
+            "Name",
+            "Distributed Generation Technologies, Exam",
+            "Distributed Generation Technologies D, Exam"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-E8424",
+        "name": "Distributed Generation Technologies, Exam",
+        "changes": [
+          [
+            "Name",
+            "Distributed Generation Technologies, Exam",
+            "Distributed Generation Technologies D, Exam"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-E8424",
+        "name": "Distributed Generation Technologies, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Distributed Generation Technologies, Lecture",
+            "Distributed Generation Technologies D, Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1542",
+        "name": "Documentary Film Project Editing Workshop, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1224",
+        "name": "Film Idea Incubator, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1046",
+        "name": "Film history thematic courses with variable content 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "TU-E4330",
+        "name": "I&E Study Project D, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-09-22",
+            "2025-08-21"
+          ],
+          [
+            "Enrolment End",
+            "2025-10-27",
+            "2025-09-25"
+          ]
+        ]
+      },
+      {
+        "code": "AMNGT-C1008",
+        "name": "Leadership in Action, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Leadership in Action, Lecture",
+            "Leadership in Action, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1036",
+        "name": "MA Production, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1030",
+        "name": "Master's Thesis Seminar 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1030",
+        "name": "Master's Thesis Seminar 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1031",
+        "name": "Master's Thesis Seminar 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1031",
+        "name": "Master's Thesis Seminar 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS3077.kyps",
+        "name": "Maturity Test, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-02-16",
+            "2026-02-23"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS3077.kyps",
+        "name": "Maturity Test, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-02-16",
+            "2026-02-23"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E4546",
+        "name": "Music Recording\u00a0 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1229",
+        "name": "Night Life 2, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-11-17",
+            "2025-07-28"
+          ],
+          [
+            "Enrolment End",
+            "2025-12-08",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E5219",
+        "name": "Orientation to Artistic Collaboration and ACO Project, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-11-17",
+            "2025-07-28"
+          ],
+          [
+            "Enrolment End",
+            "2025-12-08",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "TU-E6010",
+        "name": "Philosophy D, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-07",
+            "2025-11-26"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E5032",
+        "name": "Scenography, Production and Costume Design Lectures, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E4548",
+        "name": "Sound Effects Recording, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E4547",
+        "name": "Sound as a Storytelling Device in Film 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E2069",
+        "name": "Special Courses in Screenwriting: Genre B, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "AMNGT-E2013",
+        "name": "Strategic Marketing in Global Context, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Strategic Marketing in Global Context, Lecture",
+            "Strategic Marketing in Global Context, Online teaching, Open Uni"
+          ]
+        ]
+      }
+    ]
+  }
+}

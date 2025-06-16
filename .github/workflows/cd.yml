@@ -4,37 +4,119 @@ on:
   push:
     branches:
       - main
+  workflow_run:
+    workflows: 
+      - "Send Newsletter"
+      - "Check Course Updates"
+    types:
+      - completed
 
 jobs:
-  build-and-deploy:
-    name: Build and Deploy to Fly.io
+  determine-deployment:
+    name: Deployment needed
     runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ env.DEPLOY == 'true' }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # Always checkout main branch for workflow_run events
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.sha }}
 
-    permissions:
-      deployments: write
+      - name: Check direct push
+        id: direct_push
+        if: github.event_name == 'push'
+        run: |
+          echo "Direct push to main - deploying"
+          echo "DEPLOY=true" >> $GITHUB_ENV
 
+      - name: Check workflow_run trigger
+        id: workflow_run_check
+        if: github.event_name == 'workflow_run'
+        run: |
+          echo "Workflow run event detected"
+          echo "Triggering workflow: ${{ github.event.workflow_run.name }}"
+
+          # Fetch the latest changes from origin
+          git fetch origin main
+
+          # Get the latest commit info
+          COMMIT_AUTHOR="$(git log -1 --pretty=format:'%an')"
+          COMMIT_MESSAGE="$(git log -1 --pretty=%B)"
+          
+          echo "Latest commit by: $COMMIT_AUTHOR"
+          echo "Message: $COMMIT_MESSAGE"
+          
+          # Check if latest commit was made by github-actions and matches our patterns
+          if [[ "$COMMIT_AUTHOR" == "github-actions[bot]" && "$COMMIT_MESSAGE" == *"Update Week"* && "$COMMIT_MESSAGE" == *"newsletter"* ]]; then
+            echo "Newsletter update by github-actions detected - deploying"
+            echo "DEPLOY=true" >> $GITHUB_ENV
+          elif [[ "$COMMIT_AUTHOR" == "github-actions[bot]" && "$COMMIT_MESSAGE" == "Update course database:"* ]]; then
+            echo "Course database update by github-actions detected - deploying"
+            echo "DEPLOY=true" >> $GITHUB_ENV
+          else
+            echo "No deployment trigger found"
+            echo "DEPLOY=false" >> $GITHUB_ENV
+          fi
+          
+  build:
+    name: Build Application
+    needs: determine-deployment
+    if: needs.determine-deployment.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      build-complete: ${{ steps.build.outputs.result }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
       - name: Install Dependencies
         run: |
-          npm init -y
           npm ci
 
       - name: Build with Vite
-        run: npm run build
+        id: build
+        run: |
+          npm run build
+          echo "result=success" >> $GITHUB_OUTPUT
 
       - name: List Files
         run: ls -la
 
-      - name: Setup Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+  deploy:
+    name: Deploy to Production
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+    environment: 
+      name: production
+      url: https://sisukas.fly.dev/
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: List Files
+        run: ls -la
 
       - uses: chrnorm/deployment-action@v2
         name: Create GitHub deployment
@@ -43,6 +125,9 @@ jobs:
           token: '${{ github.token }}'
           environment-url: https://sisukas.fly.dev/
           environment: production
+
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy on Fly.io
         run: flyctl deploy --remote-only

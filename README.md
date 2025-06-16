@@ -4,121 +4,90 @@
 
 A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.fly.dev/).
 
-## Why?
+> [!IMPORTANT]
+> If you're a university student in the Finnish education system, you’ve likely encountered the frustrations of the SISU system. With limited filters, navigation that hides key details behind multiple clicks, and a confusing pagination system that makes it easy to lose track, finding courses can be unnecessarily tedious. Slow performance only adds to the hassle, making the whole experience more cumbersome than it needs to be. On top of that, the lack of curriculum information makes planning your studies more difficult.
 
-Students are frustrated with the official SISU system due to:
-- **Limited filters**: Finding relevant courses requires excessive manual searching.
-- **Annoying navigation**: It displays only minimal details unless you click into each link.
-- **Slow performance**: Multiple requests slow down the experience.
+Sisukas offers a faster, more intuitive way to browse and filter courses:
 
-Sisukas provides a **faster, more user-friendly** way to browse and filter courses.
-- **Fast and Efficient**: All data is preloaded, no additional requests.
-- **Periods**: Intuitive drag-and-drop selection across the year.
-- **Boolean Logic**: Combine filters with AND, OR for more refined results.
-- **Keyword**: Narrow down results with keywords in course codes or names.
-- **Date**: Filter courses by start and end dates to target specific time frames.
-- **Major & Minor**: Predefined course lists for specific degrees.
+- Quick response with preloaded data, with no additional requests
+- Intuitive drag-and-drop selection across periods
+- Refined search using Boolean logic (AND, OR) for more specific results
+- Filter courses by start and end dates to focus on specific time frames
+- Predefined course lists for specific majors and minors
 
-## Balance
+> [!NOTE]
+> Sisukas strikes the right balance in presenting course information. It features a compact layout that displays all necessary course details at a glance, with no extra clicks. A unique toggle merges duplicate entries, showing only one per course code. The app is fully responsive, ensuring smooth performance across both desktop and mobile devices.
 
-- **Compact**: All course information you'd need at a glance, no extra clicks.
-- **Unique Toggle**: Show one entry per course code, merging duplicates.
-- **Responsive Design**: Fully optimized for desktop and mobile devices.
+> [!TIP]
+> Want to stay informed about important course details, key registration deadlines, and exam schedules? Sisukas now features a public newsletter! Check out the latest issue or subscribe [here](https://sisukas.fly.dev/newsletter.html).
 
-## Technical Stack
+## How It Works
 
-- **Vanilla JavaScript**: Simple, lightweight, and runs efficiently in the browser.
-- **Static JSON Database**: Course data is loaded once at startup, ensuring quick performance.
+The Sisukas app is built with Vanilla JavaScript, chosen for its simplicity, lightweight nature, and fast performance in the browser. To ensure quick access, it loads Static JSON Data once at startup, eliminating the need for repeated API calls. The app's development process is optimized with the Vite build tool, which supports ECMAScript modules and handles cache invalidation efficiently. Vitest is used to perform fast, reliable unit tests, ensuring that key features like filtering, sorting, and data handling work correctly with minimal overhead. Finally, for deployment, Fly.io distributes the app across multiple edge locations for global access, while Docker ensures consistent, containerized environments.
 
-## Data Source
+> [!NOTE]
+> The course data (`courses.json`) was retrieved using the Aalto Open API, following the instructions at [3scale Aalto Open API Docs](https://3scale.apps.ocp4.aalto.fi/docs/swagger/open_courses_sisu). The data was obtained using the `GET /courseunitrealisations` endpoint, with the parameter: `startTimeAfter=2024-01-01`.
 
-The course data (`courses.json`) was retrieved using the **Aalto Open API**, following the instructions at [3scale Aalto Open API Docs](https://3scale.apps.ocp4.aalto.fi/docs/swagger/open_courses_sisu).
-
-The data was obtained using the `GET /courseunitrealisations` endpoint, with the parameter: `startTimeAfter=2024-01-01`.
-
-Currently, the app uses a cached version of this data to ensure fast performance without making additional API calls.
+> [!IMPORTANT]
+> Currently, the app uses a cached version of this data to ensure fast performance without making additional API calls. There is no guarantee that the loaded data is the latest information.
 
 ## Running Locally
 
 To test the application on your local machine, follow these steps:
 
-1. **Clone the repository** to your local machine if you haven't already:
+1. Clone the repository: `git clone https://github.com/kctong529/sisukas.git`
+2. Install dependencies: `cd sisukas; npm ci`
+3. Start the server: `npm run dev`
 
-   ```sh
-   git clone https://github.com/kctong529/sisukas.git
-   cd sisukas
-   ```
+This will start the Vite development server and provide a URL in the console (e.g., `http://localhost:5173`). Simply open this URL in your browser.
 
-2. **Install dependencies** using npm:
+> [!NOTE]
+> If you're interested in building the app for production, you can run `npm run build`. This will bundle the project for production and create the necessary static files in the `/dist` folder. You can serve the files from the `/dist` directory using any HTTP server of your choice (e.g. `python -m http.server`).
 
-   ```sh
-   npm ci
-   ```
-
-3. **Build the project with Vite**:
-
-   To build the project, run:
-
-   ```sh
-   npm run build
-   ```
-
-   This will bundle the project for production. After the build is complete, you'll have the necessary static files in the `/dist` folder.
-
-   Opening `index.html` is useful for testing CSS styles and layout.
-
-4. **Start a simple HTTP server** in your project directory:
-
-   If you have Python installed, you can use Python's built-in HTTP server:
-
-   ```sh
-   cd dist
-   python -m http.server 8000
-   ```
-
-   This will start a local server on port 8000. Alternatively, you can serve the files using any HTTP server of your choice.
-
-5. **Open your browser** and go to the following URL:
-
-   ```sh
-   http://localhost:8000
-   ```
-
-   **Note**: `courses.json` is blocked when accessed directly via `file://` in the browser (due to browser security restrictions). The local server is required to load `courses.json` properly.
+> [!TIP]
+> `courses.json` is blocked when accessed directly via `file://` in the browser (due to browser security restrictions). Using the local server ensures proper loading of `courses.json`.
 
 ## To-Do List
 
 ### Core Functionality
 
-- [ ] Enable filtering by course descriptions. https://github.com/kctong529/sisukas/issues/4
-- [ ] Refactor organization filter rule. https://github.com/kctong529/sisukas/issues/15
-- [ ] Add exclusion criteria such as "Not a math course".
-- [ ] Implement support for nested sorting criteria.
+- [ ] Implement filtering by course descriptions. https://github.com/kctong529/sisukas/issues/4
+- [ ] Refactor the organization filter rule. https://github.com/kctong529/sisukas/issues/15
+- [ ] Add exclusion criteria, such as "Not a math course".
+- [ ] Support nested sorting criteria.
 - [ ] Automatically generate a timeline based on course schedules.
-- [ ] Integrate a study calendar for better planning.
+- [ ] Integrate a study calendar to assist with planning.
 
 ### User Experience & Accessibility
 
-- [x] Enhance responsive design. https://github.com/kctong529/sisukas/issues/2
-- [ ] Allow users to save filter sets. https://github.com/kctong529/sisukas/issues/8
-- [ ] Introduce user management features.
-- [ ] Allow users to pin courses to keep them at the top.
-- [ ] Add comment field where student feedbacks are shown.
-- [ ] Improve accessibility for a more inclusive user experience.
+- [x] Improve responsive design for better usability across devices. https://github.com/kctong529/sisukas/issues/2
+- [ ] Enable users to save and reuse filter sets. https://github.com/kctong529/sisukas/issues/8
+- [ ] Implement user management features.
+- [ ] Allow users to pin selected courses to keep them at the top of the list.
+- [ ] Add a comment field where student feedback is shown.
+- [ ] Enhance accessibility for a more inclusive user experience.
 
 ### Data Management & Updates
 
-- [ ] Use AWS CloudFront to cache `courses.json` and serve it from edge locations to reduce origin traffic and save on Fly.io pay-as-you-go costs. https://github.com/kctong529/sisukas/issues/9
-- [ ] Evaluate the feasibility and necessity of fetching the latest course information from the Aalto Open API, balancing between real-time updates and caching.
-- [ ] Support importing courses from a long string or fuzzy copied text.
-- [ ] Export filtered results with customizable fields (JSON, CSV, Excel).
+- [ ] Use AWS CloudFront to cache `courses.json` and serve it from edge locations. https://github.com/kctong529/sisukas/issues/9
+- [ ] Write a workflow to fetch the course API, with diff report and automatically commit.
+- [ ] Evaluate the balance between performance and caching of fetching real-time course information.
+- [ ] Support importing courses from a long string or loosely formatted copied text.
+- [ ] Enable exporting filtered results with customizable fields in JSON, CSV, and Excel formats.
+
+### Newsletter & Announcements
+
+- [x] Implement a GitHub Action to send newsletter updates automatically when a new issue is published.
+- [ ] Build management workflow to support drafting, previewing, and scheduling issues.
+- [ ] Add basic email subscription management system (unsubscribe, preferences, email validation).
+- [ ] Build a proper newsletter archive viewer for past issues, and ensure old issues are cleaned up and consistent in Markdown + HTML formats.
 
 ### Development & Maintenance
-- [ ] Refactor file structure. https://github.com/kctong529/sisukas/issues/3
+- [ ] Refactor the project and file structure for better maintainability. https://github.com/kctong529/sisukas/issues/3
 - [ ] Define and document terminology across the system. https://github.com/kctong529/sisukas/issues/14
-- [ ] Draft guidelines for package management.
-- [ ] Evaluate and choose test packages.
-- [ ] Create a draft set of unit tests.
+- [ ] Write unit tests for core filtering functionalities. https://github.com/kctong529/sisukas/issues/16
+- [ ] Establish guidelines for package management.
+- [ ] Evaluate and select appropriate testing frameworks.
 
 ## Contributing
 
