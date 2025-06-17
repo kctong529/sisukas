@@ -1,0 +1,115 @@
+{
+  "timestamp": "2025-06-17T06:21:31.083333",
+  "summary": {
+    "added": 9,
+    "removed": 0,
+    "updated": 5
+  },
+  "details": {
+    "added": [
+      {
+        "code": "ELO-C2053",
+        "name": "Dramaturgical literature, ",
+        "credits": 1
+      },
+      {
+        "code": "MUO-E0014",
+        "name": "Finnish Design Histories (3 cr), Lectures",
+        "credits": 2
+      },
+      {
+        "code": "MNGT-C1006",
+        "name": "Kest\u00e4v\u00e4n liiketoiminnan perusteet, Online teaching",
+        "credits": 2
+      },
+      {
+        "code": "MNGT-C1006",
+        "name": "Kest\u00e4v\u00e4n liiketoiminnan perusteet, Online teaching",
+        "credits": 2
+      },
+      {
+        "code": "ARTSa.kyps",
+        "name": "Maturity Test, Lectures",
+        "credits": 0
+      },
+      {
+        "code": "ARTSa.kyps",
+        "name": "Maturity Test, Lectures",
+        "credits": 0
+      },
+      {
+        "code": "ELO-C1541",
+        "name": "Planning and Writing Documentary Films 1, Lectures",
+        "credits": 3
+      },
+      {
+        "code": "SCI-L1010",
+        "name": "Scientific Computing Skills, Lectures",
+        "credits": 1
+      },
+      {
+        "code": "MNGT-C1007",
+        "name": "The New Sustainability in Business, Online teaching",
+        "credits": 2
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "MS-A0202",
+        "name": "Differential and Integral Calculus 2 (SCI), Summer course",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-06-14",
+            "2025-08-05"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E4101",
+        "name": "Laboratory Work in Inorganic Chemistry, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Laboratory Work in Inorganic Chemistry, Lecture",
+            "Laboratory Work in Inorganic Chemistry, Laboratory work"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-A1205",
+        "name": "Laboratory Work in Organic Chemistry, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-03-02",
+            "2026-02-22"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E4112",
+        "name": "Research Techniques, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-31"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E5280",
+        "name": "Societal Design Project D, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-08-04",
+            "2025-06-16"
+          ]
+        ]
+      }
+    ]
+  }
+}
