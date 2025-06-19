@@ -1,0 +1,90 @@
+{
+  "timestamp": "2025-06-19T06:21:30.526592",
+  "summary": {
+    "added": 3,
+    "removed": 0,
+    "updated": 5
+  },
+  "details": {
+    "added": [
+      {
+        "code": "WAT-E2010",
+        "name": "Groundwater Hydrology D, Electronic exam",
+        "credits": 5
+      },
+      {
+        "code": "ELEC-LV004",
+        "name": "Midterm review for doctoral students in ELEC, Lectures",
+        "credits": 2
+      },
+      {
+        "code": "SCI.harj",
+        "name": "Training, Lectures",
+        "credits": 1
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "CHEM-A1270",
+        "name": "General Chemistry, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-02"
+          ]
+        ]
+      },
+      {
+        "code": "MNGT-C3001",
+        "name": "Go to Market for Founders, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-10-20",
+            "2025-10-21"
+          ],
+          [
+            "End Date",
+            "2025-10-20",
+            "2025-11-25"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1110",
+        "name": "Online Writing Skills for Engineers 1 (w), Lecture",
+        "changes": [
+          [
+            "Name",
+            "Online Writing Skills for Engineers 1 (w), Lecture",
+            "Online Writing Skills for Engineers 1 (w), Lecture (Aug)"
+          ]
+        ]
+      },
+      {
+        "code": "WAT-E1100",
+        "name": "Water and Environmental Engineering, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-08-31"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E2128",
+        "name": "Wood Science Laboratory, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-03-02",
+            "2026-02-22"
+          ]
+        ]
+      }
+    ]
+  }
+}
