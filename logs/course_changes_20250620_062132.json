@@ -1,0 +1,221 @@
+{
+  "timestamp": "2025-06-20T06:21:32.845848",
+  "summary": {
+    "added": 6,
+    "removed": 0,
+    "updated": 16
+  },
+  "details": {
+    "added": [
+      {
+        "code": "NBE-E4080",
+        "name": "Decision Support in Healthcare D, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "PHYS-E0467",
+        "name": "Experimental reactor physics D, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "ABL-E2616",
+        "name": "Foundations of Data Regulation, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "ABL-C1104",
+        "name": "Introduction to Sustainability Accounting, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "28E99905",
+        "name": "Master's Thesis Seminar, Lectures",
+        "credits": 6
+      },
+      {
+        "code": "CHEM-L2240",
+        "name": "Ultrathin Films of Soft Materials D, Lectures",
+        "credits": 8
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "BIZ3160.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-09-01"
+          ]
+        ]
+      },
+      {
+        "code": "BIZ3160.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2026-01-03"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-E2611",
+        "name": "Entrepreneurship Law, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-19"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-E2611",
+        "name": "Entrepreneurship Law, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-02-16",
+            "2026-02-22"
+          ]
+        ]
+      },
+      {
+        "code": "MNGT3-L0003",
+        "name": "Entrepreneurship Perspectives D, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-02-24",
+            "2026-02-24"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E7125",
+        "name": "Experimental Assignments in Chemical Engineering, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-09-08",
+            "2025-11-26"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E7125",
+        "name": "Experimental Assignments in Chemical Engineering, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-01-12",
+            "2026-05-20"
+          ]
+        ]
+      },
+      {
+        "code": "32E99905",
+        "name": "Master's Thesis Seminar, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-08-31"
+          ]
+        ]
+      },
+      {
+        "code": "32E99905",
+        "name": "Master's Thesis Seminar, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-08-31"
+          ]
+        ]
+      },
+      {
+        "code": "MEC-E6007",
+        "name": "Mechanical Testing of Materials D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-03-02",
+            "2026-02-22"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-E2614",
+        "name": "Mergers and acquisitions: law, theory and practice, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2026-01-11"
+          ]
+        ]
+      },
+      {
+        "code": "FIN-A0106",
+        "name": "Personal Finance, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-04-27",
+            "2026-05-06"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-A3101",
+        "name": "Preparatory Course for Physics, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-08-03",
+            "2025-08-01"
+          ]
+        ]
+      },
+      {
+        "code": "32E30001",
+        "name": "Tax Challenges for Multinational Enterprises, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-04-13",
+            "2026-04-21"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-E2609",
+        "name": "Value Added Tax (advanced), Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-02-26",
+            "2025-02-23"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-E2609",
+        "name": "Value Added Tax (advanced), Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-02-25",
+            "2026-02-23"
+          ]
+        ]
+      }
+    ]
+  }
+}
