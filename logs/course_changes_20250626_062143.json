@@ -1,0 +1,225 @@
+{
+  "timestamp": "2025-06-26T06:21:43.124050",
+  "summary": {
+    "added": 1,
+    "removed": 2,
+    "updated": 16
+  },
+  "details": {
+    "added": [
+      {
+        "code": "MNGT-E1007",
+        "name": "Creativity for Sustainability, Essay",
+        "credits": 3
+      }
+    ],
+    "removed": [
+      {
+        "code": "MUO-E1078",
+        "name": "Fashion Cultures, Online teaching"
+      },
+      {
+        "code": "ELO-E5032",
+        "name": "Scenography, Production and Costume Design Lectures, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "CHEM-E4118",
+        "name": "AI for Chemistry and Materials Science D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-03-02",
+            "2026-02-23"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E2170",
+        "name": "Advanced Wood Science D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-27",
+            "2025-10-19"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E2236",
+        "name": "Board Manufacture Project Course, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-08-29"
+          ]
+        ]
+      },
+      {
+        "code": "MUO-E3052",
+        "name": "Designing for Services, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-08-04",
+            "2025-08-01"
+          ],
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-21"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E5140",
+        "name": "Materials Characterization, laboratory course D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-03-02",
+            "2026-02-22"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E4105",
+        "name": "Nanochemistry and Nanoengineering, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2026-01-07"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E2230",
+        "name": "Packaging Surface Modification and Coating, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-27",
+            "2025-10-21"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E2145",
+        "name": "Polymer Reaction Engineering D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2026-01-07"
+          ]
+        ]
+      },
+      {
+        "code": "TU-C1022",
+        "name": "Product management project, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-01-05",
+            "2026-01-07"
+          ]
+        ]
+      },
+      {
+        "code": "REC-E5000",
+        "name": "Research Designs for Real Estate Economics Theses D, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-08-04",
+            "2025-08-02"
+          ],
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-08-26"
+          ]
+        ]
+      },
+      {
+        "code": "LC-L1000",
+        "name": "Research Ethics for Doctoral Students D, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-10-22",
+            "2025-10-20"
+          ],
+          [
+            "End Date",
+            "2025-11-26",
+            "2025-12-07"
+          ]
+        ]
+      },
+      {
+        "code": "LC-L1000",
+        "name": "Research Ethics for Doctoral Students D, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-02-26",
+            "2026-02-23"
+          ],
+          [
+            "End Date",
+            "2026-04-09",
+            "2026-04-19"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E1175",
+        "name": "Sustainability Assessments for Bioproducts D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-03-02",
+            "2026-02-22"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E0125",
+        "name": "Teaching Assistant Duties at the School of Chemical Engineering V, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-07"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E0125001",
+        "name": "Teaching Assistant Duties at the School of Chemical Engineering V, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-07"
+          ]
+        ]
+      },
+      {
+        "code": "SPT-E5020",
+        "name": "Urban Experience D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2026-01-02"
+          ]
+        ]
+      }
+    ]
+  }
+}
