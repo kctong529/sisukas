@@ -1,0 +1,173 @@
+{
+  "timestamp": "2025-06-28T06:19:20.901186",
+  "summary": {
+    "added": 1,
+    "removed": 0,
+    "updated": 13
+  },
+  "details": {
+    "added": [
+      {
+        "code": "ARTS-EV",
+        "name": "Course with Varying Content, Becoming a Creative Professional, 1 cr",
+        "credits": 0
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "CHEM-C2000",
+        "name": "Course Assistant in the School of Chemical Engineering V, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-31",
+            "2025-09-05"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-C2000001",
+        "name": "Course Assistant in the School of Chemical Engineering V, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-31",
+            "2025-09-05"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E5010",
+        "name": "Game Design Fundamentals, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-08-17"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E5008",
+        "name": "Games Now!, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E6001",
+        "name": "Introduction to Sound Design and Music, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-21",
+            "2025-08-17"
+          ]
+        ]
+      },
+      {
+        "code": "ISM-E5001",
+        "name": "Master's Thesis Seminar, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2026-05-31"
+          ]
+        ]
+      },
+      {
+        "code": "ISM-E1999",
+        "name": "Master's Thesis Seminar, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-01-21",
+            "2026-06-05"
+          ],
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2026-05-31"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E3012",
+        "name": "Mediums and Materials, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-C3230",
+        "name": "Molecular Quantum Mechanics, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-03",
+            "2025-09-01"
+          ]
+        ]
+      },
+      {
+        "code": "30C02000",
+        "name": "Negotiation Analytics, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-04-27",
+            "2026-05-04"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E9008",
+        "name": "NoVA Research Seminar, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-08-04"
+          ],
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E2003",
+        "name": "Visual Narrative in Design, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E0104",
+        "name": "Workshop Period 4, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Workshop Period 4, Lecture",
+            "Workshop Period 4, Introduction to Motion Capture"
+          ]
+        ]
+      }
+    ]
+  }
+}
