@@ -1,0 +1,192 @@
+{
+  "timestamp": "2025-07-01T06:22:09.432047",
+  "summary": {
+    "added": 21,
+    "removed": 2,
+    "updated": 3
+  },
+  "details": {
+    "added": [
+      {
+        "code": "AARTS-A0218",
+        "name": "Basics of Comic Art, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "AMUO-C3046",
+        "name": "Basics of Service Design, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "AMUO-C3046",
+        "name": "Basics of Service Design, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "EKO-C2001",
+        "name": "Basics of Thermodynamics and Heat Transfer, Exam",
+        "credits": 5
+      },
+      {
+        "code": "AAXM-C0108",
+        "name": "Ceramics Workshop, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "AAXM-C0108",
+        "name": "Ceramics Workshop, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "AELO-E3050",
+        "name": "Creative Thinking, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "ATAI-C1169",
+        "name": "Digital Image Workshop, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "ATAI-C1169",
+        "name": "Digital Image Workshop, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "AARTS-A0219",
+        "name": "Forms of Comics Expression and Storytelling, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "ADOM-E3045",
+        "name": "History of Contemporary Photography, Lecture",
+        "credits": 4
+      },
+      {
+        "code": "AARK-C4504",
+        "name": "Housing Politics for Housing Designers, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "AARK-C4504",
+        "name": "Housing Politics for Housing Designers, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "AARTS-A0226",
+        "name": "Painting Workshop, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "ATAI-C1177",
+        "name": "Trauma and Art, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "AARTS-A0223",
+        "name": "Watercolour Workshop, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "AELO-C2047",
+        "name": "Writing TV Drama 1, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "AELO-C2030",
+        "name": "Writing a Feature Film 1, Lecture",
+        "credits": 8
+      },
+      {
+        "code": "AELO-C2031",
+        "name": "Writing a Feature Film 2, Lecture",
+        "credits": 2
+      },
+      {
+        "code": "AELO-C2031",
+        "name": "Writing a Feature Film 2, Lecture",
+        "credits": 2
+      },
+      {
+        "code": "AELO-C2035",
+        "name": "Writing a Short Film, Lecture",
+        "credits": 2
+      }
+    ],
+    "removed": [
+      {
+        "code": "KJR-C2003",
+        "name": "Basic course on fluid mechanics, Exam"
+      },
+      {
+        "code": "EKO-C2001",
+        "name": "Basics of Thermodynamics and Heat Transfer, Exam"
+      }
+    ],
+    "updated": [
+      {
+        "code": "EKO-C2001",
+        "name": "Basics of Thermodynamics and Heat Transfer, Exam",
+        "changes": [
+          [
+            "Start Date",
+            "2026-02-16",
+            "2025-12-12"
+          ],
+          [
+            "End Date",
+            "2026-02-16",
+            "2025-12-12"
+          ],
+          [
+            "Enrolment Start",
+            "2025-12-18",
+            "2025-10-13"
+          ],
+          [
+            "Enrolment End",
+            "2026-02-09",
+            "2025-12-05"
+          ]
+        ]
+      },
+      {
+        "code": "EKO-C2001",
+        "name": "Basics of Thermodynamics and Heat Transfer, Exam",
+        "changes": [
+          [
+            "Start Date",
+            "2026-04-16",
+            "2026-02-16"
+          ],
+          [
+            "End Date",
+            "2026-04-16",
+            "2026-02-16"
+          ],
+          [
+            "Enrolment Start",
+            "2026-02-15",
+            "2025-12-18"
+          ],
+          [
+            "Enrolment End",
+            "2026-04-09",
+            "2026-02-09"
+          ]
+        ]
+      },
+      {
+        "code": "ISM-E3002",
+        "name": "Capstone: Future-proofing Supply Chains, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2026-01-04"
+          ]
+        ]
+      }
+    ]
+  }
+}
