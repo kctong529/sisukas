@@ -1,0 +1,42 @@
+{
+  "timestamp": "2025-07-08T06:22:05.848684",
+  "summary": {
+    "added": 1,
+    "removed": 0,
+    "updated": 2
+  },
+  "details": {
+    "added": [
+      {
+        "code": "PHYS-C0253",
+        "name": "Quantum Mechanics 1, Exam",
+        "credits": 5
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "CHEM-C2480",
+        "name": "Metallurgical Engineering and Technical Analysis of Lifecycle and Sustainability, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-07-28",
+            "2025-09-01"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-C3000",
+        "name": "Research Project in Chemical Engineering V, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-08-24"
+          ]
+        ]
+      }
+    ]
+  }
+}
