@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-07-24T06:23:08.404970",
+  "summary": {
+    "added": 5,
+    "removed": 0,
+    "updated": 0
+  },
+  "details": {
+    "added": [
+      {
+        "code": "MNGT3-L1001",
+        "name": "Research Progress Seminar in Entrepreneurship I D, Lecture",
+        "credits": 1
+      },
+      {
+        "code": "MNGT3-L1002",
+        "name": "Research Progress Seminar in Entrepreneurship II D, Lecture",
+        "credits": 1
+      },
+      {
+        "code": "MNGT3-L1003",
+        "name": "Research Progress Seminar in Entrepreneurship III D, Lecture",
+        "credits": 2
+      },
+      {
+        "code": "MNGT3-L1004",
+        "name": "Research Progress Seminar in Entrepreneurship IV D, Lecture",
+        "credits": 2
+      },
+      {
+        "code": "ISM3-L7000",
+        "name": "Theories and research in international purchasing and supply management D, Lecture",
+        "credits": 6
+      }
+    ],
+    "removed": [],
+    "updated": []
+  }
+}
