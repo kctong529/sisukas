@@ -1,0 +1,123 @@
+{
+  "timestamp": "2025-08-12T06:21:58.225532",
+  "summary": {
+    "added": 2,
+    "removed": 1,
+    "updated": 8
+  },
+  "details": {
+    "added": [
+      {
+        "code": "PHYS-EV0005",
+        "name": "Quantum Chemistry Methods for Physicists, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "MNGT-C1007",
+        "name": "The New Sustainability in Business, Online teaching",
+        "credits": 2
+      }
+    ],
+    "removed": [
+      {
+        "code": "AAXM-E1112",
+        "name": "Introduction to Interdisciplinary Art Pedagogy, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "LC-0570",
+        "name": "Communication competence for students in art and design, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-08-20"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-CV02",
+        "name": "Course with Varying Content: Battery Engineering: Materials and Recycling, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-09-01",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E7125",
+        "name": "Experimental Assignments in Chemical Engineering, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-03"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1110",
+        "name": "Online Writing Skills for Engineers 1 (w), Lectures (FITec Green Transition II students only)",
+        "changes": [
+          [
+            "Name",
+            "Online Writing Skills for Engineers 1 (w), Lectures (FITec Green Transition II students only)",
+            "Online Writing Skills for Engineers 1 (w), Lectures (FITech Green Transition II students only)"
+          ]
+        ]
+      },
+      {
+        "code": "22E24000",
+        "name": "Performance Management, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-01",
+            "2025-09-03"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-C2005",
+        "name": "Professional Development as a Chemical Engineer, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-12-01"
+          ],
+          [
+            "Enrolment End",
+            "2026-01-08",
+            "2026-01-05"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E7135",
+        "name": "Reactor Design, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2026-01-07"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2320",
+        "name": "Spanish 2, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-01",
+            "2025-09-03"
+          ]
+        ]
+      }
+    ]
+  }
+}
