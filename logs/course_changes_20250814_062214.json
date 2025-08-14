@@ -1,0 +1,145 @@
+{
+  "timestamp": "2025-08-14T06:22:14.223287",
+  "summary": {
+    "added": 3,
+    "removed": 0,
+    "updated": 10
+  },
+  "details": {
+    "added": [
+      {
+        "code": "LC-7010",
+        "name": "Finland Studies MOOC, Online teaching",
+        "credits": 1
+      },
+      {
+        "code": "LC-7210",
+        "name": "Finnish 1, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "LC-7210",
+        "name": "Finnish 1, Lecture",
+        "credits": 3
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "ELEC-E8432",
+        "name": "An Introduction to Hydrogen Economy, Lectures",
+        "changes": [
+          [
+            "Name",
+            "An Introduction to Hydrogen Economy, Lectures",
+            "An Introduction to Hydrogen Economy, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-E2603",
+        "name": "Business Contracts D, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-01",
+            "2025-09-03"
+          ]
+        ]
+      },
+      {
+        "code": "CS-EJ5491",
+        "name": "Digital Ethics and Sustainability D, Lectures",
+        "changes": [
+          [
+            "Name",
+            "Digital Ethics and Sustainability D, Lectures",
+            "Digital Ethics and Sustainability D, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "ATAI-C1169",
+        "name": "Digital Image Workshop, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-12-16",
+            "2025-12-18"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7324",
+        "name": "Finnish Conversation 2, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-11-10",
+            "2025-11-18"
+          ],
+          [
+            "End Date",
+            "2025-11-26",
+            "2025-12-04"
+          ]
+        ]
+      },
+      {
+        "code": "CS-EJ5481",
+        "name": "Introduction to Digital Transformation D, Lectures",
+        "changes": [
+          [
+            "Name",
+            "Introduction to Digital Transformation D, Lectures",
+            "Introduction to Digital Transformation D, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-E8125",
+        "name": "Reinforcement Learning D, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-26",
+            "2025-12-01"
+          ]
+        ]
+      },
+      {
+        "code": "GIS-E1150",
+        "name": "Remote Sensing and Scientific Writing for Geoinformatics Professionals D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-04-27",
+            "2026-04-20"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E3011",
+        "name": "Strange Economics, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-26",
+            "2025-12-03"
+          ]
+        ]
+      },
+      {
+        "code": "MUO-E0018",
+        "name": "Thesis seminar, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-01",
+            "2025-09-02"
+          ]
+        ]
+      }
+    ]
+  }
+}
