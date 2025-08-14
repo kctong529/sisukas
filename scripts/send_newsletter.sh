@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Load HTML content from the generated file
-html_content=$(<public/newsletter.html)
-
 # Read emails from the file and format them as a JSON array
 email_list=$(jq -Rn '[inputs]' < email_list.txt)
 
@@ -21,5 +18,5 @@ curl -X POST 'https://api.resend.com/emails' \
     --arg to "Sisukas Subscribers <kichun.tong@aalto.fi>" \
     --argjson bcc "$email_list" \
     --arg subject "$subject" \
-    --arg html_content "$html_content" \
+    --rawfile html_content public/newsletter.html \
     '{from: $from, to: $to, bcc: $bcc, subject: $subject, html: $html_content}')"
