@@ -9,14 +9,21 @@ issue_number=$(date +'%Y Week %V')
 # Construct subject line
 subject="Sisukas Newsletter - $issue_number"
 
-# Send the email using Resend API with jq for proper escaping
+# Create JSON payload and write to temporary file
+temp_payload=$(mktemp)
+jq -n \
+  --arg from "newsletter@sisukas.eu" \
+  --arg to "Sisukas Subscribers <kichun.tong@aalto.fi>" \
+  --argjson bcc "$email_list" \
+  --arg subject "$subject" \
+  --rawfile html_content public/newsletter.html \
+  '{from: $from, to: $to, bcc: $bcc, subject: $subject, html: $html_content}' > "$temp_payload"
+
+# Send the email using Resend API
 curl -X POST 'https://api.resend.com/emails' \
   -H "Authorization: Bearer $RESEND_API_KEY" \
   -H 'Content-Type: application/json' \
-  -d "$(jq -n \
-    --arg from "newsletter@sisukas.eu" \
-    --arg to "Sisukas Subscribers <kichun.tong@aalto.fi>" \
-    --argjson bcc "$email_list" \
-    --arg subject "$subject" \
-    --rawfile html_content public/newsletter.html \
-    '{from: $from, to: $to, bcc: $bcc, subject: $subject, html: $html_content}')"
+  --data-binary "@$temp_payload"
+
+# Clean up
+rm "$temp_payload"
