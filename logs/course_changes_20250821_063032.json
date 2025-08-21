@@ -1,0 +1,205 @@
+{
+  "timestamp": "2025-08-21T06:30:32.748555",
+  "summary": {
+    "added": 1,
+    "removed": 2,
+    "updated": 16
+  },
+  "details": {
+    "added": [
+      {
+        "code": "CS-E400213",
+        "name": "Special Course in Computer Science: The Psychology of Human-Centered Security and Privacy, Lectures",
+        "credits": 5
+      }
+    ],
+    "removed": [
+      {
+        "code": "LC-5004",
+        "name": "Foundations of Swedish for Working Life, (H02 Contact) Lecture"
+      },
+      {
+        "code": "LCB-5800",
+        "name": "Swedish Business Communication 1, (H01 Contact) Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "MLI61C630",
+        "name": "Academic Writing, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Academic Writing, Lecture",
+            "Academic Writing, BScBA25A, Group 1, Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "MLI61C630",
+        "name": "Academic Writing, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Academic Writing, Lecture",
+            "Academic Writing, BScBA25A, Group 2, Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "MLI61C630",
+        "name": "Academic Writing, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Academic Writing, Lecture",
+            "Academic Writing, BScBA25B, Group1, Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "MLI61C630",
+        "name": "Academic Writing, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Academic Writing, Lecture",
+            "Academic Writing, BScBA25B, Group2, Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "MLI61A130",
+        "name": "Business Communication, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-01-05",
+            "2026-01-07"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-L2010",
+        "name": "Cellulose Chemistry D, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2024-08-28",
+            "2025-06-20"
+          ]
+        ]
+      },
+      {
+        "code": "CS-A1140",
+        "name": "Data Structures and Algorithms, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-10-31"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E3220",
+        "name": "Declarative Programming D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-10-31"
+          ]
+        ]
+      },
+      {
+        "code": "JOIN-E3910",
+        "name": "Design thinking for innovation, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2026-07-31"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E4770",
+        "name": "Designing and Building Scalable Web Applications D, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Designing and Building Scalable Web Applications D, Lecture",
+            "Designing and Building Scalable Web Applications D, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E4770",
+        "name": "Designing and Building Scalable Web Applications D, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Designing and Building Scalable Web Applications D, Lecture",
+            "Designing and Building Scalable Web Applications D, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E4270",
+        "name": "Device-Agnostic Design D, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Device-Agnostic Design D, Lecture",
+            "Device-Agnostic Design D, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "MAR-E1061",
+        "name": "History of Landscape Architecture in Finland, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-01",
+            "2025-09-08"
+          ]
+        ]
+      },
+      {
+        "code": "JOIN-E3920",
+        "name": "Ideation and creative collaboration, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2026-07-31"
+          ]
+        ]
+      },
+      {
+        "code": "MS-E1010",
+        "name": "Philosophy of Science D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-15"
+          ]
+        ]
+      },
+      {
+        "code": "ARK-C1520",
+        "name": "Theory of Architecture 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-04",
+            "2025-08-31"
+          ]
+        ]
+      }
+    ]
+  }
+}
