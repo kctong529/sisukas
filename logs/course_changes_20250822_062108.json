@@ -1,0 +1,114 @@
+{
+  "timestamp": "2025-08-22T06:21:08.030441",
+  "summary": {
+    "added": 4,
+    "removed": 2,
+    "updated": 5
+  },
+  "details": {
+    "added": [
+      {
+        "code": "CS-A1130",
+        "name": "Applications of Computing, Exam",
+        "credits": 5
+      },
+      {
+        "code": "MS-E2107",
+        "name": "Independent Research Projects in Systems and Operations Research D, Project",
+        "credits": 5
+      },
+      {
+        "code": "CS-E400214",
+        "name": "Special Course in Computer Science D: Information Geometry for Generative AI, Lectures",
+        "credits": 5
+      },
+      {
+        "code": "CS-E407525",
+        "name": "Special Course in Machine Learning, Data Science and Artificial Intelligence: Seminar on Large Language Models, Lectures",
+        "credits": 5
+      }
+    ],
+    "removed": [
+      {
+        "code": "CS-A1111",
+        "name": "Basic Course in Programming Y1, Exam (end day for exams in Exam studio for courses 2025, will be fixed later)"
+      },
+      {
+        "code": "CS-E4680",
+        "name": "Quantum Machine Learning D, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "ELEC-C8204",
+        "name": "Automation software projects, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-02-16",
+            "2026-03-13"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-C8202",
+        "name": "Automation systems 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-09-19"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-C8203",
+        "name": "Automation systems 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2026-01-16"
+          ]
+        ]
+      },
+      {
+        "code": "CS-A1111",
+        "name": "Basic Course in Programming Y1, Exam (starting day of exam in Exam classrooms for 2025 courses)",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-25",
+            "2025-12-12"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS-L0102",
+        "name": "Doing Research D, Lecture",
+        "changes": [
+          [
+            "Credits Min",
+            6,
+            4
+          ],
+          [
+            "Start Date",
+            "2025-08-28",
+            "2025-09-09"
+          ],
+          [
+            "Enrolment Start",
+            "2025-07-28",
+            "2025-08-04"
+          ],
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-08-25"
+          ]
+        ]
+      }
+    ]
+  }
+}
