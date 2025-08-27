@@ -1,0 +1,296 @@
+{
+  "timestamp": "2025-08-27T06:19:48.366335",
+  "summary": {
+    "added": 1,
+    "removed": 2,
+    "updated": 22
+  },
+  "details": {
+    "added": [
+      {
+        "code": "TU-C3040",
+        "name": "Healthcare Operations Management, Lecture",
+        "credits": 5
+      }
+    ],
+    "removed": [
+      {
+        "code": "ALC-6310",
+        "name": "German 1, Exam"
+      },
+      {
+        "code": "ALC-6310",
+        "name": "German 1, Online teaching"
+      }
+    ],
+    "updated": [
+      {
+        "code": "LC-0550",
+        "name": "Communication Skills D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-26"
+          ]
+        ]
+      },
+      {
+        "code": "LC-0570",
+        "name": "Communication competence for students in art and design, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-E9545",
+        "name": "Digital Microelectronics III: Physical Implementation D, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            null,
+            "2025-08-26"
+          ],
+          [
+            "Enrolment End",
+            null,
+            "2025-08-31"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7210",
+        "name": "Finnish 1, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-10-08",
+            "2025-10-13"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-C2470",
+        "name": "Forests, Wood and Carbon, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Forests, Wood and Carbon, Lecture",
+            "Forests, Wood and Carbon, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-C2470",
+        "name": "Forests, Wood and Carbon, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Forests, Wood and Carbon, Lecture",
+            "Forests, Wood and Carbon, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1117",
+        "name": "Integrated Oral and Written Skills (o,w), Lecture (integrated with DsD year 1 taking ELEC-C9801 Design Thinking and Electronic Prototyping)",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-24",
+            "2025-12-01"
+          ]
+        ]
+      },
+      {
+        "code": "32E99905",
+        "name": "Master's Thesis Seminar, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-02-02",
+            "2026-05-31"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E4650",
+        "name": "Methods of Data Mining D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1120",
+        "name": "Online Persuasive Presentations for Engineers (o), Lecture (V01)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-27",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-C1230",
+        "name": "Principles of Physical Chemistry, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-10-15",
+            "2025-10-16"
+          ]
+        ]
+      },
+      {
+        "code": "REC-E3100",
+        "name": "Real Estate Economics D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-26"
+          ]
+        ]
+      },
+      {
+        "code": "CS-C3180",
+        "name": "Software Design and Modelling, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-05"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2310",
+        "name": "Spanish 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-09-02"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2310",
+        "name": "Spanish 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-09-07"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2320",
+        "name": "Spanish 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-09-02"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2330",
+        "name": "Spanish 3, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-09-03"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2350",
+        "name": "Spanish 5 (o,w), Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-09-02"
+          ]
+        ]
+      },
+      {
+        "code": "ARK-E1020",
+        "name": "Studio Autumn, Wood Architecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-03",
+            "2025-09-10"
+          ],
+          [
+            "End Date",
+            "2025-12-10",
+            "2025-12-17"
+          ]
+        ]
+      },
+      {
+        "code": "SPT-E4050",
+        "name": "Transport Economics, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-01-08",
+            "2026-02-24"
+          ],
+          [
+            "End Date",
+            "2026-02-12",
+            "2026-04-10"
+          ],
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2026-01-26"
+          ],
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2026-02-20"
+          ]
+        ]
+      },
+      {
+        "code": "ARK-E4020",
+        "name": "Wood Architecture, Lecture Course: Wood in Architecture and Construction D, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-05",
+            "2025-09-12"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E2235",
+        "name": "Wood Products and Processes, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Wood Products and Processes, Lecture",
+            "Wood Products and Processes, Online teaching"
+          ]
+        ]
+      }
+    ]
+  }
+}
