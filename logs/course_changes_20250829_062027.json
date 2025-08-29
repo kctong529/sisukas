@@ -1,0 +1,420 @@
+{
+  "timestamp": "2025-08-29T06:20:27.747358",
+  "summary": {
+    "added": 3,
+    "removed": 1,
+    "updated": 35
+  },
+  "details": {
+    "added": [
+      {
+        "code": "NBE-C2101",
+        "name": "Biophysics, Exam",
+        "credits": 5
+      },
+      {
+        "code": "ELEC-C8002",
+        "name": "Electrical Energy Systems, Exam",
+        "credits": 5
+      },
+      {
+        "code": "ELEC-C8002",
+        "name": "Electrical Energy Systems, Exam",
+        "credits": 5
+      }
+    ],
+    "removed": [
+      {
+        "code": "ATAI-C1169",
+        "name": "Digital Image Workshop, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "ELO-E5035",
+        "name": "ADVANCED SPECIAL MATERIALS AND TECHNIQUES, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E2537",
+        "name": "AV Business, Budgeting & Financial Management, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E3530",
+        "name": "Advanced Directing Workshop 2: Actor and Camera II, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1212",
+        "name": "Advanced MA-laboratory 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E4025",
+        "name": "Advanced MA-laboratory Post-production, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E4660",
+        "name": "Advanced Topics in Software Systems D, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-12-03",
+            "2025-11-26"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E2127",
+        "name": "Applied Mechanics of Wood Materials, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Applied Mechanics of Wood Materials, Lecture",
+            "Applied Mechanics of Wood Materials, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E3537",
+        "name": "Artistic Approaches Seminar 5: Genre B, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E2236",
+        "name": "Board Manufacture Project Course, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-29",
+            "2025-09-02"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-E1366",
+        "name": "Capstone: Accounting, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-10-09",
+            "2025-11-12"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1233",
+        "name": "Cinematic Laboratory B, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E6513",
+        "name": "Costume and Research, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E5226",
+        "name": "Developing a designer-oriented concept (TeaK), Lectures",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1557",
+        "name": "Director Atelier 3, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E3041",
+        "name": "Editing a Feature Film or Television Series 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1224",
+        "name": "Film Idea Incubator, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5411",
+        "name": "Foundations of Swedish for Technology, (H01 CHEM Contact) Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-29"
+          ]
+        ]
+      },
+      {
+        "code": "MUO-C0006",
+        "name": "History of Innovations and Design, Independent study",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-10-19"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E2538",
+        "name": "Marketing, New Distribution Ways, Data and Consumer Research, AI, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1030",
+        "name": "Master's Thesis Seminar 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1030",
+        "name": "Master's Thesis Seminar 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E4546",
+        "name": "Music Recording\u00a0 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E5219",
+        "name": "Orientation to Artistic Collaboration and ACO Project, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "CS-C3260",
+        "name": "Practical Quantum Computing, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E5521",
+        "name": "Realtime Virtual Set Design, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E4548",
+        "name": "Sound Effects Recording, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1216",
+        "name": "Sound and Environment, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E4547",
+        "name": "Sound as a Storytelling Device in Film 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E2069",
+        "name": "Special Courses in Screenwriting: Genre B, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5410",
+        "name": "Swedish for Technology, (H04 ELEC Contact) Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-29"
+          ]
+        ]
+      },
+      {
+        "code": "WAT-E2200",
+        "name": "WAT Project Course D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-04-27",
+            "2026-04-13"
+          ]
+        ]
+      },
+      {
+        "code": "WAT-E2080",
+        "name": "Water and Governance D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2026-01-05"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E2225",
+        "name": "Wood Material Science, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Wood Material Science, Lecture",
+            "Wood Material Science, Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E2056",
+        "name": "Workshop in Feature Film Screenwriting 2 D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E2048",
+        "name": "Workshop in Feature Film Screenwriting 3 D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-09-04"
+          ]
+        ]
+      }
+    ]
+  }
+}
