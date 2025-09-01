@@ -1,0 +1,36 @@
+{
+  "timestamp": "2025-09-01T06:23:02.547639",
+  "summary": {
+    "added": 0,
+    "removed": 0,
+    "updated": 2
+  },
+  "details": {
+    "added": [],
+    "removed": [],
+    "updated": [
+      {
+        "code": "LC-7271",
+        "name": "Finnish for Work, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-31",
+            "2025-09-07"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E500010",
+        "name": "Seminar in Software and Service Engineering D: AI for Software Engineering --- The Death of a Profession?, Lectures",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-09-22",
+            "2025-08-31"
+          ]
+        ]
+      }
+    ]
+  }
+}
