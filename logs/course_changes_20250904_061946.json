@@ -1,0 +1,31 @@
+{
+  "timestamp": "2025-09-04T06:19:46.614000",
+  "summary": {
+    "added": 1,
+    "removed": 0,
+    "updated": 1
+  },
+  "details": {
+    "added": [
+      {
+        "code": "AARTS-A0218",
+        "name": "Basics of Comic Art, Lecture",
+        "credits": 6
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "TU-C1030",
+        "name": "Managerial accounting and finance for decision-makers, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-10"
+          ]
+        ]
+      }
+    ]
+  }
+}
