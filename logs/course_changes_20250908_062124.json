@@ -1,0 +1,46 @@
+{
+  "timestamp": "2025-09-08T06:21:24.299335",
+  "summary": {
+    "added": 0,
+    "removed": 0,
+    "updated": 2
+  },
+  "details": {
+    "added": [],
+    "removed": [],
+    "updated": [
+      {
+        "code": "CS-A0100",
+        "name": "Computer as a Tool, Independent Study",
+        "changes": [
+          [
+            "End Date",
+            "2025-09-01",
+            "2026-07-31"
+          ],
+          [
+            "Enrolment Start",
+            null,
+            "2025-09-01"
+          ],
+          [
+            "Enrolment End",
+            null,
+            "2026-07-31"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7271",
+        "name": "Finnish for Work, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-07",
+            "2025-09-14"
+          ]
+        ]
+      }
+    ]
+  }
+}
