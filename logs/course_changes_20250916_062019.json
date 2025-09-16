@@ -1,0 +1,78 @@
+{
+  "timestamp": "2025-09-16T06:20:19.391402",
+  "summary": {
+    "added": 0,
+    "removed": 1,
+    "updated": 4
+  },
+  "details": {
+    "added": [],
+    "removed": [
+      {
+        "code": "LC-L1000",
+        "name": "Research Ethics for Doctoral Students D, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "CHEM-CV02",
+        "name": "Course with Varying Content: Battery Engineering: Materials and Recycling, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2026-01-01",
+            "2025-09-15"
+          ],
+          [
+            "Enrolment End",
+            "2026-04-30",
+            "2025-09-29"
+          ]
+        ]
+      },
+      {
+        "code": "LCA-1002",
+        "name": "Expressing your Expertise (o,w), Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-10-21",
+            "2025-11-04"
+          ],
+          [
+            "End Date",
+            "2025-12-02",
+            "2025-12-11"
+          ]
+        ]
+      },
+      {
+        "code": "TU-C1030",
+        "name": "Managerial accounting and finance for decision-makers, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-15",
+            "2025-09-17"
+          ]
+        ]
+      },
+      {
+        "code": "MAR-E1070",
+        "name": "Readings in Landscape Architecture, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-02",
+            "2025-09-16"
+          ],
+          [
+            "End Date",
+            "2025-12-03",
+            "2025-12-09"
+          ]
+        ]
+      }
+    ]
+  }
+}
