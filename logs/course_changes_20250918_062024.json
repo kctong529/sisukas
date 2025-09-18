@@ -1,0 +1,136 @@
+{
+  "timestamp": "2025-09-18T06:20:24.133333",
+  "summary": {
+    "added": 3,
+    "removed": 2,
+    "updated": 7
+  },
+  "details": {
+    "added": [
+      {
+        "code": "CS-C3240",
+        "name": "Machine Learning, Exam",
+        "credits": 5
+      },
+      {
+        "code": "CS-C3240",
+        "name": "Machine Learning, Exam",
+        "credits": 5
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, (V08 Online) Lecture",
+        "credits": 3
+      }
+    ],
+    "removed": [
+      {
+        "code": "ATAI-C1169",
+        "name": "Digital Image Workshop, Lecture"
+      },
+      {
+        "code": "CS-C3240",
+        "name": "Machine Learning, Exam"
+      }
+    ],
+    "updated": [
+      {
+        "code": "LC-0510",
+        "name": "Conference presentations D, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-06",
+            "2025-11-11"
+          ],
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-17"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E4200",
+        "name": "Emergent User Interfaces D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2025-12-29"
+          ]
+        ]
+      },
+      {
+        "code": "LC-0710 ",
+        "name": "Konferenssiesiintyminen, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-10-23",
+            "2025-10-28"
+          ],
+          [
+            "End Date",
+            "2025-11-06",
+            "2025-11-11"
+          ],
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-17"
+          ]
+        ]
+      },
+      {
+        "code": "CS-C3240",
+        "name": "Machine Learning, Exam",
+        "changes": [
+          [
+            "End Date",
+            "2026-05-18",
+            "2026-06-05"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E5011 ",
+        "name": "Research Methods: Case Studies & Design Science D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-27",
+            "2025-10-13"
+          ]
+        ]
+      },
+      {
+        "code": "CS-C4030",
+        "name": "Social Psychology, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-09-22",
+            "2025-09-18"
+          ],
+          [
+            "Enrolment End",
+            "2025-10-27",
+            "2025-10-20"
+          ]
+        ]
+      },
+      {
+        "code": "MUO-C3037",
+        "name": "Users and Interaction, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-04-01",
+            "2026-04-09"
+          ]
+        ]
+      }
+    ]
+  }
+}
