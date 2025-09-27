@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-09-27T06:17:00.729549",
+  "summary": {
+    "added": 0,
+    "removed": 1,
+    "updated": 2
+  },
+  "details": {
+    "added": [],
+    "removed": [
+      {
+        "code": "CS-E5011 ",
+        "name": "Research Methods: Case Studies & Design Science D, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "WAT-E1100",
+        "name": "Water and Environmental Engineering, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-10-17",
+            "2025-10-20"
+          ]
+        ]
+      },
+      {
+        "code": "LCA-1050",
+        "name": "Writing Doctoral Research for Arts (w) D, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2026-01-26",
+            "2025-09-26"
+          ]
+        ]
+      }
+    ]
+  }
+}
