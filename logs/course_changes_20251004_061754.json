@@ -1,0 +1,108 @@
+{
+  "timestamp": "2025-10-04T06:17:54.066048",
+  "summary": {
+    "added": 1,
+    "removed": 0,
+    "updated": 8
+  },
+  "details": {
+    "added": [
+      {
+        "code": "NBE-E4120",
+        "name": "Cellular Electrophysiology D, Exam",
+        "credits": 5
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "LCA-1020",
+        "name": "Academic Communication for Master\u00b4s Students (o,w), Lecture (Erasmus Mundo Replay students prioritized)",
+        "changes": [
+          [
+            "Name",
+            "Academic Communication for Master\u00b4s Students (o,w), Lecture (Erasmus Mundo Replay students prioritized)",
+            "Academic Communication for Master\u00b4s Students (o,w), Lecture ( Replay students prioritized)"
+          ]
+        ]
+      },
+      {
+        "code": "CS-A1113",
+        "name": "Basics in Programming Y1, Exam",
+        "changes": [
+          [
+            "Name",
+            "Basics in Programming Y1, Exam",
+            "Basics in Programming Y1, Retake exam for autumn 2025 course"
+          ]
+        ]
+      },
+      {
+        "code": "CS-A1113",
+        "name": "Basics in Programming Y1, Exam",
+        "changes": [
+          [
+            "Name",
+            "Basics in Programming Y1, Exam",
+            "Basics in Programming Y1, Retake exam for autumn 2025 course"
+          ]
+        ]
+      },
+      {
+        "code": "CS-A1113",
+        "name": "Basics in Programming Y1, Exam",
+        "changes": [
+          [
+            "Name",
+            "Basics in Programming Y1, Exam",
+            "Basics in Programming Y1, Retake exam for autumn 2024 course (not for autumn 25 course)"
+          ]
+        ]
+      },
+      {
+        "code": "AARTS-A0219",
+        "name": "Forms of Comics Expression and Storytelling, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-12-18",
+            "2026-01-08"
+          ]
+        ]
+      },
+      {
+        "code": "LC-0530",
+        "name": "Public speaking and stage fright D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-03"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-E4530",
+        "name": "Radio Astronomy D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2026-01-05"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E407525",
+        "name": "Special Course in Machine Learning, Data Science and Artificial Intelligence: Seminar on Large Language Models, Lectures",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-17",
+            "2025-10-16"
+          ]
+        ]
+      }
+    ]
+  }
+}
