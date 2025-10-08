@@ -1,0 +1,67 @@
+{
+  "timestamp": "2025-10-08T06:20:32.895887",
+  "summary": {
+    "added": 1,
+    "removed": 2,
+    "updated": 3
+  },
+  "details": {
+    "added": [
+      {
+        "code": "EEA-EV008",
+        "name": "Visual Perception and Planning for Autonomous Driving, Lecture",
+        "credits": 5
+      }
+    ],
+    "removed": [
+      {
+        "code": "LC-1090",
+        "name": "Online Preparatory English: Reading and Writing, Lecture"
+      },
+      {
+        "code": "LC-1091",
+        "name": "Online Preparatory English: Speaking and Listening, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "LC-7210",
+        "name": "Finnish 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-16",
+            "2025-10-07"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7220",
+        "name": "Finnish 2, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-02-23",
+            "2026-03-23"
+          ],
+          [
+            "End Date",
+            "2026-05-06",
+            "2026-05-27"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1312",
+        "name": "Online Academic Presentations Skills for MSc Students (o), Lecture (Zoom, MSc students from CHEM, ELEC, ENG, SCI, BIZ))",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-15",
+            "2025-10-13"
+          ]
+        ]
+      }
+    ]
+  }
+}
