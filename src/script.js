@@ -1,5 +1,5 @@
 // Import all required modules and helper functions
-import { loadPrograms, loadPeriods, periodsData, curriculaMap } from './yamlCache.js';
+import { loadPrograms, loadPeriods, loadOrganizations, periodsData, curriculaMap, organizationNames } from './yamlCache.js';
 import { initializeDragSelect, removeEventHandlers } from './dragSelect.js';
 import { createSelect, populateSelect } from './domUtils.js';
 import {
@@ -21,7 +21,6 @@ import { FILTER_FIELDS, INPUT_HTMLS } from './constant.js';
 
 // Global state variables
 let courses = []; // Stores all courses loaded from JSON
-let organizationNames = new Set(); // Unique organization names
 let filteredCourses = []; // Stores currently filtered courses
 let currentSortColumn = "courseName"; // Default sort column
 let sortDirection = 1; // 1 = ascending, -1 = descending
@@ -235,12 +234,6 @@ async function loadCourses() {
         courses = await loadCourseData();
         filteredCourses = [...courses]; // Shallow copy of all courses
 
-        // Extract organization names for filtering
-        organizationNames = extractOrganizationNames(courses);
-
-        // Load additional required data
-        await loadAdditionalData();
-
         // Sort by default column (courseName ascending) and display
         sortCourses();
         displayCourses(filteredCourses, false);
@@ -278,6 +271,7 @@ export function extractOrganizationNames(courses) {
 async function loadAdditionalData() {
     await loadPrograms();
     await loadPeriods();
+    await loadOrganizations();
 }
 
 // Helper to extract sortable value from course based on column
@@ -843,11 +837,7 @@ function loadFiltersFromJson(filters) {
         }
     });
 
-    // Finally trigger the search
-    filterCourses();
-    sortCourses();
-    displayCourses(filteredCourses, true);
-    updateSortIndicators(currentSortColumn, sortDirection);
+    onSearchButtonClick();
 }
 
 function loadFiltersFromFile() {
@@ -888,6 +878,30 @@ function setupEnterKeyHandler() {
     });
 }
 
+// On page load, check for filter parameter and load from API
+async function loadFiltersFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const filtersKey = urlParams.get('filters');
+    
+    if (filtersKey && filtersKey.length === 16) {
+        console.log('Successfully loaded filters:', filtersKey);
+        try {
+            const response = await fetch(`http://127.0.0.1:8000/api/filters/${filtersKey}`);
+            
+            if (!response.ok) {
+                console.error('Failed to load filters:', response.statusText);
+                return;
+            }
+            
+            const filters = await response.json();
+            loadFiltersFromJson(filters.rules);
+            
+        } catch (error) {
+            console.error('Error loading filters from URL:', error);
+        }
+    }
+}
+
 window.addFilterRule = addFilterRule;
 window.handleFieldChange = handleFieldChange;
 window.removeFilterRule = removeFilterRule;
@@ -897,12 +911,29 @@ window.logFilters = logFilters;
 window.saveFiltersToFile = saveFiltersToFile;
 window.loadFiltersFromJson = loadFiltersFromJson;
 window.loadFiltersFromFile = loadFiltersFromFile;
+window.loadFiltersFromUrl = loadFiltersFromUrl;
 window.onSearchButtonClick = onSearchButtonClick;
 
 // Initialize on page load
-window.onload = function() {
-    loadCourses();
-    
+window.onload = async function() {
+    try {
+        // Load just the data needed for filters
+        await loadAdditionalData();
+
+        // Now load filters from URL (if present)
+        await loadFiltersFromUrl();
+
+        // Finally load and display courses
+        await loadCourses();
+
+        const filterContainer = document.getElementById('filter-container');
+        if (filterContainer.children.length > 0) {
+            onSearchButtonClick();
+        }
+    } catch (error) {
+        console.error("Error loading:", error);
+    }
+
     // Add click handlers to column headers
     document.querySelectorAll('th[data-column]').forEach(th => {
         th.addEventListener('click', () => {

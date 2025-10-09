@@ -12,6 +12,8 @@ export let courseIndex = {
 
 export let periodsData = [];
 
+export let organizationNames = [];
+
 // Fetches the YAML data from a file, appending a timestamp to the URL
 export const fetchYaml = async (url) => {
   try {
@@ -106,6 +108,12 @@ export async function loadPeriods() {
 
     // Populate the periods container in the UI
     renderPeriods();
+}
+
+// Load organizations data
+export async function loadOrganizations() {
+    const organizationsData = await loadYamlFile('data/organizations.yaml');
+    organizationNames = organizationsData.organizations || [];
 }
 
 // Render periods into the DOM
