@@ -1,0 +1,42 @@
+{
+  "timestamp": "2025-10-09T06:20:54.558496",
+  "summary": {
+    "added": 1,
+    "removed": 0,
+    "updated": 2
+  },
+  "details": {
+    "added": [
+      {
+        "code": "CS-E5011 ",
+        "name": "Research Methods: Case Studies & Design Science D, Lecture",
+        "credits": 2
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "MNGT-E5002",
+        "name": "CEMS Global Citizenship Seminar, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-01-28",
+            "2026-01-15"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1120",
+        "name": "Online Persuasive Presentations for Engineers (o), Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-15",
+            "2025-10-14"
+          ]
+        ]
+      }
+    ]
+  }
+}
