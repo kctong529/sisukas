@@ -18,12 +18,18 @@ import {
 } from './filterHelpers.js';
 
 import { FILTER_FIELDS, INPUT_HTMLS } from './constant.js';
+import { config } from './config.js';
+
 
 // Global state variables
 let courses = []; // Stores all courses loaded from JSON
 let filteredCourses = []; // Stores currently filtered courses
 let currentSortColumn = "courseName"; // Default sort column
 let sortDirection = 1; // 1 = ascending, -1 = descending
+
+// API Configuration
+const API_BASE_URL = "https://sisukas-filters-api-969370446235.europe-north1.run.app";
+
 
 // IndexedDB-based ETag cache for large files
 class LargeFileETagCache {
@@ -807,6 +813,103 @@ function saveFiltersToFile() {
     URL.revokeObjectURL(url);
 }
 
+// Save filters to API and optionally download JSON
+async function saveFiltersToApi() {
+    const filters = exportFilters();
+    
+    // Validate that there are filters to save
+    if (filters.length === 0) {
+        showFilterLoadError("No filters to save");
+        return;
+    }
+
+    try {
+        // Prepare the payload with "rules" key as the API expects
+        const payload = {
+            rules: filters
+        };
+
+        // Send POST request to API
+        const response = await fetch(`${config.api.baseUrl}/api/filters`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            let errorMessage = "Failed to save filters";
+            
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.detail || errorMessage;
+            } catch (e) {
+                errorMessage = response.statusText;
+            }
+            
+            console.error(`Failed to save filters (${response.status}):`, errorMessage);
+            showFilterLoadError(`Unable to save filters: ${errorMessage}`);
+            return;
+        }
+
+        const data = await response.json();
+        
+        // Validate response structure
+        if (!data.hash_id) {
+            console.error("Invalid response structure:", data);
+            showFilterLoadError("Invalid response from server");
+            return;
+        }
+
+        // Create shareable URL
+        const shareableUrl = `${window.location.origin}${window.location.pathname}?filters=${data.hash_id}`;
+        
+        // Copy to clipboard
+        try {
+            await navigator.clipboard.writeText(shareableUrl);
+            console.log(`Filter link copied to clipboard! (${data.rules_count} filter${data.rules_count > 1 ? 's' : ''})`);
+        } catch (clipboardError) {
+            // Fallback if clipboard fails
+            console.warn("Clipboard API failed, showing URL in alert:", clipboardError);
+        }
+
+        console.log(`Filters saved with hash ID: ${data.hash_id}`);
+        console.log(`Shareable URL: ${shareableUrl}`);
+
+        // Navigate to the URL with the filter hash
+        window.location.href = shareableUrl;
+        
+    } catch (error) {
+        // Handle network errors and other exceptions
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            console.error("Network error saving filters:", error);
+            showFilterLoadError("Unable to connect to filter service. Please check your internet connection.");
+        } else {
+            console.error("Error saving filters:", error);
+            showFilterLoadError("An unexpected error occurred while saving filters");
+        }
+    }
+}
+
+// Combined function that does both - save to API and optionally download
+async function saveFilters(downloadJson = false) {
+    const filters = exportFilters();
+    
+    if (filters.length === 0) {
+        showFilterLoadError("No filters to save");
+        return;
+    }
+
+    // Always save to API
+    await saveFiltersToApi();
+    
+    // Optionally also download JSON
+    if (downloadJson) {
+        saveFiltersToFile();
+    }
+}
+
 function loadFiltersFromJson(filters) {
     filters.forEach(filter => {
         addFilterRule(); // adds a new filter rule row
@@ -886,10 +989,8 @@ async function loadFiltersFromUrl() {
     // Early return if no filter key present
     if (!filtersKey) return;
 
-    const apiBaseUrl = "https://sisukas-filters-api-969370446235.europe-north1.run.app";
-    
     try {
-        const response = await fetch(`${apiBaseUrl}/api/filters/${filtersKey}`);
+        const response = await fetch(`${config.api.baseUrl}/api/filters/${filtersKey}`);
         
         // Handle different error responses
         if (!response.ok) {
@@ -935,6 +1036,7 @@ async function loadFiltersFromUrl() {
         
         loadFiltersFromJson(data.rules);
         console.log(`Successfully loaded ${data.count || data.rules.length} filters:`, filtersKey);
+        logFilters();
         showFilterLoadSuccess(`Loaded ${data.rules.length} filter(s) from shared link`);
         
     } catch (error) {
@@ -965,8 +1067,8 @@ function showFilterLoadError(message) {
     const container = getNotificationContainer();
     container.appendChild(notification);
     
-    // Auto-remove after 8 seconds
-    setTimeout(() => notification.remove(), 2000);
+    // Auto-remove after configured duration
+    setTimeout(() => notification.remove(), config.ui.notificationDuration.error);
 }
 
 // Helper function to show success messages
@@ -985,8 +1087,8 @@ function showFilterLoadSuccess(message) {
     const container = getNotificationContainer();
     container.appendChild(notification);
     
-    // Auto-remove after 5 seconds
-    setTimeout(() => notification.remove(), 1000);
+    // Auto-remove after configured duration
+    setTimeout(() => notification.remove(), config.ui.notificationDuration.success);
 }
 
 // Get or create notification container
@@ -1013,6 +1115,8 @@ window.displayCourses = displayCourses;
 window.filterCourses = filterCourses;
 window.logFilters = logFilters;
 window.saveFiltersToFile = saveFiltersToFile;
+window.saveFiltersToApi = saveFiltersToApi;
+window.saveFilters = saveFilters;
 window.loadFiltersFromJson = loadFiltersFromJson;
 window.loadFiltersFromFile = loadFiltersFromFile;
 window.loadFiltersFromUrl = loadFiltersFromUrl;
