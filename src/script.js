@@ -882,24 +882,128 @@ function setupEnterKeyHandler() {
 async function loadFiltersFromUrl() {
     const urlParams = new URLSearchParams(window.location.search);
     const filtersKey = urlParams.get('filters');
+
+    // Early return if no filter key present
+    if (!filtersKey) return;
+
+    const apiBaseUrl = "https://sisukas-filters-api-969370446235.europe-north1.run.app";
     
-    if (filtersKey && filtersKey.length === 16) {
-        console.log('Successfully loaded filters:', filtersKey);
-        try {
-            const response = await fetch(`http://127.0.0.1:8000/api/filters/${filtersKey}`);
+    try {
+        const response = await fetch(`${apiBaseUrl}/api/filters/${filtersKey}`);
+        
+        // Handle different error responses
+        if (!response.ok) {
+            let errorMessage = "Failed to load filters";
             
-            if (!response.ok) {
-                console.error('Failed to load filters:', response.statusText);
-                return;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.detail || errorMessage;
+            } catch (e) {
+                // If response isn't JSON, use status text
+                errorMessage = response.statusText;
             }
             
-            const filters = await response.json();
-            loadFiltersFromJson(filters.rules);
+            switch (response.status) {
+                case 404:
+                    console.warn(`Filter not found: ${filtersKey}`);
+                    showFilterLoadError("These filters no longer exist or have been deleted");
+                    break;
+                case 422:
+                    console.warn(`Invalid filter hash: ${filtersKey}`);
+                    showFilterLoadError("Invalid filter URL format");
+                    break;
+                case 503:
+                    console.error("Filter service temporarily unavailable");
+                    showFilterLoadError("Filter service is temporarily unavailable. Please try again later.");
+                    break;
+                default:
+                    console.error(`Failed to load filters (${response.status}):`, errorMessage);
+                    showFilterLoadError(`Unable to load filters: ${errorMessage}`);
+            }
             
-        } catch (error) {
-            console.error('Error loading filters from URL:', error);
+            return;
+        }
+
+        const data = await response.json();
+        
+        // Validate response structure
+        if (!data.rules || !Array.isArray(data.rules)) {
+            console.error("Invalid filter data structure:", data);
+            showFilterLoadError("Invalid filter data received");
+            return;
+        }
+        
+        loadFiltersFromJson(data.rules);
+        console.log(`Successfully loaded ${data.count || data.rules.length} filters:`, filtersKey);
+        showFilterLoadSuccess(`Loaded ${data.rules.length} filter(s) from shared link`);
+        
+    } catch (error) {
+        // Handle network errors and other exceptions
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            console.error("Network error loading filters:", error);
+            showFilterLoadError("Unable to connect to filter service. Please check your internet connection.");
+        } else {
+            console.error("Error loading filters from URL:", error);
+            showFilterLoadError("An unexpected error occurred while loading filters");
         }
     }
+}
+
+// Helper function to show error messages to the user
+function showFilterLoadError(message) {
+    // Remove any existing notifications first
+    removeExistingNotifications();
+    
+    const notification = document.createElement('div');
+    notification.className = 'filter-notification error';
+    notification.innerHTML = `
+        <i class="bi bi-exclamation-circle"></i>
+        <span>${message}</span>
+    `;
+    
+    // Insert at a fixed position in the DOM
+    const container = getNotificationContainer();
+    container.appendChild(notification);
+    
+    // Auto-remove after 8 seconds
+    setTimeout(() => notification.remove(), 2000);
+}
+
+// Helper function to show success messages
+function showFilterLoadSuccess(message) {
+    // Remove any existing notifications first
+    removeExistingNotifications();
+    
+    const notification = document.createElement('div');
+    notification.className = 'filter-notification success';
+    notification.innerHTML = `
+        <i class="bi bi-check-circle"></i>
+        <span>${message}</span>
+    `;
+    
+    // Insert at a fixed position in the DOM
+    const container = getNotificationContainer();
+    container.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => notification.remove(), 1000);
+}
+
+// Get or create notification container
+function getNotificationContainer() {
+    let container = document.getElementById('notification-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notification-container';
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
+// Remove any existing notifications
+function removeExistingNotifications() {
+    const existing = document.querySelectorAll('.filter-notification');
+    existing.forEach(notif => notif.remove());
 }
 
 window.addFilterRule = addFilterRule;
