@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-10-11T06:17:58.853777",
+  "summary": {
+    "added": 0,
+    "removed": 0,
+    "updated": 3
+  },
+  "details": {
+    "added": [],
+    "removed": [],
+    "updated": [
+      {
+        "code": "LC-0570",
+        "name": "Communication competence for students in art and design, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-4320",
+        "name": "French 2, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-10-09",
+            "2025-10-10"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2320",
+        "name": "Spanish 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-16"
+          ]
+        ]
+      }
+    ]
+  }
+}
