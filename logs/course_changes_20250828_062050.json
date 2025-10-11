@@ -1,0 +1,189 @@
+{
+  "timestamp": "2025-08-28T06:20:50.989839",
+  "summary": {
+    "added": 3,
+    "removed": 0,
+    "updated": 14
+  },
+  "details": {
+    "added": [
+      {
+        "code": "TU-C2080",
+        "name": "Entrepreneurship Essentials, Independent study",
+        "credits": 1
+      },
+      {
+        "code": "TU-C2080",
+        "name": "Entrepreneurship Essentials, Independent study",
+        "credits": 1
+      },
+      {
+        "code": "CS-E500010",
+        "name": "Seminar in Software and Service Engineering D: AI for Software Engineering --- The Death of a Profession?, Lectures",
+        "credits": 5
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "CHEM-E8120",
+        "name": "Cell Biology D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-31"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-A1020",
+        "name": "Elementary Academic Thinking, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7230",
+        "name": "Finnish 3, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-07",
+            "2025-08-26"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5004",
+        "name": "Foundations of Swedish for Working Life, (H01 Flex Contact) Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-29"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7009",
+        "name": "Get to know Finland, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-26"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1117",
+        "name": "Integrated Oral and Written Skills (o,w), Lecture (integrated with BSc in Computational Engineering year 1)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-04",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1117",
+        "name": "Integrated Oral and Written Skills (o,w), Lecture (integrated with BSc in Data Science year 1)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-04",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1117",
+        "name": "Integrated Oral and Written Skills (o,w), Lecture (integrated with BSc in Quantum Technology year 1)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-04",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1117",
+        "name": "Integrated Oral and Written Skills (o,w), Lecture (integrated with DsD year 1 taking ELEC-C9801 Design Thinking and Electronic Prototyping)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-04",
+            "2025-08-28"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS-L0606",
+        "name": "Knowing Aesthetics D, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-09-15"
+          ],
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2025-10-13"
+          ]
+        ]
+      },
+      {
+        "code": "21L11109",
+        "name": "Perspectives on organization, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-29",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2310",
+        "name": "Spanish 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-07",
+            "2025-09-05"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2310",
+        "name": "Spanish 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-31"
+          ]
+        ]
+      },
+      {
+        "code": "LC-5003",
+        "name": "Swedish for Working Life, (H01 Contact) Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-08-29"
+          ]
+        ]
+      }
+    ]
+  }
+}

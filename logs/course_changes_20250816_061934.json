@@ -1,0 +1,547 @@
+{
+  "timestamp": "2025-08-16T06:19:34.108879",
+  "summary": {
+    "added": 2,
+    "removed": 1,
+    "updated": 47
+  },
+  "details": {
+    "added": [
+      {
+        "code": "ELO-E3541",
+        "name": "Advanced Directing Workshop 1: Intimacy directing, Lectures",
+        "credits": 3
+      },
+      {
+        "code": "ECON-L6220",
+        "name": "Structural Econometrics D, Lecture",
+        "credits": 6
+      }
+    ],
+    "removed": [
+      {
+        "code": "GEO-E2050",
+        "name": "Bituminous Materials and Mixtures D, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "ELO-C3550",
+        "name": "Actor and Camera I, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C4044",
+        "name": "Cinematography, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C2529",
+        "name": "Contemporary topics in producing, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C3551",
+        "name": "Directing, Workshop 2: TV Drama Series / Visual Concept, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C3549",
+        "name": "Directing, Workshop I: Camera work, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C1203",
+        "name": "Documentary Cinematography, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C1209",
+        "name": "Dokumentaarinen leikkaus 2, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C1208",
+        "name": "Dokumentaarisen elokuvan leikkausanalyysi, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C2045",
+        "name": "Dramaturgical Analysis, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C3076",
+        "name": "Elokuvakirjallisuus A, Exam",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C3078",
+        "name": "Elokuvakirjallisuus B, Exam",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C3077",
+        "name": "Elokuvakirjallisuus C, Exam",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C6544",
+        "name": "Elokuvan pukusuunnittelu II, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C2530",
+        "name": "Entrepreneurship and project management, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ISM-E2006",
+        "name": "Ethics in Digital Innovation, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-12-02",
+            "2025-10-14"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C3083",
+        "name": "Fiktioleikkaus 1, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C3074",
+        "name": "Fiktioleikkaus 2, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C1206",
+        "name": "Film Music Workshop, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C4545",
+        "name": "Film Sound Recording 1, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C1537",
+        "name": "Filmmaker's Theory 1, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS-A0630",
+        "name": "General Studies Courses with Varying Contents, Lecture",
+        "changes": [
+          [
+            "Name",
+            "General Studies Courses with Varying Contents, Lecture",
+            "General Studies Courses with Varying Contents, Fast Sculpture \u2013 spatial practices, performance, intervention, 3 ECTS"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS-A0630",
+        "name": "General Studies Courses with Varying Contents, Lecture",
+        "changes": [
+          [
+            "Name",
+            "General Studies Courses with Varying Contents, Lecture",
+            "General Studies Courses with Varying Contents, Slow Sculpture \u2013 Live Model Clay Modeling, Casting in Glass, 3 ECTS"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C5032",
+        "name": "Introduction to 3D Modeling, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C1210",
+        "name": "Leadership and Group Dynamics (BA), Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C4037",
+        "name": "Lighting 2, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C4042",
+        "name": "Location Scouting, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C6546",
+        "name": "Makeup and Hairstyling, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C5035",
+        "name": "Materiaalioppi ja rakennesuunnittelu, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C1211",
+        "name": "Observational and Interactive Documentary Film, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C3542",
+        "name": "Ohjausmetodiikka 2: Kohtausharjoitus, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C3544",
+        "name": "Ohjaussuunnittelu 1: Ohjaussuunnitelma, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C3545",
+        "name": "Ohjaussuunnittelu 2: Harjoitussuunnitelma, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C3548",
+        "name": "Ohjaussuunnittelu 5: Mise-en-sc\u00e8ne, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1311",
+        "name": "Online Academic Writing Skills for MSc students (w), Lecture (Zoom, MSc students from CHEM, ELEC, ENG, SCI, BIZ)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-09-01"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1120",
+        "name": "Online Persuasive Presentations for Engineers (o), Lecture (V01)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-26",
+            "2025-08-27"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o), Lecture  (V07)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-26",
+            "2025-08-25"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C1532",
+        "name": "Portrait Course, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C6548",
+        "name": "Presentation skills, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C5521",
+        "name": "Production Design, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C2051",
+        "name": "Professional practices of screenwriting, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C2524",
+        "name": "Scheduling, AVFX and budgeting, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C4541",
+        "name": "Sound as a Storytelling Device in Film 1, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C1114",
+        "name": "VFX - Elokuvan visuaaliset tehosteet, workshop, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C1113",
+        "name": "VFX: 3D grafiikka ja elokuvan visuaaliset tehosteet, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C5524",
+        "name": "Worldbuilding, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C2032",
+        "name": "Writing a Feature Film 4, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-C2048",
+        "name": "Writing a Short Film, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2015-11-17",
+            "2025-11-17"
+          ]
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "timestamp": "2025-09-24T06:20:21.666384",
+  "summary": {
+    "added": 0,
+    "removed": 0,
+    "updated": 4
+  },
+  "details": {
+    "added": [],
+    "removed": [],
+    "updated": [
+      {
+        "code": "LC-0520",
+        "name": "Impact and argumentation D, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Impact and argumentation D, Lecture",
+            "Impact and argumentation D, this group in English, Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-0760",
+        "name": "Impact and argumentation, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Impact and argumentation, Lecture",
+            "Impact and argumentation, this group in English, Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-0330",
+        "name": "Leadership Communication D, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Leadership Communication D, Lecture",
+            "Leadership Communication D_This group is in Finnish, Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "CS-C0005",
+        "name": "Mind & Study - toolbox for being well in studies, Lectures",
+        "changes": [
+          [
+            "Name",
+            "Mind & Study - toolbox for being well in studies, Lectures",
+            "Mind and Study - toolbox for being well in studies, Lectures"
+          ]
+        ]
+      }
+    ]
+  }
+}

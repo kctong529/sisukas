@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-09-12T06:19:31.819618",
+  "summary": {
+    "added": 0,
+    "removed": 0,
+    "updated": 2
+  },
+  "details": {
+    "added": [],
+    "removed": [],
+    "updated": [
+      {
+        "code": "MAR-A1020",
+        "name": "Basics of Landscape Architecture 1A, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-12-02",
+            "2025-12-04"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS-A0108",
+        "name": "Information Literacy, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-10-20",
+            "2025-10-27"
+          ],
+          [
+            "End Date",
+            "2025-10-27",
+            "2025-11-03"
+          ]
+        ]
+      }
+    ]
+  }
+}

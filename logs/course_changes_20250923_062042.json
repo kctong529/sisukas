@@ -1,0 +1,53 @@
+{
+  "timestamp": "2025-09-23T06:20:42.390685",
+  "summary": {
+    "added": 1,
+    "removed": 0,
+    "updated": 3
+  },
+  "details": {
+    "added": [
+      {
+        "code": "MARK-C0077",
+        "name": "Sales: Sustainable Value-Based Selling, Online teaching",
+        "credits": 6
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "CS-A1141",
+        "name": "Data Structures and Algorithms Y, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-10-15"
+          ]
+        ]
+      },
+      {
+        "code": "LC-0740",
+        "name": "Public speaking and stage fright, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Public speaking and stage fright, Lecture",
+            "Public speaking and stage fright, Lecture, this group in Finnish"
+          ]
+        ]
+      },
+      {
+        "code": "MARK-C0077",
+        "name": "Sales: Sustainable Value-Based Selling, Online teaching",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-31",
+            "2025-09-22"
+          ]
+        ]
+      }
+    ]
+  }
+}

@@ -63,14 +63,15 @@ curricula:
       - ELEC-C9610
       - ELEC-C9801
       - ELEC-C7420
-      - ELEC‐C9600
+      - ELEC-C9600
       - ELEC-C9821
       - ELEC-C5310
-      - ELEC‐C8201
+      - ELEC-C8201
       - ELEC-C7430
       - ELEC-E8001
-      - ELEC‐C9410
-      - ELEC‐C0302
+      - ELEC-C9410
+      - ELEC-C0302
+      - ELEC-C0302
       - ELEC-C9822
       - JOIN.bsc
   - code: DataSci24

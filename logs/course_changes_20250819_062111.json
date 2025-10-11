@@ -1,0 +1,176 @@
+{
+  "timestamp": "2025-08-19T06:21:11.046224",
+  "summary": {
+    "added": 4,
+    "removed": 1,
+    "updated": 11
+  },
+  "details": {
+    "added": [
+      {
+        "code": "ELO-C1542",
+        "name": "Director Atelier 1, Documentary Film, Lectures",
+        "credits": 4
+      },
+      {
+        "code": "MS-C1541",
+        "name": "Metric Spaces, Exam",
+        "credits": 5
+      },
+      {
+        "code": "CS-E400307",
+        "name": "Special Assingment in Computer Science, Lectures",
+        "credits": 1
+      },
+      {
+        "code": "CS-E400307",
+        "name": "Special Assingment in Computer Science, Lectures",
+        "credits": 1
+      }
+    ],
+    "removed": [
+      {
+        "code": "ECON-L6210",
+        "name": "Structural Econometrics D, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "CS-A1111",
+        "name": "Basic Course in Programming Y1, Exam",
+        "changes": [
+          [
+            "Name",
+            "Basic Course in Programming Y1, Exam",
+            "Basic Course in Programming Y1, Exam (starting day of exam in Exam classrooms for 2025 courses)"
+          ]
+        ]
+      },
+      {
+        "code": "CS-A1111",
+        "name": "Basic Course in Programming Y1, Exam",
+        "changes": [
+          [
+            "Name",
+            "Basic Course in Programming Y1, Exam",
+            "Basic Course in Programming Y1, Exam (end day for exams in Exam studio for courses 2025, will be fixed later)"
+          ]
+        ]
+      },
+      {
+        "code": "LC-0570",
+        "name": "Communication competence for students in art and design, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-20",
+            "2025-08-21"
+          ]
+        ]
+      },
+      {
+        "code": "ISM-E2006",
+        "name": "Ethics in Digital Innovation, Exam",
+        "changes": [
+          [
+            "Start Date",
+            "2026-02-09",
+            "2025-11-24"
+          ],
+          [
+            "End Date",
+            "2026-02-09",
+            "2025-11-24"
+          ],
+          [
+            "Enrolment Start",
+            "2025-12-11",
+            "2025-09-24"
+          ],
+          [
+            "Enrolment End",
+            "2026-02-02",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "MLI66B101",
+        "name": "French Business Communication 1a, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-08-15",
+            "2025-08-06"
+          ]
+        ]
+      },
+      {
+        "code": "MLI62A101",
+        "name": "German Business Communication 1a, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-08-15",
+            "2025-08-06"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-E7331",
+        "name": "Laboratory Course in Networking and Cloud Technologies, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-03"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-E9950",
+        "name": "Research Seminar on Electronics and Nanoengineering D, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-09-10",
+            "2025-08-20"
+          ]
+        ]
+      },
+      {
+        "code": "ECON-L6220",
+        "name": "Structural Econometrics D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-08-31"
+          ]
+        ]
+      },
+      {
+        "code": "A21E16001",
+        "name": "Sustainability in Business, Contact teaching, Open Uni",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-12",
+            "2025-08-18"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-C0110",
+        "name": "Workshop period 1, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Workshop period 1, Lecture",
+            "Workshop period 1, Safe harbours for people in transit: a positive dialogue, Designing impactful public messages and experiences"
+          ]
+        ]
+      }
+    ]
+  }
+}

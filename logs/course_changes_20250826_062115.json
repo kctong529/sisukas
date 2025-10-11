@@ -1,0 +1,96 @@
+{
+  "timestamp": "2025-08-26T06:21:15.485462",
+  "summary": {
+    "added": 0,
+    "removed": 1,
+    "updated": 7
+  },
+  "details": {
+    "added": [],
+    "removed": [
+      {
+        "code": "CS-E407525",
+        "name": "Special Course in Machine Learning, Data Science and Artificial Intelligence: Seminar on Large Language Models, Lectures"
+      }
+    ],
+    "updated": [
+      {
+        "code": "AXM-E6003",
+        "name": "Composing with New Musical Instruments, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-09-22",
+            "2025-09-01"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7271",
+        "name": "Finnish for Work, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-08-31"
+          ]
+        ]
+      },
+      {
+        "code": "CS-C2140",
+        "name": "Software Project 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2026-01-19"
+          ]
+        ]
+      },
+      {
+        "code": "WAT-E3020",
+        "name": "State of the World and Development D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-09-07"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E0101",
+        "name": "Workshop Period 1, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Workshop Period 1, Lecture",
+            "Workshop Period 1, Visual Programming"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E0103",
+        "name": "Workshop Period 3, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Workshop Period 3, Lecture",
+            "Workshop Period 3, Projection Mapping"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E0104",
+        "name": "Workshop Period 4, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Workshop Period 4, Lecture",
+            "Workshop Period 4, Open Source Investigations"
+          ]
+        ]
+      }
+    ]
+  }
+}

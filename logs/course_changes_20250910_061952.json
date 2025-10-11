@@ -1,0 +1,58 @@
+{
+  "timestamp": "2025-09-10T06:19:52.079108",
+  "summary": {
+    "added": 1,
+    "removed": 0,
+    "updated": 3
+  },
+  "details": {
+    "added": [
+      {
+        "code": "TU-E5080",
+        "name": "AI Agents and the Real World, Lecture",
+        "credits": 3
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "ARK-C0002",
+        "name": "Basics: Place 1, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-03-25",
+            "2026-04-17"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E1130",
+        "name": "Catalysis, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2026-01-07"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-E2604",
+        "name": "Intellectual Property Rights, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-10-31",
+            "2025-10-24"
+          ],
+          [
+            "Enrolment End",
+            "2025-10-27",
+            "2025-10-31"
+          ]
+        ]
+      }
+    ]
+  }
+}

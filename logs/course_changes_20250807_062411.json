@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-08-07T06:24:11.294104",
+  "summary": {
+    "added": 0,
+    "removed": 0,
+    "updated": 1
+  },
+  "details": {
+    "added": [],
+    "removed": [],
+    "updated": [
+      {
+        "code": "ELEC-E4740",
+        "name": "Antennas Workshop D, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-12-02",
+            "2025-12-05"
+          ]
+        ]
+      }
+    ]
+  }
+}

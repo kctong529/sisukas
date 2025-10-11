@@ -31,9 +31,9 @@ let sortDirection = 1; // 1 = ascending, -1 = descending
 const API_BASE_URL = "https://sisukas-filters-api-969370446235.europe-north1.run.app";
 
 
-// IndexedDB-based ETag cache for large files
-class LargeFileETagCache {
-    constructor(dbName = 'etag-cache', version = 1) {
+// IndexedDB-based cache for large files
+class LargeFileCache {
+    constructor(dbName = 'lastModified-cache', version = 1) {
         this.dbName = dbName;
         this.version = version;
         this.db = null;
@@ -79,7 +79,7 @@ class LargeFileETagCache {
     }
 
     // Save data to cache
-    async setCache(url, etag, data) {
+    async setCache(url, lastModified, data) {
         await this.init();
 
         return new Promise((resolve, reject) => {
@@ -88,7 +88,7 @@ class LargeFileETagCache {
 
             const cacheItem = {
                 url,
-                etag,
+                lastModified,
                 data,
                 timestamp: Date.now(),
                 size: JSON.stringify(data).length
@@ -101,15 +101,14 @@ class LargeFileETagCache {
         });
     }
 
-    // Main fetch method with ETag support
+    // Main fetch method with cache support
     async fetch(url) {
         try {
             const cached = await this.getCache(url);
             const headers = {};
 
-            // Add If-None-Match header if we have a cached ETag
-            if (cached?.etag) {
-                headers['If-None-Match'] = cached.etag;
+            if (cached?.lastModified) {
+                headers['If-Modified-Since'] = cached.lastModified;
             }
 
             console.log(`Fetching ${url}${cached ? ' (checking for updates...)' : ' (first time)'}`);
@@ -124,14 +123,14 @@ class LargeFileETagCache {
 
             // New data available
             if (response.ok) {
-                const etag = response.headers.get('ETag');
+                const lastModified = response.headers.get('Last-Modified');
                 const data = await response.json();
 
                 const sizeMB = Math.round(JSON.stringify(data).length / 1024 / 1024);
-                console.log(`${url} - Downloaded ${sizeMB}MB, ETag: ${etag}`);
+                console.log(`${url} - Downloaded ${sizeMB}MB, Last Modified: ${lastModified}`);
 
                 // Cache the new data
-                await this.setCache(url, etag, data);
+                await this.setCache(url, lastModified, data);
 
                 return data;
             }
@@ -193,7 +192,7 @@ class LargeFileETagCache {
                 const info = {};
                 request.result.forEach(item => {
                     info[item.url] = {
-                        etag: item.etag,
+                        lastModified: item.lastModified,
                         size: `${Math.round(item.size / 1024 / 1024)}MB`,
                         cached: new Date(item.timestamp).toLocaleString()
                     };
@@ -231,7 +230,7 @@ class LargeFileETagCache {
     }
 }
 
-const cache = new LargeFileETagCache();
+const cache = new LargeFileCache();
 
 // Main initialization function
 async function loadCourses() {
@@ -261,8 +260,8 @@ async function loadCourseData() {
 }
 
 // Debug helpers
-window.debugCache = () => {
-    console.table(cache.getCacheInfo());
+window.debugCache = async () => {
+    console.table(await cache.getCacheInfo());
 };
 
 window.clearCache = async () => {
@@ -690,7 +689,7 @@ function applyRule(course, rule) {
         case "teacher": return applyTeacherFilter(course, rule);
         case "language": return applyLanguageFilter(course, rule);
         case "startDate": return applyStartDateFilter(course, rule);
-        case "endDate": return applyStartDateFilter(course, rule);
+        case "endDate": return applyEndDateFilter(course, rule);
         case "enrollment": return applyEnrollmentFilter(course, rule);
         case "credits": return applyCreditsFilter(course, rule);
         case "level": return applyLevelFilter(course, rule);

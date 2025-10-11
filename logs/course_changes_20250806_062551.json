@@ -1,0 +1,106 @@
+{
+  "timestamp": "2025-08-06T06:25:51.416839",
+  "summary": {
+    "added": 2,
+    "removed": 0,
+    "updated": 6
+  },
+  "details": {
+    "added": [
+      {
+        "code": "SCI3163.kand",
+        "name": "Bachelor's Thesis and Seminar (Engineering Psychology), Lectures",
+        "credits": 10
+      },
+      {
+        "code": "CS-AJ0100",
+        "name": "FITech 101: Blockchain Business Applications, Online teaching",
+        "credits": 1
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "MNGT-L2003",
+        "name": "Advanced Research Design and Data Collection in Management Studies D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-08-26"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-E4740",
+        "name": "Antennas Workshop D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-08-29"
+          ]
+        ]
+      },
+      {
+        "code": "NBE-E4060",
+        "name": "Bioelectromagnetism: Fundamentals, Modelling and Application D, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-08-04",
+            "2025-08-11"
+          ],
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-09-01"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E4920",
+        "name": "Portfolio in Software and Service Engineering, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-08-04"
+          ],
+          [
+            "Enrolment End",
+            "2026-01-12",
+            "2025-09-08"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-E9950",
+        "name": "Research Seminar on Electronics and Nanoengineering D, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2026-01-26",
+            "2025-08-05"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1322",
+        "name": "Thesis Writing for Engineers (MSc) (w), Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            null,
+            "2025-09-01"
+          ],
+          [
+            "Enrolment End",
+            null,
+            "2026-04-06"
+          ]
+        ]
+      }
+    ]
+  }
+}

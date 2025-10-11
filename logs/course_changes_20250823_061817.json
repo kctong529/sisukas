@@ -1,0 +1,134 @@
+{
+  "timestamp": "2025-08-23T06:18:17.862535",
+  "summary": {
+    "added": 2,
+    "removed": 1,
+    "updated": 9
+  },
+  "details": {
+    "added": [
+      {
+        "code": "CHEM-A1120",
+        "name": "Fluid Flow and Heat Transfer, Exam",
+        "credits": 5
+      },
+      {
+        "code": "CHEM-E7160",
+        "name": "Fluid Flow in Process Units, Exam",
+        "credits": 5
+      }
+    ],
+    "removed": [
+      {
+        "code": "CS-E4930",
+        "name": "Software Processes and Projects D, Exam"
+      }
+    ],
+    "updated": [
+      {
+        "code": "LCA-1022",
+        "name": "Academic Writing (w) (H02), Lecture (for ARTS master's students writing their thesis, Zoom group)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-16",
+            "2025-10-13"
+          ]
+        ]
+      },
+      {
+        "code": "LCA-1022",
+        "name": "Academic Writing (w) (H04), Lecture (for ARTS master's students writing their thesis; Zoom group)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-02-19",
+            "2026-02-16"
+          ]
+        ]
+      },
+      {
+        "code": "LCA-1022",
+        "name": "Academic Writing (w), Lecture (for ARTS master's students writing their thesis)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "MUO-C1077",
+        "name": "Digital Fashion Design, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-09-22",
+            "2025-09-21"
+          ],
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-06"
+          ]
+        ]
+      },
+      {
+        "code": "ARTS-L0102",
+        "name": "Doing Research D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-08-29"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7230",
+        "name": "Finnish 3, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-08-25",
+            "2025-09-07"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E6001",
+        "name": "Introduction to Sound Design and Music, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-09-19",
+            "2025-10-10"
+          ]
+        ]
+      },
+      {
+        "code": "EKO-C2012",
+        "name": "Machine Design 3: Constructions, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "MUO-C1074",
+        "name": "Production processes in Clothing industry, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2026-01-20"
+          ]
+        ]
+      }
+    ]
+  }
+}

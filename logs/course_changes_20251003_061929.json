@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-10-03T06:19:29.040955",
+  "summary": {
+    "added": 0,
+    "removed": 0,
+    "updated": 3
+  },
+  "details": {
+    "added": [],
+    "removed": [],
+    "updated": [
+      {
+        "code": "LCA-1020",
+        "name": "Academic Communication for Master\u00b4s Students (o,w), Lecture (This group for Erasmus Mundo Replay students)",
+        "changes": [
+          [
+            "Name",
+            "Academic Communication for Master\u00b4s Students (o,w), Lecture (This group for Erasmus Mundo Replay students)",
+            "Academic Communication for Master\u00b4s Students (o,w), Lecture (Erasmus Mundo Replay students prioritized)"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1311",
+        "name": "Online Academic Writing Skills for MSc students (w), Lecture (Zoom, MSc students from CHEM, ELEC, ENG, SCI, BIZ)",
+        "changes": [
+          [
+            "End Date",
+            "2025-10-10",
+            "2025-10-15"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E3011",
+        "name": "Strange Economics, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-19"
+          ]
+        ]
+      }
+    ]
+  }
+}

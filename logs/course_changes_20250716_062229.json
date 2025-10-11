@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-07-16T06:22:29.430906",
+  "summary": {
+    "added": 0,
+    "removed": 0,
+    "updated": 1
+  },
+  "details": {
+    "added": [],
+    "removed": [],
+    "updated": [
+      {
+        "code": "AAE-E3095",
+        "name": "Wind Power Engineering and Development, Lectures",
+        "changes": [
+          [
+            "Name",
+            "Wind Power Engineering and Development, Lectures",
+            "Wind Power Engineering and Development, Lecture"
+          ]
+        ]
+      }
+    ]
+  }
+}

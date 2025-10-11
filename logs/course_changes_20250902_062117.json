@@ -1,0 +1,158 @@
+{
+  "timestamp": "2025-09-02T06:21:17.189791",
+  "summary": {
+    "added": 8,
+    "removed": 0,
+    "updated": 8
+  },
+  "details": {
+    "added": [
+      {
+        "code": "PHYS-E0411",
+        "name": "Advanced Physics Laboratory D, Lectures",
+        "credits": 5
+      },
+      {
+        "code": "PHYS-C0310",
+        "name": "Applied Physics, Laboratory Course, Lectures",
+        "credits": 5
+      },
+      {
+        "code": "CS-AJ1030",
+        "name": "Introduction to Large Language Models, Project",
+        "credits": 1
+      },
+      {
+        "code": "CS-AJ1030",
+        "name": "Introduction to Large Language Models, Project",
+        "credits": 1
+      },
+      {
+        "code": "CS-AJ1030",
+        "name": "Introduction to Large Language Models, Project",
+        "credits": 1
+      },
+      {
+        "code": "CS-AJ1040",
+        "name": "Software Engineering with Large Language Models, Project",
+        "credits": 2
+      },
+      {
+        "code": "CS-AJ1040",
+        "name": "Software Engineering with Large Language Models, Project",
+        "credits": 2
+      },
+      {
+        "code": "CS-AJ1040",
+        "name": "Software Engineering with Large Language Models, Project",
+        "credits": 2
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "ELEC-E9450",
+        "name": "Antennas and Wave Propagation D, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-06-02",
+            "2026-06-03"
+          ]
+        ]
+      },
+      {
+        "code": "CS-A1111",
+        "name": "Basic Course in Programming Y1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-08",
+            "2025-09-10"
+          ]
+        ]
+      },
+      {
+        "code": "AXM-E8001",
+        "name": "Games Now! Community, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-10-13",
+            "2025-09-08"
+          ],
+          [
+            "Enrolment Start",
+            "2025-09-15",
+            "2025-09-01"
+          ],
+          [
+            "Enrolment End",
+            "2025-10-09",
+            "2025-09-04"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-A1050",
+        "name": "Introduction to Chemical Engineering studies, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-08-04",
+            "2025-08-01"
+          ],
+          [
+            "Enrolment End",
+            "2025-08-28",
+            "2025-09-07"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-A7310",
+        "name": "Linux Basics, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Linux Basics, Lecture",
+            "Linux Basics, Lecture (Lectures in English)"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-A7310",
+        "name": "Linux Basics, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Linux Basics, Lecture",
+            "Linux Basics, Lecture (Lectures in Finnish)"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2320",
+        "name": "Spanish 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-02",
+            "2025-09-01"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2330",
+        "name": "Spanish 3, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-09-03",
+            "2025-09-02"
+          ]
+        ]
+      }
+    ]
+  }
+}

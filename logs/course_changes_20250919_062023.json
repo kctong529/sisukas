@@ -1,0 +1,235 @@
+{
+  "timestamp": "2025-09-19T06:20:23.793625",
+  "summary": {
+    "added": 3,
+    "removed": 1,
+    "updated": 15
+  },
+  "details": {
+    "added": [
+      {
+        "code": "CS-A1120",
+        "name": "Programming 2, Exam",
+        "credits": 5
+      },
+      {
+        "code": "LC-0740",
+        "name": "Public speaking and stage fright, Lecture",
+        "credits": 2
+      },
+      {
+        "code": "CS-E4000",
+        "name": "Seminar in Computer Science D, Lecture",
+        "credits": 5
+      }
+    ],
+    "removed": [
+      {
+        "code": "TU-C3022",
+        "name": "Organizing of Business, Exam"
+      }
+    ],
+    "updated": [
+      {
+        "code": "CHEM-C3420",
+        "name": "Basics of Polymer Technology, Exam",
+        "changes": [
+          [
+            "Start Date",
+            "2026-04-13",
+            "2026-04-14"
+          ],
+          [
+            "End Date",
+            "2026-04-13",
+            "2026-04-14"
+          ]
+        ]
+      },
+      {
+        "code": "MUO-E8055",
+        "name": "Broken II - Repair studio, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-02-13",
+            "2026-02-20"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-CV02",
+        "name": "Course with Varying Content: Battery Engineering: Materials and Recycling, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-09-15",
+            "2025-12-08"
+          ],
+          [
+            "Enrolment End",
+            "2025-09-29",
+            "2026-04-30"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7230",
+        "name": "Finnish 3, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-05-27",
+            "2026-06-03"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7230",
+        "name": "Finnish 3, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-04-21",
+            "2026-04-14"
+          ],
+          [
+            "End Date",
+            "2026-06-02",
+            "2026-06-05"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7240",
+        "name": "Finnish 4, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-03-16",
+            "2026-03-23"
+          ]
+        ]
+      },
+      {
+        "code": "LC-0710 ",
+        "name": "Konferenssiesiintyminen, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-17",
+            "2025-10-21"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1333",
+        "name": "Navigate your doctoral studies while learning about equity, diversity, and inclusion, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2026-01-26",
+            "2025-09-19"
+          ]
+        ]
+      },
+      {
+        "code": "ELO-E1229",
+        "name": "Night Life 2, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2025-08-25",
+            "2026-01-19"
+          ],
+          [
+            "Enrolment Start",
+            "2025-07-28",
+            "2025-11-17"
+          ],
+          [
+            "Enrolment End",
+            "2025-08-18",
+            "2025-12-08"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1312",
+        "name": "Online Academic Presentations Skills for MSc Students (o), Lecture (Zoom, MSc students from CHEM, ELEC, ENG, SCI, BIZ))",
+        "changes": [
+          [
+            "End Date",
+            "2025-12-01",
+            "2025-12-02"
+          ],
+          [
+            "Enrolment End",
+            "2025-10-16",
+            "2025-10-20"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1120",
+        "name": "Online Persuasive Presentations for Engineers (o), Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-16",
+            "2025-10-15"
+          ]
+        ]
+      },
+      {
+        "code": "LC-0530",
+        "name": "Public speaking and stage fright D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-04-16",
+            "2026-04-21"
+          ]
+        ]
+      },
+      {
+        "code": "TU-E0100",
+        "name": "Research Assignment D, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-10-08",
+            "2025-12-10"
+          ]
+        ]
+      },
+      {
+        "code": "CS-E5012",
+        "name": "Research Methods: AI-based Data Synthesis & Analysis D, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-11",
+            "2025-12-12"
+          ],
+          [
+            "Enrolment End",
+            "2025-10-27",
+            "2025-10-13"
+          ]
+        ]
+      },
+      {
+        "code": "LCB-1350",
+        "name": "Writing Doctoral Research for Business and Management (w) D, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-11-03",
+            "2025-09-18"
+          ]
+        ]
+      }
+    ]
+  }
+}

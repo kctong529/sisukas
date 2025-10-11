@@ -1,0 +1,42 @@
+{
+  "timestamp": "2025-09-06T06:17:30.390251",
+  "summary": {
+    "added": 1,
+    "removed": 0,
+    "updated": 2
+  },
+  "details": {
+    "added": [
+      {
+        "code": "CHEM-L1100",
+        "name": "Toolkit for Doctoral Studies D, Lecture",
+        "credits": 3
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "AXM-E0105",
+        "name": "External Collaborations, Future Sustainable Solutions (3 cr)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-09-15",
+            "2025-09-08"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-A1500",
+        "name": "Work-Based Learning, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-04-09",
+            "2026-07-31"
+          ]
+        ]
+      }
+    ]
+  }
+}

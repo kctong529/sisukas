@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-07-19T06:21:01.822483",
+  "summary": {
+    "added": 3,
+    "removed": 0,
+    "updated": 1
+  },
+  "details": {
+    "added": [
+      {
+        "code": "CHEM-LV05",
+        "name": "Introduction to scanning electron microscopy and X-ray microanalysis D, Blended teaching",
+        "credits": 3
+      },
+      {
+        "code": "BIZ-LV011",
+        "name": "Public sector accounting: Accountability and auditing in European Union and its member states, Contact teaching",
+        "credits": 4
+      },
+      {
+        "code": "ECON-L6230",
+        "name": "Quantitative methods in spatial economics D, Lecture",
+        "credits": 6
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "ELEC-E4740",
+        "name": "Antennas Workshop D, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-08-04",
+            "2025-08-08"
+          ]
+        ]
+      }
+    ]
+  }
+}
