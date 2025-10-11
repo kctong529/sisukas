@@ -2,7 +2,7 @@
 
 [![CI Pipeline](https://github.com/kctong529/sisukas/actions/workflows/ci.yml/badge.svg)](https://github.com/kctong529/sisukas/actions/workflows/ci.yml)
 
-A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.fly.dev/).
+A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.eu/).
 
 > [!IMPORTANT]
 > If you're a university student in the Finnish education system, you’ve likely encountered the frustrations of the SISU system. With limited filters, navigation that hides key details behind multiple clicks, and a confusing pagination system that makes it easy to lose track, finding courses can be unnecessarily tedious. Slow performance only adds to the hassle, making the whole experience more cumbersome than it needs to be. On top of that, the lack of curriculum information makes planning your studies more difficult.
@@ -19,7 +19,7 @@ Sisukas offers a faster, more intuitive way to browse and filter courses:
 > Sisukas strikes the right balance in presenting course information. It features a compact layout that displays all necessary course details at a glance, with no extra clicks. A unique toggle merges duplicate entries, showing only one per course code. The app is fully responsive, ensuring smooth performance across both desktop and mobile devices.
 
 > [!TIP]
-> Want to stay informed about important course details, key registration deadlines, and exam schedules? Sisukas now features a public newsletter! Check out the latest issue or subscribe [here](https://sisukas.fly.dev/newsletter.html).
+> Want to stay informed about important course details, key registration deadlines, and exam schedules? Sisukas now features a public newsletter! Check out the latest issue or subscribe [here](https://sisukas.eu/newsletter.html).
 
 ## How It Works
 
