@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-10-12T06:18:07.316901",
+  "summary": {
+    "added": 0,
+    "removed": 0,
+    "updated": 1
+  },
+  "details": {
+    "added": [],
+    "removed": [],
+    "updated": [
+      {
+        "code": "MUO-C1077",
+        "name": "Digital Fashion Design, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-12"
+          ]
+        ]
+      }
+    ]
+  }
+}
