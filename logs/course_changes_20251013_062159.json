@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-10-13T06:21:59.742278",
+  "summary": {
+    "added": 0,
+    "removed": 0,
+    "updated": 3
+  },
+  "details": {
+    "added": [],
+    "removed": [],
+    "updated": [
+      {
+        "code": "LCA-1022",
+        "name": "Academic Writing (w) (H02), Lecture (for ARTS master's students writing their thesis, Zoom group)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-15"
+          ]
+        ]
+      },
+      {
+        "code": "MAR-C1021",
+        "name": "Basics of Landscape Architecture 2A, Landscape Analysis, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-10-15"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7210",
+        "name": "Finnish 1, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-28",
+            "2025-12-02"
+          ]
+        ]
+      }
+    ]
+  }
+}
