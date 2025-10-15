@@ -421,8 +421,8 @@ tr:hover td {
     display: flex;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 12px color: rgba(0, 0, 0, 15%);
+    animation: slide_in 0.3s ease;
     margin-bottom: 10px;
     pointer-events: auto;
     max-width: 500px;
@@ -450,11 +450,12 @@ tr:hover td {
     min-width: 0;
 }
 
-@keyframes slideIn {
+@keyframes slide_in {
     from {
         transform: translateX(-400px);
         opacity: 0;
     }
+    
     to {
         transform: translateX(0);
         opacity: 1;
