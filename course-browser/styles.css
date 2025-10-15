@@ -421,7 +421,7 @@ tr:hover td {
     display: flex;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 4px 12px color: rgba(0, 0, 0, 15%);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
     animation: slide_in 0.3s ease;
     margin-bottom: 10px;
     pointer-events: auto;
@@ -455,7 +455,7 @@ tr:hover td {
         transform: translateX(-400px);
         opacity: 0;
     }
-    
+
     to {
         transform: translateX(0);
         opacity: 1;
