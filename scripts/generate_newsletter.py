@@ -257,7 +257,7 @@ def main():
     three_weeks_from_day = today + timedelta(weeks=3)
 
     # Load the courses JSON
-    with open("public/data/courses.json") as f:
+    with open("course-browser/public/data/courses.json") as f:
         courses = json.load(f)
 
     # Filter the courses
@@ -279,7 +279,7 @@ def main():
     html_content = generate_html(upcoming_open, upcoming_close, exam_courses)
 
     # Write the HTML to a file
-    with open("public/newsletter.html", "w") as f:
+    with open("course-browser/public/newsletter.html", "w") as f:
         f.write(html_content)
 
     print(f"Generated newsletter HTML with {len(filtered_courses)} courses.")
