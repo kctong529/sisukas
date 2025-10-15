@@ -1,0 +1,127 @@
+{
+  "timestamp": "2025-10-15T06:20:56.266198",
+  "summary": {
+    "added": 6,
+    "removed": 1,
+    "updated": 7
+  },
+  "details": {
+    "added": [
+      {
+        "code": "AMNGT-A4003",
+        "name": "Communication and Interaction Skills in Business, Blended teaching",
+        "credits": 6
+      },
+      {
+        "code": "AMNGT-A4003",
+        "name": "Communication and Interaction Skills in Business, Online teaching",
+        "credits": 6
+      },
+      {
+        "code": "AMNGT-E2009",
+        "name": "International Strategy, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "AMNGT-C1001",
+        "name": "Introduction to Strategic Management, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "AMNGT-A4004",
+        "name": "Mastering influence in business communication, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "AMNGT-E2008",
+        "name": "Strategic People Management, Lecture",
+        "credits": 6
+      }
+    ],
+    "removed": [
+      {
+        "code": "LC-8544",
+        "name": "Russian 4, Lecture"
+      }
+    ],
+    "updated": [
+      {
+        "code": "LCA-1022",
+        "name": "Academic Writing (w) (H02), Lecture (for ARTS master's students writing their thesis, Zoom group)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-15",
+            "2025-10-14"
+          ]
+        ]
+      },
+      {
+        "code": "KIG-C1050",
+        "name": "Grouds for environmental and real estate property law, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-27",
+            "2025-11-14"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1120",
+        "name": "Online Persuasive Presentations for Engineers (o), Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-14",
+            "2025-10-13"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o), Lecture (V14-15)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-16",
+            "2025-10-14"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o), Lecture (V16-17)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-16",
+            "2025-10-15"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o), Lectures (V10-11)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-16",
+            "2025-10-14"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1315",
+        "name": "Tools for Master's Thesis, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-16",
+            "2025-10-19"
+          ]
+        ]
+      }
+    ]
+  }
+}
