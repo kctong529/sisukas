@@ -30,8 +30,8 @@ Models:
     FilterRule
         Represents a single atomic filter condition
       Fields:
-        - field: Course attribute to filter (e.g., "code", "major", "period")
-        - relation: Comparison operator (e.g., "contains", "is", "after")
+        - field: Course attribute to filter (e.g. "code", "major", "period")
+        - relation: Comparison operator (e.g. "contains", "is", "after")
         - value: Value to compare against (string representation)
 
     FilterGroup
@@ -104,7 +104,7 @@ logger = logging.getLogger('uvicorn.error')
 
 app = FastAPI(
     title="Sisukas Filters API",
-    version="0.0.3",
+    version="0.0.4",
     contact={
         "name": "API Support",
         "email": "kichun.tong@aalto.fi",
@@ -256,24 +256,37 @@ async def save_filter(query: FilterQuery):
     """
     Save a filter configuration and generate a unique hash ID.
 
-    Identical filter configurations always produce the same hash ID,
-    preventing duplicates. Returns the hash for later retrieval.
+    The filter configuration is serialized to JSON and hashed using SHA-256.
+    The initial hash ID is the first 16 characters of the SHA-256 hash.
+    If a collision with an existing hash occurs, the hash is extended
+    character by character until it becomes unique.
+    A RuntimeError is raised if the hash cannot be made unique within
+    64 characters (extremely unlikely).
+    Identical filter configurations will always generate the same hash
+    within the current runtime, unless filters are deleted.
     """
     logger.info("Received request to create filter")
 
     # Serialize FilterQuery to JSON
     query_json = query.model_dump_json(exclude_none=True)
 
-    # Generate SHA-256 hash and shorten to 16 characters
-    hash_id = hashlib.sha256(query_json.encode()).hexdigest()[:16]
-    logger.info("Generated hash %s", hash_id)
+    # Compute the full SHA-256 hash of the JSON representation
+    full_sha = hashlib.sha256(query_json.encode()).hexdigest()
 
-    if hash_exists(hash_id):
-        logger.error("Hash %s already existed!", hash_id)
-    else:
-        logger.info("Saving new filter hash %s", hash_id)
-        filter_storage[hash_id] = query_json
+    # Start with a short 16-character hash ID
+    k = 16
 
+    # Incrementally lengthen the hash ID if a collision is detected
+    while hash_exists(full_sha[:k]):
+        logger.debug("Collision detected, trying longer hash")
+        k += 1
+        # Safety guard: SHA-256 hash is only 64 characters
+        if k > 64:
+            raise RuntimeError("Hash collision could not be resolved")
+
+    hash_id = full_sha[:k]
+    filter_storage[hash_id] = query_json
+    logger.info("Saved new filter hash %s", hash_id)
     return HashModel(hash_id=hash_id)
 
 
@@ -317,7 +330,7 @@ async def root():
     """
     return {
         "service": "Sisukas Filters API",
-        "version": "0.0.3",
+        "version": "0.0.4",
         "description":
             "Save and retrieve filter configurations for course selection",
         "endpoints": {
