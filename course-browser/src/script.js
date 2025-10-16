@@ -27,9 +27,6 @@ let filteredCourses = []; // Stores currently filtered courses
 let currentSortColumn = "courseName"; // Default sort column
 let sortDirection = 1; // 1 = ascending, -1 = descending
 
-// API Configuration
-const API_BASE_URL = "https://sisukas-filters-api-969370446235.europe-north1.run.app";
-
 
 // IndexedDB-based cache for large files
 class LargeFileCache {
@@ -775,21 +772,22 @@ function updateSortIndicators(column, direction) {
 
 function exportFilters() {
     const rules = Array.from(document.querySelectorAll("#filter-container .filter-rule"));
-    const filters = rules.map(rule => {
-        const booleanSelect = rule.querySelector(".filter-boolean");
-        const fieldSelect = rule.querySelector(".filter-field");
-        const relationSelect = rule.querySelector(".filter-relation");
-        const valueInput = rule.querySelector(".filter-value");
+    const groups = [];
+    let group = [];
 
-        return {
-            boolean: booleanSelect ? booleanSelect.value : null,
-            field: fieldSelect.value,
-            relation: relationSelect.value,
-            value: valueInput.value
-        };
-    });
+    for (const rule of rules) {
+        const get = cls => rule.querySelector(cls)?.value || "";
+        const boolean = get(".filter-boolean").toUpperCase();
+        const ruleObj = { field: get(".filter-field"), relation: get(".filter-relation"), value: get(".filter-value") };
 
-    return filters;
+        if (boolean === "OR" || !group.length) {
+            if (group.length) groups.push(group);
+            group = [ruleObj];
+        } else group.push(ruleObj);
+    }
+
+    if (group.length) groups.push(group);
+    return groups;
 }
 
 function logFilters() {
@@ -823,13 +821,14 @@ async function saveFiltersToApi() {
     }
 
     try {
-        // Prepare the payload with "rules" key as the API expects
+        // Wrap each AND-group in an object with "rules" key
         const payload = {
-            rules: filters
+            groups: filters.map(group => ({ rules: group }))
         };
+        console.log("Saving filters:", payload);
 
         // Send POST request to API
-        const response = await fetch(`${config.api.baseUrl}/api/filters`, {
+        const response = await fetch(`${config.api.baseUrl}/api/filters/save/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -853,6 +852,7 @@ async function saveFiltersToApi() {
         }
 
         const data = await response.json();
+        console.log(data);
         
         // Validate response structure
         if (!data.hash_id) {
@@ -877,7 +877,7 @@ async function saveFiltersToApi() {
         console.log(`Shareable URL: ${shareableUrl}`);
 
         // Navigate to the URL with the filter hash
-        window.location.href = shareableUrl;
+        // window.location.href = shareableUrl;
         
     } catch (error) {
         // Handle network errors and other exceptions
@@ -910,33 +910,49 @@ async function saveFilters(downloadJson = false) {
 }
 
 function loadFiltersFromJson(filters) {
-    filters.forEach(filter => {
-        addFilterRule(); // adds a new filter rule row
+    const groups = (filters && filters.groups) || [];
+    let isFirstRuleOverall = true;
 
-        // Get the last added rule
-        const rules = document.querySelectorAll("#filter-container .filter-rule");
-        const newRule = rules[rules.length - 1];
+    groups.forEach(group => {
+        const rules = group.rules || [];
+        rules.forEach((rule, idxInGroup) => {
+            addFilterRule(); // adds a new filter rule row
 
-        // Set field
-        const fieldSelect = newRule.querySelector(".filter-field");
-        fieldSelect.value = filter.field;
-        handleFieldChange(fieldSelect); // if necessary
+            // Get the last added rule
+            const rules = document.querySelectorAll("#filter-container .filter-rule");
+            const newRule = rules[rules.length - 1];
 
-        // Set relation
-        const relationSelect = newRule.querySelector(".filter-relation");
-        relationSelect.value = filter.relation;
+            // Set field
+            const fieldSelect = newRule.querySelector(".filter-field");
+            fieldSelect.value = rule.field;
+            handleFieldChange(fieldSelect); // if necessary
 
-        // Set boolean (if exists)
-        const booleanSelect = newRule.querySelector(".filter-boolean");
-        if (booleanSelect && filter.boolean) {
-            booleanSelect.value = filter.boolean;
-        }
+            // Set relation
+            const relationSelect = newRule.querySelector(".filter-relation");
+            relationSelect.value = rule.relation;
 
-        // Set value
-        const valueInput = newRule.querySelector(".filter-value");
-        if (valueInput) {
-            valueInput.value = filter.value;
-        }
+            // Decide boolean based on position
+            const booleanSelect = newRule.querySelector(".filter-boolean");
+            if (booleanSelect) {
+                if (isFirstRuleOverall) {
+                    // leave as default / empty for the very first rule
+                } else if (idxInGroup === 0) {
+                    // first rule of a new group => separate from previous group
+                    booleanSelect.value = "OR";
+                } else {
+                    // inside same group => AND with previous
+                    booleanSelect.value = "AND";
+                }
+            }
+
+            isFirstRuleOverall = false;
+
+            // Set value
+            const valueInput = newRule.querySelector(".filter-value");
+            if (valueInput) {
+                valueInput.value = rule.value;
+            }
+        });
     });
 
     onSearchButtonClick();
@@ -982,10 +998,7 @@ function setupEnterKeyHandler() {
 
 // On page load, check for filter parameter and load from API
 async function loadFiltersFromUrl() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const filtersKey = urlParams.get('filters');
-
-    // Early return if no filter key present
+    const filtersKey = new URLSearchParams(window.location.search).get('filters');
     if (!filtersKey) return;
 
     try {
@@ -1005,38 +1018,32 @@ async function loadFiltersFromUrl() {
             
             switch (response.status) {
                 case 404:
-                    console.warn(`Filter not found: ${filtersKey}`);
                     showFilterLoadError("These filters no longer exist or have been deleted");
                     break;
                 case 422:
-                    console.warn(`Invalid filter hash: ${filtersKey}`);
                     showFilterLoadError("Invalid filter URL format");
                     break;
                 case 503:
-                    console.error("Filter service temporarily unavailable");
                     showFilterLoadError("Filter service is temporarily unavailable. Please try again later.");
                     break;
                 default:
-                    console.error(`Failed to load filters (${response.status}):`, errorMessage);
                     showFilterLoadError(`Unable to load filters: ${errorMessage}`);
             }
-            
+            console.error(`Failed to load filters (${response.status}):`, errorMessage);
             return;
         }
 
         const data = await response.json();
         
         // Validate response structure
-        if (!data.rules || !Array.isArray(data.rules)) {
+        if (!data.groups || !Array.isArray(data.groups)) {
             console.error("Invalid filter data structure:", data);
-            showFilterLoadError("Invalid filter data received");
+            showFilterLoadError("Invalid filter data received from server");
             return;
         }
         
-        loadFiltersFromJson(data.rules);
-        console.log(`Successfully loaded ${data.count || data.rules.length} filters:`, filtersKey);
+        loadFiltersFromJson(data);
         logFilters();
-        showFilterLoadSuccess(`Loaded ${data.rules.length} filter(s) from shared link`);
         
     } catch (error) {
         // Handle network errors and other exceptions

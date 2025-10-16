@@ -96,6 +96,7 @@ import hashlib
 import logging
 from typing import List, Dict, Annotated
 from fastapi import FastAPI, Path, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ValidationError
 
 logger = logging.getLogger('uvicorn.error')
@@ -108,6 +109,22 @@ app = FastAPI(
         "name": "API Support",
         "email": "kichun.tong@aalto.fi",
     }
+)
+
+
+origins = [
+    "http://localhost:5173",  # frontend URL
+    "http://127.0.0.1:5173"
+]
+
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # allow GET, POST, PUT, DELETE, OPTIONS, etc.
+    allow_headers=["*"],  # allow any headers
 )
 
 
