@@ -13,12 +13,12 @@ A filter configuration consists of:
   alternatives (OR logic between alternative groups)
 
 Endpoints:
-    POST /api/filters/save/
+    POST /api/filters/
         Save a filter configuration. The server generates a hash ID for the
         configuration, which can be used to retrieve it later
         Returns the hash ID as JSON
 
-    GET /api/filters/{hash_id}/
+    GET /api/filters/{hash_id}
         Retrieve a previously saved filter configuration by its hash ID
         Returns 404 if the hash is not found
         The response contains the full filter structure (groups → rules)
@@ -251,7 +251,7 @@ def hash_exists(candidate: str) -> bool:
 # ------------------------
 # API endpoints
 # ------------------------
-@app.post("/api/filters/save/", response_model=HashModel)
+@app.post("/api/filter", response_model=HashModel)
 async def save_filter(query: FilterQuery):
     """
     Save a filter configuration and generate a unique hash ID.
@@ -290,7 +290,7 @@ async def save_filter(query: FilterQuery):
     return HashModel(hash_id=hash_id)
 
 
-@app.get("/api/filters/{hash_id}/", response_model=FilterResponse)
+@app.get("/api/filters/{hash_id}", response_model=FilterResponse)
 async def load_filter(
     hash_id: Annotated[str, Path(
         min_length=16,

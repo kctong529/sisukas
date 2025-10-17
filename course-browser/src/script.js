@@ -828,7 +828,7 @@ async function saveFiltersToApi() {
         console.log("Saving filters:", payload);
 
         // Send POST request to API
-        const response = await fetch(`${config.api.baseUrl}/api/filters/save/`, {
+        const response = await fetch(`${config.api.baseUrl}/api/filter`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
