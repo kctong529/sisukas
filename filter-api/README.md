@@ -6,10 +6,13 @@ A FastAPI-based microservice for managing and sharing course filter configuratio
 
 - **Hierarchical Filter Structure**: Support for must rules (universal constraints) and alternative groups (OR logic)
 - **Hash-based Storage**: Save filter configurations with auto-generated short hash IDs
+- **Persistent File Storage**: JSON file-based storage with environment-specific directories
+- **Environment Configuration**: Separate prod/test environments with .env file support
 - **Shareable URLs**: Retrieve filters via hash identifiers for easy sharing
 - **RESTful API Design**: Automatic OpenAPI documentation with Swagger UI
 - **Type-safe Models**: Pydantic-based validation for all filter components
 - **Fast, Async Handling**: Built on FastAPI for high-performance request processing
+- **CORS Support**: Configurable cross-origin resource sharing
 
 ## Filter Structure
 
@@ -78,6 +81,12 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+7. Create a `.env` file for configuration:
+```sh
+# .env
+SISUKAS_ENV=test  # or "prod"
+```
+
 ## Running the API
 
 ### Development Mode
@@ -91,8 +100,17 @@ The API will be available at `http://localhost:8000`
 ### Production Mode
 Run the production server:
 ```sh
-fastapi run main.py
+SISUKAS_ENV=prod fastapi run main.py
 ```
+
+## Configuration
+
+The API uses environment variables for configuration, loaded from a `.env` file:
+- `SISUKAS_ENV`: Environment mode ("test" or "prod", defaults to "test")
+
+Storage directories are automatically created based on the environment:
+- Test mode: `storage/filters_test/`
+- Production mode: `storage/filters_prod/`
 
 ## API Documentation
 
@@ -110,20 +128,22 @@ API information and health check endpoint.
 ```json
 {
   "service": "Sisukas Filters API",
-  "version": "0.0.2",
+  "version": "0.1.0",
+  "environment": "test",
   "description": "Save and retrieve filter configurations for course selection",
   "endpoints": {
-    "save": "/api/filters/save/",
-    "load": "/api/filters/{hash}/",
+    "save": "/api/filter",
+    "load": "/api/filter/{hash_id}",
     "docs": "/docs"
   },
+  "storage_dir": "/path/to/storage/filters_test",
   "stats": {
-    "stored_filters": 0
+    "stored_filters": 42
   }
 }
 ```
 
-### `POST /api/filters/save/`
+### `POST /api/filter`
 Save a filter configuration and receive a hash identifier.
 
 **Request Body:**
@@ -134,12 +154,12 @@ Save a filter configuration and receive a hash identifier.
       "rules": [
         {
           "field": "period",
-          "relation": "overlaps",
+          "relation": "is",
           "value": "2025-26 Period II"
         },
         {
           "field": "enrollment",
-          "relation": "is_open",
+          "relation": "overlaps",
           "value": "today"
         }
       ],
@@ -172,11 +192,11 @@ Save a filter configuration and receive a hash identifier.
 **Response:**
 ```json
 {
-  "hash": "a3f5d8e9c2b14f67"
+  "hash_id": "a3f5d8e9c2b14f67"
 }
 ```
 
-### `GET /api/filters/{filter_hash}/`
+### `GET /api/filter/{hash_id}`
 Retrieve a previously saved filter configuration by its hash.
 
 **Response:**
@@ -187,7 +207,7 @@ Retrieve a previously saved filter configuration by its hash.
       "rules": [
         {
           "field": "period",
-          "relation": "overlaps",
+          "relation": "is",
           "value": "2025-26 Period II"
         }
       ],
@@ -208,7 +228,7 @@ Retrieve a previously saved filter configuration by its hash.
 
 ### Save a Filter
 ```bash
-curl -X POST http://localhost:8000/api/filters/save/ \
+curl -X POST http://localhost:8000/api/filter \
   -H "Content-Type: application/json" \
   -d '{
     "groups": [
@@ -231,14 +251,21 @@ curl -X POST http://localhost:8000/api/filters/save/ \
 
 ### Retrieve a Filter
 ```bash
-curl http://localhost:8000/api/filters/a3f5d8e9c2b14f67/
+curl http://localhost:8000/api/filter/a3f5d8e9c2b14f67/
 ```
 
 ## Project Structure
 ```
 filter-api/
 ├── main.py              # FastAPI application, models, and routes
+├── config.py            # Environment and storage configuration
+├── file_storage.py      # File-based storage utilities
 ├── requirements.txt     # Python dependencies
+├── .env                 # Environment variables (not in git)
+├── .gitignore           # Git ignore patterns
+├── storage/             # Filter storage directory (not in git)
+│   ├── filters_test/    # Test environment filters
+│   └── filters_prod/    # Production environment filters
 ├── .venv/               # Virtual environment (not in git)
 └── README.md            # This file
 ```
@@ -262,16 +289,25 @@ Use the interactive docs at `/docs` to test endpoints, or use curl/httpie for co
 
 ## Storage
 
-**Current (Development):** In-memory dictionary storage (resets on restart)
+Filters are stored as JSON files in environment-specific directories:
 
-**Production:** Each filter configuration is stored as a JSON file in a Google Cloud Storage bucket:
-- File naming: `{hash}.json` (e.g., `a3f5d8e9c2b14f67.json`)
-- Bucket structure: Flat namespace with hash-based file names
-- Benefits: Simple, scalable, serverless-friendly, no database maintenance
+- **File naming**: `{hash_id}.json` (e.g., `a3f5d8e9c2b14f67.json`)
+- **Hash generation**: SHA-256 based, starting at 16 characters
+- **Collision handling**: Automatic hash extension if collision detected
+- **Idempotent saves**: Identical filters reuse existing hash IDs
+- **Persistence**: Filters persist across API restarts
+
+The storage system automatically:
+- Creates storage directories if they don't exist
+- Handles hash collisions by extending the hash length
+- Reuses existing hashes for identical filter configurations
 
 ## Version History
 
-- **0.0.2** (Current): Complete filter query system with hierarchical structure
+- **0.1.0** (Current): File-based storage with environment configuration
+- **0.0.5**: Added error handling improvements
+- **0.0.4**: Initial in-memory storage implementation
+- **0.0.2**: Complete filter query system with hierarchical structure
 - **0.0.1**: Initial single filter rule endpoint (deprecated)
 
 ## License
