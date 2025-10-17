@@ -13,12 +13,12 @@ A filter configuration consists of:
   alternatives (OR logic between alternative groups)
 
 Endpoints:
-    POST /api/filters/
+    POST /api/filter
         Save a filter configuration. The server generates a hash ID for the
         configuration, which can be used to retrieve it later
         Returns the hash ID as JSON
 
-    GET /api/filters/{hash_id}
+    GET /api/filter/{hash_id}
         Retrieve a previously saved filter configuration by its hash ID
         Returns 404 if the hash is not found
         The response contains the full filter structure (groups → rules)
@@ -89,42 +89,35 @@ Usage:
         {"hash_id": "a3f5d8e9c2b14f67"}
 
     Retrieve the saved filter:
-        curl http://localhost:8000/api/filters/a3f5d8e9c2b14f67/
+        curl http://localhost:8000/api/filter/a3f5d8e9c2b14f67/
 """
 
-import hashlib
 import logging
-from typing import List, Dict, Annotated
+from typing import List, Annotated
+from pydantic import BaseModel, Field, ValidationError
 from fastapi import FastAPI, Path, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, ValidationError
+
+from config import ENV, FILTERS_DIR, CORS_ORIGINS
+from config import API_TITLE, API_VERSION, API_CONTACT
+from file_storage import save_filter_file, load_filter_file
+from file_storage import generate_unique_hash
+
 
 logger = logging.getLogger('uvicorn.error')
 
 
-app = FastAPI(
-    title="Sisukas Filters API",
-    version="0.0.4",
-    contact={
-        "name": "API Support",
-        "email": "kichun.tong@aalto.fi",
-    }
-)
+# FastAPI app
+app = FastAPI(title=API_TITLE, version=API_VERSION, contact=API_CONTACT)
 
 
-origins = [
-    "http://localhost:5173",  # frontend URL
-    "http://127.0.0.1:5173"
-]
-
-
-# Add CORS middleware
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],  # allow GET, POST, PUT, DELETE, OPTIONS, etc.
-    allow_headers=["*"],  # allow any headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -136,22 +129,22 @@ class FilterRule(BaseModel):
     field: str = Field(
         min_length=1,
         max_length=20,
-        description="Course attribute to filter on (e.g. code, major, "
-        "period)",
-        example="code"
+        description="Course attribute to filter on",
+        json_schema_extra={"example": "code"}
     )
     relation: str = Field(
         min_length=2,
         max_length=15,
         description="Comparison operator (e.g. contains, overlaps, after)",
-        example="contains"
+        json_schema_extra={"example": "contains"}
     )
     value: str = Field(
         min_length=1,
         max_length=100,
-        description="Value to compare against. Format depends on the "
-        "field type",
-        examples=["CS", "2025-10-10", "en", "basic-studies", "DSD24"]
+        description="Value to compare against. "
+        "Format depends on the field type",
+        json_schema_extra={"examples": ["CS", "2025-10-10", "en",
+                                        "basic-studies", "DSD24"]}
     )
 
 
@@ -171,53 +164,57 @@ class FilterQuery(BaseModel):
     """Complete filter configuration containing multiple groups"""
     groups: List[FilterGroup] = Field(
         ...,
-        example=[
-            {
-                "rules": [
+        json_schema_extra={
+            "example": {
+                "groups": [
                     {
-                        "field": "period",
-                        "relation": "is",
-                        "value": "2025-26 Period II"
+                        "rules": [
+                            {
+                                "field": "period",
+                                "relation": "is",
+                                "value": "2025-26 Period II"
+                            },
+                            {
+                                "field": "enrollment",
+                                "relation": "overlaps",
+                                "value": "today"
+                            }
+                        ],
+                        "is_must": True
                     },
                     {
-                        "field": "enrollment",
-                        "relation": "overlaps",
-                        "value": "today"
-                    }
-                ],
-                "is_must": True
-            },
-            {
-                "rules": [
+                        "rules": [
+                            {
+                                "field": "code",
+                                "relation": "contains",
+                                "value": "CS"
+                            }
+                        ],
+                        "is_must": False
+                    },
                     {
-                        "field": "code",
-                        "relation": "contains",
-                        "value": "CS"
-                    }
-                ],
-                "is_must": False
-            },
-            {
-                "rules": [
+                        "rules": [
+                            {
+                                "field": "major",
+                                "relation": "is",
+                                "value": "DSD24"
+                            }
+                        ],
+                        "is_must": False
+                    },
                     {
-                        "field": "major",
-                        "relation": "is",
-                        "value": "DSD24"
+                        "rules": [
+                            {
+                                "field": "teacher",
+                                "relation": "contains",
+                                "value": "Milo"
+                            }
+                        ],
+                        "is_must": False
                     }
-                ],
-                "is_must": False
-            },
-            {
-                "rules": [
-                    {
-                        "field": "teacher",
-                        "relation": "contains",
-                        "value": "Milo"
-                    }
-                ],
-                "is_must": False
+                ]
             }
-        ]
+        }
     )
 
 
@@ -233,19 +230,8 @@ class HashModel(BaseModel):
         pattern="^[a-f0-9]{16,64}$",
         description="SHA-256-based hash ID for the saved filter "
         "configuration",
-        example="e1d4f1a3a3c5afc4"
+        json_schema_extra={"example": "e1d4f1a3a3c5afc4"}
     )
-
-
-# ------------------------
-# In-memory storage (replace with database in production)
-# ------------------------
-filter_storage: Dict[str, str] = {}
-
-
-def hash_exists(candidate: str) -> bool:
-    """Check if a hash already exists in the storage"""
-    return candidate in filter_storage
 
 
 # ------------------------
@@ -268,29 +254,21 @@ async def save_filter(query: FilterQuery):
     logger.info("Received request to create filter")
 
     # Serialize FilterQuery to JSON
-    query_json = query.model_dump_json(exclude_none=True)
+    query_dict = query.model_dump(exclude_none=True)
 
-    # Compute the full SHA-256 hash of the JSON representation
-    full_sha = hashlib.sha256(query_json.encode()).hexdigest()
+    # Generate a hash ID, reusing existing hash if identical content
+    hash_id, to_create = generate_unique_hash(query_dict)
 
-    # Start with a short 16-character hash ID
-    k = 16
-
-    # Incrementally lengthen the hash ID if a collision is detected
-    while hash_exists(full_sha[:k]):
-        logger.debug("Collision detected, trying longer hash")
-        k += 1
-        # Safety guard: SHA-256 hash is only 64 characters
-        if k > 64:
-            raise RuntimeError("Hash collision could not be resolved")
-
-    hash_id = full_sha[:k]
-    filter_storage[hash_id] = query_json
-    logger.info("Saved new filter hash %s", hash_id)
+    # Only save if the file does not exist yet
+    if to_create:
+        save_filter_file(hash_id, query_dict)
+        logger.info("Saved new filter %s in %s mode", hash_id, ENV)
+    else:
+        logger.info("Filter already exists with hash %s", hash_id)
     return HashModel(hash_id=hash_id)
 
 
-@app.get("/api/filters/{hash_id}", response_model=FilterResponse)
+@app.get("/api/filter/{hash_id}", response_model=FilterResponse)
 async def load_filter(
     hash_id: Annotated[str, Path(
         min_length=16,
@@ -310,14 +288,12 @@ async def load_filter(
         raise HTTPException(status_code=400, detail="Invalid hash format")
 
     hash_value = validated.hash_id  # Extract validated string
-
-    if hash_value not in filter_storage:
+    data = load_filter_file(hash_value)
+    if not data:
         raise HTTPException(status_code=404, detail="Filter not found")
 
-    logger.info("Retrieved filter with hash %s", hash_id)
-    query_json = filter_storage[hash_value]
-    query = FilterResponse.model_validate_json(query_json)
-    return query  # FastAPI serializes this properly
+    logger.info("Loaded filter %s from %s storage", hash_id, ENV)
+    return FilterResponse(**data)
 
 
 @app.get("/")
@@ -328,17 +304,18 @@ async def root():
     Returns service name, version, endpoint paths, and basic filter
     storage statistics.
     """
+    stored_count = sum(1 for _ in FILTERS_DIR.glob("*.json"))
     return {
-        "service": "Sisukas Filters API",
-        "version": "0.0.4",
+        "service": API_TITLE,
+        "version": API_VERSION,
+        "environment": ENV,
         "description":
             "Save and retrieve filter configurations for course selection",
         "endpoints": {
-            "save": "/api/filters/save/",
-            "load": "/api/filters/{hash_id}/",
+            "save": "/api/filter",
+            "load": "/api/filter/{hash_id}",
             "docs": "/docs"
         },
-        "stats": {
-            "stored_filters": len(filter_storage)
-        }
+        "storage_dir": str(FILTERS_DIR),
+        "stats": {"stored_filters": stored_count},
     }

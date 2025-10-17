@@ -862,12 +862,12 @@ async function saveFiltersToApi() {
         }
 
         // Create shareable URL
-        const shareableUrl = `${window.location.origin}${window.location.pathname}?filters=${data.hash_id}`;
+        const shareableUrl = `${window.location.origin}${window.location.pathname}?filter=${data.hash_id}`;
         
         // Copy to clipboard
         try {
             await navigator.clipboard.writeText(shareableUrl);
-            console.log(`Filter link copied to clipboard! (${data.rules_count} filter${data.rules_count > 1 ? 's' : ''})`);
+            console.log("Filter link copied to clipboard!");
         } catch (clipboardError) {
             // Fallback if clipboard fails
             console.warn("Clipboard API failed, showing URL in alert:", clipboardError);
@@ -998,11 +998,11 @@ function setupEnterKeyHandler() {
 
 // On page load, check for filter parameter and load from API
 async function loadFiltersFromUrl() {
-    const filtersKey = new URLSearchParams(window.location.search).get('filters');
+    const filtersKey = new URLSearchParams(window.location.search).get('filter');
     if (!filtersKey) return;
 
     try {
-        const response = await fetch(`${config.api.baseUrl}/api/filters/${filtersKey}`);
+        const response = await fetch(`${config.api.baseUrl}/api/filter/${filtersKey}`);
         
         // Handle different error responses
         if (!response.ok) {
