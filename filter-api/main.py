@@ -1,107 +1,52 @@
 """
-main.py - Sisukas Filters API
+Sisukas Filters API
+===================
 
-This FastAPI application provides endpoints to save and retrieve
-filter configurations for course selection. Filter configurations are
-stored using a SHA-256-based hash identifier, which can be used to
-share and later retrieve the saved filters.
+This FastAPI application provides an API for saving, retrieving, and deleting
+filter configurations used for course selection in Sisukas.
+
+Each filter configuration is stored as a JSON file identified by a unique
+SHA-256-based hash ID. This allows users to save, share, and reapply filter
+criteria later using the same hash.
 
 A filter configuration consists of:
+
 - Filter groups: Collections of rules combined with AND logic
-- Must groups: Groups marked as is_must=True, which all courses must satisfy
-- Alternative groups: Groups marked as is_must=False, representing acceptable
-  alternatives (OR logic between alternative groups)
+- Must groups: All must be satisfied for a course to match
+- Alternative groups: At least one must be satisfied (OR logic)
 
 Endpoints:
+
     POST /api/filter
-        Save a filter configuration. The server generates a hash ID for the
-        configuration, which can be used to retrieve it later
-        Returns the hash ID as JSON
+        Save a new filter configuration. Returns a generated hash_id
 
     GET /api/filter/{hash_id}
-        Retrieve a previously saved filter configuration by its hash ID
-        Returns 404 if the hash is not found
-        The response contains the full filter structure (groups → rules)
+        Retrieve a previously saved filter configuration by its hash_id
+        Returns 404 if the filter is not found
+
+    DELETE /api/filter/{hash_id}
+        Delete a saved filter configuration. Returns a success message
 
     GET /
-        Returns API metadata, including version, endpoints, and basic stats
+        Returns API metadata, version, and storage statistics
 
-Models:
-    FilterRule
-        Represents a single atomic filter condition
-      Fields:
-        - field: Course attribute to filter (e.g. "code", "major", "period")
-        - relation: Comparison operator (e.g. "contains", "is", "after")
-        - value: Value to compare against (string representation)
-
-    FilterGroup
-        Represents a group of rules combined with AND logic
-      Fields:
-        - rules: List of FilterRule objects
-        - is_must: Boolean indicating if all courses must satisfy this group
-
-    FilterQuery
-        Complete filter configuration for a query
-      Fields:
-        - groups: List of FilterGroup objects
-
-    HashModel
-        Response model for saving a filter
-      Fields:
-        - hash_id: SHA-256-based identifier for the saved filter
-
-Usage:
-    Run the application with FastAPI:
-        fastapi dev main.py
-
-    Example POST request body:
-        {
-          "groups": [
-            {
-              "rules": [
-                {
-                  "field": "period",
-                  "relation": "overlaps",
-                  "value": "2025-26 Period II"
-                },
-                {
-                  "field": "enrollment",
-                  "relation": "is",
-                  "value": "today"
-                }
-              ],
-              "is_must": true
-            },
-            {
-              "rules": [
-                {
-                  "field": "major",
-                  "relation": "is",
-                  "value": "DSD24"
-                }
-              ],
-              "is_must": false
-            }
-          ]
-        }
-
-    Example response:
-        {"hash_id": "a3f5d8e9c2b14f67"}
-
-    Retrieve the saved filter:
-        curl http://localhost:8000/api/filter/a3f5d8e9c2b14f67/
 """
 
 import logging
+import re
 from typing import List, Annotated
-from pydantic import BaseModel, Field, ValidationError
-from fastapi import FastAPI, Path, HTTPException
+from pydantic import BaseModel, Field
+from fastapi import FastAPI, Path, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import ENV, FILTERS_DIR, CORS_ORIGINS
-from config import API_TITLE, API_VERSION, API_CONTACT
-from file_storage import save_filter_file, load_filter_file
-from file_storage import generate_unique_hash, delete_filter_file
+from config import (
+    ENV, FILTERS_DIR, CORS_ORIGINS,
+    API_TITLE, API_VERSION, API_CONTACT
+)
+from file_storage import (
+    save_filter_file, load_filter_file,
+    generate_unique_hash, delete_filter_file
+)
 
 
 logger = logging.getLogger('uvicorn.error')
@@ -124,6 +69,11 @@ app.add_middleware(
 # ------------------------
 # Pydantic models
 # ------------------------
+
+# Shared regex for hash validation
+HASH_PATTERN = r"^[a-f0-9]{16,64}$"
+
+
 class FilterRule(BaseModel):
     """Represents a single atomic filter condition for a course"""
     field: str = Field(
@@ -165,91 +115,163 @@ class FilterQuery(BaseModel):
     groups: List[FilterGroup] = Field(
         ...,
         json_schema_extra={
-            "example": {
-                "groups": [
-                    {
-                        "rules": [
-                            {
-                                "field": "period",
-                                "relation": "is",
-                                "value": "2025-26 Period II"
-                            },
-                            {
-                                "field": "enrollment",
-                                "relation": "overlaps",
-                                "value": "today"
-                            }
-                        ],
-                        "is_must": True
-                    },
-                    {
-                        "rules": [
-                            {
-                                "field": "code",
-                                "relation": "contains",
-                                "value": "CS"
-                            }
-                        ],
-                        "is_must": False
-                    },
-                    {
-                        "rules": [
-                            {
-                                "field": "major",
-                                "relation": "is",
-                                "value": "DSD24"
-                            }
-                        ],
-                        "is_must": False
-                    },
-                    {
-                        "rules": [
-                            {
-                                "field": "teacher",
-                                "relation": "contains",
-                                "value": "Milo"
-                            }
-                        ],
-                        "is_must": False
-                    }
-                ]
-            }
+            "example": [
+                {
+                    "rules": [
+                        {
+                            "field": "period",
+                            "relation": "is",
+                            "value": "2025-26 Period II"
+                        },
+                        {
+                            "field": "enrollment",
+                            "relation": "overlaps",
+                            "value": "today"
+                        }
+                    ],
+                    "is_must": True
+                },
+                {
+                    "rules": [
+                        {
+                            "field": "code",
+                            "relation": "contains",
+                            "value": "CS"
+                        }
+                    ],
+                    "is_must": False
+                },
+                {
+                    "rules": [
+                        {
+                            "field": "major",
+                            "relation": "is",
+                            "value": "DSD24"
+                        }
+                    ],
+                    "is_must": False
+                },
+                {
+                    "rules": [
+                        {
+                            "field": "teacher",
+                            "relation": "contains",
+                            "value": "Milo"
+                        }
+                    ],
+                    "is_must": False
+                }
+            ]
         }
     )
 
 
-class FilterResponse(FilterQuery):
-    pass
+def validate_hash_id(
+    hash_id: Annotated[str, Path(
+        min_length=16,
+        max_length=64,
+        pattern=HASH_PATTERN,
+        json_schema_extra={"example": "1c1ec50735361d70"}
+    )]
+) -> str:
+    """
+    Validate that a given hash ID matches the required SHA-256 format
+
+    Ensures the hash consists only of 16–64 lowercase hexadecimal characters.
+    Used as a FastAPI dependency for path parameters.
+    """
+    if not re.fullmatch(HASH_PATTERN, hash_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid hash format. "
+            "Expected 16–64 lowercase hex characters."
+        )
+    return hash_id
 
 
-class HashModel(BaseModel):
-    """Response model for returning a hash identifier of a saved filter"""
+# ------------------------
+# Response models
+# ------------------------
+
+
+class PostResponse(BaseModel):
+    """Response for successful filter creation"""
     hash_id: str = Field(
         min_length=16,
         max_length=64,
-        pattern="^[a-f0-9]{16,64}$",
-        description="SHA-256-based hash ID for the saved filter "
-        "configuration",
-        json_schema_extra={"example": "e1d4f1a3a3c5afc4"}
+        pattern=HASH_PATTERN,
+        description="Unique hash ID assigned to the saved filter",
+        json_schema_extra={"example": "1c1ec50735361d70"}
+    )
+
+
+class GetResponse(FilterQuery):
+    """Response for retrieving a saved filter configuration"""
+    # Extends FilterQuery for semantics (Swagger treats it as distinct)
+
+
+class DeleteResponse(BaseModel):
+    """Response model for successful filter deletion"""
+    message: str = Field(
+        ...,
+        description="Success message confirming filter deletion",
+        json_schema_extra={"example": "Filter deleted successfully"}
+    )
+    hash_id: str = Field(
+        pattern=HASH_PATTERN,
+        description="Hash of the deleted filter",
+        json_schema_extra={"example": "1c1ec50735361d70"}
+    )
+
+
+class RootResponse(BaseModel):
+    """Metadata and service status"""
+    service: str = Field(
+        ...,
+        json_schema_extra={"example": "Sisukas Filters API"})
+    version: str = Field(
+        ...,
+        json_schema_extra={"example": "1.0.0"})
+    environment: str = Field(
+        ...,
+        json_schema_extra={"example": "development"})
+    description: str = Field(
+        ...,
+        json_schema_extra={
+            "example": "Save and retrieve filter configurations"
+        })
+    endpoints: dict = Field(
+        ...,
+        json_schema_extra={
+            "example": {
+                "save": "/api/filter",
+                "load": "/api/filter/{hash_id}",
+                "delete": "/api/filter/{hash_id}",
+                "docs": "/docs"
+            }
+        }
+    )
+    storage_dir: str = Field(
+        ...,
+        json_schema_extra={
+            "example": "/data/filters"
+        })
+    stats: dict = Field(
+        ...,
+        json_schema_extra={
+            "example": {
+                "stored_filters": 42
+            }}
     )
 
 
 # ------------------------
 # API endpoints
 # ------------------------
-@app.post("/api/filter", response_model=HashModel)
+@app.post("/api/filter", response_model=PostResponse)
 async def save_filter(query: FilterQuery):
     """
-    Save a filter configuration and generate a unique hash ID.
-
-    The filter configuration is serialized to JSON and hashed using SHA-256.
-    The initial hash ID is the first 16 characters of the SHA-256 hash.
-    If a collision with an existing hash occurs, the hash is extended
-    character by character until it becomes unique.
-    A RuntimeError is raised if the hash cannot be made unique within
-    64 characters (extremely unlikely).
-    Identical filter configurations will always generate the same hash
-    within the current runtime, unless filters are deleted.
+    Save a filter configuration and generate a unique hash ID
     """
     logger.info("Received request to create filter")
 
@@ -265,92 +287,55 @@ async def save_filter(query: FilterQuery):
         logger.info("Saved new filter %s in %s mode", hash_id, ENV)
     else:
         logger.info("Filter already exists with hash %s", hash_id)
-    return HashModel(hash_id=hash_id)
+    return PostResponse(hash_id=hash_id)
 
 
-@app.get("/api/filter/{hash_id}", response_model=FilterResponse)
-async def load_filter(
-    hash_id: Annotated[str, Path(
-        min_length=16,
-        max_length=64,
-        pattern="^[a-f0-9]{16,64}$",
-        examples=["e1d4f1a3a3c5afc4"])]
-) -> FilterResponse:
+@app.get("/api/filter/{hash_id}", response_model=GetResponse)
+async def load_filter(hash_id: str = Depends(validate_hash_id)):
     """
-    Retrieve a filter configuration by its hash ID.
-
-    Returns the complete filter specification (groups and rules).
-    Returns 404 if no filter is found for the given hash.
+    Retrieve a saved filter configuration by its hash ID
     """
-    try:
-        validated = HashModel.model_validate({"hash_id": hash_id})
-    except ValidationError as e:
-        raise HTTPException(status_code=400,
-                            detail="Invalid hash format") from e
-
-    hash_value = validated.hash_id  # Extract validated string
-    data = load_filter_file(hash_value)
+    data = load_filter_file(hash_id)
     if not data:
         raise HTTPException(status_code=404, detail="Filter not found")
-
     logger.info("Loaded filter %s from %s storage", hash_id, ENV)
-    return FilterResponse(**data)
+    return GetResponse(**data)
 
 
-@app.delete("/api/filter/{hash_id}")
-async def delete_filter(
-    hash_id: Annotated[str, Path(
-        min_length=16,
-        max_length=64,
-        pattern="^[a-f0-9]{16,64}$",
-        examples=["e1d4f1a3a3c5afc4"])]
-) -> dict:
+@app.delete("/api/filter/{hash_id}", response_model=DeleteResponse)
+async def delete_filter(hash_id: str = Depends(validate_hash_id)):
     """
-    Delete a filter configuration by its hash ID.
-
-    Returns a success message if the filter was deleted.
-    Returns 404 if no filter is found for the given hash.
+    Delete a saved filter configuration
     """
-    try:
-        validated = HashModel.model_validate({"hash_id": hash_id})
-    except ValidationError as e:
-        raise HTTPException(status_code=400,
-                            detail="Invalid hash format") from e
-
-    hash_value = validated.hash_id
-    deleted = delete_filter_file(hash_value)
+    deleted = delete_filter_file(hash_id)
 
     if not deleted:
         raise HTTPException(status_code=404, detail="Filter not found")
 
     logger.info("Deleted filter %s from %s storage", hash_id, ENV)
-    return {
-        "message": "Filter deleted successfully",
-        "hash_id": hash_value
-    }
+    return DeleteResponse(
+        message="Filter deleted successfully",
+        hash_id=hash_id)
 
 
-@app.get("/")
+@app.get("/", response_model=RootResponse)
 async def root():
     """
-    API metadata and health check endpoint.
-
-    Returns service name, version, endpoint paths, and basic filter
-    storage statistics.
+    Return API metadata and basic health information
     """
     stored_count = sum(1 for _ in FILTERS_DIR.glob("*.json"))
-    return {
-        "service": API_TITLE,
-        "version": API_VERSION,
-        "environment": ENV,
-        "description":
-            "Save and retrieve filter configurations for course selection",
-        "endpoints": {
+    return RootResponse(
+        service=API_TITLE,
+        version=API_VERSION,
+        environment=ENV,
+        description="Save and retrieve filter configurations "
+        "for course selection",
+        endpoints={
             "save": "/api/filter",
             "load": "/api/filter/{hash_id}",
             "delete": "/api/filter/{hash_id}",
             "docs": "/docs"
         },
-        "storage_dir": str(FILTERS_DIR),
-        "stats": {"stored_filters": stored_count},
-    }
+        storage_dir=str(FILTERS_DIR),
+        stats={"stored_filters": stored_count},
+    )
