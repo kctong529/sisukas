@@ -101,7 +101,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import ENV, FILTERS_DIR, CORS_ORIGINS
 from config import API_TITLE, API_VERSION, API_CONTACT
 from file_storage import save_filter_file, load_filter_file
-from file_storage import generate_unique_hash
+from file_storage import generate_unique_hash, delete_filter_file
 
 
 logger = logging.getLogger('uvicorn.error')
@@ -284,8 +284,9 @@ async def load_filter(
     """
     try:
         validated = HashModel.model_validate({"hash_id": hash_id})
-    except ValidationError:
-        raise HTTPException(status_code=400, detail="Invalid hash format")
+    except ValidationError as e:
+        raise HTTPException(status_code=400,
+                            detail="Invalid hash format") from e
 
     hash_value = validated.hash_id  # Extract validated string
     data = load_filter_file(hash_value)
@@ -294,6 +295,39 @@ async def load_filter(
 
     logger.info("Loaded filter %s from %s storage", hash_id, ENV)
     return FilterResponse(**data)
+
+
+@app.delete("/api/filter/{hash_id}")
+async def delete_filter(
+    hash_id: Annotated[str, Path(
+        min_length=16,
+        max_length=64,
+        pattern="^[a-f0-9]{16,64}$",
+        examples=["e1d4f1a3a3c5afc4"])]
+) -> dict:
+    """
+    Delete a filter configuration by its hash ID.
+
+    Returns a success message if the filter was deleted.
+    Returns 404 if no filter is found for the given hash.
+    """
+    try:
+        validated = HashModel.model_validate({"hash_id": hash_id})
+    except ValidationError as e:
+        raise HTTPException(status_code=400,
+                            detail="Invalid hash format") from e
+
+    hash_value = validated.hash_id
+    deleted = delete_filter_file(hash_value)
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Filter not found")
+
+    logger.info("Deleted filter %s from %s storage", hash_id, ENV)
+    return {
+        "message": "Filter deleted successfully",
+        "hash_id": hash_value
+    }
 
 
 @app.get("/")
@@ -314,6 +348,7 @@ async def root():
         "endpoints": {
             "save": "/api/filter",
             "load": "/api/filter/{hash_id}",
+            "delete": "/api/filter/{hash_id}",
             "docs": "/docs"
         },
         "storage_dir": str(FILTERS_DIR),

@@ -46,6 +46,18 @@ def load_filter_file(hash_id: str) -> Optional[dict]:
     return json.loads(content)
 
 
+def delete_filter_file(hash_id: str) -> bool:
+    """Delete a filter file by its hash ID if it exists"""
+    file_path = FILTERS_DIR / f"{hash_id}.json"
+    if not file_path.exists():
+        return False
+    try:
+        file_path.unlink()  # The file is now deleted
+    except Exception as e:
+        raise RuntimeError(f"Failed to delete filter {hash_id}") from e
+    return True
+
+
 def generate_unique_hash(
     content: dict,
     hash_func: Callable = hashlib.sha256,
