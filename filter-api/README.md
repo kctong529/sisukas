@@ -2,6 +2,7 @@
 
 A FastAPI-based microservice for managing and sharing course filter configurations. This API allows users to save complex filter queries with multiple groups and rules, generating shareable hash identifiers for easy retrieval.
 
+
 ## Features
 
 - **Hierarchical Filter Structure**: Support for must rules (universal constraints) and alternative groups (OR logic)
@@ -9,10 +10,11 @@ A FastAPI-based microservice for managing and sharing course filter configuratio
 - **Persistent File Storage**: JSON file-based storage with environment-specific directories
 - **Environment Configuration**: Separate prod/test environments with .env file support
 - **Shareable URLs**: Retrieve filters via hash identifiers for easy sharing
-- **RESTful API Design**: Automatic OpenAPI documentation with Swagger UI
+- **RESTful API Design**: OpenAPI documentation with Swagger UI
 - **Type-safe Models**: Pydantic-based validation for all filter components
 - **Fast, Async Handling**: Built on FastAPI for high-performance request processing
 - **CORS Support**: Configurable cross-origin resource sharing
+
 
 ## Filter Structure
 
@@ -37,10 +39,12 @@ Complete filter with:
 
 **Example**: "Show courses in Period II that are open for enrollment (must), and are either CS courses, or DSD major courses, or taught by Milo"
 
+
 ## Prerequisites
 
 - Python 3.8 or higher
 - pip (Python package manager)
+
 
 ## Installation
 
@@ -87,6 +91,7 @@ pip install -r requirements.txt
 SISUKAS_ENV=test  # or "prod"
 ```
 
+
 ## Running the API
 
 ### Development Mode
@@ -103,6 +108,7 @@ Run the production server:
 SISUKAS_ENV=prod fastapi run main.py
 ```
 
+
 ## Configuration
 
 The API uses environment variables for configuration, loaded from a `.env` file:
@@ -112,12 +118,14 @@ Storage directories are automatically created based on the environment:
 - Test mode: `storage/filters_test/`
 - Production mode: `storage/filters_prod/`
 
+
 ## API Documentation
 
 Once the server is running, you can access:
 - **Interactive API docs (Swagger UI):** http://localhost:8000/docs
 - **Alternative API docs (ReDoc):** http://localhost:8000/redoc
 - **OpenAPI schema:** http://localhost:8000/openapi.json
+
 
 ## API Endpoints
 
@@ -128,23 +136,23 @@ API information and health check endpoint.
 ```json
 {
   "service": "Sisukas Filters API",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "environment": "test",
   "description": "Save and retrieve filter configurations for course selection",
   "endpoints": {
     "save": "/api/filter",
     "load": "/api/filter/{hash_id}",
+    "delete": "/api/filter/{hash_id}",
     "docs": "/docs"
   },
   "storage_dir": "/path/to/storage/filters_test",
-  "stats": {
-    "stored_filters": 42
-  }
+  "stats": {"stored_filters": 42}
 }
 ```
 
 ### `POST /api/filter`
-Save a filter configuration and receive a hash identifier.
+
+Save a filter configuration and receive a hash ID.
 
 **Request Body:**
 ```json
@@ -197,7 +205,8 @@ Save a filter configuration and receive a hash identifier.
 ```
 
 ### `GET /api/filter/{hash_id}`
-Retrieve a previously saved filter configuration by its hash.
+
+Retrieve a saved filter configuration.
 
 **Response:**
 ```json
@@ -224,68 +233,73 @@ Retrieve a previously saved filter configuration by its hash.
 }
 ```
 
+### `DELETE /api/filter/{hash_id}`
+
+Delete a saved filter configuration.
+
+**Response Example:**
+
+```json
+{
+  "message": "Filter deleted successfully",
+  "hash_id": "a3f5d8e9c2b14f67"
+}
+```
+
+
 ## Usage Examples
 
 ### Save a Filter
+
 ```bash
 curl -X POST http://localhost:8000/api/filter \
   -H "Content-Type: application/json" \
-  -d '{
-    "groups": [
-      {
-        "rules": [
-          {"field": "price", "relation": "lessThan", "value": 500},
-          {"field": "inStock", "relation": "is", "value": true}
-        ],
-        "is_must": true
-      },
-      {
-        "rules": [
-          {"field": "category", "relation": "is", "value": "electronics"}
-        ],
-        "is_must": false
-      }
-    ]
-  }'
+  -d '{ "groups": [...your filter groups...] }'
 ```
 
 ### Retrieve a Filter
+
 ```bash
 curl http://localhost:8000/api/filter/a3f5d8e9c2b14f67/
 ```
 
+
 ## Project Structure
 ```
 filter-api/
-├── main.py              # FastAPI application, models, and routes
-├── config.py            # Environment and storage configuration
-├── file_storage.py      # File-based storage utilities
-├── requirements.txt     # Python dependencies
-├── .env                 # Environment variables (not in git)
-├── .gitignore           # Git ignore patterns
-├── storage/             # Filter storage directory (not in git)
-│   ├── filters_test/    # Test environment filters
-│   └── filters_prod/    # Production environment filters
-├── .venv/               # Virtual environment (not in git)
-└── README.md            # This file
+├── README.md                 # Project documentation
+├── main.py                   # FastAPI application entrypoint
+├── requirements.txt          # Python dependencies
+├── core/                     # Core configuration and exception handling
+│   ├── __init__.py
+│   ├── config.py             # Environment and storage configuration
+│   └── exceptions.py         # Custom FastAPI exception handlers
+├── models/                   # Pydantic models for filters and responses
+│   ├── __init__.py
+│   ├── filter_models.py      # Filter-related models and hash validation
+│   └── response_models.py    # API response models
+├── routers/                  # API route definitions
+│   ├── __init__.py
+│   ├── filters.py            # /api/filter endpoints
+│   └── root.py               # / root endpoint
+├── storage/                  # File-based storage utilities and directories
+│   ├── __init__.py
+│   ├── file_storage.py       # JSON file storage utilities
+│   └── filters_test/         # Test environment filter files
+├── utils/                    # Utility modules
+│   ├── __init__.py
+│   └── responses.py          # Standardized endpoint responses
+├── .venv/                    # Python virtual environment (not tracked)
+└── __pycache__/              # Compiled Python files (not tracked)
 ```
+
 
 ## Development
 
-### Adding Dependencies
-After installing new packages:
-```sh
-pip freeze > requirements.txt
-```
+* Add dependencies: `pip freeze > requirements.txt`
+* Deactivate venv: `deactivate`
+* Test endpoints using `/docs` or curl/httpie
 
-### Deactivating Virtual Environment
-When done working:
-```sh
-deactivate
-```
-
-### Testing the API
-Use the interactive docs at `/docs` to test endpoints, or use curl/httpie for command-line testing.
 
 ## Storage
 
@@ -302,9 +316,11 @@ The storage system automatically:
 - Handles hash collisions by extending the hash length
 - Reuses existing hashes for identical filter configurations
 
+
 ## Version History
 
-- **0.1.0** (Current): File-based storage with environment configuration
+* **0.2.0**: Standardized responses and robust error handling
+* **0.1.0**: Initial file-based storage implementation
 - **0.0.5**: Added error handling improvements
 - **0.0.4**: Initial in-memory storage implementation
 - **0.0.2**: Complete filter query system with hierarchical structure
