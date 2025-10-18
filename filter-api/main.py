@@ -38,6 +38,9 @@ from typing import List, Annotated
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, Path, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.requests import Request
+from fastapi.exceptions import RequestValidationError
 
 from config import (
     ENV, FILTERS_DIR, CORS_ORIGINS,
@@ -64,6 +67,63 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(
+    request: Request,
+    exc: HTTPException
+):
+    """Handles HTTPExceptions with consistent JSON output"""
+    logger.warning(
+        "%s error at %s: %s",
+        exc.status_code,
+        request.url.path,
+        exc.detail
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(
+    request: Request,
+    exc: RequestValidationError
+):
+    """Handles validation errors from Pydantic/FastAPI"""
+    logger.warning(
+        "422 validation error at %s: %s",
+        request.url.path,
+        exc.errors()
+    )
+    first_error = (
+        exc.errors()[0]["msg"]
+        if exc.errors()
+        else "Invalid request data"
+    )
+    return JSONResponse(
+        status_code=422,
+        content={"detail": first_error},
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(
+    request: Request,
+    exc: Exception
+):
+    """Catch-all handler for unexpected errors"""
+    logger.exception(
+        "Unhandled error at %s: %s",
+        request.url.path,
+        exc
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
 
 
 # ------------------------
@@ -265,10 +325,99 @@ class RootResponse(BaseModel):
     )
 
 
+class ErrorResponse(BaseModel):
+    """Standardized error response model"""
+    detail: str = Field(
+        ...,
+        description="Human-readable error message",
+        json_schema_extra={"example": "Filter not found"}
+    )
+
+
+# ------------------------
+# Endpoint-specific responses
+# ------------------------
+
+POST_RESPONSES = {
+    201: {
+        "description": "Filter created successfully",
+        "model": PostResponse,
+        "content": {
+            "application/json": {
+                "example": {
+                    "hash_id": "1c1ec50735361d70"}}}
+    },
+    422: {
+        "description": "Invalid request",
+        "model": ErrorResponse,
+        "content": {
+            "application/json": {
+                "example": {
+                    "detail": "Invalid request data"}}}
+    },
+    500: {
+        "description": "Internal server error",
+        "model": ErrorResponse,
+        "content": {
+            "application/json": {
+                "example": {
+                    "detail": "Internal server error"}}}
+    },
+}
+
+
+def error_response(detail: str) -> dict:
+    return {
+        "description": detail,
+        "model": ErrorResponse,
+        "content": {
+            "application/json": {
+                "example": {
+                    "detail": detail}
+            }
+        }
+    }
+
+
+GET_RESPONSES = {
+    200: {"description": "Filter retrieved successfully",
+          "model": GetResponse},
+    422: error_response("Invalid hash format"),
+    404: error_response("Filter not found"),
+    500: error_response("Internal server error"),
+}
+
+DELETE_RESPONSES = {
+    200: {
+        "description": "Filter deleted successfully",
+        "model": DeleteResponse,
+        "content": {
+            "application/json": {
+                "example": {
+                    "message": "Filter deleted successfully",
+                    "hash_id": "1c1ec50735361d70"}}}
+    },
+    422: error_response("Invalid hash format"),
+    404: error_response("Filter not found"),
+    500: error_response("Internal server error"),
+}
+
+ROOT_RESPONSES = {
+    200: {"description": "API metadata retrieved successfully",
+          "model": RootResponse},
+    500: error_response("Internal server error"),
+}
+
+
 # ------------------------
 # API endpoints
 # ------------------------
-@app.post("/api/filter", response_model=PostResponse)
+@app.post(
+    "/api/filter",
+    status_code=201,
+    response_model=PostResponse,
+    responses=POST_RESPONSES
+)
 async def save_filter(query: FilterQuery):
     """
     Save a filter configuration and generate a unique hash ID
@@ -290,7 +439,11 @@ async def save_filter(query: FilterQuery):
     return PostResponse(hash_id=hash_id)
 
 
-@app.get("/api/filter/{hash_id}", response_model=GetResponse)
+@app.get(
+    "/api/filter/{hash_id}",
+    response_model=GetResponse,
+    responses=GET_RESPONSES
+)
 async def load_filter(hash_id: str = Depends(validate_hash_id)):
     """
     Retrieve a saved filter configuration by its hash ID
@@ -302,7 +455,11 @@ async def load_filter(hash_id: str = Depends(validate_hash_id)):
     return GetResponse(**data)
 
 
-@app.delete("/api/filter/{hash_id}", response_model=DeleteResponse)
+@app.delete(
+    "/api/filter/{hash_id}",
+    response_model=DeleteResponse,
+    responses=DELETE_RESPONSES
+)
 async def delete_filter(hash_id: str = Depends(validate_hash_id)):
     """
     Delete a saved filter configuration
@@ -318,7 +475,11 @@ async def delete_filter(hash_id: str = Depends(validate_hash_id)):
         hash_id=hash_id)
 
 
-@app.get("/", response_model=RootResponse)
+@app.get(
+    "/",
+    response_model=RootResponse,
+    responses=ROOT_RESPONSES
+)
 async def root():
     """
     Return API metadata and basic health information
