@@ -70,7 +70,7 @@ from core.config import (
     CORS_ORIGINS,
     API_TITLE,
     API_VERSION,
-    API_CONTACT
+    API_CONTACT,
 )
 from core.exceptions import (
     http_exception_handler,
@@ -98,6 +98,7 @@ app.add_middleware(
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
+
 
 # Routers
 app.include_router(filters_router)

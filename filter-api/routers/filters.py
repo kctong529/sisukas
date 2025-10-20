@@ -60,7 +60,11 @@ router = APIRouter()
 )
 async def save_filter(query: FilterQuery):
     """
-    Save a filter configuration and generate a unique hash ID
+    Save a new filter configuration or return an existing one
+
+    If an identical configuration already exists, the existing hash ID
+    is reused (idempotent behavior). Returns a unique hash identifier
+    referencing the saved filter.
     """
     logger.info("Received request to create filter")
 
@@ -68,11 +72,12 @@ async def save_filter(query: FilterQuery):
     query_dict = query.model_dump(exclude_none=True)
 
     # Generate a hash ID, reusing existing hash if identical content
-    hash_id, to_create = generate_unique_hash(query_dict)
+    full_hash, k, to_create = generate_unique_hash(query_dict)
+    hash_id = full_hash[:k]
 
     # Only save if the file does not exist yet
     if to_create:
-        save_filter_file(hash_id, query_dict)
+        save_filter_file(full_hash, k, query_dict)
         logger.info("Saved new filter %s in %s mode", hash_id, ENV)
     else:
         logger.info("Filter already exists with hash %s", hash_id)
@@ -86,9 +91,19 @@ async def save_filter(query: FilterQuery):
 )
 async def load_filter(hash_id: str = Depends(validate_hash_id)):
     """
-    Retrieve a saved filter configuration by its hash ID
+    Retrieve a stored filter configuration by its hash ID
+
+    Returns the full filter configuration if found,
+    or 404 if not present in storage.
     """
-    data = load_filter_file(hash_id)
+    try:
+        data = load_filter_file(hash_id)
+    except Exception as e:
+        logger.error(
+            "Failed to load filter %s: %s", hash_id, e, exc_info=True)
+        raise HTTPException(status_code=500,
+                            detail="Internal storage error") from e
+
     if not data:
         raise HTTPException(status_code=404, detail="Filter not found")
     logger.info("Loaded filter %s from %s storage", hash_id, ENV)
@@ -102,9 +117,18 @@ async def load_filter(hash_id: str = Depends(validate_hash_id)):
 )
 async def delete_filter(hash_id: str = Depends(validate_hash_id)):
     """
-    Delete a saved filter configuration
+    Delete a stored filter configuration by its hash ID
+
+    Returns a success message if deletion succeeds, or 404 if no filter
+    exists with the provided hash ID.
     """
-    deleted = delete_filter_file(hash_id)
+    try:
+        deleted = delete_filter_file(hash_id)
+    except Exception as e:
+        logger.error("Failed to delete filter %s: %s",
+                     hash_id, e, exc_info=True)
+        raise HTTPException(status_code=500,
+                            detail="Internal storage error") from e
 
     if not deleted:
         raise HTTPException(status_code=404, detail="Filter not found")

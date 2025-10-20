@@ -7,7 +7,7 @@ A FastAPI-based microservice for managing and sharing course filter configuratio
 
 - **Hierarchical Filter Structure**: Support for must rules (universal constraints) and alternative groups (OR logic)
 - **Hash-based Storage**: Save filter configurations with auto-generated short hash IDs
-- **Persistent File Storage**: JSON file-based storage with environment-specific directories
+- **Persistent Cloud Storage**: JSON file-based storage in Google Cloud Storage (GCS)
 - **Environment Configuration**: Separate prod/test environments with .env file support
 - **Shareable URLs**: Retrieve filters via hash identifiers for easy sharing
 - **RESTful API Design**: OpenAPI documentation with Swagger UI
@@ -111,12 +111,10 @@ SISUKAS_ENV=prod fastapi run main.py
 
 ## Configuration
 
-The API uses environment variables for configuration, loaded from a `.env` file:
-- `SISUKAS_ENV`: Environment mode ("test" or "prod", defaults to "test")
+The API uses environment variables loaded from a `.env` file:
 
-Storage directories are automatically created based on the environment:
-- Test mode: `storage/filters_test/`
-- Production mode: `storage/filters_prod/`
+* `SISUKAS_ENV`: Environment mode ("test" or "prod", defaults to "test")
+* `GCS_BUCKET_NAME`: Automatically derived from environment (`sisukas-filters-api-prod` or `sisukas-filters-api-test`)
 
 
 ## API Documentation
@@ -267,9 +265,9 @@ curl http://localhost:8000/api/filter/a3f5d8e9c2b14f67/
 ## Project Structure
 ```
 filter-api/
-├── README.md                 # Project documentation
+├── README.md
 ├── main.py                   # FastAPI application entrypoint
-├── requirements.txt          # Python dependencies
+├── requirements.txt
 ├── core/                     # Core configuration and exception handling
 │   ├── __init__.py
 │   ├── config.py             # Environment and storage configuration
@@ -284,43 +282,31 @@ filter-api/
 │   └── root.py               # / root endpoint
 ├── storage/                  # File-based storage utilities and directories
 │   ├── __init__.py
-│   ├── file_storage.py       # JSON file storage utilities
-│   └── filters_test/         # Test environment filter files
+│   └── file_storage.py       # GCS storage utilities
 ├── utils/                    # Utility modules
 │   ├── __init__.py
 │   └── responses.py          # Standardized endpoint responses
-├── .venv/                    # Python virtual environment (not tracked)
-└── __pycache__/              # Compiled Python files (not tracked)
+├── .venv/
+└── __pycache__/
 ```
-
-
-## Development
-
-* Add dependencies: `pip freeze > requirements.txt`
-* Deactivate venv: `deactivate`
-* Test endpoints using `/docs` or curl/httpie
 
 
 ## Storage
 
-Filters are stored as JSON files in environment-specific directories:
+Filters are stored as JSON files in **Google Cloud Storage (GCS)**:
 
-- **File naming**: `{hash_id}.json` (e.g., `a3f5d8e9c2b14f67.json`)
-- **Hash generation**: SHA-256 based, starting at 16 characters
-- **Collision handling**: Automatic hash extension if collision detected
-- **Idempotent saves**: Identical filters reuse existing hash IDs
-- **Persistence**: Filters persist across API restarts
-
-The storage system automatically:
-- Creates storage directories if they don't exist
-- Handles hash collisions by extending the hash length
-- Reuses existing hashes for identical filter configurations
+* **File naming**: `{hash_id}.json`
+* **Hash generation**: SHA-256 based, starting at 16 characters
+* **Collision handling**: Automatic hash extension if collision detected
+* **Idempotent saves**: Identical filters reuse existing hash IDs
+* **Persistence**: Filters persist across API restarts
 
 
 ## Version History
 
-* **0.2.0**: Standardized responses and robust error handling
-* **0.1.0**: Initial file-based storage implementation
+- **0.3.0**: Switched to GCS-based storage
+- **0.2.0**: Standardized responses and robust error handling
+- **0.1.0**: Initial file-based storage implementation
 - **0.0.5**: Added error handling improvements
 - **0.0.4**: Initial in-memory storage implementation
 - **0.0.2**: Complete filter query system with hierarchical structure

@@ -135,7 +135,7 @@ def validate_hash_id(
         min_length=16,
         max_length=64,
         pattern=HASH_PATTERN,
-        json_schema_extra={"example": "1c1ec50735361d70"}
+        json_schema_extra={"example": "43de8e1e03d4a5e3"}
     )]
 ) -> str:
     """

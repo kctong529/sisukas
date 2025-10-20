@@ -34,7 +34,7 @@ class PostResponse(BaseModel):
         max_length=64,
         pattern=HASH_PATTERN,
         description="Unique hash ID assigned to the saved filter",
-        json_schema_extra={"example": "1c1ec50735361d70"}
+        json_schema_extra={"example": "43de8e1e03d4a5e3"}
     )
 
 
@@ -53,7 +53,7 @@ class DeleteResponse(BaseModel):
     hash_id: str = Field(
         pattern=HASH_PATTERN,
         description="Hash of the deleted filter",
-        json_schema_extra={"example": "1c1ec50735361d70"}
+        json_schema_extra={"example": "43de8e1e03d4a5e3"}
     )
 
 
@@ -83,18 +83,6 @@ class RootResponse(BaseModel):
                 "docs": "/docs"
             }
         }
-    )
-    storage_dir: str = Field(
-        ...,
-        json_schema_extra={
-            "example": "/data/filters"
-        })
-    stats: dict = Field(
-        ...,
-        json_schema_extra={
-            "example": {
-                "stored_filters": 42
-            }}
     )
 
 

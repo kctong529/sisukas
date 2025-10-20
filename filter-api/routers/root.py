@@ -15,7 +15,7 @@ to provide clients with a quick overview of the service.
 from fastapi import APIRouter
 from models.response_models import RootResponse
 from utils.responses import ROOT_RESPONSES
-from core.config import API_TITLE, API_VERSION, ENV, FILTERS_DIR
+from core.config import API_TITLE, API_VERSION, ENV
 
 router = APIRouter()
 
@@ -27,7 +27,7 @@ router = APIRouter()
 )
 async def root():
     """
-    Retrieve API metadata, environment details, and storage statistics.
+    Retrieve API metadata and environment details
 
     Returns
     -------
@@ -38,10 +38,7 @@ async def root():
         - environment: Current environment (e.g., development, production)
         - description: Brief description of the API
         - endpoints: Dictionary of available API endpoints
-        - storage_dir: Path to the filter storage directory
-        - stats: Basic statistics, including number of stored filters
     """
-    stored_count = sum(1 for _ in FILTERS_DIR.glob("*.json"))
     return RootResponse(
         service=API_TITLE,
         version=API_VERSION,
@@ -54,6 +51,4 @@ async def root():
             "delete": "/api/filter/{hash_id}",
             "docs": "/docs"
         },
-        storage_dir=str(FILTERS_DIR),
-        stats={"stored_filters": stored_count},
     )
