@@ -868,6 +868,7 @@ async function saveFiltersToApi() {
         try {
             await navigator.clipboard.writeText(shareableUrl);
             console.log("Filter link copied to clipboard!");
+            showFilterLoadSuccess("Filter link copied to clipboard!");
         } catch (clipboardError) {
             // Fallback if clipboard fails
             console.warn("Clipboard API failed, showing URL in alert:", clipboardError);
@@ -1044,6 +1045,7 @@ async function loadFiltersFromUrl() {
         
         loadFiltersFromJson(data);
         logFilters();
+        showFilterLoadSuccess("Loaded filter(s) from shared link");
         
     } catch (error) {
         // Handle network errors and other exceptions
