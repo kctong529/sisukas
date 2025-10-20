@@ -810,14 +810,17 @@ function saveFiltersToFile() {
     URL.revokeObjectURL(url);
 }
 
-// Save filters to API and optionally download JSON
+/**
+ * Saves the current filters to the API.
+ * @returns A Promise resolving to the shareable URL or null if saving failed.
+ */
 async function saveFiltersToApi() {
     const filters = exportFilters();
     
     // Validate that there are filters to save
     if (filters.length === 0) {
         showFilterLoadError("No filters to save");
-        return;
+        return null;
     }
 
     try {
@@ -830,9 +833,7 @@ async function saveFiltersToApi() {
         // Send POST request to API
         const response = await fetch(`${config.api.baseUrl}/api/filter`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
@@ -848,7 +849,7 @@ async function saveFiltersToApi() {
             
             console.error(`Failed to save filters (${response.status}):`, errorMessage);
             showFilterLoadError(`Unable to save filters: ${errorMessage}`);
-            return;
+            return null;
         }
 
         const data = await response.json();
@@ -858,28 +859,13 @@ async function saveFiltersToApi() {
         if (!data.hash_id) {
             console.error("Invalid response structure:", data);
             showFilterLoadError("Invalid response from server");
-            return;
+            return null;
         }
 
         // Create shareable URL
         const shareableUrl = `${window.location.origin}${window.location.pathname}?filter=${data.hash_id}`;
-        
-        // Copy to clipboard
-        try {
-            await navigator.clipboard.writeText(shareableUrl);
-            console.log("Filter link copied to clipboard!");
-            showFilterLoadSuccess("Filter link copied to clipboard!");
-        } catch (clipboardError) {
-            // Fallback if clipboard fails
-            console.warn("Clipboard API failed, showing URL in alert:", clipboardError);
-        }
-
         console.log(`Filters saved with hash ID: ${data.hash_id}`);
-        console.log(`Shareable URL: ${shareableUrl}`);
-
-        // Navigate to the URL with the filter hash
-        // window.location.href = shareableUrl;
-        
+        return shareableUrl;
     } catch (error) {
         // Handle network errors and other exceptions
         if (error.name === 'TypeError' && error.message.includes('fetch')) {
@@ -892,6 +878,20 @@ async function saveFiltersToApi() {
     }
 }
 
+async function handleSaveClick() {
+    const shareableUrl = await saveFiltersToApi(); // return URL from this function
+    if (!shareableUrl) return;
+
+    try {
+        await navigator.clipboard.writeText(shareableUrl);
+        showFilterLoadSuccess("Filter link copied to clipboard!");
+    } catch (clipboardError) {
+        console.warn("Clipboard API failed:", clipboardError);
+    }
+
+    console.log(`Shareable URL: ${shareableUrl}`);
+}
+
 // Combined function that does both - save to API and optionally download
 async function saveFilters(downloadJson = false) {
     const filters = exportFilters();
@@ -901,8 +901,7 @@ async function saveFilters(downloadJson = false) {
         return;
     }
 
-    // Always save to API
-    await saveFiltersToApi();
+    await handleSaveClick();
     
     // Optionally also download JSON
     if (downloadJson) {
