@@ -1,0 +1,317 @@
+# Filter API
+
+A FastAPI-based microservice for managing and sharing course filter configurations. This API allows users to save complex filter queries with multiple groups and rules, generating shareable hash identifiers for easy retrieval.
+
+
+## Features
+
+- **Hierarchical Filter Structure**: Support for must rules (universal constraints) and alternative groups (OR logic)
+- **Hash-based Storage**: Save filter configurations with auto-generated short hash IDs
+- **Persistent Cloud Storage**: JSON file-based storage in Google Cloud Storage (GCS)
+- **Environment Configuration**: Separate prod/test environments with .env file support
+- **Shareable URLs**: Retrieve filters via hash identifiers for easy sharing
+- **RESTful API Design**: OpenAPI documentation with Swagger UI
+- **Type-safe Models**: Pydantic-based validation for all filter components
+- **Fast, Async Handling**: Built on FastAPI for high-performance request processing
+- **CORS Support**: Configurable cross-origin resource sharing
+
+
+## Filter Structure
+
+The API uses a two-tier filter architecture:
+
+### FilterRule (Atomic Condition)
+Single filter condition with:
+- `field`: Course attribute to filter (e.g., "code", "major", "period")
+- `relation`: Comparison method (e.g., "contains", "is", "overlaps")
+- `value`: Value to compare against
+
+### FilterGroup (AND Logic)
+Collection of rules that must all match:
+- `rules`: List of FilterRule objects
+- `is_must`: Boolean flag indicating universal constraint vs. alternative pattern
+
+### FilterQuery (Complete Specification)
+Complete filter with:
+- `groups`: List of FilterGroup objects
+- Must groups (`is_must=True`) apply universally with AND logic
+- Alternative groups (`is_must=False`) apply with OR logic (any match qualifies)
+
+**Example**: "Show courses in Period II that are open for enrollment (must), and are either CS courses, or DSD major courses, or taught by Milo"
+
+
+## Prerequisites
+
+- Python 3.8 or higher
+- pip (Python package manager)
+
+
+## Installation
+
+1. Navigate to the filter-api directory:
+```sh
+cd filter-api
+```
+
+2. Create a virtual environment:
+```sh
+python -m venv .venv
+```
+
+3. Activate the virtual environment:
+
+**On macOS/Linux:**
+```sh
+source .venv/bin/activate
+```
+
+**On Windows:**
+```sh
+.venv\Scripts\activate
+```
+
+4. Verify Python is using the virtual environment:
+```sh
+which python  # Should show path to .venv/bin/python
+```
+
+5. Upgrade pip:
+```sh
+python -m pip install --upgrade pip
+```
+
+6. Install dependencies:
+```sh
+pip install -r requirements.txt
+```
+
+7. Create a `.env` file for configuration:
+```sh
+# .env
+SISUKAS_ENV=test  # or "prod"
+```
+
+
+## Running the API
+
+### Development Mode
+Start the development server with auto-reload:
+```sh
+fastapi dev main.py
+```
+
+The API will be available at `http://localhost:8000`
+
+### Production Mode
+Run the production server:
+```sh
+SISUKAS_ENV=prod fastapi run main.py
+```
+
+
+## Configuration
+
+The API uses environment variables loaded from a `.env` file:
+
+* `SISUKAS_ENV`: Environment mode ("test" or "prod", defaults to "test")
+* `GCS_BUCKET_NAME`: Automatically derived from environment (`sisukas-filters-api-prod` or `sisukas-filters-api-test`)
+
+
+## API Documentation
+
+Once the server is running, you can access:
+- **Interactive API docs (Swagger UI):** http://localhost:8000/docs
+- **Alternative API docs (ReDoc):** http://localhost:8000/redoc
+- **OpenAPI schema:** http://localhost:8000/openapi.json
+
+
+## API Endpoints
+
+### `GET /`
+API information and health check endpoint.
+
+**Response:**
+```json
+{
+  "service": "Sisukas Filters API",
+  "version": "0.2.0",
+  "environment": "test",
+  "description": "Save and retrieve filter configurations for course selection",
+  "endpoints": {
+    "save": "/api/filter",
+    "load": "/api/filter/{hash_id}",
+    "delete": "/api/filter/{hash_id}",
+    "docs": "/docs"
+  },
+  "storage_dir": "/path/to/storage/filters_test",
+  "stats": {"stored_filters": 42}
+}
+```
+
+### `POST /api/filter`
+
+Save a filter configuration and receive a hash ID.
+
+**Request Body:**
+```json
+{
+  "groups": [
+    {
+      "rules": [
+        {
+          "field": "period",
+          "relation": "is",
+          "value": "2025-26 Period II"
+        },
+        {
+          "field": "enrollment",
+          "relation": "overlaps",
+          "value": "today"
+        }
+      ],
+      "is_must": true
+    },
+    {
+      "rules": [
+        {
+          "field": "major",
+          "relation": "is",
+          "value": "DSD24"
+        }
+      ],
+      "is_must": false
+    },
+    {
+      "rules": [
+        {
+          "field": "teacher",
+          "relation": "contains",
+          "value": "Milo"
+        }
+      ],
+      "is_must": false
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "hash_id": "a3f5d8e9c2b14f67"
+}
+```
+
+### `GET /api/filter/{hash_id}`
+
+Retrieve a saved filter configuration.
+
+**Response:**
+```json
+{
+  "groups": [
+    {
+      "rules": [
+        {
+          "field": "period",
+          "relation": "is",
+          "value": "2025-26 Period II"
+        }
+      ],
+      "is_must": true
+    }
+  ]
+}
+```
+
+**Error Response (404):**
+```json
+{
+  "detail": "Filter not found"
+}
+```
+
+### `DELETE /api/filter/{hash_id}`
+
+Delete a saved filter configuration.
+
+**Response Example:**
+
+```json
+{
+  "message": "Filter deleted successfully",
+  "hash_id": "a3f5d8e9c2b14f67"
+}
+```
+
+
+## Usage Examples
+
+### Save a Filter
+
+```bash
+curl -X POST http://localhost:8000/api/filter \
+  -H "Content-Type: application/json" \
+  -d '{ "groups": [...your filter groups...] }'
+```
+
+### Retrieve a Filter
+
+```bash
+curl http://localhost:8000/api/filter/a3f5d8e9c2b14f67/
+```
+
+
+## Project Structure
+```
+filter-api/
+├── README.md
+├── main.py                   # FastAPI application entrypoint
+├── requirements.txt
+├── core/                     # Core configuration and exception handling
+│   ├── __init__.py
+│   ├── config.py             # Environment and storage configuration
+│   └── exceptions.py         # Custom FastAPI exception handlers
+├── models/                   # Pydantic models for filters and responses
+│   ├── __init__.py
+│   ├── filter_models.py      # Filter-related models and hash validation
+│   └── response_models.py    # API response models
+├── routers/                  # API route definitions
+│   ├── __init__.py
+│   ├── filters.py            # /api/filter endpoints
+│   └── root.py               # / root endpoint
+├── storage/                  # File-based storage utilities and directories
+│   ├── __init__.py
+│   └── file_storage.py       # GCS storage utilities
+├── utils/                    # Utility modules
+│   ├── __init__.py
+│   └── responses.py          # Standardized endpoint responses
+├── .venv/
+└── __pycache__/
+```
+
+
+## Storage
+
+Filters are stored as JSON files in **Google Cloud Storage (GCS)**:
+
+* **File naming**: `{hash_id}.json`
+* **Hash generation**: SHA-256 based, starting at 16 characters
+* **Collision handling**: Automatic hash extension if collision detected
+* **Idempotent saves**: Identical filters reuse existing hash IDs
+* **Persistence**: Filters persist across API restarts
+
+
+## Version History
+
+- **0.3.0**: Switched to GCS-based storage
+- **0.2.0**: Standardized responses and robust error handling
+- **0.1.0**: Initial file-based storage implementation
+- **0.0.5**: Added error handling improvements
+- **0.0.4**: Initial in-memory storage implementation
+- **0.0.2**: Complete filter query system with hierarchical structure
+- **0.0.1**: Initial single filter rule endpoint (deprecated)
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](../LICENSE) file for details.

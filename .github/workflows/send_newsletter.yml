@@ -5,6 +5,11 @@ on:
     - cron: '49 8 * * 6'
   workflow_dispatch:
 
+env:
+  WORKING_DIR: course-browser
+  PYTHON_VERSION: '3.12'
+  RECIPIENTS_REPO: kctong529/sisukas-newsletter-recipients
+
 jobs:
   send:
     runs-on: ubuntu-latest
@@ -21,12 +26,12 @@ jobs:
 
       - name: Clone private recipients repo
         run: |
-          git clone git@github.com:kctong529/sisukas-newsletter-recipients.git
+          git clone git@github.com:${{ env.RECIPIENTS_REPO }}.git
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Generate newsletter content
         run: |
@@ -57,7 +62,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/newsletter.html
+          git add ${{ env.WORKING_DIR }}/public/newsletter.html
           if git diff --cached --quiet; then
             echo "No changes to commit."
             echo "commit-made=false" >> $GITHUB_OUTPUT

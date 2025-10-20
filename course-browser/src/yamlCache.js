@@ -1,16 +1,14 @@
 import yaml from 'js-yaml';
 
-// Generic data structures to store program and course data
+// Generic data structure to store program and course data
 export let curriculaMap = {
-    major: {},
-    minor: {}
-};
-export let courseIndex = {
     major: {},
     minor: {}
 };
 
 export let periodsData = [];
+
+export let organizationNames = [];
 
 // Fetches the YAML data from a file, appending a timestamp to the URL
 export const fetchYaml = async (url) => {
@@ -68,7 +66,6 @@ export const loadYamlFile = async (filePath) => {
 export async function loadPrograms() {
     // Clear existing data
     curriculaMap = { major: {}, minor: {} };
-    courseIndex = { major: {}, minor: {} };
 
     const majorPrograms = await loadYamlFile('data/major.yaml');
     const minorPrograms = await loadYamlFile('data/minor.yaml');
@@ -84,14 +81,6 @@ export async function loadPrograms() {
                 name,
                 courses: new Set(courses),
             };
-
-            // Store course data in courseIndex
-            courses.forEach(course => {
-                if (!courseIndex[type][course]) {
-                    courseIndex[type][course] = new Set();
-                }
-                courseIndex[type][course].add(upperCode);
-            });
         });
     };
 
@@ -106,6 +95,12 @@ export async function loadPeriods() {
 
     // Populate the periods container in the UI
     renderPeriods();
+}
+
+// Load organizations data
+export async function loadOrganizations() {
+    const organizationsData = await loadYamlFile('data/organizations.yaml');
+    organizationNames = organizationsData.organizations || [];
 }
 
 // Render periods into the DOM

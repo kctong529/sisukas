@@ -14,6 +14,7 @@ Sisukas offers a faster, more intuitive way to browse and filter courses:
 - Refined search using Boolean logic (AND, OR) for more specific results
 - Filter courses by start and end dates to focus on specific time frames
 - Predefined course lists for specific majors and minors
+- Share filter configurations via URL for easy collaboration
 
 > [!NOTE]
 > Sisukas strikes the right balance in presenting course information. It features a compact layout that displays all necessary course details at a glance, with no extra clicks. A unique toggle merges duplicate entries, showing only one per course code. The app is fully responsive, ensuring smooth performance across both desktop and mobile devices.
@@ -23,21 +24,22 @@ Sisukas offers a faster, more intuitive way to browse and filter courses:
 
 ## How It Works
 
-The Sisukas app is built with Vanilla JavaScript, chosen for its simplicity, lightweight nature, and fast performance in the browser. To ensure quick access, it loads Static JSON Data once at startup, eliminating the need for repeated API calls. The app's development process is optimized with the Vite build tool, which supports ECMAScript modules and handles cache invalidation efficiently. Vitest is used to perform fast, reliable unit tests, ensuring that key features like filtering, sorting, and data handling work correctly with minimal overhead. Finally, for deployment, Fly.io distributes the app across multiple edge locations for global access, while Docker ensures consistent, containerized environments.
+The Sisukas frontend is built with Vanilla JavaScript, chosen for its simplicity, lightweight nature, and fast performance in the browser. To ensure quick access, it uses IndexedDB-based caching to efficiently load course data once at startup, eliminating unnecessary network requests. The app's development process is optimized with the Vite build tool, which supports ECMAScript modules and handles cache invalidation efficiently. Vitest is used to perform fast, reliable unit tests, ensuring that key features like filtering, sorting, and data handling work correctly with minimal overhead. A serverless API backend (Google Cloud Run) handles filter sharing functionality, allowing users to save and share filter configurations via short URLs. Finally, for deployment, Fly.io distributes the app across multiple edge locations for global access, while Docker ensures consistent, containerized environments.
 
 > [!NOTE]
-> The course data (`courses.json`) was retrieved using the Aalto Open API, following the instructions at [3scale Aalto Open API Docs](https://3scale.apps.ocp4.aalto.fi/docs/swagger/open_courses_sisu). The data was obtained using the `GET /courseunitrealisations` endpoint, with the parameter: `startTimeAfter=2024-01-01`.
+> The course data (`courses.json`) was retrieved using the Aalto Open API, following the instructions at [3scale Aalto Open API Docs](https://3scale.apps.ocp4.aalto.fi/docs/swagger/open_courses_sisu). The data was obtained using the `GET /courseunitrealisations` endpoint, with the parameter: `startTimeAfter=2024-01-01`. A GitHub Actions workflow automatically checks for course updates daily and commits changes to the repository.
 
 > [!IMPORTANT]
-> Currently, the app uses a cached version of this data to ensure fast performance without making additional API calls. There is no guarantee that the loaded data is the latest information.
+> The app uses a cached version of this data with HTTP conditional requests (If-Modified-Since) to ensure fast performance while staying up-to-date. The browser will automatically fetch updates only when the data has changed on the server.
 
 ## Running Locally
 
 To test the application on your local machine, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/kctong529/sisukas.git`
-2. Install dependencies: `cd sisukas; npm ci`
-3. Start the server: `npm run dev`
+2. Navigate to the frontend directory: `cd sisukas/course-browser`
+3. Install dependencies: `npm ci`
+4. Start the development server: `npm run dev`
 
 This will start the Vite development server and provide a URL in the console (e.g., `http://localhost:5173`). Simply open this URL in your browser.
 
@@ -61,7 +63,7 @@ This will start the Vite development server and provide a URL in the console (e.
 ### User Experience & Accessibility
 
 - [x] Improve responsive design for better usability across devices. https://github.com/kctong529/sisukas/issues/2
-- [ ] Enable users to save and reuse filter sets. https://github.com/kctong529/sisukas/issues/8
+- [x] Enable users to save and reuse filter sets. https://github.com/kctong529/sisukas/issues/8
 - [ ] Implement user management features.
 - [ ] Allow users to pin selected courses to keep them at the top of the list.
 - [ ] Add a comment field where student feedback is shown.
@@ -70,7 +72,7 @@ This will start the Vite development server and provide a URL in the console (e.
 ### Data Management & Updates
 
 - [ ] Use AWS CloudFront to cache `courses.json` and serve it from edge locations. https://github.com/kctong529/sisukas/issues/9
-- [ ] Write a workflow to fetch the course API, with diff report and automatically commit.
+- [x] Write a workflow to fetch the course API, with diff report and automatically commit.
 - [ ] Evaluate the balance between performance and caching of fetching real-time course information.
 - [ ] Support importing courses from a long string or loosely formatted copied text.
 - [ ] Enable exporting filtered results with customizable fields in JSON, CSV, and Excel formats.

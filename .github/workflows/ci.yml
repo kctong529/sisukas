@@ -10,24 +10,29 @@ on:
       - dev
       - main
 
+env:
+  WORKING_DIR: course-browser
+  NODE_VERSION: '18'
+
 jobs:
   test:
     name: Run Linters and Unit Tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install Dependencies
-        run: |
-          npm init -y
-          npm ci
+        run: npm ci
 
       - name: Lint HTML
         run: npm run htmllint

@@ -1,5 +1,5 @@
 // Import all required modules and helper functions
-import { loadPrograms, loadPeriods, periodsData, curriculaMap } from './yamlCache.js';
+import { loadPrograms, loadPeriods, loadOrganizations, periodsData, curriculaMap, organizationNames } from './yamlCache.js';
 import { initializeDragSelect, removeEventHandlers } from './dragSelect.js';
 import { createSelect, populateSelect } from './domUtils.js';
 import {
@@ -18,13 +18,15 @@ import {
 } from './filterHelpers.js';
 
 import { FILTER_FIELDS, INPUT_HTMLS } from './constant.js';
+import { config } from './config.js';
+
 
 // Global state variables
 let courses = []; // Stores all courses loaded from JSON
-let organizationNames = new Set(); // Unique organization names
 let filteredCourses = []; // Stores currently filtered courses
 let currentSortColumn = "courseName"; // Default sort column
 let sortDirection = 1; // 1 = ascending, -1 = descending
+
 
 // IndexedDB-based cache for large files
 class LargeFileCache {
@@ -234,12 +236,6 @@ async function loadCourses() {
         courses = await loadCourseData();
         filteredCourses = [...courses]; // Shallow copy of all courses
 
-        // Extract organization names for filtering
-        organizationNames = extractOrganizationNames(courses);
-
-        // Load additional required data
-        await loadAdditionalData();
-
         // Sort by default column (courseName ascending) and display
         sortCourses();
         displayCourses(filteredCourses, false);
@@ -277,6 +273,7 @@ export function extractOrganizationNames(courses) {
 async function loadAdditionalData() {
     await loadPrograms();
     await loadPeriods();
+    await loadOrganizations();
 }
 
 // Helper to extract sortable value from course based on column
@@ -775,21 +772,22 @@ function updateSortIndicators(column, direction) {
 
 function exportFilters() {
     const rules = Array.from(document.querySelectorAll("#filter-container .filter-rule"));
-    const filters = rules.map(rule => {
-        const booleanSelect = rule.querySelector(".filter-boolean");
-        const fieldSelect = rule.querySelector(".filter-field");
-        const relationSelect = rule.querySelector(".filter-relation");
-        const valueInput = rule.querySelector(".filter-value");
+    const groups = [];
+    let group = [];
 
-        return {
-            boolean: booleanSelect ? booleanSelect.value : null,
-            field: fieldSelect.value,
-            relation: relationSelect.value,
-            value: valueInput.value
-        };
-    });
+    for (const rule of rules) {
+        const get = cls => rule.querySelector(cls)?.value || "";
+        const boolean = get(".filter-boolean").toUpperCase();
+        const ruleObj = { field: get(".filter-field"), relation: get(".filter-relation"), value: get(".filter-value") };
 
-    return filters;
+        if (boolean === "OR" || !group.length) {
+            if (group.length) groups.push(group);
+            group = [ruleObj];
+        } else group.push(ruleObj);
+    }
+
+    if (group.length) groups.push(group);
+    return groups;
 }
 
 function logFilters() {
@@ -812,41 +810,152 @@ function saveFiltersToFile() {
     URL.revokeObjectURL(url);
 }
 
+// Save filters to API and optionally download JSON
+async function saveFiltersToApi() {
+    const filters = exportFilters();
+    
+    // Validate that there are filters to save
+    if (filters.length === 0) {
+        showFilterLoadError("No filters to save");
+        return;
+    }
+
+    try {
+        // Wrap each AND-group in an object with "rules" key
+        const payload = {
+            groups: filters.map(group => ({ rules: group }))
+        };
+        console.log("Saving filters:", payload);
+
+        // Send POST request to API
+        const response = await fetch(`${config.api.baseUrl}/api/filter`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            let errorMessage = "Failed to save filters";
+            
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.detail || errorMessage;
+            } catch (e) {
+                errorMessage = response.statusText;
+            }
+            
+            console.error(`Failed to save filters (${response.status}):`, errorMessage);
+            showFilterLoadError(`Unable to save filters: ${errorMessage}`);
+            return;
+        }
+
+        const data = await response.json();
+        console.log(data);
+        
+        // Validate response structure
+        if (!data.hash_id) {
+            console.error("Invalid response structure:", data);
+            showFilterLoadError("Invalid response from server");
+            return;
+        }
+
+        // Create shareable URL
+        const shareableUrl = `${window.location.origin}${window.location.pathname}?filter=${data.hash_id}`;
+        
+        // Copy to clipboard
+        try {
+            await navigator.clipboard.writeText(shareableUrl);
+            console.log("Filter link copied to clipboard!");
+        } catch (clipboardError) {
+            // Fallback if clipboard fails
+            console.warn("Clipboard API failed, showing URL in alert:", clipboardError);
+        }
+
+        console.log(`Filters saved with hash ID: ${data.hash_id}`);
+        console.log(`Shareable URL: ${shareableUrl}`);
+
+        // Navigate to the URL with the filter hash
+        // window.location.href = shareableUrl;
+        
+    } catch (error) {
+        // Handle network errors and other exceptions
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            console.error("Network error saving filters:", error);
+            showFilterLoadError("Unable to connect to filter service. Please check your internet connection.");
+        } else {
+            console.error("Error saving filters:", error);
+            showFilterLoadError("An unexpected error occurred while saving filters");
+        }
+    }
+}
+
+// Combined function that does both - save to API and optionally download
+async function saveFilters(downloadJson = false) {
+    const filters = exportFilters();
+    
+    if (filters.length === 0) {
+        showFilterLoadError("No filters to save");
+        return;
+    }
+
+    // Always save to API
+    await saveFiltersToApi();
+    
+    // Optionally also download JSON
+    if (downloadJson) {
+        saveFiltersToFile();
+    }
+}
+
 function loadFiltersFromJson(filters) {
-    filters.forEach(filter => {
-        addFilterRule(); // adds a new filter rule row
+    const groups = (filters && filters.groups) || [];
+    let isFirstRuleOverall = true;
 
-        // Get the last added rule
-        const rules = document.querySelectorAll("#filter-container .filter-rule");
-        const newRule = rules[rules.length - 1];
+    groups.forEach(group => {
+        const rules = group.rules || [];
+        rules.forEach((rule, idxInGroup) => {
+            addFilterRule(); // adds a new filter rule row
 
-        // Set field
-        const fieldSelect = newRule.querySelector(".filter-field");
-        fieldSelect.value = filter.field;
-        handleFieldChange(fieldSelect); // if necessary
+            // Get the last added rule
+            const rules = document.querySelectorAll("#filter-container .filter-rule");
+            const newRule = rules[rules.length - 1];
 
-        // Set relation
-        const relationSelect = newRule.querySelector(".filter-relation");
-        relationSelect.value = filter.relation;
+            // Set field
+            const fieldSelect = newRule.querySelector(".filter-field");
+            fieldSelect.value = rule.field;
+            handleFieldChange(fieldSelect); // if necessary
 
-        // Set boolean (if exists)
-        const booleanSelect = newRule.querySelector(".filter-boolean");
-        if (booleanSelect && filter.boolean) {
-            booleanSelect.value = filter.boolean;
-        }
+            // Set relation
+            const relationSelect = newRule.querySelector(".filter-relation");
+            relationSelect.value = rule.relation;
 
-        // Set value
-        const valueInput = newRule.querySelector(".filter-value");
-        if (valueInput) {
-            valueInput.value = filter.value;
-        }
+            // Decide boolean based on position
+            const booleanSelect = newRule.querySelector(".filter-boolean");
+            if (booleanSelect) {
+                if (isFirstRuleOverall) {
+                    // leave as default / empty for the very first rule
+                } else if (idxInGroup === 0) {
+                    // first rule of a new group => separate from previous group
+                    booleanSelect.value = "OR";
+                } else {
+                    // inside same group => AND with previous
+                    booleanSelect.value = "AND";
+                }
+            }
+
+            isFirstRuleOverall = false;
+
+            // Set value
+            const valueInput = newRule.querySelector(".filter-value");
+            if (valueInput) {
+                valueInput.value = rule.value;
+            }
+        });
     });
 
-    // Finally trigger the search
-    filterCourses();
-    sortCourses();
-    displayCourses(filteredCourses, true);
-    updateSortIndicators(currentSortColumn, sortDirection);
+    onSearchButtonClick();
 }
 
 function loadFiltersFromFile() {
@@ -887,6 +996,124 @@ function setupEnterKeyHandler() {
     });
 }
 
+// On page load, check for filter parameter and load from API
+async function loadFiltersFromUrl() {
+    const filtersKey = new URLSearchParams(window.location.search).get('filter');
+    if (!filtersKey) return;
+
+    try {
+        const response = await fetch(`${config.api.baseUrl}/api/filter/${filtersKey}`);
+        
+        // Handle different error responses
+        if (!response.ok) {
+            let errorMessage = "Failed to load filters";
+            
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.detail || errorMessage;
+            } catch (e) {
+                // If response isn't JSON, use status text
+                errorMessage = response.statusText;
+            }
+            
+            switch (response.status) {
+                case 404:
+                    showFilterLoadError("These filters no longer exist or have been deleted");
+                    break;
+                case 422:
+                    showFilterLoadError("Invalid filter URL format");
+                    break;
+                case 503:
+                    showFilterLoadError("Filter service is temporarily unavailable. Please try again later.");
+                    break;
+                default:
+                    showFilterLoadError(`Unable to load filters: ${errorMessage}`);
+            }
+            console.error(`Failed to load filters (${response.status}):`, errorMessage);
+            return;
+        }
+
+        const data = await response.json();
+        
+        // Validate response structure
+        if (!data.groups || !Array.isArray(data.groups)) {
+            console.error("Invalid filter data structure:", data);
+            showFilterLoadError("Invalid filter data received from server");
+            return;
+        }
+        
+        loadFiltersFromJson(data);
+        logFilters();
+        
+    } catch (error) {
+        // Handle network errors and other exceptions
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            console.error("Network error loading filters:", error);
+            showFilterLoadError("Unable to connect to filter service. Please check your internet connection.");
+        } else {
+            console.error("Error loading filters from URL:", error);
+            showFilterLoadError("An unexpected error occurred while loading filters");
+        }
+    }
+}
+
+// Helper function to show error messages to the user
+function showFilterLoadError(message) {
+    // Remove any existing notifications first
+    removeExistingNotifications();
+    
+    const notification = document.createElement('div');
+    notification.className = 'filter-notification error';
+    notification.innerHTML = `
+        <i class="bi bi-exclamation-circle"></i>
+        <span>${message}</span>
+    `;
+    
+    // Insert at a fixed position in the DOM
+    const container = getNotificationContainer();
+    container.appendChild(notification);
+    
+    // Auto-remove after configured duration
+    setTimeout(() => notification.remove(), config.ui.notificationDuration.error);
+}
+
+// Helper function to show success messages
+function showFilterLoadSuccess(message) {
+    // Remove any existing notifications first
+    removeExistingNotifications();
+    
+    const notification = document.createElement('div');
+    notification.className = 'filter-notification success';
+    notification.innerHTML = `
+        <i class="bi bi-check-circle"></i>
+        <span>${message}</span>
+    `;
+    
+    // Insert at a fixed position in the DOM
+    const container = getNotificationContainer();
+    container.appendChild(notification);
+    
+    // Auto-remove after configured duration
+    setTimeout(() => notification.remove(), config.ui.notificationDuration.success);
+}
+
+// Get or create notification container
+function getNotificationContainer() {
+    let container = document.getElementById('notification-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notification-container';
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
+// Remove any existing notifications
+function removeExistingNotifications() {
+    const existing = document.querySelectorAll('.filter-notification');
+    existing.forEach(notif => notif.remove());
+}
+
 window.addFilterRule = addFilterRule;
 window.handleFieldChange = handleFieldChange;
 window.removeFilterRule = removeFilterRule;
@@ -894,14 +1121,33 @@ window.displayCourses = displayCourses;
 window.filterCourses = filterCourses;
 window.logFilters = logFilters;
 window.saveFiltersToFile = saveFiltersToFile;
+window.saveFiltersToApi = saveFiltersToApi;
+window.saveFilters = saveFilters;
 window.loadFiltersFromJson = loadFiltersFromJson;
 window.loadFiltersFromFile = loadFiltersFromFile;
+window.loadFiltersFromUrl = loadFiltersFromUrl;
 window.onSearchButtonClick = onSearchButtonClick;
 
 // Initialize on page load
-window.onload = function() {
-    loadCourses();
-    
+window.onload = async function() {
+    try {
+        // Load just the data needed for filters
+        await loadAdditionalData();
+
+        // Now load filters from URL (if present)
+        await loadFiltersFromUrl();
+
+        // Finally load and display courses
+        await loadCourses();
+
+        const filterContainer = document.getElementById('filter-container');
+        if (filterContainer.children.length > 0) {
+            onSearchButtonClick();
+        }
+    } catch (error) {
+        console.error("Error loading:", error);
+    }
+
     // Add click handlers to column headers
     document.querySelectorAll('th[data-column]').forEach(th => {
         th.addEventListener('click', () => {

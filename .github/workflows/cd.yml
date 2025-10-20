@@ -11,6 +11,11 @@ on:
     types:
       - completed
 
+env:
+  WORKING_DIR: course-browser
+  PRODUCTION_URL: https://sisukas.fly.dev/
+  NODE_VERSION: '18'
+
 jobs:
   determine-deployment:
     name: Deployment needed
@@ -75,26 +80,28 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ env.NODE_VERSION }}
 
       - name: Install Dependencies
-        run: |
-          npm ci
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
 
       - name: Build with Vite
         id: build
+        working-directory: ${{ env.WORKING_DIR }}
         run: |
           npm run build
           echo "result=success" >> $GITHUB_OUTPUT
 
       - name: List Files
+        working-directory: ${{ env.WORKING_DIR }}
         run: ls -la
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
-          path: dist/
+          path: ${{ env.WORKING_DIR }}/dist/
 
   deploy:
     name: Deploy to Production
@@ -104,7 +111,7 @@ jobs:
       deployments: write
     environment: 
       name: production
-      url: https://sisukas.fly.dev/
+      url: ${{ env.PRODUCTION_URL }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -113,9 +120,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
-          path: dist/
+          path: ${{ env.WORKING_DIR }}/dist/
 
       - name: List Files
+        working-directory: ${{ env.WORKING_DIR }}
         run: ls -la
 
       - uses: chrnorm/deployment-action@v2
@@ -123,13 +131,14 @@ jobs:
         id: deployment
         with:
           token: '${{ github.token }}'
-          environment-url: https://sisukas.fly.dev/
+          environment-url: ${{ env.PRODUCTION_URL }}
           environment: production
 
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy on Fly.io
+        working-directory: ${{ env.WORKING_DIR }}
         run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -139,7 +148,7 @@ jobs:
         uses: chrnorm/deployment-status@v2
         with:
           token: '${{ github.token }}'
-          environment-url: https://sisukas.fly.dev/
+          environment-url: ${{ env.PRODUCTION_URL }}
           state: 'success'
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}
 
@@ -148,6 +157,6 @@ jobs:
         uses: chrnorm/deployment-status@v2
         with:
           token: '${{ github.token }}'
-          environment-url: https://sisukas.fly.dev/
+          environment-url: ${{ env.PRODUCTION_URL }}
           state: 'failure'
           deployment-id: ${{ steps.deployment.outputs.deployment_id }}

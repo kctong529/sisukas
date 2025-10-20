@@ -6,6 +6,10 @@ on:
     # Run daily at 6 AM UTC
     - cron: '0 6 * * *'
 
+env:
+  WORKING_DIR: course-browser
+  PYTHON_VERSION: '3.12'
+
 jobs:
   check_course_updates:
     runs-on: ubuntu-latest
@@ -16,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: pip install requests
@@ -37,14 +41,14 @@ jobs:
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
           # Replace old database with new data
-          cp latest_fetch.json public/data/courses.json
+          cp latest_fetch.json ${{ env.WORKING_DIR }}/public/data/courses.json
           
           # Configure git
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           # Add changes
-          git add public/data/courses.json logs/
+          git add ${{ env.WORKING_DIR }}/public/data/courses.json logs/
 
           # Create descriptive commit message
           ADDED="${{ steps.check_changes.outputs.added_count }}"

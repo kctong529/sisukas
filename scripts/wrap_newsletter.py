@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 print("Starting HTML wrapping script...")
 
 # Read the existing HTML content
-with open('public/newsletter.html', 'r', encoding='utf-8') as f:
+with open('course-browser/public/newsletter.html', 'r', encoding='utf-8') as f:
     original_html = f.read()
 print("Read original_content.html successfully.")
 
@@ -199,8 +199,8 @@ final_html = f"""
 """
 
 # Write the wrapped HTML to a new file
-with open('public/newsletter.html', 'w') as f:
+with open('course-browser/public/newsletter.html', 'w') as f:
     f.write(final_html)
 
-print("Written public/newsletter.html successfully.")
+print("Written course-browser/public/newsletter.html successfully.")
 print("Script finished.")
