@@ -2,7 +2,7 @@
 
 [![CI Pipeline](https://github.com/kctong529/sisukas/actions/workflows/ci.yml/badge.svg)](https://github.com/kctong529/sisukas/actions/workflows/ci.yml)
 
-A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.fly.dev/).
+A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.eu/).
 
 > [!IMPORTANT]
 > If you're a university student in the Finnish education system, you’ve likely encountered the frustrations of the SISU system. With limited filters, navigation that hides key details behind multiple clicks, and a confusing pagination system that makes it easy to lose track, finding courses can be unnecessarily tedious. Slow performance only adds to the hassle, making the whole experience more cumbersome than it needs to be. On top of that, the lack of curriculum information makes planning your studies more difficult.

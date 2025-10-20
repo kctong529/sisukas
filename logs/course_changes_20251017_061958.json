@@ -1,0 +1,74 @@
+{
+  "timestamp": "2025-10-17T06:19:58.081470",
+  "summary": {
+    "added": 1,
+    "removed": 0,
+    "updated": 4
+  },
+  "details": {
+    "added": [
+      {
+        "code": "AXM-L1003",
+        "name": "Curating and its Futures D, Lectures",
+        "credits": 6
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "LC-0570",
+        "name": "Communication competence for students in art and design, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-17",
+            "2025-10-20"
+          ]
+        ]
+      },
+      {
+        "code": "AMNGT-C1001",
+        "name": "Introduction to Strategic Management, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Introduction to Strategic Management, Lecture",
+            "Introduction to Strategic Management, Online teaching, Open Uni"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o), Lecture (V20-21)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ],
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-15"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1111",
+        "name": "Online Writing Skills for Engineers 2 (w), Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ],
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-15"
+          ]
+        ]
+      }
+    ]
+  }
+}

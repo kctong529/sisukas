@@ -1,0 +1,58 @@
+{
+  "timestamp": "2025-10-16T06:20:56.111193",
+  "summary": {
+    "added": 2,
+    "removed": 0,
+    "updated": 3
+  },
+  "details": {
+    "added": [
+      {
+        "code": "AMARK-A0001",
+        "name": "Marketing management, Blended teaching",
+        "credits": 6
+      },
+      {
+        "code": "AMARK-A0001",
+        "name": "Marketing management, Exam",
+        "credits": 6
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "AMNGT-E2009",
+        "name": "International Strategy, Lecture",
+        "changes": [
+          [
+            "Name",
+            "International Strategy, Lecture",
+            "International Strategy, Online teaching, Open Uni"
+          ]
+        ]
+      },
+      {
+        "code": "AMNGT-A4004",
+        "name": "Mastering influence in business communication, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Mastering influence in business communication, Lecture",
+            "Mastering influence in business communication, Blended teaching, Open Uni"
+          ]
+        ]
+      },
+      {
+        "code": "AMNGT-E2008",
+        "name": "Strategic People Management, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Strategic People Management, Lecture",
+            "Strategic People Management, Online teaching, Open Uni"
+          ]
+        ]
+      }
+    ]
+  }
+}
