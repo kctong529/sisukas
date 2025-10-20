@@ -124,7 +124,7 @@ class LargeFileCache {
                 const data = await response.json();
 
                 const sizeMB = Math.round(JSON.stringify(data).length / 1024 / 1024);
-                console.log(`${url} - Downloaded ${sizeMB}MB, Last Modified: ${lastModified}`);
+                // console.log(`${url} - Downloaded ${sizeMB}MB, Last Modified: ${lastModified}`);
 
                 // Cache the new data
                 await this.setCache(url, lastModified, data);
@@ -233,11 +233,12 @@ const cache = new LargeFileCache();
 async function loadCourses() {
     try {
         // Load course data and initialize filteredCourses with all courses
-        courses = await loadCourseData();
+        courses = await loadCourseData(updateProgressBar);
         filteredCourses = [...courses]; // Shallow copy of all courses
 
         // Sort by default column (courseName ascending) and display
         sortCourses();
+        console.log(filteredCourses);
         displayCourses(filteredCourses, false);
         updateSortIndicators(currentSortColumn, sortDirection);
     } catch (error) {
@@ -245,15 +246,35 @@ async function loadCourses() {
     }
 }
 
-async function loadCourseData() {
-    try {
-        const courses = await cache.fetch('/data/courses.json');
-        console.log('Courses loaded:', courses.length);
-        return courses;
-    } catch (error) {
-        console.error('Failed to load courses:', error);
-        throw error;
+function updateProgressBar(fraction) {
+    const bar = document.getElementById("progress-bar");
+    bar.style.width = `${Math.round(fraction * 100)}%`;
+}
+
+function renderPartial(chunk) {
+    const container = document.getElementById('course-list');
+    chunk.forEach(course => {
+        container.insertAdjacentHTML('beforeend', createCourseRow(course));
+    });
+}
+
+async function loadCourseData(progressCallback) {
+    const chunkCount = 50;
+    const allCourses = [];
+
+    for (let i = 1; i <= chunkCount; i++) {
+        const chunk = await cache.fetch(`/data/courses_${i}.json`);
+        allCourses.push(...chunk);
+
+        // Render the new chunk for progressive UI
+        renderPartial(chunk);
+        updateCourseCount(allCourses, false); // show total loaded so far
+
+        // Update progress bar
+        if (progressCallback) progressCallback(i / chunkCount);
     }
+
+    return allCourses;
 }
 
 // Debug helpers
@@ -611,6 +632,7 @@ export function createFilterGroups(filters) {
     const filterGroups = [];
     let currentGroup = [];
 
+
     filters.forEach(filter => {
         const rule = createRuleFromFilter(filter);
 
@@ -695,6 +717,15 @@ function applyRule(course, rule) {
         case "minor": return applyCurriculumFilter(course, rule, "minor", curriculaMap);
         case "organization": return applyOrganizationFilter(course, rule);
     }
+}
+
+// Check if any filter rule has a non-empty value
+function hasActiveFilters() {
+    const rules = document.querySelectorAll('#filter-container .filter-rule');
+    return Array.from(rules).some(rule => {
+        const value = rule.querySelector('.filter-value')?.value.trim();
+        return value !== '';
+    });
 }
 
 function getUniqueCourses(courses) {
@@ -1147,7 +1178,7 @@ window.onload = async function() {
         await loadCourses();
 
         const filterContainer = document.getElementById('filter-container');
-        if (filterContainer.children.length > 0) {
+        if (filterContainer.children.length > 0 && hasActiveFilters()) {
             onSearchButtonClick();
         }
     } catch (error) {
