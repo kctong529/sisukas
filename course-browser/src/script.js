@@ -879,17 +879,22 @@ async function saveFiltersToApi() {
 }
 
 async function handleSaveClick() {
-    const shareableUrl = await saveFiltersToApi(); // return URL from this function
+    const shareableUrl = await saveFiltersToApi();
     if (!shareableUrl) return;
 
     try {
-        await navigator.clipboard.writeText(shareableUrl);
+        console.log(`Shareable URL: ${shareableUrl}`);
         showFilterLoadSuccess("Filter link copied to clipboard!");
+        await navigator.clipboard.writeText(shareableUrl);
     } catch (clipboardError) {
         console.warn("Clipboard API failed:", clipboardError);
+    } finally {
+        // Navigate to the URL with the filter hash
+        showFilterLoadSuccess("Opening your saved filters...");
+        setTimeout(() => {
+            window.location.href = shareableUrl;
+        }, 500);
     }
-
-    console.log(`Shareable URL: ${shareableUrl}`);
 }
 
 // Combined function that does both - save to API and optionally download
