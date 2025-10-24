@@ -7,7 +7,7 @@ retrieving course units, course realisations, and study events, with
 robust error handling and connection pooling.
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Union, Any
 import logging
 import json
 import requests
@@ -46,7 +46,7 @@ class SisuAPI:
         path: str,
         params: Optional[Dict[str, Any]] = None,
         timeout: int = 10
-    ) -> Dict[str, Any]:
+    ) -> Union[Dict[str, Any], List[Any]]:
         """
         Send a GET request to the Sisu API and return the JSON response
         """
@@ -86,9 +86,15 @@ class SisuAPI:
         cls,
         assessment_item_id: str,
         timeout: int = 10
-    ) -> List[Any]:
+    ) -> List[Dict[str, Any]]:
         """
-        Fetch all published course realisations for a given assessment item
+        Retrieve all published course realisations linked to a specific
+        assessment item
+
+        This endpoint only returns upcoming or recently active realisations.
+        Historical (older) realisations are not included — those are available
+        through the broader /course-unit-realisations endpoint, which
+        returns an unfiltered list spanning many years.
         """
         return cls.get_json(
             "/course-unit-realisations/published",
@@ -119,6 +125,43 @@ class SisuAPI:
             cls._session = None
 
 
+class CourseUnit:
+    def __init__(self, course_unit_id: str,
+                 course_offering_id: str):
+        self.course_unit_id = course_unit_id
+        self.course_offering_id = course_offering_id
+        self.name = ""
+        self.assessment_items = []
+
+    def fetch_assessment_items(self) -> None:
+        """Fetch course unit metadata and its assessment items."""
+        data = SisuAPI.fetch_course_unit(self.course_unit_id)
+        self.name = data.get("name", {}).get("en", "Unnamed Course")
+
+        self.assessment_items = [
+            item_id
+            for method in data.get("completionMethods", [])
+            for item_id in method.get("assessmentItemIds", [])
+        ]
+
+    def get_realisation(self):
+        """Fetch the realisation that matches self.realisation_id."""
+        for ai in self.assessment_items:
+            data = SisuAPI.fetch_course_realisations(ai)
+            for real in data:
+                if real.get('id', "") == self.course_offering_id:
+                    return real
+        return None
+
+
+def extract_study_event_ids(realisation: Dict[str, Any]) -> List[str]:
+    ids = []
+    for group_set in realisation.get("studyGroupSets", []):
+        for sub_group in group_set.get("studySubGroups", []):
+            ids.extend(sub_group.get("studyEventIds", []))
+    return ids
+
+
 def shorten_lists(obj, max_items: int = 1):
     """
     Recursively traverse JSON-like data (dict/list) and keep only the first
@@ -144,33 +187,18 @@ def main():
         format="%(levelname)s: %(message)s"
     )
 
-    # Example course unit ID from Aalto Sisu Open API
+    # Example: Calculus 1 Lecture from Aalto Sisu Open API
+    course_offering_id = "aalto-CUR-206690-3122470"
     course_unit_id = "aalto-OPINKOHD-1125839311-20210801"
-    assessment_item_id = "aalto-AI-1125839311-20210801-1-3"
-    study_event_ids = [
-        'aalto-SE-ASIO-3122465-6716317',
-        'aalto-SE-ASIO-3122465-6716316',
-        'aalto-SE-ASIO-3122465-6716315',
-        'aalto-SE-ASIO-3122465-6716326'
-    ]
 
     try:
         logging.info("Fetching course unit...")
-        course_data = SisuAPI.fetch_course_unit(course_unit_id)
-        print("\n=== Course Unit ===")
-        print(json.dumps(shorten_lists(course_data),
-                         indent=2, ensure_ascii=False))
+        course = CourseUnit(course_unit_id, course_offering_id)
+        course.fetch_assessment_items()
+        realisation = course.get_realisation()
 
-        logging.info("Fetching course realisations...")
-        realisations = SisuAPI.fetch_course_realisations(assessment_item_id)
-        print("\n=== Course Realisations ===")
-        print(json.dumps(shorten_lists(realisations),
-                         indent=2, ensure_ascii=False))
-
-        logging.info("Fetching study events...")
-        data = SisuAPI.fetch_study_events(study_event_ids)
-        print("\n=== Study Events ===")
-        print(json.dumps(shorten_lists(data), indent=2, ensure_ascii=False))
+        all_study_event_ids = extract_study_event_ids(realisation)
+        print(all_study_event_ids)
 
     except SisuAPIError as e:
         logger.error("API error: %s", e)
