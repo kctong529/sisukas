@@ -1,7 +1,17 @@
+"""
+Data models for Sisu API entities
+
+These dataclasses represent the domain objects returned by the Sisu API,
+providing a clean interface for working with course data.
+
+Limitations:
+    - Location/venue information is not available through the public API
+    - Multiple events with identical times typically indicate different venues
+"""
+
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Dict, Any
-from client import SisuAPI
+from typing import List
 
 
 @dataclass
@@ -13,19 +23,24 @@ class StudyEvent:
     Sisu API endpoints. Multiple events with identical times typically
     indicate different venues for the same session (e.g. exam halls).
     """
-    start: datetime
-    end: datetime
+    start: str
+    end: str
 
-    def __repr__(self):
+    @property
+    def start_datetime(self) -> datetime:
+        """Get start time as datetime object"""
+        return datetime.fromisoformat(self.start)
+
+    @property
+    def end_datetime(self) -> datetime:
+        """Get end time as datetime object"""
+        return datetime.fromisoformat(self.end)
+
+    def __repr__(self) -> str:
         fmt = "%d.%m.%Y (%a) %H:%M"
-        return f"{self.start.strftime(fmt)} – {self.end.strftime('%H:%M')}"
-
-    @classmethod
-    def from_api(cls, data: dict[str, Any]) -> "StudyEvent":
-        """Convert API event dict into a StudyEvent with datetime fields"""
-        start = datetime.fromisoformat(data["start"])
-        end = datetime.fromisoformat(data["end"])
-        return cls(start=start, end=end)
+        start_formatted = self.start_datetime.strftime(fmt)
+        end_formatted = self.end_datetime.strftime('%H:%M')
+        return f"{start_formatted} - {end_formatted}"
 
 
 @dataclass
@@ -35,8 +50,8 @@ class StudyGroup:
 
     Attributes:
         group_id: Unique ID of the study group
-        name: Name of the group
-        type: Group type (Lecture, Exercise, Exam)
+        name: Name of the group (e.g. 'L01', 'H02')
+        type: Group type (e.g. 'Lecture', 'Exercise', 'Exam')
         study_events: List of study events in this group
     """
     group_id: str
@@ -47,38 +62,10 @@ class StudyGroup:
     @property
     def sorted_events(self) -> List[StudyEvent]:
         """Return study events sorted by start time"""
-        return sorted(
-            self.study_events,
-            key=lambda e: e.start
-        )
+        return sorted(self.study_events, key=lambda e: e.start_datetime)
 
-    @classmethod
-    def from_api(cls, group_set_data: Dict[str, Any]) -> List["StudyGroup"]:
-        """
-        Convert a group set with subgroups
-        into a list of flattened StudyGroup instances
-        """
-        flattened_groups: List[StudyGroup] = []
-        group_type = group_set_data.get("name", {}).get("en", "Unknown")
-
-        for sub_group_data in group_set_data.get("studySubGroups", []):
-            study_event_ids = sub_group_data.get("studyEventIds", [])
-            event_records = SisuAPI.fetch_study_events(study_event_ids)
-            study_events = [
-                StudyEvent.from_api(event)
-                for record in event_records
-                for event in record.get("events", [])
-            ]
-
-            flattened_groups.append(
-                cls(
-                    group_id=sub_group_data.get("id", ""),
-                    name=sub_group_data.get("name", {}).get("en", ""),
-                    type=group_type,
-                    study_events=study_events
-                )
-            )
-        return flattened_groups
+    def __repr__(self) -> str:
+        return f"{self.type}: {self.name} ({len(self.study_events)} events)"
 
 
 @dataclass
@@ -92,3 +79,18 @@ class CourseOffering:
     name: str
     assessment_items: List[str] = field(default_factory=list)
     study_groups: List[StudyGroup] = field(default_factory=list)
+
+    def get_groups_by_type(self, group_type: str) -> List[StudyGroup]:
+        """
+        Get all study groups of a specific type
+
+        Args:
+            group_type: The type to filter by (e.g. 'Lecture', 'Exercise')
+
+        Returns:
+            List of matching study groups
+        """
+        return [g for g in self.study_groups if g.type == group_type]
+
+    def __repr__(self) -> str:
+        return f"{self.name} ({len(self.study_groups)} groups)"
