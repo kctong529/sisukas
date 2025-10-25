@@ -1,7 +1,7 @@
 # Sisukas
 
 [![CI Pipeline](https://github.com/kctong529/sisukas/actions/workflows/ci.yml/badge.svg)](https://github.com/kctong529/sisukas/actions/workflows/ci.yml)
-![PyPI](https://img.shields.io/pypi/v/sisu_wrapper?label=sisu_wrapper)
+[![PyPI](https://img.shields.io/pypi/v/sisu_wrapper?label=sisu_wrapper)](https://pypi.org/project/sisu-wrapper/)
 
 A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.eu/).
 
