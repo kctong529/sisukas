@@ -57,7 +57,7 @@ For development:
 
 ```sh
 git clone https://github.com/kctong529/sisukas.git
-cd sisu-wrapper
+cd sisukas/sisu-wrapper
 pip install -e ".[dev]"
 ```
 
