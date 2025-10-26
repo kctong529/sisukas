@@ -53,16 +53,27 @@ class SisuService:
         course_name = course_unit_data.get(
             "name", {}).get("en", "Unnamed Course")
 
-        flattened_groups: List[StudyGroup] = []
+        # Collect all matching realisations
+        matching_realisations = []
         for assessment_id in assessment_item_ids:
-            realisations = self.client.fetch_course_realisations(
-                assessment_id)
-            for real_data in realisations:
+            for real_data in self.client.fetch_course_realisations(
+                    assessment_id):
                 if real_data.get("id") == offering_id:
-                    for group_set in real_data.get("studyGroupSets", []):
-                        flattened_groups.extend(
-                            self._parse_study_groups(group_set)
-                        )
+                    matching_realisations.append(real_data)
+
+        # Collect all study groups from those realisations
+        all_groups = []
+        for real_data in matching_realisations:
+            for group_set in real_data.get("studyGroupSets", []):
+                all_groups.extend(self._parse_study_groups(group_set))
+
+        # Deduplicate by group_id
+        flattened_groups = []
+        seen_ids = set()
+        for group in all_groups:
+            if group.group_id not in seen_ids:
+                flattened_groups.append(group)
+                seen_ids.add(group.group_id)
 
         return CourseOffering(
             course_unit_id=course_unit_id,
