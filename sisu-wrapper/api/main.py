@@ -14,8 +14,7 @@ from core.config import (
     API_CONTACT,
 )
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 app = FastAPI(title=API_TITLE, version=API_VERSION, contact=API_CONTACT)
 
@@ -49,3 +48,8 @@ def get_study_groups(
     except Exception as e:
         logger.error("Error fetching study groups: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/")
+def root():
+    return {"status": "ok"}

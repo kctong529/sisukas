@@ -20,13 +20,15 @@ import {
 import { FILTER_FIELDS, INPUT_HTMLS } from './constant.js';
 import { config } from './config.js';
 
+const filtersApi = import.meta.env.VITE_FILTERS_API;
+const wrapperApi = import.meta.env.VITE_WRAPPER_API;
+
 
 // Global state variables
 let courses = []; // Stores all courses loaded from JSON
 let filteredCourses = []; // Stores currently filtered courses
 let currentSortColumn = "courseName"; // Default sort column
 let sortDirection = 1; // 1 = ascending, -1 = descending
-
 
 // IndexedDB-based cache for large files
 class LargeFileCache {
@@ -831,7 +833,7 @@ async function saveFiltersToApi() {
         console.log("Saving filters:", payload);
 
         // Send POST request to API
-        const response = await fetch(`${config.api.baseUrl}/api/filter`, {
+        const response = await fetch(`${filtersApi}/api/filter`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -1007,7 +1009,7 @@ async function loadFiltersFromUrl() {
     if (!filtersKey) return;
 
     try {
-        const response = await fetch(`${config.api.baseUrl}/api/filter/${filtersKey}`);
+        const response = await fetch(`${filtersApi}/api/filter/${filtersKey}`);
         
         // Handle different error responses
         if (!response.ok) {
@@ -1210,7 +1212,7 @@ async function fetchStudyGroups(courseObj) {
     return;
   }
 
-  const url = new URL("http://localhost:8000/study-groups"); // adjust host/port if needed
+  const url = new URL(`${wrapperApi}/study-groups`);
   url.searchParams.append("course_unit_id", courseObj.course_unit_id);
   url.searchParams.append("course_offering_id", courseObj.course_offering_id);
 
