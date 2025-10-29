@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-10-29T06:22:00.541766",
+  "summary": {
+    "added": 0,
+    "removed": 0,
+    "updated": 3
+  },
+  "details": {
+    "added": [],
+    "removed": [],
+    "updated": [
+      {
+        "code": "KIG-C1040",
+        "name": "Acquisition of geospatial data, Exam",
+        "changes": [
+          [
+            "End Date",
+            "2025-12-09",
+            "2025-12-10"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-A1630",
+        "name": "CHEMARTS Basics, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-04-10",
+            "2026-04-17"
+          ]
+        ]
+      },
+      {
+        "code": "LCB-1350",
+        "name": "Writing Doctoral Research for Business and Management (w) D, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-01-12",
+            "2026-01-07"
+          ],
+          [
+            "Enrolment End",
+            "2026-01-07",
+            "2026-01-04"
+          ]
+        ]
+      }
+    ]
+  }
+}
