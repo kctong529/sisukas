@@ -1,5 +1,8 @@
-.DS_Store
 **/node_modules/
 **/coverage/
 **/dist/
-.env.*
+__pycache__/
+.venv/
+
+.DS_Store
+.env
