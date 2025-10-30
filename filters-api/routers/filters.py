@@ -11,11 +11,11 @@ with unique SHA-256-based hash IDs, allowing deduplication and easy sharing.
 
 Endpoints
 ---------
-- POST /api/filter
+- POST /api/filters
     Save a new filter configuration. Returns a unique hash ID.
-- GET /api/filter/{hash_id}
+- GET /api/filters/{hash_id}
     Retrieve a filter configuration by its hash ID.
-- DELETE /api/filter/{hash_id}
+- DELETE /api/filters/{hash_id}
     Delete a filter configuration by its hash ID.
 
 
@@ -53,7 +53,7 @@ router = APIRouter()
 
 
 @router.post(
-    "/api/filter",
+    "/api/filters",
     status_code=201,
     response_model=PostResponse,
     responses=POST_RESPONSES
@@ -85,7 +85,7 @@ async def save_filter(query: FilterQuery):
 
 
 @router.get(
-    "/api/filter/{hash_id}",
+    "/api/filters/{hash_id}",
     response_model=GetResponse,
     responses=GET_RESPONSES
 )
@@ -111,7 +111,7 @@ async def load_filter(hash_id: str = Depends(validate_hash_id)):
 
 
 @router.delete(
-    "/api/filter/{hash_id}",
+    "/api/filters/{hash_id}",
     response_model=DeleteResponse,
     responses=DELETE_RESPONSES
 )

@@ -46,9 +46,9 @@ async def root():
         description="Save and retrieve filter configurations "
         "for course selection",
         endpoints={
-            "save": "/api/filter",
-            "load": "/api/filter/{hash_id}",
-            "delete": "/api/filter/{hash_id}",
+            "save": "/api/filters",
+            "load": "/api/filters/{hash_id}",
+            "delete": "/api/filters/{hash_id}",
             "docs": "/docs"
         },
     )

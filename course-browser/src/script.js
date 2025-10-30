@@ -833,7 +833,7 @@ async function saveFiltersToApi() {
         console.log("Saving filters:", payload);
 
         // Send POST request to API
-        const response = await fetch(`${filtersApi}/api/filter`, {
+        const response = await fetch(`${filtersApi}/api/filters`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -1009,7 +1009,7 @@ async function loadFiltersFromUrl() {
     if (!filtersKey) return;
 
     try {
-        const response = await fetch(`${filtersApi}/api/filter/${filtersKey}`);
+        const response = await fetch(`${filtersApi}/api/filters/${filtersKey}`);
         
         // Handle different error responses
         if (!response.ok) {
