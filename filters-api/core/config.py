@@ -68,7 +68,7 @@ CORS_ORIGINS: list[str] = [
     ).split(",")
 ]
 
-API_VERSION = "0.3.1"
+API_VERSION = "0.3.2"
 API_TITLE = "Sisukas Filters API"
 API_CONTACT = {
     "name": "API Support",
