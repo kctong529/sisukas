@@ -33,8 +33,9 @@ on:
         default: europe-north1
 
     secrets:
-      gcp_credentials:
-        required: false
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      FLY_API_TEST_TOKEN: ${{ secrets.FLY_API_TEST_TOKEN }}
+
 
 jobs:
   deploy_frontend:
@@ -44,3 +45,4 @@ jobs:
       vite_filters_api: ${{ inputs.vite_filters_api }}
       vite_wrapper_api: ${{ inputs.vite_wrapper_api }}
       fly_io_url: ${{ inputs.fly_io_url }}
+    secrets: inherit

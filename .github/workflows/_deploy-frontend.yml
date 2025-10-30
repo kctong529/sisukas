@@ -15,6 +15,16 @@ on:
       fly_io_url:
         required: true
         type: string
+      fly_token_dev:
+        required: true
+        type: string
+      fly_token_prod:
+        required: true
+        type: string
+
+    secrets:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      FLY_API_TEST_TOKEN: ${{ secrets.FLY_API_TEST_TOKEN }}
 
 env:
   WORKING_DIR: course-browser
@@ -102,7 +112,7 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: flyctl deploy --remote-only
         env:
-          FLY_API_TOKEN: ${{ inputs.environment == 'production' && secrets.FLY_API_TOKEN || secrets.FLY_API_TEST_TOKEN }}
+          FLY_API_TOKEN: ${{ inputs.environment == 'production' && secrets.FLY_API_TEST_TOKEN || secrets.FLY_API_TOKEN }}
         
       - name: Update deployment status (success)
         if: success()

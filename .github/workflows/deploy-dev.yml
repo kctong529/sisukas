@@ -18,5 +18,4 @@ jobs:
       filters_api_cloud_run_service: sisukas-filters-api-test
       sisu_wrapper_api_cloud_run_service: sisu-wrapper-api-test
       region: europe-north1
-    secrets:
-      gcp_credentials: ${{ secrets.GCP_CREDENTIALS_DEV }}
+    secrets: inherit
