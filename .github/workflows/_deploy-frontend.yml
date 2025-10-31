@@ -72,8 +72,9 @@ jobs:
           name: build-artifacts
           path: ${{ env.WORKING_DIR }}/dist/
 
-  deploy:
-    name: Deploy to Fly.io
+  deploy_frontend_dev:
+    name: Deploy Frontend (Dev)
+    if: ${{ inputs.environment == 'test' }}
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -112,22 +113,47 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: flyctl deploy --remote-only
         env:
-          FLY_API_TOKEN: ${{ inputs.environment == 'production' && secrets.FLY_API_TEST_TOKEN || secrets.FLY_API_TOKEN }}
-        
-      - name: Update deployment status (success)
-        if: success()
-        uses: chrnorm/deployment-status@v2
-        with:
-          token: '${{ github.token }}'
-          environment-url: ${{ inputs.fly_io_url }}
-          state: 'success'
-          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TEST_TOKEN }}
 
-      - name: Update deployment status (failure)
-        if: failure()
-        uses: chrnorm/deployment-status@v2
+  deploy_frontend_prod:
+    name: Deploy Frontend (Prod)
+    if: ${{ inputs.environment == 'production' }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+
+    environment: 
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.fly_io_url }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+
+      - name: List Files
+        working-directory: ${{ env.WORKING_DIR }}
+        run: ls -la
+
+      - uses: chrnorm/deployment-action@v2
+        name: Create GitHub deployment
+        id: deployment
         with:
           token: '${{ github.token }}'
           environment-url: ${{ inputs.fly_io_url }}
-          state: 'failure'
-          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          environment: ${{ inputs.environment }}
+
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy on Fly.io
+        working-directory: ${{ env.WORKING_DIR }}
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
