@@ -14,8 +14,9 @@ jobs:
       vite_wrapper_api: https://sisu-wrapper-api-test.sisukas.eu
       fly_io_url: https://sisukas-test.fly.dev/
       cors_origins: https://sisukas-test.sisukas.fly.dev,http://localhost:5173
-      gcp_project: sisukas-fastapi
+      gcp_project_id: sisukas-fastapi
       filters_api_cloud_run_service: sisukas-filters-api-test
       sisu_wrapper_api_cloud_run_service: sisu-wrapper-api-test
+      gcs_bucket_name: sisukas-filters-api-test
       region: europe-north1
     secrets: inherit

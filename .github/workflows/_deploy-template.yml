@@ -18,13 +18,16 @@ on:
       cors_origins:
         required: true
         type: string
-      gcp_project:
+      gcp_project_id:
         required: true
         type: string
       filters_api_cloud_run_service:
         required: true
         type: string
       sisu_wrapper_api_cloud_run_service:
+        required: true
+        type: string
+      gcs_bucket_name:
         required: true
         type: string
       region:
@@ -41,4 +44,15 @@ jobs:
       vite_filters_api: ${{ inputs.vite_filters_api }}
       vite_wrapper_api: ${{ inputs.vite_wrapper_api }}
       fly_io_url: ${{ inputs.fly_io_url }}
+    secrets: inherit
+
+  deploy_filters_api:
+    uses: ./.github/workflows/_deploy-filters-api.yml
+    with:
+      environment: ${{ inputs.environment }}
+      gcp_project_id: ${{ inputs.gcp_project_id }}
+      region: ${{ inputs.region }}
+      filters_api_cloud_run_service: ${{ inputs.filters_api_cloud_run_service }}
+      cors_origins: ${{ inputs.cors_origins }}
+      gcs_bucket_name: ${{ inputs.gcs_bucket_name }}
     secrets: inherit
