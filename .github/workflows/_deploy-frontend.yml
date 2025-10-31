@@ -1,0 +1,149 @@
+name: Deploy Frontend
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      vite_filters_api:
+        required: true
+        type: string
+      vite_wrapper_api:
+        required: true
+        type: string
+      fly_io_url:
+        required: true
+        type: string
+
+env:
+  WORKING_DIR: course-browser
+  NODE_VERSION: '20'
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    outputs:
+      build-complete: ${{ steps.build.outputs.result }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+
+      - name: Build Vite app
+        id: build
+        working-directory: ${{ env.WORKING_DIR }}
+        env:
+          VITE_FILTERS_API: ${{ inputs.vite_filters_api }}
+          VITE_WRAPPER_API: ${{ inputs.vite_wrapper_api }}
+        run: |
+          npm run build
+          echo "result=success" >> $GITHUB_OUTPUT
+
+      - name: List Files
+        working-directory: ${{ env.WORKING_DIR }}
+        run: ls -la
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+
+  deploy_frontend_dev:
+    name: Deploy Frontend (Dev)
+    if: ${{ inputs.environment == 'test' }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+
+    environment: 
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.fly_io_url }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+
+      - name: List Files
+        working-directory: ${{ env.WORKING_DIR }}
+        run: ls -la
+
+      - uses: chrnorm/deployment-action@v2
+        name: Create GitHub deployment
+        id: deployment
+        with:
+          token: '${{ github.token }}'
+          environment-url: ${{ inputs.fly_io_url }}
+          environment: ${{ inputs.environment }}
+
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy on Fly.io
+        working-directory: ${{ env.WORKING_DIR }}
+        run: flyctl deploy --config fly.dev.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TEST_TOKEN }}
+
+  deploy_frontend_prod:
+    name: Deploy Frontend (Prod)
+    if: ${{ inputs.environment == 'production' }}
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+
+    environment: 
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.fly_io_url }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+
+      - name: List Files
+        working-directory: ${{ env.WORKING_DIR }}
+        run: ls -la
+
+      - uses: chrnorm/deployment-action@v2
+        name: Create GitHub deployment
+        id: deployment
+        with:
+          token: '${{ github.token }}'
+          environment-url: ${{ inputs.fly_io_url }}
+          environment: ${{ inputs.environment }}
+
+      - name: Setup Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy on Fly.io
+        working-directory: ${{ env.WORKING_DIR }}
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

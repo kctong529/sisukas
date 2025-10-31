@@ -20,13 +20,15 @@ import {
 import { FILTER_FIELDS, INPUT_HTMLS } from './constant.js';
 import { config } from './config.js';
 
+const filtersApi = import.meta.env.VITE_FILTERS_API;
+const wrapperApi = import.meta.env.VITE_WRAPPER_API;
+
 
 // Global state variables
 let courses = []; // Stores all courses loaded from JSON
 let filteredCourses = []; // Stores currently filtered courses
 let currentSortColumn = "courseName"; // Default sort column
 let sortDirection = 1; // 1 = ascending, -1 = descending
-
 
 // IndexedDB-based cache for large files
 class LargeFileCache {
@@ -831,7 +833,7 @@ async function saveFiltersToApi() {
         console.log("Saving filters:", payload);
 
         // Send POST request to API
-        const response = await fetch(`${config.api.baseUrl}/api/filter`, {
+        const response = await fetch(`${filtersApi}/api/filters`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -1007,7 +1009,7 @@ async function loadFiltersFromUrl() {
     if (!filtersKey) return;
 
     try {
-        const response = await fetch(`${config.api.baseUrl}/api/filter/${filtersKey}`);
+        const response = await fetch(`${filtersApi}/api/filters/${filtersKey}`);
         
         // Handle different error responses
         if (!response.ok) {
@@ -1120,20 +1122,6 @@ function removeExistingNotifications() {
     existing.forEach(notif => notif.remove());
 }
 
-window.addFilterRule = addFilterRule;
-window.handleFieldChange = handleFieldChange;
-window.removeFilterRule = removeFilterRule;
-window.displayCourses = displayCourses;
-window.filterCourses = filterCourses;
-window.logFilters = logFilters;
-window.saveFiltersToFile = saveFiltersToFile;
-window.saveFiltersToApi = saveFiltersToApi;
-window.saveFilters = saveFilters;
-window.loadFiltersFromJson = loadFiltersFromJson;
-window.loadFiltersFromFile = loadFiltersFromFile;
-window.loadFiltersFromUrl = loadFiltersFromUrl;
-window.onSearchButtonClick = onSearchButtonClick;
-
 // Initialize on page load
 window.onload = async function() {
     try {
@@ -1155,13 +1143,108 @@ window.onload = async function() {
     }
 
     // Add click handlers to column headers
-    document.querySelectorAll('th[data-column]').forEach(th => {
-        th.addEventListener('click', () => {
-            const column = th.getAttribute('data-column');
-            handleColumnSort(column);
-        });
+    document.querySelector('table').addEventListener('click', (e) => {
+        const th = e.target.closest('th[data-column]');
+        if (!th) return;
+        handleColumnSort(th.getAttribute('data-column'));
     });
     
     // Add Enter key handler for filter inputs
     setupEnterKeyHandler();
 };
+
+function debugCourses() {
+    console.log("Filtered courses:", filteredCourses);
+    console.table(filteredCourses.map(c => ({
+        code: c.code,
+        name: c.name?.en,
+        credits: c.credits?.min,
+        start: c.startDate,
+        end: c.endDate
+    })));
+    console.log(`Total: ${filteredCourses.length}`);
+    console.log(filteredCourses[0]);
+};
+
+function validateCourseIndex(index) {
+    if (!filteredCourses || filteredCourses.length === 0) {
+        console.warn("⚠️ filteredCourses is empty or undefined.");
+        return false;
+    }
+    if (index < 0 || index >= filteredCourses.length) {
+        console.warn(`⚠️ Index out of range (0–${filteredCourses.length - 1}).`);
+        return false;
+    }
+    return true;
+}
+
+function logCourseSummary(index = 0) {
+    if (!validateCourseIndex(index)) return;
+    const course = filteredCourses[index];
+
+    console.log(`🔍 Course #${index} — ${course.name?.en || "(no name)"} (${course.code})`);
+    console.table(Object.entries(course).map(([key, value]) => ({
+        Attribute: key,
+        Type: typeof value,
+        Value: value
+    })));
+};
+
+function getCourseIdsByIndex(index = 0) {
+    if (!validateCourseIndex(index)) return;
+    const course = filteredCourses[index];
+
+    return {
+        course_unit_id: course.courseUnitId || null,
+        course_offering_id: course.id || null,
+        code: course.code || null,
+        name: course.name?.en || null
+    };
+};
+
+/**
+ * Call the FastAPI endpoint to fetch study groups for a given course object.
+ * @param {Object} courseObj - Object with course_unit_id and course_offering_id
+ */
+async function fetchStudyGroups(courseObj) {
+  if (!courseObj || !courseObj.course_unit_id || !courseObj.course_offering_id) {
+    console.error("Invalid course object:", courseObj);
+    return;
+  }
+
+  const url = new URL(`${wrapperApi}/study-groups`);
+  url.searchParams.append("course_unit_id", courseObj.course_unit_id);
+  url.searchParams.append("course_offering_id", courseObj.course_offering_id);
+
+  try {
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error(`HTTP error ${response.status}`);
+    }
+    const data = await response.json();
+    console.log("Study groups:", data);
+    return data;
+  } catch (err) {
+    console.error("Failed to fetch study groups:", err);
+    return []; // empty array if fetch fails
+  }
+}
+
+Object.assign(window, {
+    addFilterRule,
+    handleFieldChange,
+    removeFilterRule,
+    displayCourses,
+    filterCourses,
+    logFilters,
+    saveFiltersToFile,
+    saveFiltersToApi,
+    saveFilters,
+    loadFiltersFromJson,
+    loadFiltersFromFile,
+    loadFiltersFromUrl,
+    onSearchButtonClick,
+    debugCourses,
+    getCourseIdsByIndex,
+    fetchStudyGroups
+});

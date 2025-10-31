@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sisu-wrapper"
+version = "0.1.0"
+authors = [
+  { name="Ki Chun Tong", email="kichun.tong@aalto.fi" },
+]
+description = "A lightweight wrapper for the Aalto University Sisu API"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.32.5",
+]
+readme = "README.md"
+license = { text = "MIT" }
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/kctong529/sisukas"
+Repository = "https://github.com/kctong529/sisukas/sisu-wrapper"
+Issues = "https://github.com/kctong529/sisukas/issues"
+
+[tool.bumpver]
+current_version = "0.1.0"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "bump version {old_version} -> {new_version}"
+tag_message = "{new_version}"
+tag_scope = "default"
+pre_commit_hook = ""
+post_commit_hook = ""
+commit = true
+tag = true
+push = false
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'current_version = "{version}"',
+]
+"sisu_wrapper/__init__.py" = ["{version}"]

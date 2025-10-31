@@ -89,6 +89,9 @@ jobs:
       - name: Build with Vite
         id: build
         working-directory: ${{ env.WORKING_DIR }}
+        env:
+          VITE_FILTERS_API: https://filters-api.sisukas.eu
+          VITE_WRAPPER_API: https://sisu-wrapper-api.sisukas.eu
         run: |
           npm run build
           echo "result=success" >> $GITHUB_OUTPUT

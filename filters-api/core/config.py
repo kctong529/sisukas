@@ -52,15 +52,11 @@ from dotenv import load_dotenv
 # Load the .env file
 load_dotenv()
 
-# --- Environment ---
-ENV: str = os.getenv("SISUKAS_ENV", "test")  # default to test
+ENV = os.getenv("SISUKAS_ENV", "test")
 
-if ENV == "prod":
-    GCS_BUCKET_NAME = "sisukas-filters-api-prod"
-elif ENV == "test":
-    GCS_BUCKET_NAME = "sisukas-filters-api-test"
-else:
-    raise ValueError(f"Invalid SISUKAS_ENV='{ENV}'. Must be 'prod' or 'test'.")
+GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
+if not GCS_BUCKET_NAME:
+    raise ValueError("Missing GCS_BUCKET_NAME environment variable.")
 
 BASE_DIR: FsPath = FsPath(__file__).parent.parent
 
@@ -69,11 +65,10 @@ CORS_ORIGINS: list[str] = [
     origin.strip() for origin in os.getenv(
         "CORS_ORIGINS",
         "http://localhost:5173,http://127.0.0.1:5173"
-        ",https://sisukas.fly.dev,https://sisukas.eu"
     ).split(",")
 ]
 
-API_VERSION = "0.3.0"
+API_VERSION = "0.3.2"
 API_TITLE = "Sisukas Filters API"
 API_CONTACT = {
     "name": "API Support",
