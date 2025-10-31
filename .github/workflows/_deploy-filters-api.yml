@@ -79,6 +79,7 @@ jobs:
           region: '${{ inputs.region }}'
           # NOTE: If using a different source folder, update the image name below:
           source: './filters-api/'
+          project_id: '${{ inputs.gcp_project_id }}'
           env_vars: |
             SISUKAS_ENV=${{ inputs.environment }}
             GCS_BUCKET_NAME=${{ inputs.gcs_bucket_name }}
