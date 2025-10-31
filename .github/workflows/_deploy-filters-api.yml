@@ -52,6 +52,7 @@ on:
 
 jobs:
   deploy:
+    name: Deploy Filters API
     runs-on: 'ubuntu-latest'
 
     permissions:
