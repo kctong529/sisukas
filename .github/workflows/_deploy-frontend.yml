@@ -67,8 +67,6 @@ jobs:
     if: ${{ inputs.environment == 'test' }}
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      deployments: write
 
     environment: 
       name: ${{ inputs.environment }}
@@ -87,14 +85,6 @@ jobs:
       - name: List Files
         working-directory: ${{ env.WORKING_DIR }}
         run: ls -la
-
-      - uses: chrnorm/deployment-action@v2
-        name: Create GitHub deployment
-        id: deployment
-        with:
-          token: '${{ github.token }}'
-          environment-url: ${{ inputs.fly_io_url }}
-          environment: ${{ inputs.environment }}
 
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
@@ -105,31 +95,11 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TEST_TOKEN }}
 
-      - name: Update deployment status (success)
-        if: success()
-        uses: chrnorm/deployment-status@v2
-        with:
-          token: '${{ github.token }}'
-          environment-url: ${{ inputs.fly_io_url }}
-          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-          state: 'success'
-
-      - name: Update deployment status (failure)
-        if: failure()
-        uses: chrnorm/deployment-status@v2
-        with:
-          token: '${{ github.token }}'
-          environment-url: ${{ inputs.fly_io_url }}
-          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-          state: 'failure'
-
   deploy_frontend_prod:
     name: Deploy Frontend (Prod)
     if: ${{ inputs.environment == 'production' }}
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      deployments: write
 
     environment: 
       name: ${{ inputs.environment }}
@@ -149,14 +119,6 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: ls -la
 
-      - uses: chrnorm/deployment-action@v2
-        name: Create GitHub deployment
-        id: deployment
-        with:
-          token: '${{ github.token }}'
-          environment-url: ${{ inputs.fly_io_url }}
-          environment: ${{ inputs.environment }}
-
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
@@ -165,21 +127,3 @@ jobs:
         run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-
-      - name: Update deployment status (success)
-        if: success()
-        uses: chrnorm/deployment-status@v2
-        with:
-          token: '${{ github.token }}'
-          environment-url: ${{ inputs.fly_io_url }}
-          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-          state: 'success'
-
-      - name: Update deployment status (failure)
-        if: failure()
-        uses: chrnorm/deployment-status@v2
-        with:
-          token: '${{ github.token }}'
-          environment-url: ${{ inputs.fly_io_url }}
-          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-          state: 'failure'
