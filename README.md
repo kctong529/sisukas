@@ -15,7 +15,7 @@ Sisukas offers a faster, more intuitive way to browse and filter courses:
 - Refined search using Boolean logic (AND, OR) for more specific results
 - Filter courses by start and end dates to focus on specific time frames
 - Predefined course lists for specific majors and minors
-- Share filter configurations via URL for easy collaboration
+- Share filter configurations via short URLs
 
 > [!NOTE]
 > Sisukas strikes the right balance in presenting course information. It features a compact layout that displays all necessary course details at a glance, with no extra clicks. A unique toggle merges duplicate entries, showing only one per course code. The app is fully responsive, ensuring smooth performance across both desktop and mobile devices.
@@ -56,41 +56,50 @@ This will start the Vite development server and provide a URL in the console (e.
 
 - [ ] Implement filtering by course descriptions. https://github.com/kctong529/sisukas/issues/4
 - [ ] Refactor the organization filter rule. https://github.com/kctong529/sisukas/issues/15
-- [ ] Add exclusion criteria, such as "Not a math course".
-- [ ] Support nested sorting criteria.
+- [ ] Design and build Must Rules UI following conceptual models.
 - [ ] Automatically generate a timeline based on course schedules.
-- [ ] Integrate a study calendar to assist with planning.
+- [ ] Integrate a study calendar for planning courses and tracking deadlines.
+- [ ] Extract reusable filter logic into `sisukas-core` npm package.
 
-### User Experience & Accessibility
+### Frontend & UX Improvements
 
 - [x] Improve responsive design for better usability across devices. https://github.com/kctong529/sisukas/issues/2
 - [x] Enable users to save and reuse filter sets. https://github.com/kctong529/sisukas/issues/8
-- [ ] Implement user management features.
-- [ ] Allow users to pin selected courses to keep them at the top of the list.
-- [ ] Add a comment field where student feedback is shown.
-- [ ] Enhance accessibility for a more inclusive user experience.
+- [ ] Integrate Svelte framework for cleaner architecture and maintainable components.
+- [ ] Allow users to pin selected courses to the top of the list.
+- [ ] Add a comment field for student feedback.
+- [ ] Enhance accessibility for a more inclusive experience.
+- [ ] Refine the interface using Skeleton/TailwindCSS with DaisyUI components.
+
+### User Management & Collaboration
+
+- [ ] Implement user authentication and profile management.
+- [ ] Build a user dashboard interface for personalized course tracking.
+- [ ] Add notification system for key registration deadlines and exam schedules.
 
 ### Data Management & Updates
 
 - [ ] Use AWS CloudFront to cache `courses.json` and serve it from edge locations. https://github.com/kctong529/sisukas/issues/9
-- [x] Write a workflow to fetch the course API, with diff report and automatically commit.
-- [ ] Evaluate the balance between performance and caching of fetching real-time course information.
-- [ ] Support importing courses from a long string or loosely formatted copied text.
-- [ ] Enable exporting filtered results with customizable fields in JSON, CSV, and Excel formats.
+- [x] Workflow to fetch the course API with diff report and automatic commit.
+- [ ] Build REST microservice for SISU teaching session data aggregation and normalization.
+- [ ] Add a health check endpoint to filters API.
+- [ ] Evaluate balance between performance and real-time course data fetching.
+- [ ] Support importing courses from raw or loosely formatted text.
+- [ ] Enable exporting filtered results in JSON, CSV, and Excel.
 
 ### Newsletter & Announcements
 
-- [x] Implement a GitHub Action to send newsletter updates automatically when a new issue is published.
-- [ ] Build management workflow to support drafting, previewing, and scheduling issues.
-- [ ] Add basic email subscription management system (unsubscribe, preferences, email validation).
-- [ ] Build a proper newsletter archive viewer for past issues, and ensure old issues are cleaned up and consistent in Markdown + HTML formats.
+- [x] GitHub Action to send newsletter updates automatically.
+- [ ] Build workflow for drafting, previewing, and scheduling issues.
+- [ ] Add basic email subscription management (unsubscribe, preferences, email validation).
+- [ ] Build newsletter archive viewer for past issues, ensure consistency in Markdown + HTML.
 
 ### Development & Maintenance
-- [ ] Refactor the project and file structure for better maintainability. https://github.com/kctong529/sisukas/issues/3
+- [x] Refactor the project and file structure for better maintainability. https://github.com/kctong529/sisukas/issues/3
 - [ ] Define and document terminology across the system. https://github.com/kctong529/sisukas/issues/14
 - [ ] Write unit tests for core filtering functionalities. https://github.com/kctong529/sisukas/issues/16
-- [ ] Establish guidelines for package management.
-- [ ] Evaluate and select appropriate testing frameworks.
+* [ ] Establish package management and code guidelines.
+* [ ] Evaluate and select testing frameworks for frontend and backend.
 
 ## Contributing
 

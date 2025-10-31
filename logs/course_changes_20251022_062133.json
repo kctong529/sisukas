@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-10-22T06:21:33.161370",
+  "summary": {
+    "added": 1,
+    "removed": 1,
+    "updated": 2
+  },
+  "details": {
+    "added": [
+      {
+        "code": "MS-A0202",
+        "name": "Differential and Integral Calculus 2 (SCI), Re-exam of summer course",
+        "credits": 5
+      }
+    ],
+    "removed": [
+      {
+        "code": "ALC-6320",
+        "name": "German 2, Online teaching"
+      }
+    ],
+    "updated": [
+      {
+        "code": "LC-0550",
+        "name": "Communication Skills D, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-03"
+          ],
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2025-12-01"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E2235",
+        "name": "Wood Products and Processes, Online teaching",
+        "changes": [
+          [
+            "End Date",
+            "2026-06-07",
+            "2026-06-01"
+          ]
+        ]
+      }
+    ]
+  }
+}

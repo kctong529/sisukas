@@ -1,0 +1,294 @@
+{
+  "timestamp": "2025-10-24T06:20:03.823895",
+  "summary": {
+    "added": 24,
+    "removed": 0,
+    "updated": 14
+  },
+  "details": {
+    "added": [
+      {
+        "code": "AMUO-C3046",
+        "name": "Basics of Service Design, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "AMUO-C3046",
+        "name": "Basics of Service Design, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "AMUO-C3046",
+        "name": "Basics of Service Design, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "AARTS-A0220",
+        "name": "Comic Art Project, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "ADOM-E3045",
+        "name": "History of Contemporary Photography, Lecture",
+        "credits": 4
+      },
+      {
+        "code": "AARK-A1000",
+        "name": "Introduction to History of Architecture, Lecture",
+        "credits": 2
+      },
+      {
+        "code": "A30A02000",
+        "name": "Introduction to Statistics, Exam",
+        "credits": 6
+      },
+      {
+        "code": "A30A02000",
+        "name": "Introduction to Statistics, Exam",
+        "credits": 6
+      },
+      {
+        "code": "A30A02000",
+        "name": "Introduction to Statistics, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "AISM-A1002",
+        "name": "Introduction to data analytics, Exam",
+        "credits": 6
+      },
+      {
+        "code": "AISM-A1002",
+        "name": "Introduction to data analytics, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "MEC-E1005",
+        "name": "Modelling in Applied Mechanics, Lecture",
+        "credits": 5
+      },
+      {
+        "code": "AISM-A3002",
+        "name": "Operations and service management, Exam",
+        "credits": 6
+      },
+      {
+        "code": "AISM-A3002",
+        "name": "Operations and service management, Exam",
+        "credits": 6
+      },
+      {
+        "code": "AISM-A3002",
+        "name": "Operations and service management, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "A31A00110",
+        "name": "Principles of Economics, Exam",
+        "credits": 6
+      },
+      {
+        "code": "A31A00110",
+        "name": "Principles of Economics, Exam",
+        "credits": 6
+      },
+      {
+        "code": "A31A00110",
+        "name": "Principles of Economics, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "AARTS-A0223",
+        "name": "Watercolour Workshop, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "AELO-C2030",
+        "name": "Writing a Feature Film 1, Lecture",
+        "credits": 8
+      },
+      {
+        "code": "AELO-C2030",
+        "name": "Writing a Feature Film 1, Lecture",
+        "credits": 8
+      },
+      {
+        "code": "AELO-C2031",
+        "name": "Writing a Feature Film 2, Lecture",
+        "credits": 2
+      },
+      {
+        "code": "AELO-C2031",
+        "name": "Writing a Feature Film 2, Lecture",
+        "credits": 2
+      },
+      {
+        "code": "AELO-C2035",
+        "name": "Writing a Short Film, Lecture",
+        "credits": 2
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "LC-1310",
+        "name": "Academic Communication for MSc Students (o,w), Lecture (Zoom group, MSc students from CHEM, ELEC, ENG, SCI, BIZ)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1113",
+        "name": "Autonomous Language Learning Path   (o,w), Lecture  (M06)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1121",
+        "name": "Communicating Sustainable Solutions (o,w), Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1114",
+        "name": "Communicating Technology (o,w), Lecture (H12)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1114",
+        "name": "Communicating Technology (o,w), Lecture (H13)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1114",
+        "name": "Communicating Technology (o,w), Lecture (H14)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7210",
+        "name": "Finnish 1, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-28",
+            "2025-12-05"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7220",
+        "name": "Finnish 2, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-27",
+            "2025-12-04"
+          ]
+        ]
+      },
+      {
+        "code": "AARK-C4504",
+        "name": "Housing Politics for Housing Designers, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            null,
+            "2025-12-08"
+          ],
+          [
+            "Enrolment End",
+            null,
+            "2026-01-11"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1123",
+        "name": "Industrial Communications (o, w), Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1117",
+        "name": "Integrated Oral and Written Skills (o,w), Lecture (integrated with KIG-C1010 Introduction to Geoinformatics)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-30",
+            "2025-12-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o) (V22-23), Lecture (V22-23)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1110",
+        "name": "Online Writing Skills for Engineers 1 (w), Lecture (P3)",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-16"
+          ]
+        ]
+      },
+      {
+        "code": "CS-A1120",
+        "name": "Programming 2, Exam",
+        "changes": [
+          [
+            "Name",
+            "Programming 2, Exam",
+            "Programming 2, Retake-Exam (for spring 2025 course)"
+          ]
+        ]
+      }
+    ]
+  }
+}

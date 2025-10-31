@@ -1,0 +1,107 @@
+{
+  "timestamp": "2025-10-23T06:21:03.648394",
+  "summary": {
+    "added": 2,
+    "removed": 0,
+    "updated": 7
+  },
+  "details": {
+    "added": [
+      {
+        "code": "ABL-C1104",
+        "name": "Introduction to Sustainability Accounting, Exam",
+        "credits": 6
+      },
+      {
+        "code": "BIZ-L2060",
+        "name": "Literature I D, Exam",
+        "credits": 1
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "LC-0510",
+        "name": "Conference presentations D_This group is in English, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Conference presentations D_This group is in English, Lecture",
+            "CANCELED/Conference presentations D_This group is in English, Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7324",
+        "name": "Finnish Conversation 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-13",
+            "2025-11-11"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-C1104",
+        "name": "Introduction to Sustainability Accounting, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-27",
+            "2025-12-05"
+          ]
+        ]
+      },
+      {
+        "code": "LC-0710 ",
+        "name": "Konferenssiesiintyminen, Lecture",
+        "changes": [
+          [
+            "Name",
+            "Konferenssiesiintyminen, Lecture",
+            "CANCELED/Konferenssiesiintyminen, Lecture"
+          ]
+        ]
+      },
+      {
+        "code": "LC-L1019",
+        "name": "Practices of science communication D, Online teaching",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-10-26",
+            "2025-10-22"
+          ]
+        ]
+      },
+      {
+        "code": "CS-C2130",
+        "name": "Software Project 1, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-05",
+            "2025-12-05"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7108",
+        "name": "Write competently, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-10-22"
+          ],
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2025-11-24"
+          ]
+        ]
+      }
+    ]
+  }
+}
