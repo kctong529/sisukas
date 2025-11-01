@@ -1,0 +1,134 @@
+name: Integration Tests
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - dev
+      - main
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  test-setup:
+    name: Test Makefile Setup
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'course-browser/package-lock.json'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Verify tools installation
+        run: make check-tools
+
+      - name: Run full setup
+        run: make setup
+
+      - name: Verify filters-api installation
+        run: |
+          cd filters-api
+          source .venv/bin/activate
+          python --version
+          python -c "import fastapi; print(f'FastAPI {fastapi.__version__}')"
+          python -c "import google.cloud.storage; print('GCS client OK')"
+
+      - name: Verify sisu-wrapper installation
+        run: |
+          cd sisu-wrapper
+          source .venv/bin/activate
+          python --version
+          python -c "import fastapi; print(f'FastAPI {fastapi.__version__}')"
+
+      - name: Verify frontend installation
+        run: |
+          cd course-browser
+          node --version
+          npm --version
+          test -f node_modules/.bin/vite
+
+  test-servers:
+    name: Test Server Startup
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: 'course-browser/package-lock.json'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Setup all components
+        run: make setup
+
+      - name: Test filters-api startup
+        run: |
+          cd filters-api
+          timeout 30s uv run fastapi dev main.py --port 8000 &
+          SERVER_PID=$!
+          sleep 10
+          curl -f http://127.0.0.1:8000/ || (echo "Filters API failed to start" && exit 1)
+          kill $SERVER_PID
+
+      - name: Test sisu-wrapper startup
+        run: |
+          cd sisu-wrapper
+          timeout 30s uv run fastapi dev api/main.py --port 8001 &
+          SERVER_PID=$!
+          sleep 10
+          curl -f http://127.0.0.1:8001/ || (echo "Sisu Wrapper failed to start" && exit 1)
+          kill $SERVER_PID
+
+      - name: Test frontend build
+        run: |
+          cd course-browser
+          npm run build
+          test -d dist
+
+  test-requirements-sync:
+    name: Verify requirements.txt is up-to-date
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Compile requirements
+        run: make compile-requirements
+
+      - name: Check for uncommitted changes
+        run: |
+          git diff --exit-code filters-api/requirements.txt || \
+            (echo "  filters-api/requirements.txt is out of sync! Run 'make compile-requirements' and commit." && exit 1)
+          git diff --exit-code sisu-wrapper/requirements.txt || \
+            (echo "  sisu-wrapper/requirements.txt is out of sync! Run 'make compile-requirements' and commit." && exit 1)
+          echo "  All requirements.txt files are up-to-date"

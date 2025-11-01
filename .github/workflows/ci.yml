@@ -12,7 +12,7 @@ on:
 
 env:
   WORKING_DIR: course-browser
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
 
 jobs:
   test:
