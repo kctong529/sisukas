@@ -35,26 +35,30 @@ For more details on the overall architecture, see the [Sisukas documentation](ht
 
 ## Filter Structure
 
-The API uses a two-tier filter architecture:
+Filters are composed of rules organized into groups:
 
-### FilterRule (Atomic Condition)
-Single filter condition with:
+### FilterRule
+A single comparison condition:
 - `field`: Course attribute to filter (e.g. "code", "major", "period")
 - `relation`: Comparison method (e.g. "contains", "is", "overlaps")
 - `value`: Value to compare against
 
-### FilterGroup (AND Logic)
-Collection of rules that must all match:
-- `rules`: List of FilterRule objects
-- `is_must`: Boolean flag indicating universal constraint vs. alternative pattern
+### FilterGroup
+- `rules`: Array of FilterRule objects (all must match)
+- `is_must`: Boolean indicating if this group applies universally
+  - `true`: Universal constraint (applies to all results)
+  - `false`: Alternative pattern (part of OR logic with other groups)
 
-### FilterQuery (Complete Specification)
-Complete filter with:
-- `groups`: List of FilterGroup objects
-- Must groups (`is_must=True`) apply universally with AND logic
-- Alternative groups (`is_must=False`) apply with OR logic (any match qualifies)
+### FilterQuery
+The complete filter specification:
+- `groups`: Array of FilterGroup objects
 
-**Example**: "Show courses in Period II that are open for enrollment (must), and are either CS courses, or DSD major courses, or taught by Milo"
+**Evaluation logic:**
+1. All groups with `is_must: true` must match (AND)
+2. At least one group with `is_must: false` must match (OR)
+
+> [!TIP]
+> For a deeper understanding of the filtering model and evaluation logic, see the [Filter Conceptual Model](https://docs.sisukas.eu/concept/) documentation.
 
 
 ## Getting Started
@@ -159,11 +163,20 @@ curl -X POST http://localhost:8000/api/filters \
   -H "Content-Type: application/json" \
   -d '{"groups":[{"rules":[{"field":"period","relation":"is","value":"2025-26 Period II"}],"is_must":true}]}'
 
-# Retrieve a filter (replace with your hash_id)
-curl http://localhost:8000/api/filters/a3f5d8e9c2b14f67
+# Response
+{"hash_id":"a09d79673171de8f"}
+
+# Retrieve a filter
+curl http://localhost:8000/api/filters/a09d79673171de8f
+
+# Response
+{"groups":[{"rules":[{"field":"period","relation":"is","value":"2025-26 Period II"}],"is_must":true}]}
 
 # Delete a filter
-curl -X DELETE http://localhost:8000/api/filters/a3f5d8e9c2b14f67
+curl -X DELETE http://localhost:8000/api/filters/a09d79673171de8f
+
+# Response
+{"message":"Filter deleted successfully","hash_id":"a09d79673171de8f"}
 ```
 
 For complete examples and interactive testing, visit the Swagger UI documentation.
