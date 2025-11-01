@@ -1,38 +1,46 @@
-PYTHON := python3
-NODE := node
+.PHONY: help setup check-tools clean setup-filters-api setup-sisu-wrapper setup-frontend
 
-.PHONY: all setup-filters-api setup-sisu-wrapper setup-frontend clean
+help:
+	@echo "Available targets:"
+	@echo "  setup          - Set up all components"
+	@echo "  check-tools    - Verify required tools are installed"
+	@echo "  clean          - Remove virtual environments and dependencies"
 
-all: setup-filters-api setup-sisu-wrapper setup-frontend
+check-tools:
+	@command -v uv >/dev/null 2>&1 || (echo "Error: uv not found. Install from https://astral.sh/uv" && exit 1)
+	@command -v node >/dev/null 2>&1 || (echo "Error: node not found. Install from https://nodejs.org" && exit 1)
 
-# --- Backend / Python Services ---
+setup: check-tools setup-filters-api setup-sisu-wrapper setup-frontend
+
+
+# --- Backend / Python Services (using uv) ---
 
 setup-filters-api:
 	cd filters-api && \
-	$(PYTHON) -m venv .venv && \
-	. .venv/bin/activate && \
-	pip install -U pip && \
-	pip install -r requirements.txt && \
-	cp -n .env.example .env || true
+	uv venv --python 3.12 .venv && \
+	if [ -f requirements.in ]; then \
+		uv pip compile requirements.in --universal --output-file requirements.txt; \
+	fi && \
+	uv pip sync requirements.txt && \
+	cp .env.example .env || true
 
 setup-sisu-wrapper:
 	cd sisu-wrapper && \
-	$(PYTHON) -m venv .venv && \
-	. .venv/bin/activate && \
-	pip install -U pip && \
-	pip install -r requirements.txt && \
-	cp -n .env.example .env || true
+	uv venv --python 3.12 .venv && \
+	if [ -f requirements.in ]; then \
+		uv pip compile requirements.in --universal --output-file requirements.txt; \
+	fi && \
+	uv pip sync requirements.txt
 
 # --- Frontend / Node ---
 
 setup-frontend:
 	cd course-browser && \
 	npm ci && \
-	cp -n .env.example .env || true
+	cp .env.example .env || true
 
 # --- Cleanup ---
 
 clean:
-	find . -type d -name ".venv" -exec rm -rf {} +
-	cd course-browser && rm -rf node_modules
-
+	rm -rf filters-api/.venv sisu-wrapper/.venv
+	rm -rf course-browser/node_modules

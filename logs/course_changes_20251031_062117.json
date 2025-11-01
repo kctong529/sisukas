@@ -1,0 +1,24 @@
+{
+  "timestamp": "2025-10-31T06:21:17.163808",
+  "summary": {
+    "added": 1,
+    "removed": 1,
+    "updated": 0
+  },
+  "details": {
+    "added": [
+      {
+        "code": "TU-E5065",
+        "name": "Defence Linkage, Lecture",
+        "credits": 10
+      }
+    ],
+    "removed": [
+      {
+        "code": "LC-0730",
+        "name": "Communication skills, Lecture"
+      }
+    ],
+    "updated": []
+  }
+}
