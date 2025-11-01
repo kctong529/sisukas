@@ -2,10 +2,7 @@
 
 [![CI Pipeline](https://github.com/kctong529/sisukas/actions/workflows/ci.yml/badge.svg)](https://github.com/kctong529/sisukas/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/sisu_wrapper?label=sisu-wrapper)](https://pypi.org/project/sisu-wrapper/)
-<<<<<<< HEAD
-=======
 [![Documentation](https://img.shields.io/badge/docs-sisukas.eu-blue)](https://docs.sisukas.eu/)
->>>>>>> dev
 
 A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.eu/).
 
