@@ -67,8 +67,6 @@ jobs:
     if: ${{ inputs.environment == 'test' }}
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      deployments: write
 
     environment: 
       name: ${{ inputs.environment }}
@@ -87,14 +85,6 @@ jobs:
       - name: List Files
         working-directory: ${{ env.WORKING_DIR }}
         run: ls -la
-
-      - uses: chrnorm/deployment-action@v2
-        name: Create GitHub deployment
-        id: deployment
-        with:
-          token: '${{ github.token }}'
-          environment-url: ${{ inputs.fly_io_url }}
-          environment: ${{ inputs.environment }}
 
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
@@ -110,8 +100,6 @@ jobs:
     if: ${{ inputs.environment == 'production' }}
     needs: build
     runs-on: ubuntu-latest
-    permissions:
-      deployments: write
 
     environment: 
       name: ${{ inputs.environment }}
@@ -130,14 +118,6 @@ jobs:
       - name: List Files
         working-directory: ${{ env.WORKING_DIR }}
         run: ls -la
-
-      - uses: chrnorm/deployment-action@v2
-        name: Create GitHub deployment
-        id: deployment
-        with:
-          token: '${{ github.token }}'
-          environment-url: ${{ inputs.fly_io_url }}
-          environment: ${{ inputs.environment }}
 
       - name: Setup Flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
