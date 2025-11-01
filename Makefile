@@ -13,22 +13,21 @@ setup-filters-api:
 	. .venv/bin/activate && \
 	pip install -U pip && \
 	pip install -r requirements.txt && \
-	cp -n .env.example .env || true
+	cp .env.example .env || true
 
 setup-sisu-wrapper:
 	cd sisu-wrapper && \
 	$(PYTHON) -m venv .venv && \
 	. .venv/bin/activate && \
 	pip install -U pip && \
-	pip install -r requirements.txt && \
-	cp -n .env.example .env || true
+	pip install -r requirements.txt
 
 # --- Frontend / Node ---
 
 setup-frontend:
 	cd course-browser && \
 	npm ci && \
-	cp -n .env.example .env || true
+	cp .env.example .env || true
 
 # --- Cleanup ---
 
