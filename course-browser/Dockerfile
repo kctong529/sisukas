@@ -1,14 +1,15 @@
+# Create version.json
+FROM alpine as build
+ARG COMMIT_SHA
+RUN echo "{\"commit\": \"${COMMIT_SHA}\"}" > /version.json
+
+
 # Serve the static files with GoStatic
 FROM pierrezemb/gostatic
 
-# Accept a build argument for commit SHA
-ARG COMMIT_SHA
-
 # Copy the built files
 COPY ./dist /srv/http
-
-# Write commit SHA to version.json for traceability
-RUN echo "{\"commit\": \"${COMMIT_SHA}\"}" > /srv/http/version.json
+COPY --from=build /version.json /srv/http/version.json
 
 # Expose the port
 EXPOSE 8080
