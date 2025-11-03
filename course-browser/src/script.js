@@ -1230,6 +1230,32 @@ async function fetchStudyGroups(courseObj) {
   }
 }
 
+function getCourseObjectsInRange(startIndex = 0, endIndex = 10) {
+    if (!filteredCourses || filteredCourses.length === 0) {
+        console.warn("⚠️ filteredCourses is empty or undefined.");
+        return [];
+    }
+
+    // Clamp indices to valid range
+    const validStart = Math.max(0, Math.min(startIndex, filteredCourses.length - 1));
+    const validEnd = Math.max(validStart, Math.min(endIndex, filteredCourses.length));
+    
+    const courseObjects = [];
+
+    for (let i = validStart; i < validEnd; i++) {
+        const course = filteredCourses[i];
+        courseObjects.push({
+            course_unit_id: course.courseUnitId || null,
+            course_offering_id: course.id || null,
+            code: course.code || null,
+            name: course.name?.en || null
+        });
+    }
+
+    console.log(`Extracted ${courseObjects.length} course objects (indices ${validStart}–${validEnd - 1}):`);
+    return courseObjects;
+}
+
 Object.assign(window, {
     addFilterRule,
     handleFieldChange,
@@ -1246,5 +1272,6 @@ Object.assign(window, {
     onSearchButtonClick,
     debugCourses,
     getCourseIdsByIndex,
-    fetchStudyGroups
+    fetchStudyGroups,
+    getCourseObjectsInRange
 });
