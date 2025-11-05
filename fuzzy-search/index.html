@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Course Search</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    #course-search { width: 400px; padding: 8px; font-size: 16px; }
+    #autocomplete-list { list-style: none; padding: 0; margin: 0; width: 400px; border: 1px solid #ccc; max-height: 200px; overflow-y: auto; }
+    #autocomplete-list li { padding: 8px; cursor: pointer; }
+    #autocomplete-list li:hover { background-color: #eee; }
+  </style>
+</head>
+<body>
+  <h1>Course Search</h1>
+  <input id="course-search" type="text" placeholder="Search courses..." autocomplete="off" />
+  <ul id="autocomplete-list"></ul>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
