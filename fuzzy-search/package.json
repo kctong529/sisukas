@@ -11,5 +11,8 @@
   "devDependencies": {
     "typescript": "~5.9.3",
     "vite": "^7.1.7"
+  },
+  "dependencies": {
+    "fuse.js": "^7.1.0"
   }
 }

@@ -5,16 +5,41 @@
   <title>Course Search</title>
   <style>
     body { font-family: sans-serif; padding: 20px; }
-    #course-search { width: 400px; padding: 8px; font-size: 16px; }
-    #autocomplete-list { list-style: none; padding: 0; margin: 0; width: 400px; border: 1px solid #ccc; max-height: 200px; overflow-y: auto; }
-    #autocomplete-list li { padding: 8px; cursor: pointer; }
-    #autocomplete-list li:hover { background-color: #eee; }
+    #course-search { width: 382px; padding: 8px; font-size: 0.9em; }
+    #autocomplete-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      width: 400px;
+      border: 1px solid #ccc;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    #autocomplete-list li {
+      padding: 8px;
+      font-size: 0.9em;
+      cursor: pointer;
+    }
+    #autocomplete-list li:hover {
+      background-color: #eee;
+    }
   </style>
 </head>
 <body>
   <h1>Course Search</h1>
-  <input id="course-search" type="text" placeholder="Search courses..." autocomplete="off" />
+  <input id="course-search" type="text" placeholder="No courses available" autocomplete="off" disabled="true" />
   <ul id="autocomplete-list"></ul>
+  <div id="tooltip" style="
+    position: absolute;
+    background: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    pointer-events: none;
+    display: none;
+    z-index: 1000;
+"></div>
 
   <script type="module" src="/src/main.ts"></script>
 </body>
