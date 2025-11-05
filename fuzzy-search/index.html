@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Course Search</title>
+  <title>Course Search (Beta)</title>
   <style>
     * {
       box-sizing: border-box;
@@ -11,23 +11,16 @@
     
     body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      padding: 20px;
+      padding: 12px;
       max-width: 1200px;
       margin: 0 auto;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #888080 0%, #463b51 100%);
       min-height: 100vh;
-    }
-    
-    h1 {
-      color: white;
-      margin-bottom: 30px;
-      font-size: 2.5em;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
     }
     
     .search-container {
       position: relative;
-      margin-bottom: 30px;
+      margin-bottom: 10px;
     }
     
     #course-search { 
@@ -91,7 +84,7 @@
       display: none;
       background: white;
       border-radius: 12px;
-      padding: 32px;
+      padding: 10px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       animation: slideIn 0.3s ease-out;
     }
@@ -109,8 +102,8 @@
     
     .card-header {
       border-bottom: 2px solid #667eea;
-      padding-bottom: 20px;
-      margin-bottom: 24px;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
     }
     
     .course-code {
@@ -131,6 +124,17 @@
       font-weight: 700;
     }
     
+    .course-title a {
+      color: #2d3748;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    
+    .course-title a:hover {
+      color: #667eea;
+      text-decoration: underline;
+    }
+    
     .course-organization {
       color: #718096;
       font-size: 1.1em;
@@ -139,10 +143,10 @@
     
     .card-meta {
       display: flex;
-      gap: 24px;
+      gap: 12px;
       flex-wrap: wrap;
       margin-bottom: 28px;
-      padding: 20px;
+      padding: 10px;
       background: #f7fafc;
       border-radius: 8px;
     }
@@ -244,14 +248,14 @@
     .study-groups-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
+      gap: 10px;
       margin-top: 12px;
     }
     
     .study-group-card {
       background: #f7fafc;
       border-radius: 8px;
-      padding: 16px;
+      padding: 10px;
       border: 1px solid #e2e8f0;
       transition: box-shadow 0.2s;
     }
@@ -264,8 +268,8 @@
       display: flex;
       justify-content: space-between;
       align-items: start;
-      gap: 12px;
-      margin-bottom: 12px;
+      gap: 8px;
+      margin-bottom: 4px;
     }
     
     .study-group-name {
@@ -284,6 +288,15 @@
       font-size: 0.8em;
       font-weight: 500;
       white-space: nowrap;
+    }
+    
+    .study-group-schedule {
+      color: #2d3748;
+      font-size: 0.95em;
+      font-weight: 500;
+      margin-bottom: 4px;
+      padding: 4px 0;
+      line-height: 1.2;
     }
     
     .study-group-details {
@@ -313,13 +326,11 @@
       padding: 6px 0;
       font-size: 0.9em;
       color: #4a5568;
-      line-height: 1.5;
+      line-height: 1.0;
     }
   </style>
 </head>
 <body>
-  <h1>Course Search</h1>
-  
   <div class="search-container">
     <input id="course-search" type="text" placeholder="No courses available" autocomplete="off" disabled="true" />
     <ul id="autocomplete-list"></ul>

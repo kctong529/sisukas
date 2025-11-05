@@ -1,6 +1,7 @@
 import { loadCourses } from "./coursesLoader";
 import type { Course } from "./types";
 import Fuse from "fuse.js";
+import type { FuseResult } from "fuse.js";
 
 // Study group types
 interface StudyEvent {
@@ -22,7 +23,7 @@ const courseCard = document.getElementById("course-card") as HTMLDivElement;
 const tooltip = document.getElementById("tooltip") as HTMLDivElement;
 
 // API configuration
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://sisu-wrapper-api-test.sisukas.eu";
 
 // Load courses
 const courses: Course[] = await loadCourses();
@@ -60,7 +61,7 @@ const fuse = new Fuse(sortedCourses, {
 
 // Track current selection for keyboard navigation
 let currentIndex = -1;
-let results: Fuse.FuseResult<Course>[] = [];
+let results: FuseResult<Course>[] = [];
 
 // Format date for display
 function formatDate(dateString: string): string {
@@ -92,6 +93,53 @@ function formatEventTime(start: string, end: string): string {
   });
 
   return `${dateStr} ${startTime} – ${endTime}`;
+}
+
+// Aggregate study events into recurring patterns
+function aggregateStudyEvents(events: StudyEvent[]): string {
+  if (events.length === 0) return 'No scheduled events';
+  
+  // Group events by time slot (start time - end time)
+  const timeSlotMap = new Map<string, Set<string>>();
+  
+  events.forEach(event => {
+    const startDate = new Date(event.start);
+    const endDate = new Date(event.end);
+    
+    const startTime = startDate.toLocaleTimeString("en-FI", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    
+    const endTime = endDate.toLocaleTimeString("en-FI", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    
+    const dayOfWeek = startDate.toLocaleDateString("en-US", { weekday: 'short' });
+    const timeSlot = `${startTime} - ${endTime}`;
+    
+    if (!timeSlotMap.has(timeSlot)) {
+      timeSlotMap.set(timeSlot, new Set());
+    }
+    timeSlotMap.get(timeSlot)!.add(dayOfWeek);
+  });
+  
+  // Format the aggregated patterns
+  const patterns: string[] = [];
+  timeSlotMap.forEach((days, timeSlot) => {
+    const daysList = Array.from(days).join(' + ');
+    patterns.push(`${daysList} ${timeSlot}`);
+  });
+  
+  // If multiple patterns, show them on separate lines
+  if (patterns.length === 1) {
+    return patterns[0];
+  }
+  
+  return patterns.join('<br>');
 }
 
 // Fetch study groups for a course
@@ -181,11 +229,13 @@ async function displayCourseCard(course: Course) {
     `;
   }
 
+  const courseLink = `https://sisu.aalto.fi/student/courseunit/${course.courseUnitId}/brochure`
+
   // Initial card HTML without study groups
   courseCard.innerHTML = `
     <div class="card-header">
       <div class="course-code">${course.code}</div>
-      <h2 class="course-title">${course.name.en}</h2>
+      <h2 class="course-title"><a href="${courseLink}" target="_blank">${course.name.en}</a></h2>
       <p class="course-organization">${course.organizationName.en}</p>
     </div>
 
@@ -211,8 +261,6 @@ async function displayCourseCard(course: Course) {
         <div class="meta-value">${course.type}</div>
       </div>
     </div>
-
-    ${sectionsHTML || '<div class="empty-state">No additional information available</div>'}
     
     <div class="card-section">
       <h3 class="section-title">Study Groups</h3>
@@ -220,6 +268,8 @@ async function displayCourseCard(course: Course) {
         <div class="loading-spinner">Loading study groups...</div>
       </div>
     </div>
+
+    ${sectionsHTML || '<div class="empty-state">No additional information available</div>'}
   `;
 
   courseCard.style.display = 'block';
@@ -236,6 +286,8 @@ async function displayCourseCard(course: Course) {
   } else {
     const groupsHTML = studyGroups
       .map(group => {
+        const aggregatedSchedule = aggregateStudyEvents(group.study_events);
+        
         const eventsHTML = group.study_events.length > 0
           ? group.study_events
               .map(event => `<div class="event-item">${formatEventTime(event.start, event.end)}</div>`)
@@ -248,6 +300,7 @@ async function displayCourseCard(course: Course) {
               <h4 class="study-group-name">${group.name}</h4>
               <span class="study-group-type">${group.type}</span>
             </div>
+            <div class="study-group-schedule">${aggregatedSchedule}</div>
             <details class="study-group-details">
               <summary class="study-group-summary">Show all ${group.study_events.length} events</summary>
               <div class="events-list">${eventsHTML}</div>

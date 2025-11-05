@@ -21,9 +21,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
   },
   "include": ["src"]
 }
