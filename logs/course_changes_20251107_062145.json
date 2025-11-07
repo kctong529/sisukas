@@ -1,0 +1,184 @@
+{
+  "timestamp": "2025-11-07T06:21:45.401524",
+  "summary": {
+    "added": 25,
+    "removed": 0,
+    "updated": 4
+  },
+  "details": {
+    "added": [
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Pekkala, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar/ Bansak, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar/Black, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar/Mironska, Bachelor's thesis",
+        "credits": 10
+      },
+      {
+        "code": "AAXM-C0108",
+        "name": "Ceramics Workshop, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "LC-7240",
+        "name": "Finnish 4, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "LC-7240",
+        "name": "Finnish 4, Lecture",
+        "credits": 3
+      },
+      {
+        "code": "ABL-E2616",
+        "name": "Foundations of Data Regulation, Exam",
+        "credits": 6
+      },
+      {
+        "code": "ELEC-A7310",
+        "name": "Linux Basics, Exam",
+        "credits": 3
+      },
+      {
+        "code": "LC-1111",
+        "name": "Online Writing Skills for Engineers 2 (w) (FiTech Green Transition II students only), Lectures",
+        "credits": 1
+      },
+      {
+        "code": "ABL-E2617",
+        "name": "Transfer Pricing, Exam",
+        "credits": 6
+      },
+      {
+        "code": "ABL-E2617",
+        "name": "Transfer Pricing, Lecture",
+        "credits": 6
+      },
+      {
+        "code": "AXM-E0102",
+        "name": "Workshop Period 2, Unconventional Graphic Design Tools",
+        "credits": 3
+      }
+    ],
+    "removed": [],
+    "updated": [
+      {
+        "code": "TU-E5080",
+        "name": "AI Agents and the Real World, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-27",
+            "2025-12-04"
+          ]
+        ]
+      },
+      {
+        "code": "ELEC-C7222",
+        "name": "Embedded Programming with Communication Devices, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-01-16",
+            "2026-01-15"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7210",
+        "name": "Finnish 1, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-12-02",
+            "2025-12-09"
+          ]
+        ]
+      },
+      {
+        "code": "BIZ-A0105",
+        "name": "Scientific thinking and writing, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-11-07",
+            "2025-11-28"
+          ]
+        ]
+      }
+    ]
+  }
+}
