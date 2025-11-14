@@ -20,10 +20,6 @@ import {
 import { FILTER_FIELDS, INPUT_HTMLS } from './constant.js';
 import { config } from './config.js';
 
-const curriculaMap = getCurriculaMap();
-const periodsData = getPeriodsData();
-const organizationNames = getOrganizationNames();
-
 const filtersApi = import.meta.env.VITE_FILTERS_API;
 const wrapperApi = import.meta.env.VITE_WRAPPER_API;
 const gcsBucket = import.meta.env.VITE_GCS_BUCKET;
@@ -450,7 +446,7 @@ function updateOperatorDropdown(relationSelect, options) {
 // Populate the curriculum options into the dropdown
 function populateCurriculumDropdown(relationSelect, inputField, curriculumType) {
     // Map the curriculum data into an array of option objects
-    const options = Object.entries(curriculaMap[curriculumType]).map(([code, { name }]) => {
+    const options = Object.entries(getCurriculaMap()[curriculumType]).map(([code, { name }]) => {
         return { value: code, text: name };
     });
 
@@ -469,7 +465,7 @@ function populateCurriculumDropdown(relationSelect, inputField, curriculumType) 
         // Update dropdown when input changes
         filterValueInput.addEventListener('input', (e) => {
             const value = e.target.value.trim().toUpperCase();
-            const isValidCurriculumCode = Object.keys(curriculaMap[curriculumType]).includes(value);
+            const isValidCurriculumCode = Object.keys(getCurriculaMap()[curriculumType]).includes(value);
 
             if (isValidCurriculumCode) {
                 relationSelect.value = value;
@@ -486,7 +482,7 @@ function populateCurriculumDropdown(relationSelect, inputField, curriculumType) 
 // Populate the organization options into the dropdown
 function populateOrganizationDropdown(inputField) {
     // Map the organization names into an array of option objects
-    const options = Array.from(organizationNames).sort().map(name => {
+    const options = Array.from(getOrganizationNames()).sort().map(name => {
         return { value: name, text: name };
     });
 
@@ -701,9 +697,9 @@ function applyRule(course, rule) {
         case "enrollment": return applyEnrollmentFilter(course, rule);
         case "credits": return applyCreditsFilter(course, rule);
         case "level": return applyLevelFilter(course, rule);
-        case "period": return applyPeriodFilter(course, rule, periodsData);
-        case "major": return applyCurriculumFilter(course, rule, "major", curriculaMap);
-        case "minor": return applyCurriculumFilter(course, rule, "minor", curriculaMap);
+        case "period": return applyPeriodFilter(course, rule, getPeriodsData());
+        case "major": return applyCurriculumFilter(course, rule, "major", getCurriculaMap());
+        case "minor": return applyCurriculumFilter(course, rule, "minor", getCurriculaMap());
         case "organization": return applyOrganizationFilter(course, rule);
     }
 }
