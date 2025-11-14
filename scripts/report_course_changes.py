@@ -147,5 +147,5 @@ def compare_courses(old_path, new_path):
     return True
 
 if __name__ == "__main__":
-    has_changes = compare_courses("course-browser/public/data/courses.json", "latest_fetch.json")
+    has_changes = compare_courses("courses.json", "latest.json")
     exit(0 if has_changes else 1)

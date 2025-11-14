@@ -5,14 +5,22 @@ on:
   schedule:
     # Run daily at 6 AM UTC
     - cron: '0 6 * * *'
+  push:
+    branches:
+      - dev
 
 env:
-  WORKING_DIR: course-browser
   PYTHON_VERSION: '3.12'
+  GCS_BUCKET: 'sisukas-core-test'
 
 jobs:
-  check_course_updates:
+  prepare_data:
     runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    outputs:
+      has_changes: ${{ steps.check_changes.outputs.has_changes }}
     steps:
       - name: Checkout main branch
         uses: actions/checkout@v4
@@ -25,10 +33,18 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
+      - name: Fetch current JSON
+        run: |
+          curl -fSL "https://storage.googleapis.com/${{ env.GCS_BUCKET }}/courses.json" -o courses.json || echo "No existing courses.json"
+
       - name: Fetch latest courses
         env:
           AALTO_USER_KEY: ${{ secrets.AALTO_USER_KEY }}
         run: python scripts/fetch_latest_courses.py
+
+      - name: Transform latest fetch
+        run: |
+          python scripts/transform_courses.py latest_fetch.json latest.json
 
       - name: Check for changes
         id: check_changes
@@ -37,58 +53,61 @@ jobs:
           echo "Exit code: $?"
         continue-on-error: true
 
-      - name: Update database and commit changes
+      - name: Prepare artifacts
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
-          # Replace old database with new data
-          cp latest_fetch.json ${{ env.WORKING_DIR }}/public/data/courses.json
-          
-          # Configure git
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          gzip -c latest.json > courses.json.gz
+          python scripts/generate_hash.py latest.json courses.hash.json
+          LATEST_LOG=$(ls -1t logs/course_changes_*.json | head -n 1)
+          mkdir -p artifacts
+          cp courses.json.gz artifacts/
+          cp courses.hash.json artifacts/
+          cp "$LATEST_LOG" artifacts/
 
-          # Add changes
-          git add ${{ env.WORKING_DIR }}/public/data/courses.json logs/
-
-          # Create descriptive commit message
-          ADDED="${{ steps.check_changes.outputs.added_count }}"
-          REMOVED="${{ steps.check_changes.outputs.removed_count }}"
-          UPDATED="${{ steps.check_changes.outputs.updated_count }}"
-
-          COMMIT_MSG="Update course database: +$ADDED -$REMOVED ~$UPDATED courses"
-
-          # Commit and push
-          git commit -m "$COMMIT_MSG"
-          git push
-          
-      - name: Create Issue for Major Changes
-        if: steps.check_changes.outputs.has_changes == 'true' && (steps.check_changes.outputs.added_count > 10 || steps.check_changes.outputs.removed_count > 5)
-        uses: actions/github-script@v7
+      - name: Upload artifacts
+        if: steps.check_changes.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@v3
         with:
-          script: |
-            const added = parseInt('${{ steps.check_changes.outputs.added_count }}');
-            const removed = parseInt('${{ steps.check_changes.outputs.removed_count }}');
-            const updated = parseInt('${{ steps.check_changes.outputs.updated_count }}');
-            
-            github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `Major Course Database Changes Detected`,
-              body: `A significant number of course changes were detected:
-              
-              - **Added:** ${added} courses
-              - **Removed:** ${removed} courses  
-              - **Updated:** ${updated} courses
-              
-              Please review the changes in the latest commit and the detailed logs.`,
-              labels: ['course-updates', 'needs-review']
-            });
+          name: courses-artifacts
+          path: artifacts/
 
-      - name: Summary
-        if: always()
-        run: |
-          if [ "${{ steps.check_changes.outputs.has_changes }}" == "true" ]; then
-            echo "Course database updated successfully"
-          else
-            echo "No changes detected - database is up to date"
-          fi
+  upload_to_gcs:
+    needs: prepare_data
+    runs-on: ubuntu-latest
+    if: needs.prepare_data.outputs.has_changes == 'true'
+    permissions:
+      id-token: 'write'
+    steps:
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+        project_id: 'sisukas-fastapi'
+        workload_identity_provider: 'projects/969370446235/locations/global/workloadIdentityPools/github/providers/my-repo'
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: courses-artifacts
+          path: artifacts
+
+      - name: Upload JSON
+        uses: google-github-actions/upload-cloud-storage@v3
+        with:
+          path: 'artifacts/courses.json.gz'
+          destination: ${{ env.GCS_BUCKET }}/courses.json
+          content_type: 'application/json'
+          content_encoding: 'gzip'
+
+      - name: Upload hash
+        uses: google-github-actions/upload-cloud-storage@v3
+        with:
+          path: 'artifacts/courses.hash.json'
+          destination: ${{ env.GCS_BUCKET }}/courses.hash.json
+          content_type: 'application/json'
+
+      - name: Upload log
+        uses: google-github-actions/upload-cloud-storage@v3
+        with:
+          path: 'artifacts/course_changes_*.json'
+          destination: ${{ env.GCS_BUCKET }}/
+          content_type: 'application/json'
