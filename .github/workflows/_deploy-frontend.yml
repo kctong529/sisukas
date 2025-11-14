@@ -12,6 +12,9 @@ on:
       vite_wrapper_api:
         required: true
         type: string
+      vite_gcs_bucket:
+        required: true
+        type: string
       fly_io_url:
         required: true
         type: string
@@ -50,6 +53,7 @@ jobs:
         env:
           VITE_FILTERS_API: ${{ inputs.vite_filters_api }}
           VITE_WRAPPER_API: ${{ inputs.vite_wrapper_api }}
+          VITE_GCS_BUCKET: ${{ inputs.vite_gcs_bucket }}
         run: |
           npm run build
           echo "result=success" >> $GITHUB_OUTPUT

@@ -92,6 +92,7 @@ jobs:
         env:
           VITE_FILTERS_API: https://filters-api.sisukas.eu
           VITE_WRAPPER_API: https://sisu-wrapper-api.sisukas.eu
+          VITE_GCS_BUCKET: https://storage.googleapis.com/sisukas-core
         run: |
           npm run build
           echo "result=success" >> $GITHUB_OUTPUT
