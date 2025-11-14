@@ -204,7 +204,9 @@ def generate_wrapped_html(body_content: str) -> str:
 
 def write_html(output_path: str, content: str):
     """Write the final HTML to the specified output path."""
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    directory = os.path.dirname(output_path)
+    if directory:  # only make dirs if there’s a directory
+        os.makedirs(directory, exist_ok=True)
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(content)
     print(f"Written wrapped HTML to {output_path} successfully.")
