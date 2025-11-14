@@ -99,24 +99,21 @@ jobs:
           name: courses-artifacts
           path: artifacts
 
-      - name: Upload JSON
+      - name: Upload courses.json.gz
         uses: google-github-actions/upload-cloud-storage@v3
         with:
           path: 'artifacts/courses.json.gz'
-          destination: ${{ env.GCS_BUCKET }}/courses.json
-          content_type: 'application/json'
-          content_encoding: 'gzip'
+          destination: ${{ env.GCS_BUCKET }}
 
-      - name: Upload hash
+      - name: Upload courses.hash.json
         uses: google-github-actions/upload-cloud-storage@v3
         with:
           path: 'artifacts/courses.hash.json'
-          destination: ${{ env.GCS_BUCKET }}/courses.hash.json
-          content_type: 'application/json'
+          destination: ${{ env.GCS_BUCKET }}
 
-      - name: Upload log
+      - name: Upload log files
         uses: google-github-actions/upload-cloud-storage@v3
         with:
-          path: 'artifacts/course_changes_*.json'
-          destination: ${{ env.GCS_BUCKET }}/
-          content_type: 'application/json'
+          path: artifacts
+          glob: "course_changes_*.json"
+          destination: sisukas-core-test/logs
