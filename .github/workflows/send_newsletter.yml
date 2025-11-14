@@ -5,6 +5,10 @@ on:
     - cron: '49 8 * * 6'
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
   PYTHON_VERSION: '3.12'
   RECIPIENTS_REPO: kctong529/sisukas-newsletter-recipients
