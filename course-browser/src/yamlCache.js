@@ -9,7 +9,6 @@ export const getCurriculaMap = () => curriculaMap;
 export const getPeriodsData = () => periodsData;
 export const getOrganizationNames = () => organizationNames;
 
-
 // Fetches the YAML data from a file, appending a timestamp to the URL
 export const fetchYaml = async (url) => {
   try {
