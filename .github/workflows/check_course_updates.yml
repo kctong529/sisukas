@@ -81,8 +81,8 @@ jobs:
       - id: auth
         uses: google-github-actions/auth@v3
         with:
-        project_id: 'sisukas-fastapi'
-        workload_identity_provider: 'projects/969370446235/locations/global/workloadIdentityPools/github/providers/my-repo'
+          project_id: 'sisukas-fastapi'
+          workload_identity_provider: 'projects/969370446235/locations/global/workloadIdentityPools/github/providers/my-repo'
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
