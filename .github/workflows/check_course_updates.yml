@@ -7,11 +7,11 @@ on:
     - cron: '0 6 * * *'
   push:
     branches:
+      - main
       - dev
 
 env:
   PYTHON_VERSION: '3.12'
-  GCS_BUCKET: 'sisukas-core-test'
 
 jobs:
   prepare_data:
@@ -22,8 +22,18 @@ jobs:
     outputs:
       has_changes: ${{ steps.check_changes.outputs.has_changes }}
     steps:
-      - name: Checkout main branch
+      - name: Checkout repo
         uses: actions/checkout@v4
+
+      # Determine bucket based on branch
+      - name: Select GCS bucket
+        id: set_bucket
+        run: |
+          if [ "${GITHUB_REF##*/}" = "main" ]; then
+            echo "gcs_bucket=sisukas-core" >> $GITHUB_OUTPUT
+          else
+            echo "gcs_bucket=sisukas-core-test" >> $GITHUB_OUTPUT
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -33,9 +43,11 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Fetch current JSON
+      - name: Fetch existing courses.json if available
         run: |
-          curl -fSL "https://storage.googleapis.com/${{ env.GCS_BUCKET }}/courses.json" -o courses.json || echo "No existing courses.json"
+          curl -fSL \
+          "https://storage.googleapis.com/${{ steps.set_bucket.outputs.gcs_bucket }}/courses.json" \
+          -o courses.json || echo "No existing courses.json"
 
       - name: Fetch latest courses
         env:
@@ -56,15 +68,13 @@ jobs:
       - name: Prepare artifacts
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
-          gzip -c latest.json > courses.json.gz
-          python scripts/generate_hash.py latest.json courses.hash.json
-          LATEST_LOG=$(ls -1t logs/course_changes_*.json | head -n 1)
           mkdir -p artifacts
-          cp courses.json.gz artifacts/
-          cp courses.hash.json artifacts/
+          gzip -c latest.json > artifacts/courses.json.gz
+          python scripts/generate_hash.py latest.json artifacts/courses.hash.json
+          LATEST_LOG=$(ls -1t logs/course_changes_*.json | head -n 1)
           cp "$LATEST_LOG" artifacts/
 
-      - name: Upload artifacts
+      - name: Upload artifacts (internal)
         if: steps.check_changes.outputs.has_changes == 'true'
         uses: actions/upload-artifact@v4
         with:
@@ -78,8 +88,7 @@ jobs:
     permissions:
       id-token: 'write'
     steps:
-      - name: Checkout main branch
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - id: auth
         uses: google-github-actions/auth@v3
@@ -88,20 +97,20 @@ jobs:
           workload_identity_provider: 'projects/969370446235/locations/global/workloadIdentityPools/github/providers/my-repo'
           service_account: 'github-actions-deployer@sisukas-fastapi.iam.gserviceaccount.com'
 
-      - name: Print active identity
-        run: |
-          gcloud auth list
-          gcloud config list
-
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: courses-artifacts
           path: artifacts
 
-      - name: Upload to GCS using gcloud (renamed to courses.json)
+      - name: Install gcloud CLI (storage)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-cloud-cli
+
+      - name: Upload courses.json.gz (renamed to courses.json)
         env:
-          BUCKET_NAME: ${{ env.GCS_BUCKET }}
+          BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
         run: |
           gcloud storage cp \
             artifacts/courses.json.gz \
@@ -111,18 +120,17 @@ jobs:
 
       - name: Upload hash file (no caching)
         env:
-          BUCKET_NAME: ${{ env.GCS_BUCKET }}
+          BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
         run: |
           gcloud storage cp \
-            -h "Cache-Control:no-store, max-age=0" \
             artifacts/courses.hash.json \
-            gs://$BUCKET_NAME/courses.hash.json
+            gs://$BUCKET_NAME/courses.hash.json \
+            --content-type="application/json" \
+            --cache-control="no-store, max-age=0"
 
       - name: Upload log files
-        uses: google-github-actions/upload-cloud-storage@v3
-        with:
-          path: artifacts
-          glob: "course_changes_*.json"
-          destination: sisukas-core-test/logs
-          headers: |-
-            content-type: 'application/json'
+        env:
+          BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
+        run: |
+          gcloud storage cp artifacts/course_changes_*.json \
+            gs://$BUCKET/logs/
