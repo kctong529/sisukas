@@ -1,5 +1,5 @@
 // Import all required modules and helper functions
-import { loadPrograms, loadPeriods, loadOrganizations, periodsData, curriculaMap, organizationNames } from './yamlCache.js';
+import { loadAdditionalData, getCurriculaMap, getPeriodsData, getOrganizationNames } from './yamlCache.js';
 import { initializeDragSelect, removeEventHandlers } from './dragSelect.js';
 import { createSelect, populateSelect } from './domUtils.js';
 import {
@@ -19,6 +19,10 @@ import {
 
 import { FILTER_FIELDS, INPUT_HTMLS } from './constant.js';
 import { config } from './config.js';
+
+const curriculaMap = getCurriculaMap();
+const periodsData = getPeriodsData();
+const organizationNames = getOrganizationNames();
 
 const filtersApi = import.meta.env.VITE_FILTERS_API;
 const wrapperApi = import.meta.env.VITE_WRAPPER_API;
@@ -102,19 +106,36 @@ class LargeFileCache {
         });
     }
 
-    // Main fetch method with cache support
+    // Stale-while-revalidate fetch
     async fetch(dataUrl, hashUrl) {
-        try {
-            const cached = await this.getCache(dataUrl);
-            console.log(`Fetching hash ${hashUrl}`);
+        await this.init();
+        const cached = await this.getCache(dataUrl);
 
+        if (cached?.data) {
+            // Serve cached data immediately
+            console.log(`Serving cached data for ${dataUrl} (${Math.round(cached.size / 1024 / 1024)}MB)`);
+
+            // Background update (non-blocking)
+            this.updateCacheIfNeeded(dataUrl, hashUrl, cached.hash).catch(err => {
+                console.warn("Background cache update failed:", err);
+            });
+
+            return cached.data;
+        }
+        // No cached data, fetch normally
+        return this.updateCacheIfNeeded(dataUrl, hashUrl, null);
+    }
+
+    async updateCacheIfNeeded(dataUrl, hashUrl, oldHash) {
+        try {
             const hashRes = await fetch(hashUrl);
             if (!hashRes.ok) throw new Error(`Failed to fetch hash: ${hashRes.status}`);
             const { hash: newHash } = await hashRes.json();
 
-            if (cached?.hash === newHash) {
-                console.log(`Using cached data for ${dataUrl} (${Math.round(cached.size / 1024 / 1024)}MB)`);
-                return cached.data;
+            if (oldHash === newHash) {
+                console.log(`Cache up-to-date for ${dataUrl}`);
+                const cached = await this.getCache(dataUrl);
+                return cached?.data ?? null;
             }
 
             console.log(`Fetching updated data ${dataUrl}`);
@@ -130,11 +151,10 @@ class LargeFileCache {
         } catch (error) {
             console.error(`Failed to fetch ${dataUrl}:`, error);
 
-            // Fall back to cached data if available
-            const cached = await this.getCache(dataUrl);
-            if (cached?.data) {
+            if (oldHash !== null) {
                 console.log(`Using stale cached data for ${dataUrl}`);
-                return cached.data;
+                const cached = await this.getCache(dataUrl);
+                if (cached?.data) return cached.data;
             }
 
             throw error;
@@ -265,12 +285,6 @@ window.clearCache = async () => {
 
 export function extractOrganizationNames(courses) {
     return new Set(courses.map(course => course.organizationName.en).filter(name => name));
-}
-
-async function loadAdditionalData() {
-    await loadPrograms();
-    await loadPeriods();
-    await loadOrganizations();
 }
 
 // Helper to extract sortable value from course based on column

@@ -85,6 +85,10 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: npm ci
 
+      - name: Compile Metadata
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run compile-metadata
+
       - name: Build with Vite
         id: build
         working-directory: ${{ env.WORKING_DIR }}
