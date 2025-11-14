@@ -78,11 +78,20 @@ jobs:
     permissions:
       id-token: 'write'
     steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+
       - id: auth
         uses: google-github-actions/auth@v3
         with:
           project_id: 'sisukas-fastapi'
           workload_identity_provider: 'projects/969370446235/locations/global/workloadIdentityPools/github/providers/my-repo'
+          service_account: 'github-actions-deployer@sisukas-fastapi.iam.gserviceaccount.com'
+
+      - name: Print active identity
+        run: |
+          gcloud auth list
+          gcloud config list
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
