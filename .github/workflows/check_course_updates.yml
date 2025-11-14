@@ -104,7 +104,7 @@ jobs:
           BUCKET_NAME: ${{ env.GCS_BUCKET }}
         run: |
           gcloud storage cp \
-            courses.json.gz \
+            artifacts/courses.json.gz \
             gs://$BUCKET_NAME/courses.json \
             --content-type="application/json" \
             --content-encoding="gzip"
