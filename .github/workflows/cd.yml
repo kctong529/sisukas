@@ -7,7 +7,6 @@ on:
   workflow_run:
     workflows: 
       - "Send Newsletter"
-      - "Check Course Updates"
     types:
       - completed
 
