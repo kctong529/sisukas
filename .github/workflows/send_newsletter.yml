@@ -115,4 +115,4 @@ jobs:
         run: |
           gcloud storage cp \
             newsletter_wrapped.html \
-            gs://sisukas-core/newsletter.html
+            gs://newsletter.sisukas.eu/newsletter.html
