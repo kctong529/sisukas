@@ -104,17 +104,17 @@ jobs:
         with:
           path: 'artifacts/courses.json.gz'
           destination: ${{ env.GCS_BUCKET }}
-          headers: |
-            Content-Encoding: gzip
-            Content-Type: application/json
+          headers: |-
+            content-type: 'application/json'
+            content-encoding: 'gzip'
 
       - name: Upload courses.hash.json
         uses: google-github-actions/upload-cloud-storage@v3
         with:
           path: 'artifacts/courses.hash.json'
           destination: ${{ env.GCS_BUCKET }}
-          headers: |
-            Content-Type: application/json
+          headers: |-
+            content-type: 'application/json'
 
       - name: Upload log files
         uses: google-github-actions/upload-cloud-storage@v3
@@ -122,5 +122,5 @@ jobs:
           path: artifacts
           glob: "course_changes_*.json"
           destination: sisukas-core-test/logs
-          headers: |
-            Content-Type: application/json
+          headers: |-
+            content-type: 'application/json'
