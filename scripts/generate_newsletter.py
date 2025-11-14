@@ -1,7 +1,37 @@
+import os
+import sys
 import json
+import argparse
 from datetime import datetime, timedelta
 
-# Helper functions for date parsing and course filtering
+# -------------------------------
+# Helper functions
+# -------------------------------
+
+def require_file(path: str):
+    """Ensure the given path exists and is a file."""
+    if not os.path.isfile(path):
+        raise FileNotFoundError(f"Source file not found: {path}")
+
+def load_json_file(path: str):
+    """Load JSON and raise a friendly error if invalid."""
+    try:
+        with open(path, "r") as f:
+            return json.load(f)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON in {path}: {e}") from e
+
+def ensure_writable(path: str):
+    """Check if a file can be created/written."""
+    directory = os.path.dirname(path) or "."
+    if not os.path.isdir(directory):
+        raise NotADirectoryError(f"Output directory does not exist: {directory}")
+    try:
+        with open(path, "w") as f:
+            f.write("")  # test write
+    except Exception as e:
+        raise PermissionError(f"Cannot write to output file '{path}': {e}") from e
+
 def parse_date(date_str: str) -> datetime.date:
     """Parse a date string into a datetime.date object or return None if the format is invalid."""
     if date_str:
@@ -211,7 +241,17 @@ def generate_html(upcoming_open, upcoming_close, exam_courses):
                         <tr>
                             <td>
                                 <h2>{newsletter_title}</h2>
-                                <p>Stay informed about upcoming course enrolment periods at Aalto. Below, you’ll find a list of courses with enrolment periods closing soon — make sure to check them out in time.</p>
+                                <p>
+                                    We’re currently working on a refreshed newsletter layout that will roll out soon, 
+                                    along with more customizable content delivery options to make these updates even more useful for you.  
+                                    Until then, here are the latest course enrolment periods you might want to keep an eye on.
+                                </p>
+                                <p>
+                                    An unsubscribe button will also be added in the upcoming update.  
+                                    If you prefer to stop receiving these messages right now, just contact 
+                                    <a href="mailto:kichun.tong@aalto.fi" style="color: #610396;">kichun.tong@aalto.fi</a> 
+                                    or message @kctong529 on Telegram. It can be handled immediately.
+                                </p>
     """
 
     html_content += f"""
@@ -219,7 +259,7 @@ def generate_html(upcoming_open, upcoming_close, exam_courses):
 
         {generate_category_table("📅 Enrolments Opening Soon or Recently", upcoming_open)}
 
-        <p>Thanks for staying organised with Sisukas — wishing you a smooth and successful semester ahead!</p>
+        <p>Thanks for staying organised with Sisukas. We wish you a smooth and successful semester ahead!</p>
         <hr>
         <p style="margin-top: 20px; font-size: 13px; color: #777; text-align: center;">
             🚀 Built by students, for students: 
@@ -246,22 +286,48 @@ def generate_html(upcoming_open, upcoming_close, exam_courses):
     """
     return html_content
 
-# Main logic
+# -------------------------------
+# Main logic with argparse
+# -------------------------------
+
 def main():
     """Main logic to filter courses and generate the HTML newsletter."""
-    today = datetime.today().date()
+    parser = argparse.ArgumentParser(
+        description="Generate Sisukas newsletter HTML from course JSON."
+    )
+    parser.add_argument("source", help="Path to the courses.json file")
+    parser.add_argument("-o", "--output", default="newsletter.html",
+                        help="Output HTML file path (default: newsletter.html)")
 
-    # Date thresholds
+    args = parser.parse_args()
+
+    try:
+        # Validate input JSON file
+        require_file(args.source)
+
+        # Validate output path *before* doing work
+        ensure_writable(args.output)
+
+        # Load JSON with robustness
+        courses = load_json_file(args.source)
+
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    today = datetime.today().date()
     three_months_ago = today - timedelta(days=90)
     two_weeks_from_day = today + timedelta(weeks=2)
     three_weeks_from_day = today + timedelta(weeks=3)
 
     # Load the courses JSON
-    with open("course-browser/public/data/courses.json") as f:
+    with open(args.source) as f:
         courses = json.load(f)
 
     # Filter the courses
-    filtered_courses = filter_courses(courses, three_months_ago, two_weeks_from_day, three_weeks_from_day, today)
+    filtered_courses = filter_courses(
+        courses, three_months_ago, two_weeks_from_day, three_weeks_from_day, today
+    )
 
     # Deduplicate them
     filtered_courses = deduplicate_courses(filtered_courses)
@@ -273,17 +339,19 @@ def main():
     exam_courses, other_courses = split_exam_and_other_courses(filtered_courses)
 
     # Split other courses into those with future enrolment opens and those closing soon/already open
-    upcoming_open, upcoming_close = split_upcoming_open_and_deadlines(other_courses, three_weeks_from_day)
+    upcoming_open, upcoming_close = split_upcoming_open_and_deadlines(
+        other_courses, three_weeks_from_day
+    )
 
     # Generate the HTML content
     html_content = generate_html(upcoming_open, upcoming_close, exam_courses)
 
     # Write the HTML to a file
-    with open("course-browser/public/newsletter.html", "w") as f:
+    with open(args.output, "w") as f:
         f.write(html_content)
 
-    print(f"Generated newsletter HTML with {len(filtered_courses)} courses.")
+    print(f"Generated newsletter HTML -> {args.output}")
+    print(f"Total included courses: {len(filtered_courses)}")
 
-# Run the script
 if __name__ == "__main__":
     main()
