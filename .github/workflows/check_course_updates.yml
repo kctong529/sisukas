@@ -21,6 +21,7 @@ jobs:
       id-token: 'write'
     outputs:
       has_changes: ${{ steps.check_changes.outputs.has_changes }}
+      gcs_bucket: ${{ steps.set_bucket.outputs.gcs_bucket }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
