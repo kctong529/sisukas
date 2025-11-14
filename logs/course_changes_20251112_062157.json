@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-11-12T06:21:57.587979",
+  "summary": {
+    "added": 0,
+    "removed": 1,
+    "updated": 3
+  },
+  "details": {
+    "added": [],
+    "removed": [
+      {
+        "code": "BIZM312.kand",
+        "name": "Bachelor's Thesis and Seminar, Bachelor's thesis"
+      }
+    ],
+    "updated": [
+      {
+        "code": "ISM-C1002",
+        "name": "Advanced course in statistics and data analytics, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2026-01-05"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1111",
+        "name": "Online Writing Skills for Engineers 2 (w) (FiTech Green Transition II students only), Lectures",
+        "changes": [
+          [
+            "Name",
+            "Online Writing Skills for Engineers 2 (w) (FiTech Green Transition II students only), Lectures",
+            "Online Writing Skills for Engineers 2 (w) (FiTech Green Transition II students only), Online teaching"
+          ]
+        ]
+      },
+      {
+        "code": "MUO-E5052",
+        "name": "Personal Exploration, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2025-12-17"
+          ]
+        ]
+      }
+    ]
+  }
+}

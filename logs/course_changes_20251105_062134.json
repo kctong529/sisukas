@@ -1,0 +1,455 @@
+{
+  "timestamp": "2025-11-05T06:21:34.470630",
+  "summary": {
+    "added": 0,
+    "removed": 2,
+    "updated": 37
+  },
+  "details": {
+    "added": [],
+    "removed": [
+      {
+        "code": "ENG-L1000",
+        "name": "Introduction to doctoral studies D, Lecture"
+      },
+      {
+        "code": "CS-E3190",
+        "name": "Principles of Algorithmic Techniques D, Exam"
+      }
+    ],
+    "updated": [
+      {
+        "code": "LC-1310",
+        "name": "Academic Communication for MSc Students (o,w), Lecture (Zoom group, MSc students from CHEM, ELEC, ENG, SCI, BIZ)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LCA-1022",
+        "name": "Academic Writing (w), Lecture (for ARTS master's students writing their thesis)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ],
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2026-01-06"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1113",
+        "name": "Autonomous Language Learning Path   (o,w), Lecture  (M06)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1113",
+        "name": "Autonomous Language Learning Path   (o,w), Lecture (M07)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LCA-1015",
+        "name": "Autonomous Language Learning Path (o,w), Lecture (Diverse learners)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LCA-1015",
+        "name": "Autonomous Language Learning Path (o,w), Lecture (M06)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LCA-1015",
+        "name": "Autonomous Language Learning Path (o,w), Lecture (M07)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM3049.kand",
+        "name": "Bachelor's Thesis and Seminar, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-12-01"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1121",
+        "name": "Communicating Sustainable Solutions (o,w), Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1114",
+        "name": "Communicating Technology (o,w), Lecture (H11)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1114",
+        "name": "Communicating Technology (o,w), Lecture (H12)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1114",
+        "name": "Communicating Technology (o,w), Lecture (H13)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1114",
+        "name": "Communicating Technology (o,w), Lecture (H14)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LCA-1001",
+        "name": "Expressing your Idea (o,w), Lecture (H02)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ],
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2025-12-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7210",
+        "name": "Finnish 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2026-01-06"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7210",
+        "name": "Finnish 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-02-16",
+            "2026-04-13"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7220",
+        "name": "Finnish 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2026-01-01"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7220",
+        "name": "Finnish 2, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-02-16",
+            "2026-03-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7230",
+        "name": "Finnish 3, Lecture",
+        "changes": [
+          [
+            "Start Date",
+            "2026-03-16",
+            "2026-03-23"
+          ],
+          [
+            "End Date",
+            "2026-06-03",
+            "2026-05-27"
+          ],
+          [
+            "Enrolment End",
+            "2026-02-16",
+            "2026-03-16"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7270",
+        "name": "Finnish 7, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2025-12-29",
+            "2026-01-06"
+          ]
+        ]
+      },
+      {
+        "code": "ABL-E2616",
+        "name": "Foundations of Data Regulation, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2026-02-12",
+            "2026-02-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7009",
+        "name": "Get to know Finland, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2026-01-08"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1123",
+        "name": "Industrial Communications (o, w), Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1117",
+        "name": "Integrated Oral and Written Skills (o,w), Lecture (Tepsy 1. vuosi)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1117",
+        "name": "Integrated Oral and Written Skills (o,w), Lecture (integrated with KIG-C1010 Introduction to Geoinformatics)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1317",
+        "name": "Integrated Project Communication for MSc Students (o, w), Lecture (For EIT/ICT year 1, integrated with TU-E4101)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1317",
+        "name": "Integrated Project Communication for MSc Students (o, w), Lecture (For EIT/ICT year 1, integrated with TU-E4101)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-0610",
+        "name": "Intercultural Communication L, Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ],
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2026-01-06"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1120",
+        "name": "Online Persuasive Presentations for Engineers (o), Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o) (V22-23), Lecture (V22-23)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o), Lecture  (V18-19)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1112",
+        "name": "Online Presentations Skills for Engineers (o), Lecture (V24-25)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1110",
+        "name": "Online Writing Skills for Engineers 1 (w), Lecture (P3)",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-17"
+          ]
+        ]
+      },
+      {
+        "code": "CHEM-E2145",
+        "name": "Polymer Reaction Engineering D, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-07",
+            "2026-01-13"
+          ]
+        ]
+      },
+      {
+        "code": "LC-1335",
+        "name": "Preparing for the Doctoral Defence (o) (H02), Lecture",
+        "changes": [
+          [
+            "Enrolment Start",
+            "2025-12-08",
+            "2025-11-04"
+          ]
+        ]
+      },
+      {
+        "code": "LC-2330",
+        "name": "Spanish 3, Lecture",
+        "changes": [
+          [
+            "End Date",
+            "2025-11-27",
+            "2025-12-02"
+          ]
+        ]
+      },
+      {
+        "code": "LC-7004",
+        "name": "Survival Finnish 1, Lecture",
+        "changes": [
+          [
+            "Enrolment End",
+            "2026-01-01",
+            "2026-01-12"
+          ]
+        ]
+      }
+    ]
+  }
+}
