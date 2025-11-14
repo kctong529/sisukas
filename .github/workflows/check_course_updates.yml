@@ -99,14 +99,15 @@ jobs:
           name: courses-artifacts
           path: artifacts
 
-      - name: Upload courses.json (gzip)
-        uses: google-github-actions/upload-cloud-storage@v3
-        with:
-          path: 'artifacts/courses.json.gz'
-          destination: ${{ env.GCS_BUCKET }}
-          headers: |-
-            content-type: 'application/json'
-            content-encoding: 'gzip'
+      - name: Upload to GCS using gcloud (renamed to courses.json)
+        env:
+          BUCKET_NAME: ${{ env.GCS_BUCKET }}
+        run: |
+          gcloud storage cp \
+            courses.json.gz \
+            gs://$BUCKET_NAME/courses.json \
+            --content-type="application/json" \
+            --content-encoding="gzip"
 
       - name: Upload courses.hash.json
         uses: google-github-actions/upload-cloud-storage@v3
