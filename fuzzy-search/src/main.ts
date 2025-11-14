@@ -369,7 +369,7 @@ input.addEventListener("input", () => {
     return;
   }
 
-  results = fuse.search(query, { limit: 12 });
+  results = fuse.search(query, { limit: 18 });
   currentIndex = -1;
   updateList();
 });
