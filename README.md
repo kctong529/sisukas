@@ -76,7 +76,7 @@ cd sisu-wrapper && uv run fastapi dev api/main.py --port 8001
 ```
 
 > [!NOTE]
-> The frontend runs independently—backend services are only needed for filter sharing or SISU integration features. See the [Filters API documentation](https://filters-api.sisukas.eu/) for production endpoints.
+> The frontend runs independently—backend services are only needed for filter sharing or SISU integration features. See the [Filters API documentation](https://filters-api.sisukas.eu/docs) for production endpoints.
 
 Run `make help` to see all available commands.
 

@@ -22,7 +22,9 @@ import { config } from './config.js';
 
 const filtersApi = import.meta.env.VITE_FILTERS_API;
 const wrapperApi = import.meta.env.VITE_WRAPPER_API;
+const gcsBucket = import.meta.env.VITE_GCS_BUCKET;
 
+console.log("GCS bucket = ", gcsBucket);
 
 // Global state variables
 let courses = []; // Stores all courses loaded from JSON
@@ -30,7 +32,7 @@ let filteredCourses = []; // Stores currently filtered courses
 let currentSortColumn = "courseName"; // Default sort column
 let sortDirection = 1; // 1 = ascending, -1 = descending
 
-// IndexedDB-based cache for large files
+// IndexedDB-based cache for large files, hash-driven
 class LargeFileCache {
     constructor(dbName = 'lastModified-cache', version = 1) {
         this.dbName = dbName;
@@ -78,7 +80,7 @@ class LargeFileCache {
     }
 
     // Save data to cache
-    async setCache(url, lastModified, data) {
+    async setCache(url, hash, data) {
         await this.init();
 
         return new Promise((resolve, reject) => {
@@ -87,7 +89,7 @@ class LargeFileCache {
 
             const cacheItem = {
                 url,
-                lastModified,
+                hash,
                 data,
                 timestamp: Date.now(),
                 size: JSON.stringify(data).length
@@ -101,47 +103,37 @@ class LargeFileCache {
     }
 
     // Main fetch method with cache support
-    async fetch(url) {
+    async fetch(dataUrl, hashUrl) {
         try {
-            const cached = await this.getCache(url);
-            const headers = {};
+            const cached = await this.getCache(dataUrl);
+            console.log(`Fetching hash ${hashUrl}`);
 
-            if (cached?.lastModified) {
-                headers['If-Modified-Since'] = cached.lastModified;
-            }
+            const hashRes = await fetch(hashUrl);
+            if (!hashRes.ok) throw new Error(`Failed to fetch hash: ${hashRes.status}`);
+            const { hash: newHash } = await hashRes.json();
 
-            console.log(`Fetching ${url}${cached ? ' (checking for updates...)' : ' (first time)'}`);
-
-            const response = await fetch(url, { headers });
-
-            // 304 = Not Modified - use cached data
-            if (response.status === 304) {
-                console.log(`${url} - Not modified, using cached data (${Math.round(cached.size / 1024 / 1024)}MB)`);
+            if (cached?.hash === newHash) {
+                console.log(`Using cached data for ${dataUrl} (${Math.round(cached.size / 1024 / 1024)}MB)`);
                 return cached.data;
             }
 
-            // New data available
-            if (response.ok) {
-                const lastModified = response.headers.get('Last-Modified');
-                const data = await response.json();
+            console.log(`Fetching updated data ${dataUrl}`);
+            const dataRes = await fetch(dataUrl);
+            if (!dataRes.ok) throw new Error(`Failed to fetch data: ${dataRes.status}`);
+            const data = await dataRes.json();
 
-                const sizeMB = Math.round(JSON.stringify(data).length / 1024 / 1024);
-                console.log(`${url} - Downloaded ${sizeMB}MB, Last Modified: ${lastModified}`);
+            const sizeMB = Math.round(JSON.stringify(data).length / 1024 / 1024);
+            console.log(`Downloaded ${sizeMB}MB, hash: ${newHash}`);
 
-                // Cache the new data
-                await this.setCache(url, lastModified, data);
-
-                return data;
-            }
-
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            await this.setCache(dataUrl, newHash, data);
+            return data;
         } catch (error) {
-            console.error(`Failed to fetch ${url}:`, error);
+            console.error(`Failed to fetch ${dataUrl}:`, error);
 
             // Fall back to cached data if available
-            const cached = await this.getCache(url);
+            const cached = await this.getCache(dataUrl);
             if (cached?.data) {
-                console.log(`Using stale cached data for ${url}`);
+                console.log(`Using stale cached data for ${dataUrl}`);
                 return cached.data;
             }
 
@@ -249,7 +241,10 @@ async function loadCourses() {
 
 async function loadCourseData() {
     try {
-        const courses = await cache.fetch('/data/courses.json');
+        const courses = await cache.fetch(
+            `${gcsBucket}/courses.json`,
+            `${gcsBucket}/courses.hash.json`,
+        );
         console.log('Courses loaded:', courses.length);
         return courses;
     } catch (error) {
@@ -1230,6 +1225,32 @@ async function fetchStudyGroups(courseObj) {
   }
 }
 
+function getCourseObjectsInRange(startIndex = 0, endIndex = 10) {
+    if (!filteredCourses || filteredCourses.length === 0) {
+        console.warn("⚠️ filteredCourses is empty or undefined.");
+        return [];
+    }
+
+    // Clamp indices to valid range
+    const validStart = Math.max(0, Math.min(startIndex, filteredCourses.length - 1));
+    const validEnd = Math.max(validStart, Math.min(endIndex, filteredCourses.length));
+    
+    const courseObjects = [];
+
+    for (let i = validStart; i < validEnd; i++) {
+        const course = filteredCourses[i];
+        courseObjects.push({
+            course_unit_id: course.courseUnitId || null,
+            course_offering_id: course.id || null,
+            code: course.code || null,
+            name: course.name?.en || null
+        });
+    }
+
+    console.log(`Extracted ${courseObjects.length} course objects (indices ${validStart}–${validEnd - 1}):`);
+    return courseObjects;
+}
+
 Object.assign(window, {
     addFilterRule,
     handleFieldChange,
@@ -1246,5 +1267,6 @@ Object.assign(window, {
     onSearchButtonClick,
     debugCourses,
     getCourseIdsByIndex,
-    fetchStudyGroups
+    fetchStudyGroups,
+    getCourseObjectsInRange
 });

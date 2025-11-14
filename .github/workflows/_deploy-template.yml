@@ -12,6 +12,9 @@ on:
       vite_wrapper_api:
         required: true
         type: string
+      vite_gcs_bucket:
+        required: true
+        type: string
       fly_io_url:
         required: true
         type: string
@@ -43,6 +46,7 @@ jobs:
       environment: ${{ inputs.environment }}
       vite_filters_api: ${{ inputs.vite_filters_api }}
       vite_wrapper_api: ${{ inputs.vite_wrapper_api }}
+      vite_gcs_bucket: ${{ inputs.vite_gcs_bucket }}
       fly_io_url: ${{ inputs.fly_io_url }}
     secrets: inherit
 

@@ -11,7 +11,7 @@ primary_region = 'arn'
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
   processes = ['app']
 
 [[statics]]
@@ -21,6 +21,6 @@ primary_region = 'arn'
     "Cache-Control" = "public, max-age=0, must-revalidate"
 
 [[vm]]
-  memory = '1gb'
+  memory = '256mb'
   cpu_kind = 'shared'
   cpus = 1

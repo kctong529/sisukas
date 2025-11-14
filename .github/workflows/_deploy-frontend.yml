@@ -12,6 +12,9 @@ on:
       vite_wrapper_api:
         required: true
         type: string
+      vite_gcs_bucket:
+        required: true
+        type: string
       fly_io_url:
         required: true
         type: string
@@ -33,10 +36,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js and enable cache
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
 
       - name: Install Dependencies
         working-directory: ${{ env.WORKING_DIR }}
@@ -48,13 +53,20 @@ jobs:
         env:
           VITE_FILTERS_API: ${{ inputs.vite_filters_api }}
           VITE_WRAPPER_API: ${{ inputs.vite_wrapper_api }}
+          VITE_GCS_BUCKET: ${{ inputs.vite_gcs_bucket }}
         run: |
           npm run build
           echo "result=success" >> $GITHUB_OUTPUT
 
       - name: List Files
         working-directory: ${{ env.WORKING_DIR }}
-        run: ls -la
+        run: |
+          ls -la
+          ls -la dist
+
+      - name: Verify Build Output
+        working-directory: ${{ env.WORKING_DIR }}/dist
+        run: test -f index.html
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
@@ -84,16 +96,23 @@ jobs:
 
       - name: List Files
         working-directory: ${{ env.WORKING_DIR }}
-        run: ls -la
+        run: |
+          ls -la
+          ls -la dist
 
       - name: Setup Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
+        uses: superfly/flyctl-actions/setup-flyctl@1.5
 
       - name: Deploy on Fly.io
         working-directory: ${{ env.WORKING_DIR }}
-        run: flyctl deploy --config fly.dev.toml --remote-only
+        run: flyctl deploy --config fly.dev.toml --remote-only --build-arg COMMIT_SHA=${{ github.sha }}
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TEST_TOKEN }}
+
+      - name: Check Deployment Health
+        run: |
+          sleep 10
+          curl -f ${{ inputs.fly_io_url }} || exit 1
 
   deploy_frontend_prod:
     name: Deploy Frontend (Prod)
@@ -117,13 +136,20 @@ jobs:
 
       - name: List Files
         working-directory: ${{ env.WORKING_DIR }}
-        run: ls -la
+        run: |
+          ls -la
+          ls -la dist
 
       - name: Setup Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
+        uses: superfly/flyctl-actions/setup-flyctl@1.5
 
       - name: Deploy on Fly.io
         working-directory: ${{ env.WORKING_DIR }}
-        run: flyctl deploy --remote-only
+        run: flyctl deploy --config fly.toml --remote-only --build-arg COMMIT_SHA=${{ github.sha }}
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Check Deployment Health
+        run: |
+          sleep 10
+          curl -f ${{ inputs.fly_io_url }} || exit 1
