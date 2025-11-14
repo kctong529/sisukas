@@ -112,7 +112,7 @@ jobs:
         run: |
           gcloud storage cp \
             artifacts/courses.json.gz \
-            gs://$BUCKET_NAME/courses.json \
+            gs://$BUCKET/courses.json \
             --content-type="application/json" \
             --content-encoding="gzip"
 
@@ -122,7 +122,7 @@ jobs:
         run: |
           gcloud storage cp \
             artifacts/courses.hash.json \
-            gs://$BUCKET_NAME/courses.hash.json \
+            gs://$BUCKET/courses.hash.json \
             --content-type="application/json" \
             --cache-control="no-store, max-age=0"
 
