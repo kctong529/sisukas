@@ -22,7 +22,9 @@ import { config } from './config.js';
 
 const filtersApi = import.meta.env.VITE_FILTERS_API;
 const wrapperApi = import.meta.env.VITE_WRAPPER_API;
+const gcsBucket = import.meta.env.VITE_GCS_BUCKET;
 
+console.log("GCS bucket = ", gcsBucket);
 
 // Global state variables
 let courses = []; // Stores all courses loaded from JSON
@@ -240,8 +242,8 @@ async function loadCourses() {
 async function loadCourseData() {
     try {
         const courses = await cache.fetch(
-            'https://storage.googleapis.com/sisukas-core-test/courses.json',
-            'https://storage.googleapis.com/sisukas-core-test/courses.hash.json'
+            `${gcsBucket}/courses.json`,
+            `${gcsBucket}/courses.hash.json`,
         );
         console.log('Courses loaded:', courses.length);
         return courses;

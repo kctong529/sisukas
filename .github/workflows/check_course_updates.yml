@@ -62,8 +62,6 @@ jobs:
         id: check_changes
         run: |
           python scripts/report_course_changes.py
-          echo "Exit code: $?"
-        continue-on-error: true
 
       - name: Prepare artifacts
         if: steps.check_changes.outputs.has_changes == 'true'
