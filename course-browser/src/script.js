@@ -1,5 +1,5 @@
 // Import all required modules and helper functions
-import { loadPrograms, loadPeriods, loadOrganizations, periodsData, curriculaMap, organizationNames } from './yamlCache.js';
+import { loadAdditionalData, getCurriculaMap, getPeriodsData, getOrganizationNames } from './yamlCache.js';
 import { initializeDragSelect, removeEventHandlers } from './dragSelect.js';
 import { createSelect, populateSelect } from './domUtils.js';
 import {
@@ -19,6 +19,10 @@ import {
 
 import { FILTER_FIELDS, INPUT_HTMLS } from './constant.js';
 import { config } from './config.js';
+
+const curriculaMap = getCurriculaMap();
+const periodsData = getPeriodsData();
+const organizationNames = getOrganizationNames();
 
 const filtersApi = import.meta.env.VITE_FILTERS_API;
 const wrapperApi = import.meta.env.VITE_WRAPPER_API;
@@ -281,12 +285,6 @@ window.clearCache = async () => {
 
 export function extractOrganizationNames(courses) {
     return new Set(courses.map(course => course.organizationName.en).filter(name => name));
-}
-
-async function loadAdditionalData() {
-    await loadPrograms();
-    await loadPeriods();
-    await loadOrganizations();
 }
 
 // Helper to extract sortable value from course based on column

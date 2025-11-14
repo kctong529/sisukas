@@ -1,14 +1,14 @@
 import yaml from 'js-yaml';
 
-// Generic data structure to store program and course data
-export let curriculaMap = {
-    major: {},
-    minor: {}
-};
+let curriculaMap = { major: {}, minor: {} };
+let periodsData = [];
+let organizationNames = [];
 
-export let periodsData = [];
+// Getters to access the data
+export const getCurriculaMap = () => curriculaMap;
+export const getPeriodsData = () => periodsData;
+export const getOrganizationNames = () => organizationNames;
 
-export let organizationNames = [];
 
 // Fetches the YAML data from a file, appending a timestamp to the URL
 export const fetchYaml = async (url) => {
@@ -62,47 +62,6 @@ export const loadYamlFile = async (filePath) => {
   return data;
 };
 
-// Load programs (major/minor) data
-export async function loadPrograms() {
-    // Clear existing data
-    curriculaMap = { major: {}, minor: {} };
-
-    const majorPrograms = await loadYamlFile('data/major.yaml');
-    const minorPrograms = await loadYamlFile('data/minor.yaml');
-
-    // Function to process and categorize program data
-    const processPrograms = (programsArray, type) => {
-        programsArray.curricula.forEach(program => {
-            const { code, courses, name } = program;
-            const upperCode = code.toUpperCase();
-
-            // Store program data in programsMap
-            curriculaMap[type][upperCode] = {
-                name,
-                courses: new Set(courses),
-            };
-        });
-    };
-
-    // Process major and minor programs separately
-    processPrograms(majorPrograms, 'major');
-    processPrograms(minorPrograms, 'minor');
-}
-
-// Load academic periods (e.g., terms or semesters) data
-export async function loadPeriods() {
-    periodsData = await loadYamlFile('data/periods.yaml');
-
-    // Populate the periods container in the UI
-    renderPeriods();
-}
-
-// Load organizations data
-export async function loadOrganizations() {
-    const organizationsData = await loadYamlFile('data/organizations.yaml');
-    organizationNames = organizationsData.organizations || [];
-}
-
 // Render periods into the DOM
 function renderPeriods() {
     const periodsContainer = document.getElementById('periods-container');
@@ -144,6 +103,36 @@ function renderPeriods() {
         // Append the year div to the periods container
         periodsContainer.appendChild(yearDiv);
     });
+}
+
+// Load all data from a single combined file
+export async function loadAdditionalData() {
+    // Single fetch instead of 4 separate fetches
+    const metadata = await loadYamlFile('data/metadata.json');
+    
+    // Process curricula
+    curriculaMap = { major: {}, minor: {} };
+    
+    const processPrograms = (programsArray, type) => {
+        if (!programsArray?.curricula) return;
+        programsArray.curricula.forEach(program => {
+            const { code, courses, name } = program;
+            curriculaMap[type][code.toUpperCase()] = {
+                name,
+                courses: new Set(courses),
+            };
+        });
+    };
+    
+    processPrograms(metadata.major, 'major');
+    processPrograms(metadata.minor, 'minor');
+    
+    // Set periods
+    periodsData = metadata.periods || {};
+    renderPeriods();
+    
+    // Set organizations
+    organizationNames = metadata.organizations?.organizations || [];
 }
 
 // Boolean check if a course is in a given program type (major or minor)
