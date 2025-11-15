@@ -5,17 +5,58 @@ on:
     - cron: '49 8 * * 6'
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 env:
-  WORKING_DIR: course-browser
   PYTHON_VERSION: '3.12'
   RECIPIENTS_REPO: kctong529/sisukas-newsletter-recipients
 
 jobs:
-  send:
+  generate:
+    name: Generate Newsletter
     runs-on: ubuntu-latest
+    outputs:
+      newsletter-path: newsletter.html
     steps:
-      - name: Checkout main branch
+      - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Fetch existing courses.json if available
+        run: |
+          curl -fSL \
+          "https://storage.googleapis.com/sisukas-core/courses.json" \
+          -o courses.json
+
+      - name: Generate newsletter HTML
+        run: |
+          python scripts/generate_newsletter.py courses.json -o newsletter.html
+
+      - name: Upload newsletter artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: newsletter-html
+          path: newsletter.html
+
+  send:
+    name: Send Newsletter
+    runs-on: ubuntu-latest
+    needs: generate
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download generated newsletter
+        uses: actions/download-artifact@v4
+        with:
+          name: newsletter-html
+          path: .
 
       - name: Set up SSH for recipients repo
         run: |
@@ -28,15 +69,6 @@ jobs:
         run: |
           git clone git@github.com:${{ env.RECIPIENTS_REPO }}.git
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Generate newsletter content
-        run: |
-          python scripts/generate_newsletter.py
-
       - name: Move email list into expected location
         run: |
           cp sisukas-newsletter-recipients/email_list.txt email_list.txt
@@ -48,30 +80,39 @@ jobs:
           chmod +x scripts/send_newsletter.sh
           ./scripts/send_newsletter.sh
 
-      - name: Generate newsletter for public view
+  publish:
+    name: Publish Newsletter to GCS
+    runs-on: ubuntu-latest
+    needs: generate
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download generated newsletter
+        uses: actions/download-artifact@v4
+        with:
+          name: newsletter-html
+          path: .
+
+      - name: Wrap newsletter for public view
         run: |
           pip install beautifulsoup4
-          python scripts/wrap_newsletter.py
+          python scripts/wrap_newsletter.py newsletter.html -o newsletter_wrapped.html
 
-      - name: Get ISO week number
-        id: issue
-        run: echo "number=$(date +%V)" >> $GITHUB_OUTPUT
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: 'sisukas-fastapi'
+          workload_identity_provider: 'projects/969370446235/locations/global/workloadIdentityPools/github/providers/my-repo'
+          service_account: 'github-actions-deployer@sisukas-fastapi.iam.gserviceaccount.com'
 
-      - name: Check for changes and commit if needed
-        id: check-commit
+      - name: Install gcloud CLI (storage)
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ${{ env.WORKING_DIR }}/public/newsletter.html
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-            echo "commit-made=false" >> $GITHUB_OUTPUT
-          else
-            git commit -m "Update Week ${{ steps.issue.outputs.number }} newsletter"
-            git push origin main
-            echo "commit-made=true" >> $GITHUB_OUTPUT
-          fi
-          
-      - name: Log if deploy triggered by newsletter commit
-        if: steps.check-commit.outputs.commit-made == 'true'
-        run: echo "Deploying since a newsletter commit was made"
+          sudo apt-get update
+          sudo apt-get install -y google-cloud-cli
+
+      - name: Upload newsletter to GCS
+        run: |
+          gcloud storage cp \
+            newsletter_wrapped.html \
+            gs://newsletter.sisukas.eu/index.html

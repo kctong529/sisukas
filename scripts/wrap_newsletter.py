@@ -1,21 +1,27 @@
+import argparse
 from bs4 import BeautifulSoup
+import sys
+import os
 
-print("Starting HTML wrapping script...")
+def read_html(source_path: str) -> str:
+    """Read the source HTML file and return its content."""
+    if not os.path.isfile(source_path):
+        raise FileNotFoundError(f"Source file not found: {source_path}")
+    with open(source_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    print(f"Read {source_path} successfully.")
+    return content
 
-# Read the existing HTML content
-with open('course-browser/public/newsletter.html', 'r', encoding='utf-8') as f:
-    original_html = f.read()
-print("Read original_content.html successfully.")
+def extract_body(html_content: str) -> str:
+    """Extract inner HTML inside <body>. Fallback to full content if no body tag."""
+    soup = BeautifulSoup(html_content, 'html.parser')
+    body_content = soup.body.decode_contents() if soup.body else html_content
+    print(f"Extracted {len(body_content)} characters from the <body> tag.")
+    return body_content
 
-# Parse with BeautifulSoup
-soup = BeautifulSoup(original_html, 'html.parser')
-
-# Extract content inside <body>
-body_content = soup.body.decode_contents()  # returns inner HTML inside body
-print(f"Extracted {len(body_content)} characters from the <body> tag.")
-
-# Prepare new head and wrapping HTML
-new_head = """
+def generate_wrapped_html(body_content: str) -> str:
+    """Combine head, subscription UI, and extracted body into final HTML."""
+    new_head = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -135,11 +141,10 @@ new_head = """
           color: #856404;
         }
     </style>
-</head>
-"""
+</head>"""
 
-# Prepare body open
-body_open = """
+    # Prepare body open
+    body_open = """
 <body>
     <div class="info-container">
         <div class="info-text">
@@ -184,23 +189,47 @@ body_open = """
         });
       });
     });
-    </script>
-"""
+    </script>"""
 
-# Combine everything into a final HTML document
-final_html = f"""
+    # Combine everything into a final HTML document
+    final_html = f"""
 <!DOCTYPE html>
 <html lang="en">
 {new_head}
 {body_open}
 {body_content}
 </body>
-</html>
-"""
+</html>"""
+    return final_html
 
-# Write the wrapped HTML to a new file
-with open('course-browser/public/newsletter.html', 'w') as f:
-    f.write(final_html)
+def write_html(output_path: str, content: str):
+    """Write the final HTML to the specified output path."""
+    directory = os.path.dirname(output_path)
+    if directory:  # only make dirs if there’s a directory
+        os.makedirs(directory, exist_ok=True)
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    print(f"Written wrapped HTML to {output_path} successfully.")
 
-print("Written course-browser/public/newsletter.html successfully.")
-print("Script finished.")
+
+def main():
+    parser = argparse.ArgumentParser(description="Wrap newsletter HTML with additional layout and subscription UI.")
+    parser.add_argument("source", help="Path to the source HTML file to wrap")
+    parser.add_argument("-o", "--output", default="newsletter_wrapped.html",
+                        help="Destination path for the wrapped HTML file")
+    args = parser.parse_args()
+
+    try:
+        original_html = read_html(args.source)
+        body_content = extract_body(original_html)
+        final_html = generate_wrapped_html(body_content)
+        write_html(args.output, final_html)
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    print("Script finished successfully.")
+
+
+if __name__ == "__main__":
+    main()
