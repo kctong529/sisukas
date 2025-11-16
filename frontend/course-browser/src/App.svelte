@@ -95,6 +95,18 @@
   courses.forEach( c => 
     console.log(`${c.code}: ${csCodeRule.evaluate(c)}`)
   );
+
+  const nameRegexRule = RuleBlueprints.name.createRule('matches', '[1-9]');
+  console.log(nameRegexRule);
+  courses.forEach( c => 
+    console.log(`${c.code}: ${nameRegexRule.evaluate(c)}`)
+  );
+
+  const minCreditsEquals5 = RuleBlueprints.credits.createRule('minEquals', 5);
+  console.log(minCreditsEquals5);
+  courses.forEach( c => 
+    console.log(`${c.code}: ${minCreditsEquals5.evaluate(c)}`)
+  );
 </script>
 
 <ul class="course-list">

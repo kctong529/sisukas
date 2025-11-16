@@ -1,7 +1,7 @@
 // src/domain/models/Course.ts
 import type { LocalizedString } from '../value-objects/LocalizedString';
 import type { DateRange } from '../value-objects/DateRange';
-import type { CreditRange } from '../value-objects/CreditRange';
+import type { NumericRange } from '../value-objects/NumericRange';
 import type { CourseCode, Language, StudyLevel, RawCourseFormat, CourseFormat } from '../value-objects/CourseTypes';
 import { normalizeCourseFormat } from '../value-objects/CourseTypes';
 import { Prerequisites } from '../value-objects/Prerequisites';
@@ -14,7 +14,7 @@ export class Course {
   readonly startDate: Date;
   readonly endDate: Date;
   readonly enrollmentPeriod: DateRange;
-  readonly credits: CreditRange;
+  readonly credits: NumericRange;
   readonly level: StudyLevel;
   readonly prerequisites?: Prerequisites;
   readonly organization: string;
@@ -32,7 +32,7 @@ export class Course {
     startDate: Date;
     endDate: Date;
     enrollmentPeriod: DateRange;
-    credits: CreditRange;
+    credits: NumericRange;
     level: StudyLevel;
     prerequisites?: LocalizedString | Prerequisites;
     organization: string;
