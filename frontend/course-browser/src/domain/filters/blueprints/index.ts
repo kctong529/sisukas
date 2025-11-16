@@ -3,6 +3,7 @@ import { CodeRuleBlueprint, NameRuleBlueprint, OrganizationRuleBlueprint } from 
 import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprints';
 import { StartDateRuleBlueprint, EndDateRuleBlueprint } from './DateRuleBlueprints';
 import { EnrollmentPeriodRuleBlueprint, CoursePeriodRuleBlueprint } from './DateRangeRuleBlueprints';
+import { LevelRuleBlueprint, FormatRuleBlueprint, LanguagesRuleBlueprint, TeachersRuleBlueprint, TagsRuleBlueprint } from './CategoricalRuleBlueprints';
 
 /**
  * Singleton instances of all available rule blueprints.
@@ -24,6 +25,13 @@ export const RuleBlueprints = {
   // DateRange
   enrollmentPeriod: new EnrollmentPeriodRuleBlueprint(),
   coursePeriod: new CoursePeriodRuleBlueprint(),
+  
+  // Categorical
+  level: new LevelRuleBlueprint(),
+  format: new FormatRuleBlueprint(),
+  language: new LanguagesRuleBlueprint(),
+  teachers: new TeachersRuleBlueprint(),
+  tags: new TagsRuleBlueprint(),
 } as const;
 
 // Type for all blueprint keys

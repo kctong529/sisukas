@@ -2,6 +2,7 @@
   import { CourseService } from './domain/services/CourseService';
   import { Course } from './domain/models/Course';
   import { RuleBlueprints } from './domain/filters/blueprints';
+import type { DateRange } from './domain/value-objects/DateRange';
 
   const courses: Course[] = [
     new Course({
@@ -45,7 +46,8 @@
       teachers: ['Johan Lukas Ahrenberg', 'Sanna Helena Suoranta'],
       languages: ['en'],
       format: 'teaching-participation-lectures',
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
+      tags: ['programming2'],
     }),
     new Course({
       id: 'otm-e6b7a1f7-b842-4609-aa74-0c1dc8e38c9f',
@@ -76,46 +78,264 @@
       ],
       languages: ['en'],
       format: 'teaching-participation-lectures',
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
+      tags: ['heavy-workload', 'programming'],
     })
   ];
 
   const today = new Date();
   console.log(courses);
 
-  // Create rules using blueprints
+  console.log('Testing all rule blueprints with sample courses\n');
+
+  // ============================================
+  // TEXT FILTER RULES
+  // ============================================
+  console.group('📝 TEXT FILTERS');
+
+  // Code filters
+  console.group('Course Code');
   const csCodeRule = RuleBlueprints.code.createRule('startsWith', 'CS-');
-  console.log(csCodeRule);
-  courses.forEach( c => 
-    console.log(`${c.code} ${csCodeRule.describe()}: ${csCodeRule.evaluate(c)}`)
+  console.log(`Rule: ${csCodeRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} → ${csCodeRule.evaluate(c)}`)
   );
+  console.groupEnd();
 
-  const nameRegexRule = RuleBlueprints.name.createRule('matches', '[1-9]');
-  console.log(nameRegexRule);
-  courses.forEach( c => 
-    console.log(`${c.name.en} ${nameRegexRule.describe()}: ${nameRegexRule.evaluate(c)}`)
+  const elecCodeRule = RuleBlueprints.code.createRule('contains', 'ELEC');
+  console.group('Course Code Contains');
+  console.log(`Rule: ${elecCodeRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} → ${elecCodeRule.evaluate(c)}`)
   );
+  console.groupEnd();
 
-  const minCreditsEquals5 = RuleBlueprints.credits.createRule('minEquals', 5);
-  console.log(minCreditsEquals5);
-  courses.forEach( c => 
-    console.log(`${c.credits.min} ${minCreditsEquals5.describe()}: ${minCreditsEquals5.evaluate(c)}`)
+  // Name filters
+  const nameRegexRule = RuleBlueprints.name.createRule('matches', '[Pp]rogramming');
+  console.group('Course Name Regex');
+  console.log(`Rule: ${nameRegexRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.name.en.substring(0, 30).padEnd(30)} → ${nameRegexRule.evaluate(c)}`)
   );
+  console.groupEnd();
 
-  const startDateRule = RuleBlueprints.startDate.createRule('onOrAfter', today);
-  console.log(startDateRule);
-  courses.forEach( c => 
-    console.log(`${c.startDate.toLocaleDateString()} ${startDateRule.describe()}: ${startDateRule.evaluate(c)}`)
+  // Organization filters
+  const csOrgRule = RuleBlueprints.organization.createRule('contains', 'Computer Science');
+  console.group('Organization');
+  console.log(`Rule: ${csOrgRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.organization.substring(0, 40).padEnd(40)} → ${csOrgRule.evaluate(c)}`)
   );
+  console.groupEnd();
 
-  const periodRule = RuleBlueprints.coursePeriod.createRule('overlaps', {
-    start: today,
-    end: new Date(today.setDate(today.getDate() + 10))
+  console.groupEnd(); // TEXT FILTERS
+
+  // ============================================
+  // NUMERIC RANGE FILTER RULES
+  // ============================================
+  console.group('🔢 NUMERIC RANGE FILTERS');
+
+  // Credits exact match
+  const credits5Rule = RuleBlueprints.credits.createRule('minEquals', 5);
+  console.group('Credits Min Equals 5');
+  console.log(`Rule: ${credits5Rule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} credits: ${c.credits.min.toString().padEnd(3)} → ${credits5Rule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // Credits includes (checks if specific credit amount is valid)
+  const creditsInclude5Rule = RuleBlueprints.credits.createRule('includes', 5);
+  console.group('Credits Include 5');
+  console.log(`Rule: ${creditsInclude5Rule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} range: [${c.credits.min}, ${c.credits.max ?? c.credits.min}] → ${creditsInclude5Rule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  console.groupEnd(); // NUMERIC RANGE FILTERS
+
+  // ============================================
+  // DATE FILTER RULES
+  // ============================================
+  console.group('📅 DATE FILTERS');
+
+  // Start date
+  const futureStartRule = RuleBlueprints.startDate.createRule('onOrAfter', today);
+  console.group('Starts On or After Today');
+  console.log(`Rule: ${futureStartRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} starts: ${c.startDate.toLocaleDateString().padEnd(12)} → ${futureStartRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // End date
+  const endsBefore2026Rule = RuleBlueprints.endDate.createRule('before', new Date('2026-01-01'));
+  console.group('Ends Before 2026');
+  console.log(`Rule: ${endsBefore2026Rule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} ends: ${c.endDate.toLocaleDateString().padEnd(12)} → ${endsBefore2026Rule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // Between dates
+  const startsBetweenRule = RuleBlueprints.startDate.createRule('between', {
+    start: new Date('2025-12-01'),
+    end: new Date('2026-03-01')
   });
-  console.log(periodRule);
-  courses.forEach( c => 
-    console.log(`(${c.startDate.toLocaleDateString()} - ${c.endDate.toLocaleDateString()}) ${periodRule.describe()}: ${periodRule.evaluate(c)}`)
+  console.group('Starts Between Dec 2025 - Mar 2026');
+  console.log(`Rule: ${startsBetweenRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} starts: ${c.startDate.toLocaleDateString().padEnd(12)} → ${startsBetweenRule.evaluate(c)}`)
   );
+  console.groupEnd();
+
+  console.groupEnd(); // DATE FILTERS
+
+  // ============================================
+  // DATE RANGE FILTER RULES
+  // ============================================
+  console.group('📆 DATE RANGE FILTERS');
+
+  // Course period overlaps
+  const overlapsWinterRule = RuleBlueprints.coursePeriod.createRule('overlaps', {
+    start: new Date('2025-12-01'),
+    end: new Date('2026-02-28')
+  });
+  console.group('Overlaps Winter Period (Dec-Feb)');
+  console.log(`Rule: ${overlapsWinterRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} period: ${c.startDate.toLocaleDateString()} - ${c.endDate.toLocaleDateString()} → ${overlapsWinterRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // Enrollment period contains specific date
+  const enrollmentOpenNowRule = RuleBlueprints.enrollmentPeriod.createRule('contains', {
+    start: today,
+    end: today
+  });
+  console.group('Enrollment Open Now');
+  console.log(`Rule: ${enrollmentOpenNowRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} enrollment: ${c.enrollmentPeriod.start.toLocaleDateString()} - ${c.enrollmentPeriod.end.toLocaleDateString()} → ${enrollmentOpenNowRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  console.groupEnd(); // DATE RANGE FILTERS
+
+  // ============================================
+  // CATEGORICAL FILTER RULES
+  // ============================================
+  console.group('🏷️ CATEGORICAL FILTERS');
+
+  // Level - single value
+  const basicLevelRule = RuleBlueprints.level.createRule('equals', 'basic-studies');
+  console.group('Level Equals Basic Studies');
+  console.log(`Rule: ${basicLevelRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} level: ${c.level.padEnd(20)} → ${basicLevelRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // Level - multiple values
+  const beginnerLevelRule = RuleBlueprints.level.createRule('isOneOf', ['basic-studies', 'other-studies']);
+  console.group('Level Is One Of [Basic, Other]');
+  console.log(`Rule: ${beginnerLevelRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} level: ${c.level.padEnd(20)} → ${beginnerLevelRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // Format
+  const lectureFormatRule = RuleBlueprints.format.createRule('equals', 'lecture');
+  console.group('Format Equals Lecture');
+  console.log(`Rule: ${lectureFormatRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} format: ${c.format.padEnd(10)} → ${lectureFormatRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  const notExamRule = RuleBlueprints.format.createRule('notEquals', 'exam');
+  console.group('Format Not Equals Exam');
+  console.log(`Rule: ${notExamRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} format: ${c.format.padEnd(10)} → ${notExamRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  console.groupEnd(); // CATEGORICAL FILTERS
+
+  // ============================================
+  // CATEGORICAL ARRAY FILTER RULES
+  // ============================================
+  console.group('🔤 CATEGORICAL ARRAY FILTERS');
+
+  // Languages - includes
+  const englishLanguageRule = RuleBlueprints.language.createRule('includes', 'en');
+  console.group('Taught in English');
+  console.log(`Rule: ${englishLanguageRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} languages: [${c.languages.join(', ')}] → ${englishLanguageRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // Languages - includes any
+  const multilingualRule = RuleBlueprints.language.createRule('includesAny', ['fi', 'sv']);
+  console.group('Taught in Finnish or Swedish');
+  console.log(`Rule: ${multilingualRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} languages: [${c.languages.join(', ')}] → ${multilingualRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // Languages - includes all
+  const bilingualRule = RuleBlueprints.language.createRule('includesAll', ['en', 'fi']);
+  console.group('Taught in Both English and Finnish');
+  console.log(`Rule: ${bilingualRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} languages: [${c.languages.join(', ')}] → ${bilingualRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // Teachers - includes
+  const specificTeacherRule = RuleBlueprints.teachers.createRule('includes', 'Sanna Helena Suoranta');
+  console.group('Taught by Sanna Helena Suoranta');
+  console.log(`Rule: ${specificTeacherRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} teachers: ${c.teachers.length} → ${specificTeacherRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // Teachers - includes any (partial name match works due to case-insensitive)
+  const anyLudvigsenRule = RuleBlueprints.teachers.createRule('includesAny', ['Ludvigsen', 'Virtanen']);
+  console.group('Taught by Ludvigsen or Virtanen');
+  console.log(`Rule: ${anyLudvigsenRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} teachers: [${c.teachers.slice(0, 2).join(', ')}${c.teachers.length > 2 ? '...' : ''}] → ${anyLudvigsenRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // Tags - includes
+  const programmingTagRule = RuleBlueprints.tags.createRule('includes', 'programming');
+  console.group('Has Programming Tag');
+  console.log(`Rule: ${programmingTagRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} tags: [${(c.tags ?? []).join(', ')}] → ${programmingTagRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  // Tags - is empty
+  const noTagsRule = RuleBlueprints.tags.createRule('isEmpty');
+  console.group('Has No Tags');
+  console.log(`Rule: ${noTagsRule.describe()}`);
+  courses.forEach(c => 
+    console.log(`  ${c.code.padEnd(15)} tags: [${(c.tags ?? []).join(', ')}] → ${noTagsRule.evaluate(c)}`)
+  );
+  console.groupEnd();
+
+  console.groupEnd(); // CATEGORICAL ARRAY FILTERS
+
+  console.groupEnd(); // COMPREHENSIVE DEMO
 </script>
 
 <ul class="course-list">

@@ -17,8 +17,8 @@ export abstract class DateRuleBlueprint {
       throw new Error(`Invalid relation "${relation}" for field "${this.field}". Valid: ${this.validRelations.join(', ')}`);
     }
 
-    if (relation === 'between' && !Array.isArray(value)) {
-      throw new Error(`Relation "between" requires a range [start, end]`);
+    if (relation === 'between' && !this.isValidDateRange(value as DateRange)) {
+      throw new Error(`Relation "between" requires a DateRange`);
     }
 
     if (relation !== 'between' && Array.isArray(value)) {
@@ -38,6 +38,14 @@ export abstract class DateRuleBlueprint {
 
   isValidRelation(relation: DateRelation): boolean {
     return (this.validRelations as readonly string[]).includes(relation);
+  }
+
+  private isValidDateRange(range: DateRange): boolean {
+    return range.start instanceof Date &&
+           range.end instanceof Date &&
+           !isNaN(range.start.getTime()) &&
+           !isNaN(range.end.getTime()) &&
+           range.start <= range.end;
   }
 }
 
