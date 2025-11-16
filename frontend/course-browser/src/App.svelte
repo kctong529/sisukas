@@ -1,7 +1,7 @@
 <script lang="ts">
   import { CourseService } from './domain/services/CourseService';
   import { Course } from './domain/models/Course';
-  import { isBefore } from './domain/value-objects/DateRange';
+  import { RuleBlueprints } from './domain/filters/blueprints';
 
   const courses: Course[] = [
     new Course({
@@ -88,6 +88,13 @@
     .filter(c => CourseService.canEnroll(c, completedCourses).canEnroll);
 
   console.log('Courses student can enroll in today:', enrollableCourses);
+
+  // Create rules using blueprints
+  const csCodeRule = RuleBlueprints.code.createRule('startsWith', 'CS-');
+  console.log(csCodeRule);
+  courses.forEach( c => 
+    console.log(`${c.code}: ${csCodeRule.evaluate(c)}`)
+  );
 </script>
 
 <ul class="course-list">
