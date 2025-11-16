@@ -64,11 +64,3 @@ export class OrganizationRuleBlueprint extends TextRuleBlueprint {
   readonly defaultRelation = 'contains' as const;
   readonly selector = (c: Course) => c.organization;
 }
-
-export class LocationRuleBlueprint extends TextRuleBlueprint {
-  readonly field = 'location';
-  readonly label = 'Location';
-  readonly validRelations = ['equals', 'notEquals', 'contains', 'startsWith', 'endsWith'] as const;
-  readonly defaultRelation = 'contains' as const;
-  readonly selector = (c: Course) => c.location ?? '';
-}

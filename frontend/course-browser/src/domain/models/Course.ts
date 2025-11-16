@@ -21,7 +21,6 @@ export class Course {
   readonly teachers: string[];
   readonly languages: Language[];
   readonly format: CourseFormat;
-  readonly location?: string;
   readonly tags?: string[];
   readonly lastUpdated: Date;
 
@@ -40,7 +39,6 @@ export class Course {
     teachers: string[];
     languages: Language[];
     format: RawCourseFormat;
-    location?: string;
     tags?: string[];
     lastUpdated: Date;
   }) {
@@ -57,7 +55,6 @@ export class Course {
     this.teachers = params.teachers;
     this.languages = params.languages;
     this.format = normalizeCourseFormat(params.format);
-    this.location = params.location;
     this.tags = params.tags;
     this.lastUpdated = params.lastUpdated;
 
