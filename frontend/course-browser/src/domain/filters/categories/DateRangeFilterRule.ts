@@ -54,7 +54,7 @@ export class DateRangeFilterRule implements FilterRule {
   }
 
   describe(): string {
-    return `${this.config.fieldName} ${this.config.relation} [${this.config.value.start.toISOString()} - ${this.config.value.end.toISOString()}]`;
+    return `${this.config.fieldName} ${this.config.relation} [${this.config.value.start.toLocaleDateString()} - ${this.config.value.end.toLocaleDateString()}]`;
   }
 
   toJSON(): FilterRuleJSON {

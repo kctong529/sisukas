@@ -76,10 +76,10 @@ export class DateFilterRule implements FilterRule {
   describe(): string {
     if (this.config.relation === 'between') {
       const compareValue = this.config.value as DateRange;
-      return `${this.config.fieldName} between ${compareValue.start.toISOString()} and ${compareValue.end.toISOString()}`;
+      return `${this.config.fieldName} between ${compareValue.start.toLocaleDateString()} and ${compareValue.end.toLocaleDateString()}`;
     }
     const value = this.config.value as Date;
-    return `${this.config.fieldName} ${this.config.relation} ${value.toISOString()}`;
+    return `${this.config.fieldName} ${this.config.relation} ${value.toLocaleDateString()}`;
   }
 
   toJSON(): FilterRuleJSON {

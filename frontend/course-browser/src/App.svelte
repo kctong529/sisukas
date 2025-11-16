@@ -81,31 +81,40 @@
   ];
 
   const today = new Date();
-  const completedCourses = ['CS-A1110']; // Example student transcript
-
-  const enrollableCourses = courses
-    .filter(c => CourseService.isEnrollmentOpen(c, today))
-    .filter(c => CourseService.canEnroll(c, completedCourses).canEnroll);
-
-  console.log('Courses student can enroll in today:', enrollableCourses);
+  console.log(courses);
 
   // Create rules using blueprints
   const csCodeRule = RuleBlueprints.code.createRule('startsWith', 'CS-');
   console.log(csCodeRule);
   courses.forEach( c => 
-    console.log(`${c.code}: ${csCodeRule.evaluate(c)}`)
+    console.log(`${c.code} ${csCodeRule.describe()}: ${csCodeRule.evaluate(c)}`)
   );
 
   const nameRegexRule = RuleBlueprints.name.createRule('matches', '[1-9]');
   console.log(nameRegexRule);
   courses.forEach( c => 
-    console.log(`${c.code}: ${nameRegexRule.evaluate(c)}`)
+    console.log(`${c.name.en} ${nameRegexRule.describe()}: ${nameRegexRule.evaluate(c)}`)
   );
 
   const minCreditsEquals5 = RuleBlueprints.credits.createRule('minEquals', 5);
   console.log(minCreditsEquals5);
   courses.forEach( c => 
-    console.log(`${c.code}: ${minCreditsEquals5.evaluate(c)}`)
+    console.log(`${c.credits.min} ${minCreditsEquals5.describe()}: ${minCreditsEquals5.evaluate(c)}`)
+  );
+
+  const startDateRule = RuleBlueprints.startDate.createRule('onOrAfter', today);
+  console.log(startDateRule);
+  courses.forEach( c => 
+    console.log(`${c.startDate.toLocaleDateString()} ${startDateRule.describe()}: ${startDateRule.evaluate(c)}`)
+  );
+
+  const periodRule = RuleBlueprints.coursePeriod.createRule('overlaps', {
+    start: today,
+    end: new Date(today.setDate(today.getDate() + 10))
+  });
+  console.log(periodRule);
+  courses.forEach( c => 
+    console.log(`(${c.startDate.toLocaleDateString()} - ${c.endDate.toLocaleDateString()}) ${periodRule.describe()}: ${periodRule.evaluate(c)}`)
   );
 </script>
 
@@ -119,10 +128,6 @@
 
       <ul class="course-details">
         <li><strong>Duration:</strong> {CourseService.getCourseDuration(course)} days</li>
-        <li>
-          <strong>Enrollment:</strong> 
-          {CourseService.isEnrollmentOpen(course, today) ? 'Open' : 'Closed'}
-        </li>
         <li>
           <strong>Prerequisites:</strong> 
           {#if course.prerequisites && !course.prerequisites.hasTextOnly}
