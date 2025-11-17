@@ -7,6 +7,8 @@ import { TextFilterRule, type TextRelation, type TextFilterRuleConfig } from '..
  * Each subclass represents a specific field that can be filtered with text operations.
  */
 export abstract class TextRuleBlueprint {
+  readonly builderType = 'text' as const;
+
   abstract readonly field: string;
   abstract readonly label: string;
   abstract readonly validRelations: readonly TextRelation[];
@@ -16,9 +18,6 @@ export abstract class TextRuleBlueprint {
   readonly caseSensitive: boolean = false;
   readonly trimWhitespace: boolean = true;
 
-  /**
-   * Create a rule instance for this field
-   */
   createRule(relation: TextRelation, value: string): TextFilterRule {
     if (!this.isValidRelation(relation)) {
       throw new Error(`Invalid relation "${relation}" for field "${this.field}". Valid: ${this.validRelations.join(', ')}`);

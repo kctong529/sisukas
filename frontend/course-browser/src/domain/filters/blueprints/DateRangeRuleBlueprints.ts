@@ -4,6 +4,8 @@ import type { DateRange } from '../../value-objects/DateRange';
 import { DateRangeFilterRule, type DateRangeRelation, type DateRangeFilterRuleConfig } from '../categories/DateRangeFilterRule';
 
 export abstract class DateRangeRuleBlueprint {
+  readonly builderType = 'dateRange' as const;
+
   abstract readonly field: string;
   abstract readonly label: string;
   abstract readonly validRelations: readonly DateRangeRelation[];

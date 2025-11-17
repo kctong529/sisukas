@@ -4,6 +4,8 @@ import type { StudyLevel, CourseFormat, Language } from '../../value-objects/Cou
 import { CategoricalFilterRule, type CategoricalRelation, type CategoricalFilterRuleConfig } from '../categories/CategoricalFilterRule';
 
 export abstract class CategoricalRuleBlueprint<T extends string> {
+  readonly builderType = 'categorical' as const;
+
   abstract readonly field: string;
   abstract readonly label: string;
   abstract readonly validRelations: readonly CategoricalRelation[];

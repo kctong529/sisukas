@@ -4,6 +4,8 @@ import type { NumericRange } from '../../value-objects/NumericRange';
 import { NumericRangeFilterRule, type NumericRangeRelation, type NumericRangeFilterRuleConfig } from '../categories/NumericRangeFilterRule';
 
 export abstract class NumericRangeRuleBlueprint {
+  readonly builderType = 'numericRange' as const;
+
   abstract readonly field: string;
   abstract readonly label: string;
   abstract readonly validRelations: readonly NumericRangeRelation[];
