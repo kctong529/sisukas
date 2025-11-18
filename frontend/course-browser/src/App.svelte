@@ -184,6 +184,20 @@
   numericRangeBuilder.setRelation('minEquals');
   numericRangeBuilder.setValue(5);
   testRule('Builder test 5', numericRangeBuilder.build(), courses, c => `credits: ${c.credits.min}`);
+
+  let dateBuilder = getBuilderFor(RuleBlueprints.startDate);
+  dateBuilder.setRelation('onOrAfter');
+  dateBuilder.setValue(today);
+  testRule('Builder test 6', dateBuilder.build(), courses, c => `starts: ${c.startDate.toLocaleDateString()}`);
+
+  dateBuilder.setRelation('between');
+  dateBuilder.setValue({ start: new Date('2025-12-01'), end: new Date('2026-03-01') });
+  testRule('Builder test 7', dateBuilder.build(), courses, c => `starts: ${c.startDate.toLocaleDateString()}`);
+
+  dateBuilder = getBuilderFor(RuleBlueprints.endDate);
+  dateBuilder.setRelation('before');
+  dateBuilder.setValue(new Date('2026-06-01'));
+  testRule('Builder test 8', dateBuilder.build(), courses, c => `ends: ${c.endDate.toLocaleDateString()}`);
 </script>
 
 <ul class="course-list">
