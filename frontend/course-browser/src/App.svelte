@@ -198,6 +198,16 @@
   dateBuilder.setRelation('before');
   dateBuilder.setValue(new Date('2026-06-01'));
   testRule('Builder test 8', dateBuilder.build(), courses, c => `ends: ${c.endDate.toLocaleDateString()}`);
+
+  let dateRangeBuilder = getBuilderFor(RuleBlueprints.coursePeriod);
+  dateRangeBuilder.setRelation('overlaps');
+  dateRangeBuilder.setValue({ start: new Date('2025-12-01'), end: new Date('2026-02-01') });
+  testRule('Builder test 9', dateRangeBuilder.build(), courses, c => `period: ${c.startDate.toLocaleDateString()} - ${c.endDate.toLocaleDateString()}`);
+
+  dateRangeBuilder = getBuilderFor(RuleBlueprints.enrollmentPeriod);
+  dateRangeBuilder.setRelation('contains');
+  dateRangeBuilder.setValue({ start: today, end: today });
+  testRule('Builder test 10', dateRangeBuilder.build(), courses, c => `enrollment: ${c.enrollmentPeriod.start.toLocaleDateString()} - ${c.enrollmentPeriod.end.toLocaleDateString()}`);
 </script>
 
 <ul class="course-list">

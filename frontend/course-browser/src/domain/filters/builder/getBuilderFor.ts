@@ -2,12 +2,14 @@ import type { FilterRuleBuilder } from "./FilterRuleBuilder";
 import { TextRuleBuilder } from "./TextRuleBuilder";
 import { NumericRangeRuleBuilder } from "./NumericRangeRuleBuilder";
 import { DateRuleBuilder } from "./DateRuleBuilder";
+import { DateRangeRuleBuilder } from "./DateRangeRuleBuilder";
 import { RuleBlueprints } from "../blueprints"
 
 type BuilderMap = {
   text: TextRuleBuilder;
   numericRange: NumericRangeRuleBuilder;
   date: DateRuleBuilder;
+  dateRange: DateRangeRuleBuilder;
 };
 
 export function getBuilderFor<T extends keyof typeof RuleBlueprints>(
@@ -17,6 +19,7 @@ export function getBuilderFor<T extends keyof typeof RuleBlueprints>(
     case 'text': return new TextRuleBuilder(blueprint as any);
     case 'numericRange': return new NumericRangeRuleBuilder(blueprint as any);
     case 'date': return new DateRuleBuilder(blueprint as any);
+    case 'dateRange': return new DateRangeRuleBuilder(blueprint as any);
     default:
       throw new Error(`No builder for kind: ${blueprint.builderType}`);
   }
