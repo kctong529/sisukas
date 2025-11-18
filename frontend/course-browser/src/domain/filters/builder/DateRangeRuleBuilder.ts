@@ -30,7 +30,7 @@ export class DateRangeRuleBuilder implements FilterRuleBuilder<DateRangeRuleBlue
   }
 
   build() {
-    if (!this.isComplete()) throw new Error("Incomplete date range filter");
+    if (!this.isComplete()) throw new Error("Incomplete date range rule");
     return this.blueprint.createRule(this.relation!, this.value!);
   }
 }

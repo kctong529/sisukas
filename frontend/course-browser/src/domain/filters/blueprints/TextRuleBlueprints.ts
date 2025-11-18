@@ -1,12 +1,9 @@
 // src/domain/filters/blueprints/TextRuleBlueprints.ts
 import type { Course } from '../../models/Course';
 import { TextFilterRule, type TextRelation, type TextFilterRuleConfig } from '../categories/TextFilterRule';
+import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
 
-/**
- * Base class for text field rule blueprints.
- * Each subclass represents a specific field that can be filtered with text operations.
- */
-export abstract class TextRuleBlueprint {
+export abstract class TextRuleBlueprint implements BaseRuleBlueprint {
   readonly builderType = 'text' as const;
 
   abstract readonly field: string;

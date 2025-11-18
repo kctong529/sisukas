@@ -5,7 +5,7 @@ import type { NumericRange } from '../../value-objects/NumericRange';
 
 export class NumericRangeRuleBuilder implements FilterRuleBuilder<NumericRangeRuleBlueprint> {
   relation: NumericRangeRelation | null = null;
-  value: NumericRange | number | null = null;
+  value: number | NumericRange | null = null;
 
   constructor(readonly blueprint: NumericRangeRuleBlueprint) {
     this.relation = blueprint.defaultRelation ?? null;
@@ -17,7 +17,7 @@ export class NumericRangeRuleBuilder implements FilterRuleBuilder<NumericRangeRu
     return this;
   }
 
-  setValue(v: NumericRange | number) {
+  setValue(v: number | NumericRange) {
     this.value = v;
     return this;
   }

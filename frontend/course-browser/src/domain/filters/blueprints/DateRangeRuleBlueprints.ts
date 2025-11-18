@@ -2,8 +2,9 @@
 import type { Course } from '../../models/Course';
 import type { DateRange } from '../../value-objects/DateRange';
 import { DateRangeFilterRule, type DateRangeRelation, type DateRangeFilterRuleConfig } from '../categories/DateRangeFilterRule';
+import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
 
-export abstract class DateRangeRuleBlueprint {
+export abstract class DateRangeRuleBlueprint implements BaseRuleBlueprint {
   readonly builderType = 'dateRange' as const;
 
   abstract readonly field: string;

@@ -18,8 +18,8 @@ export interface DateFilterRuleConfig {
   field: DateFieldSelector;
   fieldName: string;
   relation: DateRelation;
-  value: Date | DateRange; // single date or range
-  ignoreTime?: boolean; // compare only date part, not time
+  value: Date | DateRange;
+  ignoreTime?: boolean;
 }
 
 export class DateFilterRule implements FilterRule {
@@ -36,7 +36,6 @@ export class DateFilterRule implements FilterRule {
   evaluate(course: Course): boolean {
     const fieldValue = this.config.field(course);
 
-    // Handle invalid dates
     if (!(fieldValue instanceof Date) || isNaN(fieldValue.getTime())) {
       return false;
     }

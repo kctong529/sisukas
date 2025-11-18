@@ -2,8 +2,9 @@
 import type { Course } from '../../models/Course';
 import type { NumericRange } from '../../value-objects/NumericRange';
 import { NumericRangeFilterRule, type NumericRangeRelation, type NumericRangeFilterRuleConfig } from '../categories/NumericRangeFilterRule';
+import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
 
-export abstract class NumericRangeRuleBlueprint {
+export abstract class NumericRangeRuleBlueprint implements BaseRuleBlueprint {
   readonly builderType = 'numericRange' as const;
 
   abstract readonly field: string;

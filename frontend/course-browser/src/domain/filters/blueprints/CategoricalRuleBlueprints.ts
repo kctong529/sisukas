@@ -2,8 +2,9 @@
 import type { Course } from '../../models/Course';
 import type { StudyLevel, CourseFormat, Language } from '../../value-objects/CourseTypes';
 import { CategoricalFilterRule, type CategoricalRelation, type CategoricalFilterRuleConfig } from '../categories/CategoricalFilterRule';
+import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
 
-export abstract class CategoricalRuleBlueprint<T extends string> {
+export abstract class CategoricalRuleBlueprint<T extends string> implements BaseRuleBlueprint {
   readonly builderType = 'categorical' as const;
 
   abstract readonly field: string;

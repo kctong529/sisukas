@@ -1,10 +1,11 @@
+import type { NumericRange } from "../../value-objects/NumericRange";
 import type { NumericRuleBlueprint } from "../blueprints/NumericRuleBlueprints";
 import type { NumericRelation } from "../categories/NumericFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
 
 export class NumericRuleBuilder implements FilterRuleBuilder<NumericRuleBlueprint> {
   relation: NumericRelation | null = null;
-  value: number | null = null;
+  value: number | NumericRange | null = null;
 
   constructor(readonly blueprint: NumericRuleBlueprint) {
     this.relation = blueprint.defaultRelation ?? null;
@@ -16,13 +17,20 @@ export class NumericRuleBuilder implements FilterRuleBuilder<NumericRuleBlueprin
     return this;
   }
 
-  setValue(v: number) {
+  setValue(v: number | NumericRange) {
     this.value = v;
     return this;
   }
 
   isComplete(): boolean {
-    return this.relation !== null && this.value !== null;
+    if (this.value !== null) {
+      if (typeof this.value === 'number') {
+        return this.relation !== null;
+      } else {
+        return this.value.min !== null && this.relation !== null;
+      }
+    }
+    return false;
   }
 
   build() {

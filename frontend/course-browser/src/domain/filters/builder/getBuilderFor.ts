@@ -1,26 +1,67 @@
-import type { FilterRuleBuilder } from "./FilterRuleBuilder";
+/**
+ * @module getBuilderFor
+ *
+ * Provides a type-safe factory function for creating filter rule builders from blueprints.
+ *
+ * Each blueprint type has a corresponding builder:
+ * - TextRuleBlueprint -> TextRuleBuilder
+ * - NumericRuleBlueprint -> NumericRuleBuilder
+ * - NumericRangeRuleBlueprint -> NumericRangeRuleBuilder
+ * - DateRuleBlueprint -> DateRuleBuilder
+ * - DateRangeRuleBlueprint -> DateRangeRuleBuilder
+ * - CategoricalRuleBlueprint -> CategoricalRuleBuilder
+ *
+ * Usage:
+ *   const builder = getBuilderFor(RuleBlueprints.name);
+ *   builder.setValue('programming');
+ *   const rule = builder.build();
+ * 
+ *
+ * The function enforces at compile-time that the correct builder type is returned for each blueprint,
+ * which prevents invalid combinations of blueprint and builder.
+ */
+
 import { TextRuleBuilder } from "./TextRuleBuilder";
+import { NumericRuleBuilder } from "./NumericRuleBuilder";
 import { NumericRangeRuleBuilder } from "./NumericRangeRuleBuilder";
 import { DateRuleBuilder } from "./DateRuleBuilder";
 import { DateRangeRuleBuilder } from "./DateRangeRuleBuilder";
-import { RuleBlueprints } from "../blueprints"
+import { CategoricalRuleBuilder } from "./CategoricalRuleBuilder";
 
-type BuilderMap = {
-  text: TextRuleBuilder;
-  numericRange: NumericRangeRuleBuilder;
-  date: DateRuleBuilder;
-  dateRange: DateRangeRuleBuilder;
-};
+import type {
+  TextRuleBlueprint,
+  NumericRuleBlueprint,
+  NumericRangeRuleBlueprint,
+  DateRuleBlueprint,
+  DateRangeRuleBlueprint,
+  CategoricalRuleBlueprint
+} from "../blueprints";
 
-export function getBuilderFor<T extends keyof typeof RuleBlueprints>(
-  blueprint: typeof RuleBlueprints[T]
-): BuilderMap[typeof blueprint.builderType] {
+// Type-safe overloads ensure that each blueprint returns the correct builder type
+export function getBuilderFor(blueprint: TextRuleBlueprint): TextRuleBuilder;
+export function getBuilderFor(blueprint: NumericRuleBlueprint): NumericRuleBuilder;
+export function getBuilderFor(blueprint: NumericRangeRuleBlueprint): NumericRangeRuleBuilder;
+export function getBuilderFor(blueprint: DateRuleBlueprint): DateRuleBuilder;
+export function getBuilderFor(blueprint: DateRangeRuleBlueprint): DateRangeRuleBuilder;
+export function getBuilderFor<T extends string>(blueprint: CategoricalRuleBlueprint<T>): CategoricalRuleBuilder<T>;
+
+export function getBuilderFor(
+  blueprint:
+    | TextRuleBlueprint
+    | NumericRuleBlueprint
+    | NumericRangeRuleBlueprint
+    | DateRuleBlueprint
+    | DateRangeRuleBlueprint
+    | CategoricalRuleBlueprint<any>
+) {
   switch (blueprint.builderType) {
-    case 'text': return new TextRuleBuilder(blueprint as any);
-    case 'numericRange': return new NumericRangeRuleBuilder(blueprint as any);
-    case 'date': return new DateRuleBuilder(blueprint as any);
-    case 'dateRange': return new DateRangeRuleBuilder(blueprint as any);
+    case 'text': return new TextRuleBuilder(blueprint);
+    case 'numericRange': return new NumericRangeRuleBuilder(blueprint);
+    case 'numeric': return new NumericRuleBuilder(blueprint);
+    case 'date': return new DateRuleBuilder(blueprint);
+    case 'dateRange': return new DateRangeRuleBuilder(blueprint);
+    case 'categorical': return new CategoricalRuleBuilder(blueprint);
     default:
-      throw new Error(`No builder for kind: ${blueprint.builderType}`);
+        throw new Error("No builder for unknown blueprint type");
   }
 }

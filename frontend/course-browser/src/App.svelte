@@ -3,8 +3,6 @@
   import { Course } from './domain/models/Course';
   import { RuleBlueprints } from './domain/filters/blueprints';
   import { getBuilderFor } from './domain/filters/builder/getBuilderFor'
-  import { TextRuleBuilder } from './domain/filters/builder/TextRuleBuilder';
-  import { NumericRangeRuleBuilder } from './domain/filters/builder/NumericRangeRuleBuilder';
 
   function testRule(label: string, rule: any, courses: Course[], fieldValueFn?: (c: Course) => string) {
     console.group(label);
@@ -208,6 +206,20 @@
   dateRangeBuilder.setRelation('contains');
   dateRangeBuilder.setValue({ start: today, end: today });
   testRule('Builder test 10', dateRangeBuilder.build(), courses, c => `enrollment: ${c.enrollmentPeriod.start.toLocaleDateString()} - ${c.enrollmentPeriod.end.toLocaleDateString()}`);
+
+  const levelBuilder = getBuilderFor(RuleBlueprints.level);
+  levelBuilder.setRelation('equals');
+  levelBuilder.setValue('basic-studies');
+  testRule('Builder test 11', levelBuilder.build(), courses, c => `level: ${c.level}`);
+
+  levelBuilder.setRelation('isOneOf');
+  levelBuilder.setValue(['basic-studies', 'other-studies']);
+  testRule('Builder test 12', levelBuilder.build(), courses, c => `level: ${c.level}`);
+  
+  const formatBuilder = getBuilderFor(RuleBlueprints.format);
+  formatBuilder.setRelation('equals');
+  formatBuilder.setValue('lecture');
+  testRule('Builder test 13', formatBuilder.build(), courses, c => `format: ${c.format}`);
 </script>
 
 <ul class="course-list">
