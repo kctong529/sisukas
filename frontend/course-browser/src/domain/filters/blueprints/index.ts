@@ -15,7 +15,7 @@ export const RuleBlueprints = {
   name: new NameRuleBlueprint(),
   organization: new OrganizationRuleBlueprint(),
 
-  // Numeric
+  // NumericRange
   credits: new CreditsRangeRuleBlueprint(),
 
   // Date

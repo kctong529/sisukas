@@ -13,10 +13,12 @@ export class TextRuleBuilder implements FilterRuleBuilder<TextRuleBlueprint> {
   setRelation(r: TextRelation) {
     if (!this.blueprint.isValidRelation(r)) throw new Error("Invalid relation");
     this.relation = r;
+    return this;
   }
 
   setValue(v: string) {
     this.value = v;
+    return this;
   }
 
   isComplete(): boolean {

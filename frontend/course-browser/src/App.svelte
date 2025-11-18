@@ -3,6 +3,8 @@
   import { Course } from './domain/models/Course';
   import { RuleBlueprints } from './domain/filters/blueprints';
   import { getBuilderFor } from './domain/filters/builder/getBuilderFor'
+  import { TextRuleBuilder } from './domain/filters/builder/TextRuleBuilder';
+  import { NumericRangeRuleBuilder } from './domain/filters/builder/NumericRangeRuleBuilder';
 
   function testRule(label: string, rule: any, courses: Course[], fieldValueFn?: (c: Course) => string) {
     console.group(label);
@@ -162,18 +164,26 @@
   console.groupEnd();
   console.groupEnd();
 
-  const builder = getBuilderFor(RuleBlueprints.name);
-  console.log(builder.blueprint.validRelations);
-  
-  builder.setValue('program');
-  testRule('Builder test 1', builder.build(), courses);
+  const textBuilder = getBuilderFor(RuleBlueprints.name);
+  console.log(textBuilder.blueprint.validRelations);
 
-  builder.setRelation('equals');
-  testRule('Builder test 2', builder.build(), courses);
+  textBuilder.setValue('program');
+  testRule('Builder test 1', textBuilder.build(), courses);
 
-  builder.setValue('^Fin.+[1-9]');
-  builder.setRelation('matches');
-  testRule('Builder test 3', builder.build(), courses);
+  textBuilder.setRelation('equals');
+  testRule('Builder test 2', textBuilder.build(), courses);
+
+  textBuilder.setValue('^Fin.+[1-9]');
+  textBuilder.setRelation('matches');
+  testRule('Builder test 3', textBuilder.build(), courses);
+
+  const numericRangeBuilder = getBuilderFor(RuleBlueprints.credits);
+  numericRangeBuilder.setValue(3);
+  testRule('Builder test 4', numericRangeBuilder.build(), courses);
+
+  numericRangeBuilder.setRelation('includes');
+  numericRangeBuilder.setValue(5);
+  testRule('Builder test 5', numericRangeBuilder.build(), courses);
 </script>
 
 <ul class="course-list">
