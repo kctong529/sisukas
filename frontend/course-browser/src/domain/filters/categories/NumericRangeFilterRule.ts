@@ -116,17 +116,14 @@ export class NumericRangeFilterRule implements FilterRule {
   }
 
   private isValidRange(range: NumericRange): boolean {
-    // Validate min is a finite number
     if (!Number.isFinite(range.min)) {
       return false;
     }
 
-    // If max is defined, validate it
     if (range.max !== undefined) {
       if (!Number.isFinite(range.max)) {
         return false;
       }
-      // Ensure min <= max
       if (range.min > range.max) {
         return false;
       }
@@ -148,7 +145,6 @@ export class NumericRangeFilterRule implements FilterRule {
       return `${this.config.fieldName} ${this.config.relation} [${minStr}, ${maxStr}]`;
     }
 
-    // All other operations use a number value
     return `${this.config.fieldName} ${this.config.relation} ${this.config.value}`;
   }
 

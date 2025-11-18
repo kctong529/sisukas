@@ -179,11 +179,11 @@
 
   const numericRangeBuilder = getBuilderFor(RuleBlueprints.credits);
   numericRangeBuilder.setValue(3);
-  testRule('Builder test 4', numericRangeBuilder.build(), courses);
+  testRule('Builder test 4', numericRangeBuilder.build(), courses, c => `credits: ${c.credits.min}`);
 
-  numericRangeBuilder.setRelation('includes');
+  numericRangeBuilder.setRelation('minEquals');
   numericRangeBuilder.setValue(5);
-  testRule('Builder test 5', numericRangeBuilder.build(), courses);
+  testRule('Builder test 5', numericRangeBuilder.build(), courses, c => `credits: ${c.credits.min}`);
 </script>
 
 <ul class="course-list">

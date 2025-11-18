@@ -12,9 +12,6 @@ export abstract class NumericRuleBlueprint {
   abstract readonly selector: (course: Course) => number;
 
   readonly defaultRelation?: NumericRelation;
-  readonly min?: number;
-  readonly max?: number;
-  readonly step?: number;
   readonly epsilon?: number;
 
   createRule(relation: NumericRelation, value: number | NumericRange): NumericFilterRule {
@@ -22,11 +19,11 @@ export abstract class NumericRuleBlueprint {
       throw new Error(`Invalid relation "${relation}" for field "${this.field}". Valid: ${this.validRelations.join(', ')}`);
     }
 
-    if (relation === 'between' && !Array.isArray(value)) {
-      throw new Error(`Relation "between" requires a range [min, max]`);
+    if (relation === 'between' && typeof value === 'number') {
+      throw new Error(`Relation "between" requires a numeric range {min, max}`);
     }
 
-    if (relation !== 'between' && Array.isArray(value)) {
+    if (relation !== 'between' && typeof value !== 'number') {
       throw new Error(`Relation "${relation}" requires a single number value`);
     }
 

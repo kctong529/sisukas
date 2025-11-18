@@ -20,7 +20,7 @@ export interface NumericFilterRuleConfig {
   fieldName: string;
   relation: NumericRelation;
   value: number | NumericRange;
-  epsilon?: number; // for floating point comparison
+  epsilon?: number;
 }
 
 export class NumericFilterRule implements FilterRule {
@@ -33,7 +33,6 @@ export class NumericFilterRule implements FilterRule {
   evaluate(course: Course): boolean {
     const fieldValue = this.config.field(course);
 
-    // Handle special values
     if (!Number.isFinite(fieldValue)) {
       return false;
     }
