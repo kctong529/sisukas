@@ -6,5 +6,4 @@ export interface AcademicPeriod {
   name: string;
   academicYear: string;
   dateRange: DateRange;
-  isActive: boolean;
 }
