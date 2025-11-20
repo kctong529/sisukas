@@ -3,6 +3,7 @@
   import { Course } from './domain/models/Course';
   import { RuleBlueprints } from './domain/filters/blueprints';
   import { getBuilderFor } from './domain/filters/builder/getBuilderFor'
+  import RemoteCourseLoader from './RemoteCourseLoader.svelte';
 
   function testRule(label: string, rule: any, courses: Course[], fieldValueFn?: (c: Course) => string) {
     console.group(label);
@@ -23,9 +24,8 @@
         fi: 'Suomi 1, intensiivinen, Luento-opetus',
         sv: 'Finska 1, Föreläsning'
       },
-      startDate: new Date('2026-01-09'),
-      endDate: new Date('2026-02-17'),
-      enrollmentPeriod: { start: new Date('2025-12-08'), end: new Date('2026-01-01') },
+      courseDate: { start: new Date('2026-01-09'), end: new Date('2026-02-17') },
+      enrollmentDate: { start: new Date('2025-12-08'), end: new Date('2026-01-01') },
       credits: { min: 3 },
       level: 'other-studies',
       organization: 'Aalto University, Language Centre',
@@ -42,9 +42,8 @@
         fi: 'Ohjelmointi 2, Luento-opetus',
         sv: 'Programmering 2, Föreläsning'
       },
-      startDate: new Date('2026-02-23'),
-      endDate: new Date('2026-05-29'),
-      enrollmentPeriod: { start: new Date('2026-01-26'), end: new Date('2026-03-02') },
+      courseDate: { start: new Date('2026-02-23'), end: new Date('2026-05-29') },
+      enrollmentDate: { start: new Date('2026-01-26'), end: new Date('2026-03-02') },
       credits: { min: 5 },
       level: 'basic-studies',
       prerequisites: {
@@ -67,9 +66,8 @@
         fi: 'Final Project in Digital Systems and Design, Luento-opetus',
         sv: 'Final Project in Digital Systems and Design, Närundervisning'
       },
-      startDate: new Date('2025-09-01'),
-      endDate: new Date('2026-06-05'),
-      enrollmentPeriod: { start: new Date('2025-08-04'), end: new Date('2026-04-19') },
+      courseDate: { start: new Date('2025-09-01'), end: new Date('2026-06-05') },
+      enrollmentDate: { start: new Date('2025-08-04'), end: new Date('2026-04-19') },
       credits: { min: 10 },
       level: 'intermediate-studies',
       prerequisites: {
@@ -116,9 +114,9 @@
   
   console.group('📅 DATE FILTERS');
 
-  testRule('Starts On or After Today', RuleBlueprints.startDate.createRule('onOrAfter', today), courses, c => `starts: ${c.startDate.toLocaleDateString()}`);
-  testRule('Ends Before 2026', RuleBlueprints.endDate.createRule('before', new Date('2026-01-01')), courses, c => `ends: ${c.endDate.toLocaleDateString()}`);
-  testRule('Starts Between Dec 2025 - Mar 2026', RuleBlueprints.startDate.createRule('between', { start: new Date('2025-12-01'), end: new Date('2026-03-01') }), courses, c => `starts: ${c.startDate.toLocaleDateString()}`);
+  testRule('Starts On or After Today', RuleBlueprints.startDate.createRule('onOrAfter', today), courses, c => `starts: ${c.courseDate.start.toLocaleDateString()}`);
+  testRule('Ends Before 2026', RuleBlueprints.endDate.createRule('before', new Date('2026-01-01')), courses, c => `ends: ${c.courseDate.end.toLocaleDateString()}`);
+  testRule('Starts Between Dec 2025 - Mar 2026', RuleBlueprints.startDate.createRule('between', { start: new Date('2025-12-01'), end: new Date('2026-03-01') }), courses, c => `starts: ${c.courseDate.start.toLocaleDateString()}`);
 
   console.groupEnd();
   
@@ -128,7 +126,7 @@
     'Overlaps Winter Period (Dec-Feb)',
     RuleBlueprints.coursePeriod.createRule('overlaps', { start: new Date('2025-12-01'), end: new Date('2026-02-28') }),
     courses,
-    c => `period: ${c.startDate.toLocaleDateString()} - ${c.endDate.toLocaleDateString()}`
+    c => `period: ${c.courseDate.start.toLocaleDateString()} - ${c.courseDate.end.toLocaleDateString()}`
   );
 
   testRule(
@@ -186,21 +184,21 @@
   let dateBuilder = getBuilderFor(RuleBlueprints.startDate);
   dateBuilder.setRelation('onOrAfter');
   dateBuilder.setValue(today);
-  testRule('Builder test 6', dateBuilder.build(), courses, c => `starts: ${c.startDate.toLocaleDateString()}`);
+  testRule('Builder test 6', dateBuilder.build(), courses, c => `starts: ${c.courseDate.start.toLocaleDateString()}`);
 
   dateBuilder.setRelation('between');
   dateBuilder.setValue({ start: new Date('2025-12-01'), end: new Date('2026-03-01') });
-  testRule('Builder test 7', dateBuilder.build(), courses, c => `starts: ${c.startDate.toLocaleDateString()}`);
+  testRule('Builder test 7', dateBuilder.build(), courses, c => `starts: ${c.courseDate.start.toLocaleDateString()}`);
 
   dateBuilder = getBuilderFor(RuleBlueprints.endDate);
   dateBuilder.setRelation('before');
   dateBuilder.setValue(new Date('2026-06-01'));
-  testRule('Builder test 8', dateBuilder.build(), courses, c => `ends: ${c.endDate.toLocaleDateString()}`);
+  testRule('Builder test 8', dateBuilder.build(), courses, c => `ends: ${c.courseDate.end.toLocaleDateString()}`);
 
   let dateRangeBuilder = getBuilderFor(RuleBlueprints.coursePeriod);
   dateRangeBuilder.setRelation('overlaps');
   dateRangeBuilder.setValue({ start: new Date('2025-12-01'), end: new Date('2026-02-01') });
-  testRule('Builder test 9', dateRangeBuilder.build(), courses, c => `period: ${c.startDate.toLocaleDateString()} - ${c.endDate.toLocaleDateString()}`);
+  testRule('Builder test 9', dateRangeBuilder.build(), courses, c => `period: ${c.courseDate.start.toLocaleDateString()} - ${c.courseDate.end.toLocaleDateString()}`);
 
   dateRangeBuilder = getBuilderFor(RuleBlueprints.enrollmentPeriod);
   dateRangeBuilder.setRelation('contains');
@@ -222,6 +220,8 @@
   testRule('Builder test 13', formatBuilder.build(), courses, c => `format: ${c.format}`);
 </script>
 
+<RemoteCourseLoader></RemoteCourseLoader>
+
 <ul class="course-list">
   {#each courses as course}
     <li class="course-card">
@@ -231,15 +231,12 @@
       </div>
 
       <ul class="course-details">
-        <li><strong>Duration:</strong> {CourseService.getCourseDuration(course)} days</li>
-        <li>
           <strong>Prerequisites:</strong> 
           {#if course.prerequisites && !course.prerequisites.hasTextOnly}
             {course.prerequisites.codePatterns.join(', ')}
           {:else}
             None
           {/if}
-        </li>
         <li><strong>Credits:</strong> {course.credits.min}</li>
         <li><strong>Organization:</strong> {course.organization}</li>
       </ul>

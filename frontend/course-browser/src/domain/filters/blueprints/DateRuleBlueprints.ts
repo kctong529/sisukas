@@ -57,7 +57,7 @@ export class StartDateRuleBlueprint extends DateRuleBlueprint {
   readonly label = 'Start Date';
   readonly validRelations = ['before', 'after', 'onOrBefore', 'onOrAfter', 'equals', 'between'] as const;
   readonly defaultRelation = 'onOrAfter' as const;
-  readonly selector = (c: Course) => c.startDate;
+  readonly selector = (c: Course) => c.courseDate.start;
 }
 
 export class EndDateRuleBlueprint extends DateRuleBlueprint {
@@ -65,5 +65,5 @@ export class EndDateRuleBlueprint extends DateRuleBlueprint {
   readonly label = 'End Date';
   readonly validRelations = ['before', 'after', 'onOrBefore', 'onOrAfter', 'equals', 'between'] as const;
   readonly defaultRelation = 'onOrBefore' as const;
-  readonly selector = (c: Course) => c.endDate;
+  readonly selector = (c: Course) => c.courseDate.end;
 }

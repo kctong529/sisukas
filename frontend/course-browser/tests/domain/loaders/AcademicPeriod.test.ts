@@ -1,6 +1,6 @@
 // tests/domain/loaders/AcademicPeriods.test.ts
 import { describe, it, expect } from 'vitest';
-import { loadAcademicPeriods } from '../../../src/domain/loaders/AcademicPeriods';
+import { loadAcademicPeriods } from '../../../src/infrastructure/loaders/AcademicPeriods';
 import type { AcademicPeriod } from '../../../src/domain/models/AcademicPeriod';
 
 // helper to check dates

@@ -1,6 +1,6 @@
-// src/domain/loaders/AcademicPeriods.ts
-import type { AcademicPeriod } from '../models/AcademicPeriod';
-import type { DateRange } from '../value-objects/DateRange';
+// src/infrastructure/loaders/AcademicPeriods.ts
+import type { AcademicPeriod } from '../../domain/models/AcademicPeriod';
+import type { DateRange } from '../../domain/value-objects/DateRange';
 import periodsYaml from '../../data/periods.yaml';
 
 /**

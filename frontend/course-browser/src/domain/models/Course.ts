@@ -11,8 +11,7 @@ export class Course {
   readonly code: CourseCode;
   readonly name: LocalizedString;
   readonly description?: LocalizedString;
-  readonly startDate: Date;
-  readonly endDate: Date;
+  readonly courseDate: DateRange;
   readonly enrollmentPeriod: DateRange;
   readonly credits: NumericRange;
   readonly level: StudyLevel;
@@ -29,9 +28,8 @@ export class Course {
     code: CourseCode;
     name: LocalizedString;
     description?: LocalizedString;
-    startDate: Date;
-    endDate: Date;
-    enrollmentPeriod: DateRange;
+    courseDate: DateRange;
+    enrollmentDate: DateRange;
     credits: NumericRange;
     level: StudyLevel;
     prerequisites?: LocalizedString | Prerequisites;
@@ -46,9 +44,8 @@ export class Course {
     this.code = params.code;
     this.name = params.name;
     this.description = params.description;
-    this.startDate = params.startDate;
-    this.endDate = params.endDate;
-    this.enrollmentPeriod = params.enrollmentPeriod;
+    this.courseDate = params.courseDate;
+    this.enrollmentPeriod = params.enrollmentDate;
     this.credits = params.credits;
     this.level = params.level;
     this.organization = params.organization;
