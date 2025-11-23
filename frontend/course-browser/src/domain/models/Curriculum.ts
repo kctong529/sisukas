@@ -1,14 +1,13 @@
 // src/domain/models/Curriculum.ts
 import type { CourseCode } from '../value-objects/CourseTypes';
-import type { DateRange } from '../value-objects/DateRange';
+import type { LocalizedString } from '../value-objects/LocalizedString';
+
+export type CurriculumType = 'major' | 'minor';
 
 export interface Curriculum {
   id: string;
-  code: string;
-  name: string;
-  type: 'major' | 'minor';
-  requiredCourses: CourseCode[];
-  electiveCourses: CourseCode[];
-  creditRequirement: number;
-  validPeriod: DateRange;
+  code: CourseCode;
+  name: LocalizedString;
+  type: CurriculumType;
+  courseCodes: Set<string>;
 }
