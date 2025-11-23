@@ -4,6 +4,7 @@
   import { RuleBlueprints } from './domain/filters/blueprints';
   import { getBuilderFor } from './domain/filters/builder/getBuilderFor'
   import RemoteCourseLoader from './RemoteCourseLoader.svelte';
+  import { loadCurricula } from "./infrastructure/loaders/Curricula";
 
   function testRule(label: string, rule: any, courses: Course[], fieldValueFn?: (c: Course) => string) {
     console.group(label);
@@ -218,6 +219,9 @@
   formatBuilder.setRelation('equals');
   formatBuilder.setValue('lecture');
   testRule('Builder test 13', formatBuilder.build(), courses, c => `format: ${c.format}`);
+
+  const curricula = loadCurricula();
+  console.log("Curricula loaded:", curricula);
 </script>
 
 <RemoteCourseLoader></RemoteCourseLoader>

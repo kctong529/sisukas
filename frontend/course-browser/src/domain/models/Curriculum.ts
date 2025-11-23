@@ -7,7 +7,7 @@ export type CurriculumType = 'major' | 'minor';
 export interface Curriculum {
   id: string;
   code: CourseCode;
-  name: LocalizedString;
+  name: string;
   type: CurriculumType;
   courseCodes: Set<string>;
 }
