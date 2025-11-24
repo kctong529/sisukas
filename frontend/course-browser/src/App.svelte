@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { CourseService } from './domain/services/CourseService';
   import { Course } from './domain/models/Course';
   import { RuleBlueprints } from './domain/filters/blueprints';
   import { getBuilderFor } from './domain/filters/builder/getBuilderFor'
   import RemoteCourseLoader from './RemoteCourseLoader.svelte';
-  import { loadCurricula } from "./infrastructure/loaders/Curricula";
+  import { loadCurricula } from "./infrastructure/loaders/CurriculumLoader";
 
   function testRule(label: string, rule: any, courses: Course[], fieldValueFn?: (c: Course) => string) {
     console.group(label);

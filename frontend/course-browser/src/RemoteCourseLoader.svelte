@@ -2,7 +2,7 @@
   import { Course } from "./domain/models/Course";
   import { loadCoursesWithCache } from "./infrastructure/loaders/RemoteCourseLoader";
   import type { AcademicPeriod } from "./domain/models/AcademicPeriod";
-  import { loadAcademicPeriods } from "./infrastructure/loaders/AcademicPeriods";
+  import { loadAcademicPeriods } from "./infrastructure/loaders/AcademicPeriodLoader";
 
   let courses: Course[] = [];
   let periods: AcademicPeriod[] = [];

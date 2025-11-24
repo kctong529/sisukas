@@ -1,6 +1,5 @@
 // src/domain/models/Curriculum.ts
 import type { CourseCode } from '../value-objects/CourseTypes';
-import type { LocalizedString } from '../value-objects/LocalizedString';
 
 export type CurriculumType = 'major' | 'minor';
 
@@ -10,4 +9,15 @@ export interface Curriculum {
   name: string;
   type: CurriculumType;
   courseCodes: Set<string>;
+}
+
+export interface CurriculaMap {
+    major: Record<string, {
+        name: string;
+        courses: Set<CourseCode>;
+    }>;
+    minor: Record<string, {
+        name: string;
+        courses: Set<CourseCode>;
+    }>;
 }
