@@ -22,7 +22,7 @@ export interface TextFilterRuleConfig {
   trimWhitespace?: boolean;
 }
 
-export class TextFilterRule implements FilterRule {
+export class TextFilterRule implements FilterRule<Course> {
   constructor(private config: TextFilterRuleConfig) {}
 
   evaluate(course: Course): boolean {

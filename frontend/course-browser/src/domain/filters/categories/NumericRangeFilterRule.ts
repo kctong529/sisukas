@@ -49,7 +49,7 @@ export interface NumericRangeFilterRuleConfig {
   value: NumericRange | number;
 }
 
-export class NumericRangeFilterRule implements FilterRule {
+export class NumericRangeFilterRule implements FilterRule<Course> {
   constructor(private config: NumericRangeFilterRuleConfig) { }
 
   evaluate(course: Course): boolean {

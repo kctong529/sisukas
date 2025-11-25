@@ -59,5 +59,5 @@ export class CoursePeriodRuleBlueprint extends DateRangeRuleBlueprint {
   readonly label = 'Course Period';
   readonly validRelations = ['overlaps', 'contains', 'equals'] as const;
   readonly defaultRelation = 'overlaps' as const;
-  readonly selector = (c: Course) => ({ start: c.startDate, end: c.endDate });
+  readonly selector = (c: Course) => ({ start: c.courseDate.start, end: c.courseDate.end });
 }

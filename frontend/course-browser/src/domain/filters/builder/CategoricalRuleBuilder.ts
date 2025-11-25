@@ -2,11 +2,11 @@ import type { CategoricalRuleBlueprint } from "../blueprints/CategoricalRuleBlue
 import type { CategoricalRelation } from "../categories/CategoricalFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
 
-export class CategoricalRuleBuilder<T extends string> implements FilterRuleBuilder<CategoricalRuleBlueprint<T>> {
+export class CategoricalRuleBuilder<T extends string, TEntity> implements FilterRuleBuilder<CategoricalRuleBlueprint<T, TEntity>> {
   relation: CategoricalRelation | null = null;
   value: T | T[] | null = null;
 
-  constructor(readonly blueprint: CategoricalRuleBlueprint<T>) {
+  constructor(readonly blueprint: CategoricalRuleBlueprint<T, TEntity>) {
     this.relation = blueprint.defaultRelation ?? null;
   }
 

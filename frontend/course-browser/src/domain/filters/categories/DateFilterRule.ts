@@ -22,7 +22,7 @@ export interface DateFilterRuleConfig {
   ignoreTime?: boolean;
 }
 
-export class DateFilterRule implements FilterRule {
+export class DateFilterRule implements FilterRule<Course> {
   constructor(private config: DateFilterRuleConfig) { }
 
   private normalizeDate(date: Date): number {

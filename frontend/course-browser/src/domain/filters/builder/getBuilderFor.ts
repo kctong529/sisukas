@@ -43,7 +43,7 @@ export function getBuilderFor(blueprint: NumericRuleBlueprint): NumericRuleBuild
 export function getBuilderFor(blueprint: NumericRangeRuleBlueprint): NumericRangeRuleBuilder;
 export function getBuilderFor(blueprint: DateRuleBlueprint): DateRuleBuilder;
 export function getBuilderFor(blueprint: DateRangeRuleBlueprint): DateRangeRuleBuilder;
-export function getBuilderFor<T extends string>(blueprint: CategoricalRuleBlueprint<T>): CategoricalRuleBuilder<T>;
+export function getBuilderFor<T extends string, TEntity>(blueprint: CategoricalRuleBlueprint<T, TEntity>): CategoricalRuleBuilder<T, TEntity>;
 
 export function getBuilderFor(
   blueprint:
@@ -52,7 +52,7 @@ export function getBuilderFor(
     | NumericRangeRuleBlueprint
     | DateRuleBlueprint
     | DateRangeRuleBlueprint
-    | CategoricalRuleBlueprint<any>
+    | CategoricalRuleBlueprint<any, any>
 ) {
   switch (blueprint.builderType) {
     case 'text': return new TextRuleBuilder(blueprint);
@@ -62,6 +62,6 @@ export function getBuilderFor(
     case 'dateRange': return new DateRangeRuleBuilder(blueprint);
     case 'categorical': return new CategoricalRuleBuilder(blueprint);
     default:
-        throw new Error("No builder for unknown blueprint type");
+      throw new Error("No builder for unknown blueprint type");
   }
 }

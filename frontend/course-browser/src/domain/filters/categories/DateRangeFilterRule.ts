@@ -19,7 +19,7 @@ export interface DateRangeFilterRuleConfig {
   value: DateRange;
 }
 
-export class DateRangeFilterRule implements FilterRule {
+export class DateRangeFilterRule implements FilterRule<Course> {
   constructor(private config: DateRangeFilterRuleConfig) {}
 
   evaluate(course: Course): boolean {

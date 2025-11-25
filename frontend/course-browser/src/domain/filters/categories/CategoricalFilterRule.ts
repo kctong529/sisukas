@@ -3,7 +3,7 @@ import type { Course } from '../../models/Course';
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 import * as ArrayComp from '../../value-objects/ArrayComparison';
 
-export type CategoricalFieldSelector<T extends string> = (course: Course) => T | T[];
+export type CategoricalFieldSelector<T extends string, TEntity> = (entity: TEntity) => T | T[];
 
 export type CategoricalRelation =
   // Single value relations
@@ -19,8 +19,8 @@ export type CategoricalRelation =
   | 'isEmpty'
   | 'isNotEmpty';
 
-export interface CategoricalFilterRuleConfig<T extends string> {
-  field: CategoricalFieldSelector<T>;
+export interface CategoricalFilterRuleConfig<T extends string, TEntity> {
+  field: CategoricalFieldSelector<T, TEntity>;
   fieldName: string;
   relation: CategoricalRelation;
   value?: T | T[];
@@ -28,7 +28,8 @@ export interface CategoricalFilterRuleConfig<T extends string> {
   caseSensitive?: boolean;
   partial?: boolean;
 }
-export class CategoricalFilterRule<T extends string> implements FilterRule {
+
+export class CategoricalFilterRule<T extends string, TEntity> implements FilterRule<TEntity> {
   private static readonly ARRAY_RELATIONS: CategoricalRelation[] = [
     'includes', 'notIncludes', 'includesAny', 'includesAll', 'isEmpty', 'isNotEmpty'
   ];
@@ -37,7 +38,7 @@ export class CategoricalFilterRule<T extends string> implements FilterRule {
     'equals', 'notEquals', 'isOneOf', 'isNotOneOf'
   ];
 
-  constructor(private config: CategoricalFilterRuleConfig<T>) {
+  constructor(private config: CategoricalFilterRuleConfig<T, TEntity>) {
     // Only validate if validValues is provided AND not empty
     if (this.config.validValues && this.config.validValues.length > 0) {
       this.validateValues();
@@ -73,8 +74,8 @@ export class CategoricalFilterRule<T extends string> implements FilterRule {
     }
   }
 
-  evaluate(course: Course): boolean {
-    const fieldValue = this.config.field(course);
+  evaluate(entity: TEntity): boolean {
+    const fieldValue = this.config.field(entity);
     const options = {
       caseSensitive: this.config.caseSensitive,
       partial: this.config.partial

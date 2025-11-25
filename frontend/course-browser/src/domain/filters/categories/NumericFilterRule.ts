@@ -23,7 +23,7 @@ export interface NumericFilterRuleConfig {
   epsilon?: number;
 }
 
-export class NumericFilterRule implements FilterRule {
+export class NumericFilterRule implements FilterRule<Course> {
   private readonly epsilon: number;
 
   constructor(private config: NumericFilterRuleConfig) {
