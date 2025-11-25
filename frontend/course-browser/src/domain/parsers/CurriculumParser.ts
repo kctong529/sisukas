@@ -1,13 +1,13 @@
 import type { CurriculaMap } from '../models/Curriculum';
-import type { CourseCode } from '../value-objects/CourseTypes';
+import { CourseCode } from '../value-objects/CourseCode';
 
-interface RawCurriculumEntry {
+export interface RawCurriculumEntry {
   code: string;
   name: string;
-  courses: CourseCode[];
+  courses: string[];
 }
 
-interface RawCurriculumData {
+export interface RawCurriculumData {
   curricula: RawCurriculumEntry[];
 }
 
@@ -27,9 +27,20 @@ const processCurriculumEntries = (
       continue;
     }
 
+    const validatedCourseCodes = new Set<CourseCode>();
+
+    for (const rawCode of entry.courses) {
+      try {
+        const courseCodeVo = new CourseCode(rawCode);
+        validatedCourseCodes.add(courseCodeVo);
+      } catch (error) {
+        console.error(`Skipping invalid course code "${rawCode}" in curriculum "${entry.code}":`, error instanceof Error ? error.message : String(error));
+      }
+    }
+
     targetMap[entry.code] = {
       name: entry.name,
-      courses: new Set(entry.courses),
+      courses: validatedCourseCodes,
     };
   }
 };

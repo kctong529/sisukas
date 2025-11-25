@@ -1,19 +1,9 @@
 // src/infrastructure/loaders/CurriculumLoader.ts
-import type { CurriculaMap, CurriculumType } from '../../domain/models/Curriculum';
-import type { CourseCode } from '../../domain/value-objects/CourseTypes';
+import type { CurriculaMap } from '../../domain/models/Curriculum';
+import type { RawCurriculumData } from '../../domain/parsers/CurriculumParser'; 
 import majorYaml from '../../data/major.yaml';
 import minorYaml from '../../data/minor.yaml';
 import { parseCurricula } from '../../domain/parsers/CurriculumParser';
-
-interface RawCurriculumEntry {
-  code: string;
-  name: string;
-  courses: CourseCode[];
-}
-
-interface RawCurriculumData {
-  curricula: RawCurriculumEntry[];
-}
 
 /**
  * Loads and processes major and minor curriculum data from YAML files (infrastructure)

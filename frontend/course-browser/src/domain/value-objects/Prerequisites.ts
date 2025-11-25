@@ -1,6 +1,6 @@
 // src/domain/value-objects/Prerequisites.ts
 import type { LocalizedString } from './LocalizedString';
-import type { CourseCode } from './CourseTypes';
+import type { CourseCode } from './CourseCode';
 
 export class Prerequisites {
   readonly raw: LocalizedString;
@@ -16,7 +16,7 @@ export class Prerequisites {
   /** Validate if a student’s completed courses satisfy all patterns */
   validate(completedCourses: CourseCode[]): boolean {
     return this.codePatterns.every(pattern =>
-      completedCourses.some(courseCode => Prerequisites.matchesPattern(courseCode, pattern))
+      completedCourses.some(courseCode => Prerequisites.matchesPattern(courseCode.value, pattern))
     );
   }
   

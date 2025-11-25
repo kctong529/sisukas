@@ -42,7 +42,7 @@ export class CodeRuleBlueprint extends TextRuleBlueprint {
   readonly label = 'Course Code';
   readonly validRelations = ['equals', 'notEquals', 'contains', 'startsWith', 'endsWith', 'matches'] as const;
   readonly defaultRelation = 'startsWith' as const;
-  readonly selector = (c: Course) => c.code;
+  readonly selector = (c: Course) => c.code.value;
 }
 
 export class NameRuleBlueprint extends TextRuleBlueprint {

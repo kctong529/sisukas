@@ -10,7 +10,7 @@
     console.log(`Rule: ${rule.describe()}`);
     courses.forEach(c => {
       const displayValue = fieldValueFn ? fieldValueFn(c) : '';
-      console.log(`  ${c.code.padEnd(15)}${displayValue ? ` ${displayValue.padEnd(30)}` : ''} → ${rule.evaluate(c)}`);
+      console.log(`  ${c.code.value.padEnd(15)}${displayValue ? ` ${displayValue.padEnd(30)}` : ''} → ${rule.evaluate(c)}`);
     });
     console.groupEnd();
   }

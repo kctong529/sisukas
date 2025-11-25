@@ -1,5 +1,4 @@
 // src/domain/value-objects/CourseTypes.ts
-export type CourseCode = string;
 export type Language = 'en' | 'fi' | 'sv';
 export type StudyLevel = 'basic-studies' | 'advanced-studies' | 'other-studies' | 'postgraduate-studies' | 'intermediate-studies';
 

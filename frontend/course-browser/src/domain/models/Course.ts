@@ -2,7 +2,8 @@
 import type { LocalizedString } from '../value-objects/LocalizedString';
 import type { DateRange } from '../value-objects/DateRange';
 import type { NumericRange } from '../value-objects/NumericRange';
-import type { CourseCode, Language, StudyLevel, RawCourseFormat, CourseFormat } from '../value-objects/CourseTypes';
+import { CourseCode } from '../value-objects/CourseCode'; 
+import type { Language, StudyLevel, RawCourseFormat, CourseFormat } from '../value-objects/CourseTypes';
 import { normalizeCourseFormat } from '../value-objects/CourseTypes';
 import { Prerequisites } from '../value-objects/Prerequisites';
 
@@ -25,7 +26,7 @@ export class Course {
 
   constructor(params: {
     id: string;
-    code: CourseCode;
+    code: string;
     name: LocalizedString;
     description?: LocalizedString;
     courseDate: DateRange;
@@ -41,7 +42,7 @@ export class Course {
     lastUpdated: Date;
   }) {
     this.id = params.id;
-    this.code = params.code;
+    this.code = new CourseCode(params.code);
     this.name = params.name;
     this.description = params.description;
     this.courseDate = params.courseDate;

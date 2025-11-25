@@ -3,20 +3,14 @@ import { Course } from '../models/Course';
 import type { DateRange } from '../value-objects/DateRange';
 import type { NumericRange } from '../value-objects/NumericRange';
 import { Prerequisites } from '../value-objects/Prerequisites';
-import type {
-  LocalizedString
-} from '../value-objects/LocalizedString';
-import type {
-  CourseCode,
-  StudyLevel,
-  Language,
-  RawCourseFormat
-} from '../value-objects/CourseTypes';
+import type { LocalizedString } from '../value-objects/LocalizedString';
+import type { StudyLevel, Language, RawCourseFormat } from '../value-objects/CourseTypes';
+import type { CourseCode } from '../value-objects/CourseCode';
 
 // --- Raw Data Shape (What courses.json looks like) ---
 export interface RawCourse {
   id: string;
-  code: CourseCode;
+  code: string;
   name: LocalizedString;
   description?: LocalizedString;
   startDate: string;
