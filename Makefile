@@ -42,7 +42,7 @@ setup-sisu-wrapper:
 
 setup-frontend:
 	cd course-browser && \
-	npm ci && \
+	npm ci --ignore-scripts && \
 	cp .env.example .env || true
 
 # --- Cleanup ---

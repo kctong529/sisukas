@@ -1,0 +1,198 @@
+curricula:
+  - code: CS24 (SCI3031)
+    name: Computer Science (2024-2026) (Bachelor)
+    courses:
+      - CS-A1113
+      - CS-A1123
+      - CS-A1141
+      - CS-A1110
+      - CS-A1120
+      - CS-A1140
+      - CS-A1155
+      - CS-C2160
+      - CS-C3100
+      - CS-C3120
+      - CS-C3240
+      - CS-C3140
+      - CS-C3170
+      - CS-C3130
+      - CS-C3150
+      - CS-E4580
+      - ELEC-A7100
+      - ELEC-A7151
+      - CS-E4700
+  - code: CS22 (SCI3031)
+    name: Computer Science (2022-2024) (Bachelor)
+    courses:
+      - CS-A1113
+      - CS-A1123
+      - CS-A1143
+      - CS-A1110
+      - CS-A1120
+      - CS-A1140
+      - CS-C2160
+      - CS-C3100
+      - CS-C3120
+      - CS-C3240
+      - CS-C3140
+      - CS-C3170
+      - CS-C3130
+      - CS-C3150
+      - CS-E4580
+      - ELEC-A7100
+      - ELEC-A7151
+  - code: MATH24 (SCI3033)
+    name: Mathematics (2024-2026) (Bachelor)
+    courses:
+      - MS-A0001
+      - MS-A0002
+      - MS-A0003
+      - MS-A0004
+      - MS-A0009
+      - MS-A0011
+      - MS-A0101
+      - MS-A0102
+      - MS-A0103
+      - MS-A0104
+      - MS-A0107
+      - MS-A0108
+      - MS-A0109
+      - MS-A0111
+      - MS-A0201
+      - MS-A0202
+      - MS-A0203
+      - MS-A0204
+      - MS-A0205
+      - MS-A0209
+      - MS-A0211
+      - MS-A0301
+      - MS-A0305
+      - MS-A0309
+      - MS-A0311
+      - MS-A0401
+      - MS-A0402
+      - MS-A0409
+      - MS-A0501
+      - MS-A0502
+      - MS-A0503
+      - MS-A0504
+      - MS-A0509
+      - MS-C1001
+      - MS-C1081
+      - MS-C1300
+      - MS-C1342
+      - MS-C1350
+      - MS-C1420
+      - MS-C1530
+      - MS-C1541
+      - MS-C1650
+      - MS-C2105
+      - MS-C2111
+      - MS-E1000
+      - AXM-E0411
+  - code: MATH22 (SCI3033)
+    name: Mathematics (2022-2024) (Bachelor)
+    courses:
+      - MS-A0001
+      - MS-A0002
+      - MS-A0003
+      - MS-A0004
+      - MS-A0009
+      - MS-A0011
+      - MS-A0101
+      - MS-A0102
+      - MS-A0103
+      - MS-A0104
+      - MS-A0107
+      - MS-A0108
+      - MS-A0109
+      - MS-A0111
+      - MS-A0201
+      - MS-A0202
+      - MS-A0203
+      - MS-A0204
+      - MS-A0205
+      - MS-A0209
+      - MS-A0211
+      - MS-A0301
+      - MS-A0305
+      - MS-A0309
+      - MS-A0311
+      - MS-A0401
+      - MS-A0402
+      - MS-A0409
+      - MS-A0501
+      - MS-A0502
+      - MS-A0503
+      - MS-A0504
+      - MS-A0509
+      - MS-C1001
+      - MS-C1081
+      - MS-C1300
+      - MS-C1342
+      - MS-C1350
+      - MS-C1420
+      - MS-C1530
+      - MS-C1541
+      - MS-C1650
+      - MS-E1000
+      - AXM-E0411
+  - code: DS24 (SCI3096)
+    name: Data Science (2024-2026)
+    courses:
+      - CS-A1120
+      - CS-A1121
+      - CS-A1123
+      - CS-C3240
+      - CS-A1155
+      - CS-E5480
+      - MS-C1620
+      - CS-C3120
+      - MS-C2128
+      - CS-E3190
+      - CS-E4650
+      - CS-E5710
+      - CS-E4800
+      - CS-E4840
+  - code: DS22 (SCI3096)
+    name: Data Science (2022-2024)
+    courses:
+      - CS-A1120
+      - CS-A1121
+      - CS-A1123
+      - CS-C3240
+      - MS-C1342
+      - MS-C1620
+      - CS-C3120
+      - MS-C2128
+      - CS-E3190
+      - CS-E4650
+      - CS-E5710
+      - CS-E4800
+      - CS-E4840
+  - code: SPACE24 (ELEC3044)
+    name: Space Science and Technology (2024-2026)
+    courses:
+      - ELEC-E4210
+      - ELEC-E4240
+      - ELEC-E4230
+      - ELEC-E4530
+      - ELEC-E4220
+      - ELEC-E4520
+      - ELEC-E4930
+      - ELEC-E4940
+  - code: SPACE22 (ELEC3044)
+    name: Space Science and Technology (2022-2024)
+    courses:
+      - ELEC-E4210
+      - ELEC-E4240
+      - ELEC-E4230
+      - ELEC-E4530
+      - ELEC-E4540
+      - ELEC-E4220
+      - ELEC-E4520
+      - ELEC-E4930
+      - ELEC-E4940
+      - ELEC-E4410
+      - ELEC-E4440
+      - ELEC-E4740
