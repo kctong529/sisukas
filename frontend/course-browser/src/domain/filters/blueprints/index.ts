@@ -14,12 +14,13 @@ import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprints';
 import { StartDateRuleBlueprint, EndDateRuleBlueprint } from './DateRuleBlueprints';
 import { EnrollmentPeriodRuleBlueprint, CoursePeriodRuleBlueprint } from './DateRangeRuleBlueprints';
 import { LevelRuleBlueprint, FormatRuleBlueprint, LanguagesRuleBlueprint, TeachersRuleBlueprint, TagsRuleBlueprint } from './CategoricalRuleBlueprints';
+import { MajorRuleBlueprint, MinorRuleBlueprint } from './MembershipRuleBlueprints';
+import type { CurriculaMap } from '../../models/Curriculum';
 
 /**
- * Singleton instances of all available rule blueprints.
- * Use these to create rule instances.
+ * Static blueprints that don't require external data
  */
-export const RuleBlueprints = {
+export const StaticRuleBlueprints = {
   // Text
   code: new CodeRuleBlueprint(),
   name: new NameRuleBlueprint(),
@@ -44,8 +45,35 @@ export const RuleBlueprints = {
   tags: new TagsRuleBlueprint(),
 } as const;
 
+/**
+ * Configuration for creating membership blueprints
+ */
+export interface MembershipBlueprintsConfig {
+  curriculaMap: CurriculaMap;
+  // Future data sources can be added here
+  // departmentsMap?: DepartmentsMap;
+}
+
+/**
+ * Factory function to create all rule blueprints including those requiring external data
+ */
+export function createRuleBlueprints(config: MembershipBlueprintsConfig) {
+  const { curriculaMap } = config;
+
+  return {
+    ...StaticRuleBlueprints,
+    
+    // Membership (require external data)
+    major: new MajorRuleBlueprint(curriculaMap),
+    minor: new MinorRuleBlueprint(curriculaMap),
+
+    // Future membership blueprints:
+    // department: config.departmentsMap ? new DepartmentRuleBlueprint(config.departmentsMap) : undefined,
+  } as const;
+}
+
 // Type for all blueprint keys
-export type RuleBlueprintKey = keyof typeof RuleBlueprints;
+export type RuleBlueprintKey = keyof ReturnType<typeof createRuleBlueprints>;
 
 export type { 
   BaseRuleBlueprint 
@@ -74,3 +102,7 @@ export type {
 export type { 
   CategoricalRuleBlueprint 
 } from './CategoricalRuleBlueprints';
+
+export type { 
+  MembershipRuleBlueprint 
+} from './MembershipRuleBlueprints';

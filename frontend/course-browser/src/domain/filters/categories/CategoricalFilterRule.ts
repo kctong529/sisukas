@@ -1,5 +1,4 @@
 // src/domain/filters/categories/CategoricalFilterRule.ts
-import type { Course } from '../../models/Course';
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 import * as ArrayComp from '../../value-objects/ArrayComparison';
 

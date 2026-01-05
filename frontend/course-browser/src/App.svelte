@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Course } from './domain/models/Course';
-  import { RuleBlueprints } from './domain/filters/blueprints';
+  import { createRuleBlueprints } from './domain/filters/blueprints';
   import { getBuilderFor } from './domain/filters/builder/getBuilderFor'
   import RemoteCourseLoader from './RemoteCourseLoader.svelte';
   import { loadCurricula } from "./infrastructure/loaders/CurriculumLoader";
@@ -94,7 +94,15 @@
   const today = new Date();
   console.log(courses);
 
+  const curricula = loadCurricula();
+  console.log("Curricula loaded:", curricula);
+
   console.log('Testing all rule blueprints with sample courses\n');
+
+  // Create the full blueprints object with membership blueprints
+  const RuleBlueprints = createRuleBlueprints({ 
+    curriculaMap: curricula,
+  });
 
   console.group('📝 TEXT FILTERS');
 
@@ -219,8 +227,16 @@
   formatBuilder.setValue('lecture');
   testRule('Builder test 13', formatBuilder.build(), courses, c => `format: ${c.format}`);
 
-  const curricula = loadCurricula();
-  console.log("Curricula loaded:", curricula);
+  const minorBuilder = getBuilderFor(RuleBlueprints.minor);
+  minorBuilder.setRelation('isNotMemberOf');
+  minorBuilder.setIdentifier('CS24 (SCI3031)');
+  testRule('Builder test 14', minorBuilder.build(), courses, c => `code: ${c.code}`);
+  const options = minorBuilder.getAvailableSetsWithLabels();
+  console.log('Available options:', options);
+
+  const majorBuilder = getBuilderFor(RuleBlueprints.major);
+  majorBuilder.setIdentifier('DSD24');
+  testRule('Builder test 15', majorBuilder.build(), courses, c => `code: ${c.code}`);
 </script>
 
 <RemoteCourseLoader></RemoteCourseLoader>
