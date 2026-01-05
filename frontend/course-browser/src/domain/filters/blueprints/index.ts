@@ -9,10 +9,10 @@
  * Blueprints are used to construct strongly-typed filter rules via their corresponding builders.
  */
 
-import { CodeRuleBlueprint, NameRuleBlueprint, OrganizationRuleBlueprint } from './TextRuleBlueprints';
+import { CodeRuleBlueprint, NameRuleBlueprint } from './TextRuleBlueprints';
 import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprints';
 import { StartDateRuleBlueprint, EndDateRuleBlueprint } from './DateRuleBlueprints';
-import { EnrollmentPeriodRuleBlueprint, CoursePeriodRuleBlueprint } from './DateRangeRuleBlueprints';
+import { EnrollmentRuleBlueprint, CoursePeriodRuleBlueprint } from './DateRangeRuleBlueprints';
 import { LevelRuleBlueprint, FormatRuleBlueprint, LanguagesRuleBlueprint, TeachersRuleBlueprint, TagsRuleBlueprint } from './CategoricalRuleBlueprints';
 import { MajorRuleBlueprint, MinorRuleBlueprint } from './MembershipRuleBlueprints';
 import type { CurriculaMap } from '../../models/Curriculum';
@@ -24,7 +24,6 @@ export const StaticRuleBlueprints = {
   // Text
   code: new CodeRuleBlueprint(),
   name: new NameRuleBlueprint(),
-  organization: new OrganizationRuleBlueprint(),
 
   // NumericRange
   credits: new CreditsRangeRuleBlueprint(),
@@ -34,7 +33,7 @@ export const StaticRuleBlueprints = {
   endDate: new EndDateRuleBlueprint(),
   
   // DateRange
-  enrollmentPeriod: new EnrollmentPeriodRuleBlueprint(),
+  enrollment: new EnrollmentRuleBlueprint(),
   coursePeriod: new CoursePeriodRuleBlueprint(),
   
   // Categorical

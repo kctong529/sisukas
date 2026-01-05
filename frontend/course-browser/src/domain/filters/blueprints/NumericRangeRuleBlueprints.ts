@@ -79,6 +79,6 @@ export class CreditsRangeRuleBlueprint extends NumericRangeRuleBlueprint {
   readonly field = 'credits';
   readonly label = 'Credits';
   readonly validRelations = ['includes', 'minEquals'] as const;
-  readonly defaultRelation = 'includes' as const;
+  readonly defaultRelation = 'minEquals' as const;
   readonly selector = (c: Course) => c.credits;
 }

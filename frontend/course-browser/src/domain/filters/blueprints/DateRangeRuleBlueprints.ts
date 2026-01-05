@@ -14,13 +14,13 @@ export abstract class DateRangeRuleBlueprint implements BaseRuleBlueprint {
 
   readonly defaultRelation?: DateRangeRelation;
 
-  createRule(relation: DateRangeRelation, value: DateRange): DateRangeFilterRule {
+  createRule(relation: DateRangeRelation, value: DateRange | Date): DateRangeFilterRule {
     if (!this.isValidRelation(relation)) {
       throw new Error(`Invalid relation "${relation}" for field "${this.field}". Valid: ${this.validRelations.join(', ')}`);
     }
 
-    if (!this.isValidDateRange(value)) {
-      throw new Error(`Invalid DateRange value for relation "${relation}"`);
+    if (!this.isValidValue(relation, value)) {
+      throw new Error(`Invalid value for relation "${relation}"`);
     }
 
     const config: DateRangeFilterRuleConfig = {
@@ -37,7 +37,18 @@ export abstract class DateRangeRuleBlueprint implements BaseRuleBlueprint {
     return (this.validRelations as readonly string[]).includes(relation);
   }
 
-  private isValidDateRange(range: DateRange): boolean {
+  private isValidValue(relation: DateRangeRelation, value: DateRange | Date): boolean {
+    // containsDate expects a single Date
+    if (relation === 'containsDate') {
+      return value instanceof Date && !isNaN(value.getTime());
+    }
+
+    // Other relations expect a DateRange
+    if (!(value as DateRange).start || !(value as DateRange).end) {
+      return false;
+    }
+
+    const range = value as DateRange;
     return range.start instanceof Date &&
            range.end instanceof Date &&
            !isNaN(range.start.getTime()) &&
@@ -46,12 +57,12 @@ export abstract class DateRangeRuleBlueprint implements BaseRuleBlueprint {
   }
 }
 
-export class EnrollmentPeriodRuleBlueprint extends DateRangeRuleBlueprint {
-  readonly field = 'enrollmentPeriod';
-  readonly label = 'Enrollment Period';
-  readonly validRelations = ['overlaps', 'contains', 'equals'] as const;
-  readonly defaultRelation = 'overlaps' as const;
-  readonly selector = (c: Course) => c.enrollmentPeriod;
+export class EnrollmentRuleBlueprint extends DateRangeRuleBlueprint {
+  readonly field = 'enrollment';
+  readonly label = 'Enrollment';
+  readonly validRelations = ['containsDate'] as const;
+  readonly defaultRelation = 'containsDate' as const;
+  readonly selector = (c: Course) => c.enrollmentDate;
 }
 
 export class CoursePeriodRuleBlueprint extends DateRangeRuleBlueprint {

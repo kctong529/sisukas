@@ -17,6 +17,10 @@ export class CategoricalRuleBuilder<T extends string, TEntity> implements Filter
   }
 
   setValue(v: T | T[]) {
+    if (v === '' || v === null || v === undefined) {
+      this.value = null;
+      return this;
+    }
     this.value = v;
     return this;
   }

@@ -68,7 +68,7 @@ export abstract class CategoricalRuleBlueprint<T extends string, TEntity> implem
 export class LevelRuleBlueprint extends CategoricalRuleBlueprint<StudyLevel, Course> {
   readonly field = 'level';
   readonly label = 'Study Level';
-  readonly validRelations = ['equals', 'notEquals', 'isOneOf', 'isNotOneOf'] as const;
+  readonly validRelations = ['equals', 'notEquals'] as const;
   readonly defaultRelation = 'equals' as const;
   // Selector argument is typed as Course
   readonly selector = (c: Course) => c.level;
@@ -85,7 +85,7 @@ export class LevelRuleBlueprint extends CategoricalRuleBlueprint<StudyLevel, Cou
 export class FormatRuleBlueprint extends CategoricalRuleBlueprint<CourseFormat, Course> {
   readonly field = 'format';
   readonly label = 'Course Format';
-  readonly validRelations = ['equals', 'notEquals', 'isOneOf', 'isNotOneOf'] as const;
+  readonly validRelations = ['equals', 'notEquals'] as const;
   readonly defaultRelation = 'equals' as const;
   // Selector argument is typed as Course
   readonly selector = (c: Course) => c.format;
@@ -98,11 +98,16 @@ export class FormatRuleBlueprint extends CategoricalRuleBlueprint<CourseFormat, 
   } as const;
 }
 
+// export class OrganizationRuleBlueprint extends CategoricalRuleBlueprint<string, Course> {
+//   readonly field = 'organization';
+//   readonly label = 'Organization';
+// }
+
 export class LanguagesRuleBlueprint extends CategoricalRuleBlueprint<Language, Course> {
   readonly field = 'languages';
   readonly label = 'Languages';
-  readonly validRelations = ['includes', 'notIncludes', 'includesAny', 'includesAll', 'isEmpty', 'isNotEmpty'] as const;
-  readonly defaultRelation = 'includesAny' as const;
+  readonly validRelations = ['includes', 'notIncludes'] as const;
+  readonly defaultRelation = 'includes' as const;
   // Selector argument is typed as Course
   readonly selector = (c: Course) => c.languages;
   readonly validValues = ['en', 'fi', 'sv'] as const;
@@ -116,7 +121,7 @@ export class LanguagesRuleBlueprint extends CategoricalRuleBlueprint<Language, C
 export class TeachersRuleBlueprint extends CategoricalRuleBlueprint<string, Course> {
   readonly field = 'teachers';
   readonly label = 'Teachers';
-  readonly validRelations = ['includes', 'notIncludes', 'includesAny', 'includesAll', 'isEmpty', 'isNotEmpty'] as const;
+  readonly validRelations = ['includes', 'notIncludes'] as const;
   readonly defaultRelation = 'includes' as const;
   // Selector argument is typed as Course
   readonly selector = (c: Course) => c.teachers;
@@ -128,7 +133,7 @@ export class TeachersRuleBlueprint extends CategoricalRuleBlueprint<string, Cour
 export class TagsRuleBlueprint extends CategoricalRuleBlueprint<string, Course> {
   readonly field = 'tags';
   readonly label = 'Tags';
-  readonly validRelations = ['includes', 'notIncludes', 'includesAny', 'includesAll', 'isEmpty', 'isNotEmpty'] as const;
+  readonly validRelations = ['includes', 'notIncludes'] as const;
   readonly defaultRelation = 'includes' as const;
   // Selector argument is typed as Course
   readonly selector = (c: Course) => c.tags ?? [];

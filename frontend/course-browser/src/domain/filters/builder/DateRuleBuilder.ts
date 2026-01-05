@@ -23,7 +23,19 @@ export class DateRuleBuilder implements FilterRuleBuilder<DateRuleBlueprint> {
   }
 
   isComplete(): boolean {
-    return this.relation !== null && this.value !== null;
+    if (this.relation === null) {
+      return false;
+    }
+
+    if (this.value === null || this.value === undefined) {
+      return false;
+    }
+
+    if (!(this.value instanceof Date)) {
+      return false;
+    }
+    
+    return !isNaN(this.value.getTime());
   }
 
   build() {

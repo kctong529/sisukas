@@ -41,7 +41,7 @@ export class CodeRuleBlueprint extends TextRuleBlueprint {
   readonly field = 'code';
   readonly label = 'Course Code';
   readonly validRelations = ['equals', 'notEquals', 'contains', 'startsWith', 'endsWith', 'matches'] as const;
-  readonly defaultRelation = 'startsWith' as const;
+  readonly defaultRelation = 'contains' as const;
   readonly selector = (c: Course) => c.code.value;
 }
 
@@ -51,12 +51,4 @@ export class NameRuleBlueprint extends TextRuleBlueprint {
   readonly validRelations = ['equals', 'notEquals', 'contains', 'startsWith', 'endsWith', 'matches'] as const;
   readonly defaultRelation = 'contains' as const;
   readonly selector = (c: Course) => c.name.en;
-}
-
-export class OrganizationRuleBlueprint extends TextRuleBlueprint {
-  readonly field = 'organization';
-  readonly label = 'Organization';
-  readonly validRelations = ['equals', 'notEquals', 'contains', 'startsWith', 'endsWith'] as const;
-  readonly defaultRelation = 'contains' as const;
-  readonly selector = (c: Course) => c.organization;
 }

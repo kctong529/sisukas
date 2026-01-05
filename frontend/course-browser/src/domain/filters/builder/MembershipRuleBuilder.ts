@@ -21,11 +21,20 @@ export class MembershipRuleBuilder<TKey, TEntity>
   }
 
   setIdentifier(identifier: string) {
+    // Handle empty string - just don't set the identifier
+    if (identifier === '' || identifier === null || identifier === undefined) {
+      this.identifier = null;
+      return this;
+    }
+
+    // Validate the identifier is in the available sets
     if (!this.blueprint.availableSets.includes(identifier)) {
-      throw new Error(
+      console.warn(
         `Invalid set identifier "${identifier}" for ${this.blueprint.field}. ` +
         `Valid: ${this.blueprint.availableSets.join(', ')}`
       );
+      this.identifier = null;
+      return this;
     }
     
     this.identifier = identifier;
@@ -33,12 +42,27 @@ export class MembershipRuleBuilder<TKey, TEntity>
   }
 
   isComplete(): boolean {
-    return this.relation !== null && this.identifier !== null;
+    if (this.relation === null) {
+      return false;
+    }
+
+    if (this.identifier === null || this.identifier === undefined || this.identifier === '') {
+      return false;
+    }
+
+    // Double-check identifier is valid
+    return this.blueprint.availableSets.includes(this.identifier);
   }
 
   build() {
     if (!this.isComplete()) {
-      throw new Error('Incomplete membership rule');
+      throw new Error(
+        `Incomplete membership rule: ${
+          !this.relation ? 'missing relation' : 
+          !this.identifier ? 'missing identifier' : 
+          'invalid identifier'
+        }`
+      );
     }
     return this.blueprint.createRule(this.relation!, this.identifier!);
   }

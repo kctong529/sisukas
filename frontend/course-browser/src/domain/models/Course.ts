@@ -11,9 +11,8 @@ export class Course {
   readonly id: string;
   readonly code: CourseCode;
   readonly name: LocalizedString;
-  readonly description?: LocalizedString;
   readonly courseDate: DateRange;
-  readonly enrollmentPeriod: DateRange;
+  readonly enrollmentDate: DateRange;
   readonly credits: NumericRange;
   readonly level: StudyLevel;
   readonly prerequisites?: Prerequisites;
@@ -22,13 +21,11 @@ export class Course {
   readonly languages: Language[];
   readonly format: CourseFormat;
   readonly tags?: string[];
-  readonly lastUpdated: Date;
 
   constructor(params: {
     id: string;
     code: string;
     name: LocalizedString;
-    description?: LocalizedString;
     courseDate: DateRange;
     enrollmentDate: DateRange;
     credits: NumericRange;
@@ -39,14 +36,12 @@ export class Course {
     languages: Language[];
     format: RawCourseFormat;
     tags?: string[];
-    lastUpdated: Date;
   }) {
     this.id = params.id;
     this.code = new CourseCode(params.code);
     this.name = params.name;
-    this.description = params.description;
     this.courseDate = params.courseDate;
-    this.enrollmentPeriod = params.enrollmentDate;
+    this.enrollmentDate = params.enrollmentDate;
     this.credits = params.credits;
     this.level = params.level;
     this.organization = params.organization;
@@ -54,7 +49,6 @@ export class Course {
     this.languages = params.languages;
     this.format = normalizeCourseFormat(params.format);
     this.tags = params.tags;
-    this.lastUpdated = params.lastUpdated;
 
     // Wrap prerequisites in value object if it's raw LocalizedString
     if (params.prerequisites instanceof Prerequisites) {
