@@ -8,6 +8,7 @@
   import { loadCurricula } from './infrastructure/loaders/CurriculumLoader';
   import { loadCoursesWithCache } from './infrastructure/loaders/RemoteCourseLoader';
   import { loadAcademicPeriods } from './infrastructure/loaders/AcademicPeriodLoader';
+  import { FilterService } from './domain/services/FilterService';
   import type { Course } from './domain/models/Course';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { FilterRule } from './domain/filters/core/FilterRule';
@@ -53,45 +54,17 @@
   
   function handleSearch() {
     if (!RuleBlueprints || filterRules.length === 0) {
-      filteredCourses = showUnique ? getUniqueCourses(courses) : [...courses];
+      filteredCourses = showUnique 
+        ? FilterService.getUniqueCourses(courses) 
+        : [...courses];
       return;
     }
     
-    // Apply filters using the rule architecture
-    const results = courses.filter(course => {
-      return filterRules.some(group => {
-        return group.every(rule => rule.evaluate(course));
-      });
-    });
-    
-    filteredCourses = showUnique ? getUniqueCourses(results) : results;
-  }
-  
-  function getUniqueCourses(courses: Course[]): Course[] {
-    const uniqueMap = new Map();
-    
-    courses.forEach(course => {
-      const code = course.code.value.toLowerCase();
-      const isTeaching = course.format.includes('teaching');
-      
-      if (uniqueMap.has(code)) {
-        const existingCourse = uniqueMap.get(code);
-        const existingIsTeaching = existingCourse.format.includes('teaching');
-        
-        // Prefer teaching variants
-        if (!existingIsTeaching && isTeaching) {
-          uniqueMap.set(code, course);
-        }
-        // If both are teaching, keep the one with later start date
-        else if (isTeaching && course.courseDate.start > existingCourse.courseDate.start) {
-          uniqueMap.set(code, course);
-        }
-      } else {
-        uniqueMap.set(code, course);
-      }
-    });
-    
-    return Array.from(uniqueMap.values());
+    // Apply filters using the FilterService
+    const results = FilterService.applyFilters(courses, filterRules);
+    filteredCourses = showUnique 
+      ? FilterService.getUniqueCourses(results) 
+      : results;
   }
   
   function handleSaveFilters() {
@@ -155,7 +128,7 @@
     />
     
     <footer>
-      <p id="footer-text">© 2025 Sisukas. All rights reserved.</p>
+      <p id="footer-text">© 2026 Sisukas. All rights reserved.</p>
     </footer>
   {/if}
 </div>
