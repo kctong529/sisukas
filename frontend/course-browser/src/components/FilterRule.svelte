@@ -2,6 +2,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { formatRelationLabel } from '../domain/filters/utils/RelationLabels';
+  import { BLUEPRINT_ORDER } from '../domain/filters/config/BlueprintOrder';
   
   export let blueprints: any;
   export let config: any;
@@ -9,26 +10,9 @@
   
   const dispatch = createEventDispatcher();
   
-  // Define custom order for blueprints in dropdown
-  const blueprintOrder = [
-    'code',
-    'name',
-    'startDate',
-    'endDate',
-    'major',
-    'minor',
-    'enrollment',
-    'teachers',
-    'language',
-    'format',
-    'credits',
-    'level',
-    'tags',
-  ];
-  
   // Sort blueprint keys by custom order
   $: blueprintKeys = blueprints 
-    ? blueprintOrder.filter(key => key in blueprints)
+    ? BLUEPRINT_ORDER.filter(key => key in blueprints)
     : [];
   
   $: blueprint = blueprints?.[config.blueprintKey];
