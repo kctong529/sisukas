@@ -13,7 +13,7 @@ import { CodeRuleBlueprint, NameRuleBlueprint } from './TextRuleBlueprints';
 import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprints';
 import { StartDateRuleBlueprint, EndDateRuleBlueprint } from './DateRuleBlueprints';
 import { EnrollmentRuleBlueprint, CoursePeriodRuleBlueprint } from './DateRangeRuleBlueprints';
-import { LevelRuleBlueprint, FormatRuleBlueprint, LanguagesRuleBlueprint, TeachersRuleBlueprint, TagsRuleBlueprint } from './CategoricalRuleBlueprints';
+import { LevelRuleBlueprint, FormatRuleBlueprint, LanguagesRuleBlueprint, TeachersRuleBlueprint, TagsRuleBlueprint, OrganizationRuleBlueprint } from './CategoricalRuleBlueprints';
 import { MajorRuleBlueprint, MinorRuleBlueprint } from './MembershipRuleBlueprints';
 import type { CurriculaMap } from '../../models/Curriculum';
 
@@ -45,10 +45,11 @@ export const StaticRuleBlueprints = {
 } as const;
 
 /**
- * Configuration for creating membership blueprints
+ * Configuration for creating blueprints that require external data
  */
-export interface MembershipBlueprintsConfig {
+export interface BlueprintsConfig {
   curriculaMap: CurriculaMap;
+  organizations: string[];
   // Future data sources can be added here
   // departmentsMap?: DepartmentsMap;
 }
@@ -56,17 +57,20 @@ export interface MembershipBlueprintsConfig {
 /**
  * Factory function to create all rule blueprints including those requiring external data
  */
-export function createRuleBlueprints(config: MembershipBlueprintsConfig) {
-  const { curriculaMap } = config;
+export function createRuleBlueprints(config: BlueprintsConfig) {
+  const { curriculaMap, organizations } = config;
 
   return {
     ...StaticRuleBlueprints,
+
+    // Categorical (require external data)
+    organization: new OrganizationRuleBlueprint(organizations),
     
     // Membership (require external data)
     major: new MajorRuleBlueprint(curriculaMap),
     minor: new MinorRuleBlueprint(curriculaMap),
 
-    // Future membership blueprints:
+    // Future blueprints:
     // department: config.departmentsMap ? new DepartmentRuleBlueprint(config.departmentsMap) : undefined,
   } as const;
 }

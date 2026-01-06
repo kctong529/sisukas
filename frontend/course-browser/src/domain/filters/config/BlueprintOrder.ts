@@ -11,6 +11,7 @@ export const BLUEPRINT_ORDER = [
   'major',
   'minor',
   'enrollment',
+  'organization',
   'teachers',
   'language',
   'format',

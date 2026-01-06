@@ -98,10 +98,19 @@ export class FormatRuleBlueprint extends CategoricalRuleBlueprint<CourseFormat, 
   } as const;
 }
 
-// export class OrganizationRuleBlueprint extends CategoricalRuleBlueprint<string, Course> {
-//   readonly field = 'organization';
-//   readonly label = 'Organization';
-// }
+export class OrganizationRuleBlueprint extends CategoricalRuleBlueprint<string, Course> {
+  readonly field = 'organization';
+  readonly label = 'Organization';
+  readonly validRelations = ['equals', 'notEquals'] as const;
+  readonly defaultRelation = 'equals' as const;
+  readonly selector = (c: Course) => c.organization;
+  readonly validValues: readonly string[];
+
+  constructor(organizations: string[]) {
+    super();
+    this.validValues = organizations;
+  }
+}
 
 export class LanguagesRuleBlueprint extends CategoricalRuleBlueprint<Language, Course> {
   readonly field = 'languages';

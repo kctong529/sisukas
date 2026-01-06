@@ -6,6 +6,7 @@
   import SearchControls from './components/SearchControls.svelte';
   import { createRuleBlueprints } from './domain/filters/blueprints';
   import { loadCurricula } from './infrastructure/loaders/CurriculumLoader';
+  import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
   import { loadCoursesWithCache } from './infrastructure/loaders/RemoteCourseLoader';
   import { loadAcademicPeriods } from './infrastructure/loaders/AcademicPeriodLoader';
   import { FilterService } from './domain/services/FilterService';
@@ -31,12 +32,16 @@
       periods = loadAcademicPeriods();
       console.log("Academic Periods loaded:", periods);
       
+      // Load organizations (synchronous)
+      const organizations = loadOrganizations();
+      console.log("Organizations loaded:", organizations.length);
+
       // Load curricula data
       const curriculaMap = await loadCurricula();
       console.log("Curricula loaded:", curriculaMap);
       
-      // Initialize blueprints with curricula data
-      RuleBlueprints = createRuleBlueprints({ curriculaMap });
+      // Initialize blueprints with all required data
+      RuleBlueprints = createRuleBlueprints({ curriculaMap, organizations });
       console.log("Rule blueprints initialized");
       
       // Load courses with cache
