@@ -6,6 +6,7 @@
 export const BLUEPRINT_ORDER = [
   'code',
   'name',
+  'period',
   'startDate',
   'endDate',
   'major',

@@ -41,7 +41,7 @@
       console.log("Curricula loaded:", curriculaMap);
       
       // Initialize blueprints with all required data
-      RuleBlueprints = createRuleBlueprints({ curriculaMap, organizations });
+      RuleBlueprints = createRuleBlueprints({ curriculaMap, organizations, periods });
       console.log("Rule blueprints initialized");
       
       // Load courses with cache
@@ -117,6 +117,7 @@
       bind:this={filterContainerRef}
       blueprints={RuleBlueprints} 
       bind:filterRules 
+      {periods}
       on:search={handleSearch}
     />
     

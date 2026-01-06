@@ -12,10 +12,12 @@
 import { CodeRuleBlueprint, NameRuleBlueprint } from './TextRuleBlueprints';
 import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprints';
 import { StartDateRuleBlueprint, EndDateRuleBlueprint } from './DateRuleBlueprints';
-import { EnrollmentRuleBlueprint, CoursePeriodRuleBlueprint } from './DateRangeRuleBlueprints';
+import { EnrollmentRuleBlueprint } from './DateRangeRuleBlueprints';
 import { LevelRuleBlueprint, FormatRuleBlueprint, LanguagesRuleBlueprint, TeachersRuleBlueprint, TagsRuleBlueprint, OrganizationRuleBlueprint } from './CategoricalRuleBlueprints';
 import { MajorRuleBlueprint, MinorRuleBlueprint } from './MembershipRuleBlueprints';
+import { PeriodRuleBlueprint } from './PeriodRuleBlueprint';
 import type { CurriculaMap } from '../../models/Curriculum';
+import type { AcademicPeriod } from '../../models/AcademicPeriod';
 
 /**
  * Static blueprints that don't require external data
@@ -34,7 +36,6 @@ export const StaticRuleBlueprints = {
   
   // DateRange
   enrollment: new EnrollmentRuleBlueprint(),
-  coursePeriod: new CoursePeriodRuleBlueprint(),
   
   // Categorical
   level: new LevelRuleBlueprint(),
@@ -50,6 +51,7 @@ export const StaticRuleBlueprints = {
 export interface BlueprintsConfig {
   curriculaMap: CurriculaMap;
   organizations: string[];
+  periods: AcademicPeriod[];
   // Future data sources can be added here
   // departmentsMap?: DepartmentsMap;
 }
@@ -58,13 +60,16 @@ export interface BlueprintsConfig {
  * Factory function to create all rule blueprints including those requiring external data
  */
 export function createRuleBlueprints(config: BlueprintsConfig) {
-  const { curriculaMap, organizations } = config;
+  const { curriculaMap, organizations, periods } = config;
 
   return {
     ...StaticRuleBlueprints,
 
     // Categorical (require external data)
     organization: new OrganizationRuleBlueprint(organizations),
+
+    // Period filtering (requires periods data)
+    period: new PeriodRuleBlueprint(periods),
     
     // Membership (require external data)
     major: new MajorRuleBlueprint(curriculaMap),
@@ -109,3 +114,7 @@ export type {
 export type { 
   MembershipRuleBlueprint 
 } from './MembershipRuleBlueprints';
+
+export type { 
+  PeriodRuleBlueprint 
+} from './PeriodRuleBlueprint';

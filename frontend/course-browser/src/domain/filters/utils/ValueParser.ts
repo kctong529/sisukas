@@ -41,7 +41,6 @@ export class ValueParser {
    */
   private static parseDateRange(relation: string, valueStr: any): any {
     if (relation === 'containsDate') {
-      // Single date for containsDate relation
       if (!valueStr || valueStr === '') return undefined;
       const date = new Date(valueStr);
       return isNaN(date.getTime()) ? undefined : date;

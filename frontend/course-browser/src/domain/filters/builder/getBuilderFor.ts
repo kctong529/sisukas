@@ -11,6 +11,7 @@
  * - DateRangeRuleBlueprint -> DateRangeRuleBuilder
  * - CategoricalRuleBlueprint -> CategoricalRuleBuilder
  * - MembershipRuleBlueprint -> MembershipRuleBuilder
+ * - PeriodRuleBlueprint -> PeriodRuleBuilder
  *
  * Usage:
  *   const builder = getBuilderFor(RuleBlueprints.name);
@@ -29,6 +30,7 @@ import { DateRuleBuilder } from "./DateRuleBuilder";
 import { DateRangeRuleBuilder } from "./DateRangeRuleBuilder";
 import { CategoricalRuleBuilder } from "./CategoricalRuleBuilder";
 import { MembershipRuleBuilder } from "./MembershipRuleBuilder";
+import { PeriodRuleBuilder } from './PeriodRuleBuilder';
 
 import type {
   TextRuleBlueprint,
@@ -37,7 +39,8 @@ import type {
   DateRuleBlueprint,
   DateRangeRuleBlueprint,
   CategoricalRuleBlueprint,
-  MembershipRuleBlueprint
+  MembershipRuleBlueprint,
+  PeriodRuleBlueprint
 } from "../blueprints";
 
 // Type-safe overloads ensure that each blueprint returns the correct builder type
@@ -48,6 +51,7 @@ export function getBuilderFor(blueprint: DateRuleBlueprint): DateRuleBuilder;
 export function getBuilderFor(blueprint: DateRangeRuleBlueprint): DateRangeRuleBuilder;
 export function getBuilderFor<T extends string, TEntity>(blueprint: CategoricalRuleBlueprint<T, TEntity>): CategoricalRuleBuilder<T, TEntity>;
 export function getBuilderFor<TKey, TEntity>(blueprint: MembershipRuleBlueprint<TKey, TEntity>): MembershipRuleBuilder<TKey, TEntity>;
+export function getBuilderFor(blueprint: PeriodRuleBlueprint): PeriodRuleBuilder;
 
 export function getBuilderFor(
   blueprint:
@@ -58,6 +62,7 @@ export function getBuilderFor(
     | DateRangeRuleBlueprint
     | CategoricalRuleBlueprint<any, any>
     | MembershipRuleBlueprint<any, any>
+    | PeriodRuleBlueprint
 ) {
   switch (blueprint.builderType) {
     case 'text': return new TextRuleBuilder(blueprint);
@@ -67,6 +72,7 @@ export function getBuilderFor(
     case 'dateRange': return new DateRangeRuleBuilder(blueprint);
     case 'categorical': return new CategoricalRuleBuilder(blueprint);
     case 'membership': return new MembershipRuleBuilder(blueprint);
+    case 'period': return new PeriodRuleBuilder(blueprint);
     default:
       throw new Error("No builder for unknown blueprint type");
   }

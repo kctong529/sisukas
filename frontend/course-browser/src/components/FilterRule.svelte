@@ -4,11 +4,14 @@
   import { formatRelationLabel } from '../domain/filters/utils/RelationLabels';
   import { BLUEPRINT_ORDER } from '../domain/filters/config/BlueprintOrder';
   import { DefaultValueInitializer } from '../domain/filters/utils/DefaultValueInitializer';
+  import PeriodSelector from './PeriodSelector.svelte';
   import type { FilterConfig } from '../domain/filters/types';
+  import type { AcademicPeriod } from '../domain/models/AcademicPeriod';
   
   export let blueprints: any;
   export let config: FilterConfig;
   export let showBooleanOp: boolean = false;
+  export let periods: AcademicPeriod[] = [];
   
   const dispatch = createEventDispatcher();
   
@@ -19,12 +22,25 @@
   
   $: blueprint = blueprints?.[config.blueprintKey];
   $: relations = blueprint?.validRelations || [];
+
+  $: showPeriodSelector = config.blueprintKey === 'period';
+
+  // Parse period IDs from value string
+  $: selectedPeriods = typeof config.value === 'string' 
+    ? config.value.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
   
   function handleFieldChange() {
     // Reset relation and value when field changes
     const newBlueprint = blueprints[config.blueprintKey];
     config.relation = newBlueprint.defaultRelation || newBlueprint.validRelations[0];
     config.value = DefaultValueInitializer.getDefaultValue(newBlueprint);
+    dispatch('change');
+  }
+
+  function handlePeriodSelectionChange(event: CustomEvent<string[]>) {
+    const periodIds = event.detail;
+    config.value = periodIds.join(', ');
     dispatch('change');
   }
   
@@ -53,7 +69,15 @@
   
   {#if needsValue}
     <div class="filter-input">
-      {#if blueprint?.builderType === 'text'}
+      {#if blueprint?.builderType === 'period'}
+        <input 
+          type="text" 
+          class="filter-value" 
+          value={config.value}
+          placeholder="Select period(s)"
+          readonly
+        />
+      {:else if blueprint?.builderType === 'text'}
         <input type="text" class="filter-value" bind:value={config.value} on:input={() => dispatch('change')} placeholder="Enter value" />
       {:else if blueprint?.builderType === 'numeric' || blueprint?.builderType === 'numericRange'}
         <input type="number" class="filter-value" bind:value={config.value} on:input={() => dispatch('change')} placeholder="Enter value" />
@@ -81,6 +105,15 @@
   
   <button on:click={() => dispatch('remove')}><i class="bi bi-trash"></i></button>
 </div>
+
+{#if showPeriodSelector}
+  <PeriodSelector 
+    {periods} 
+    {selectedPeriods}
+    visible={showPeriodSelector}
+    on:change={handlePeriodSelectionChange}
+  />
+{/if}
 
 <style>
   .filter-boolean {

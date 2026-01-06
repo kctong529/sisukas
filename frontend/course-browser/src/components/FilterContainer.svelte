@@ -7,10 +7,12 @@
   import { DefaultValueInitializer } from '../domain/filters/utils/DefaultValueInitializer';
   import type { FilterConfig, FilterRuleGroups } from '../domain/filters/types';
   import type { Course } from '../domain/models/Course';
+  import type { AcademicPeriod } from '../domain/models/AcademicPeriod';
   import type { FilterRule as Rule } from '../domain/filters/core/FilterRule';
   
   export let blueprints: any;
   export let filterRules: FilterRuleGroups = [];
+  export let periods: AcademicPeriod[] = [];
   
   const dispatch = createEventDispatcher();
   
@@ -119,6 +121,7 @@
       <FilterRule
         {blueprints}
         {config}
+        {periods}
         showBooleanOp={index > 0}
         on:change={updateFilterRules}
         on:remove={() => removeFilterRule(config.id)}

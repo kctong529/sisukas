@@ -27,6 +27,8 @@ export const RELATION_LABELS: Record<string, string> = {
   'overlaps': 'Overlaps',
   'within': 'Within',
   'containsDate': 'Contains',
+  'isCompletelyBefore': 'Is Completely Before',
+  'isCompletelyAfter': 'Is Completely After',
   
   // Categorical relations
   'isOneOf': 'Is One Of',
