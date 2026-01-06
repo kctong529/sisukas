@@ -1,6 +1,7 @@
 <!-- src/components/FilterRule.svelte -->
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
+  import { formatRelationLabel } from '../domain/filters/utils/RelationLabels';
   
   export let blueprints: any;
   export let config: any;
@@ -39,40 +40,6 @@
     config.relation = newBlueprint.defaultRelation || newBlueprint.validRelations[0];
     config.value = '';
     dispatch('change');
-  }
-  
-  function formatRelationLabel(relation: string): string {
-    const labels: Record<string, string> = {
-      'contains': 'Contains',
-      'notContains': 'Does Not Contain',
-      'equals': 'Equals',
-      'notEquals': 'Does Not Equal',
-      'startsWith': 'Starts With',
-      'endsWith': 'Ends With',
-      'matches': 'Matches (regex)',
-      'minEquals': 'At Least',
-      'maxEquals': 'At Most',
-      'includes': 'Include',
-      'notIncludes': 'Does Not Include',
-      'before': 'Before',
-      'after': 'After',
-      'onOrBefore': 'On or Before',
-      'onOrAfter': 'On or After',
-      'between': 'Between',
-      'overlaps': 'Overlaps',
-      'within': 'Within',
-      'containsDate': 'Contains',
-      'isOneOf': 'Is One Of',
-      'isNotOneOf': 'Is Not One Of',
-      'includesAny': 'Includes Any',
-      'includesAll': 'Includes All',
-      'isEmpty': 'Is Empty',
-      'isNotEmpty': 'Is Not Empty',
-      'isMemberOf': 'Is',
-      'isNotMemberOf': 'Is Not'
-    };
-    
-    return labels[relation] || relation;
   }
   
   $: needsValue = !['isEmpty', 'isNotEmpty'].includes(config.relation);
