@@ -4,6 +4,7 @@
   import FilterRule from './FilterRule.svelte';
   import { getBuilderFor } from '../domain/filters/builder/getBuilderFor';
   import { ValueParser } from '../domain/filters/utils/ValueParser';
+  import { DefaultValueInitializer } from '../domain/filters/utils/DefaultValueInitializer';
   import type { FilterConfig, FilterRuleGroups } from '../domain/filters/types';
   import type { Course } from '../domain/models/Course';
   import type { FilterRule as Rule } from '../domain/filters/core/FilterRule';
@@ -29,7 +30,7 @@
       id: nextId++,
       blueprintKey: firstBlueprintKey,
       relation: firstBlueprint.defaultRelation || firstBlueprint.validRelations[0],
-      value: '',
+      value: DefaultValueInitializer.getDefaultValue(firstBlueprint),
       booleanOp: 'AND'
     }];
   }

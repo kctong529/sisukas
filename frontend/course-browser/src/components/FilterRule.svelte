@@ -3,6 +3,7 @@
   import { createEventDispatcher } from 'svelte';
   import { formatRelationLabel } from '../domain/filters/utils/RelationLabels';
   import { BLUEPRINT_ORDER } from '../domain/filters/config/BlueprintOrder';
+  import { DefaultValueInitializer } from '../domain/filters/utils/DefaultValueInitializer';
   import type { FilterConfig } from '../domain/filters/types';
   
   export let blueprints: any;
@@ -23,7 +24,7 @@
     // Reset relation and value when field changes
     const newBlueprint = blueprints[config.blueprintKey];
     config.relation = newBlueprint.defaultRelation || newBlueprint.validRelations[0];
-    config.value = '';
+    config.value = DefaultValueInitializer.getDefaultValue(newBlueprint);
     dispatch('change');
   }
   
