@@ -4,21 +4,14 @@
   import FilterRule from './FilterRule.svelte';
   import { getBuilderFor } from '../domain/filters/builder/getBuilderFor';
   import { ValueParser } from '../domain/filters/utils/ValueParser';
-  import type { FilterRule as Rule } from '../domain/filters/core/FilterRule';
+  import type { FilterConfig, FilterRuleGroups } from '../domain/filters/types';
   import type { Course } from '../domain/models/Course';
+  import type { FilterRule as Rule } from '../domain/filters/core/FilterRule';
   
   export let blueprints: any;
-  export let filterRules: Rule<Course>[][] = [];
+  export let filterRules: FilterRuleGroups = [];
   
   const dispatch = createEventDispatcher();
-  
-  interface FilterConfig {
-    id: number;
-    blueprintKey: string;
-    relation: string;
-    value: any;
-    booleanOp: 'AND' | 'OR';
-  }
   
   let filterConfigs: FilterConfig[] = [];
   let nextId = 0;
@@ -50,7 +43,7 @@
     if (!blueprints) return;
     
     // Build filter groups (OR groups containing AND rules)
-    const groups: Rule<Course>[][] = [];
+    const groups: FilterRuleGroups = [];
     let currentGroup: Rule<Course>[] = [];
     
     filterConfigs.forEach((config, index) => {
@@ -93,7 +86,7 @@
       
       // Parse the value using ValueParser
       const parsedValue = ValueParser.parse(blueprint, relation, value);
-      
+
       if (parsedValue !== undefined) {
         if ('setValue' in builder) {
           (builder as any).setValue(parsedValue);

@@ -3,9 +3,10 @@
   import { createEventDispatcher } from 'svelte';
   import { formatRelationLabel } from '../domain/filters/utils/RelationLabels';
   import { BLUEPRINT_ORDER } from '../domain/filters/config/BlueprintOrder';
+  import type { FilterConfig } from '../domain/filters/types';
   
   export let blueprints: any;
-  export let config: any;
+  export let config: FilterConfig;
   export let showBooleanOp: boolean = false;
   
   const dispatch = createEventDispatcher();

@@ -11,13 +11,13 @@
   import { FilterService } from './domain/services/FilterService';
   import type { Course } from './domain/models/Course';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
-  import type { FilterRule } from './domain/filters/core/FilterRule';
+  import type { FilterRuleGroups } from './domain/filters/types';
   
   let RuleBlueprints: any = null;
   let courses: Course[] = [];
   let filteredCourses: Course[] = [];
   let periods: AcademicPeriod[] = [];
-  let filterRules: FilterRule<Course>[][] = [];
+  let filterRules: FilterRuleGroups = [];
   let showUnique = false;
   
   // Loading states
