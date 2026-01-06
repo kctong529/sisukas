@@ -2,10 +2,10 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import FilterRule from './FilterRule.svelte';
-  import { getBuilderFor } from '../domain/filters/builder/getBuilderFor';
-  import { ValueParser } from '../domain/filters/utils/ValueParser';
-  import { DefaultValueInitializer } from '../domain/filters/utils/DefaultValueInitializer';
-  import type { FilterConfig, FilterRuleGroups } from '../domain/filters/types';
+  import { getBuilderFor } from '../domain/filters/builders/getBuilderFor';
+  import { ValueParser } from '../domain/filters/helpers/ValueParser';
+  import { DefaultValueInitializer } from '../domain/filters/helpers/DefaultValueInitializer';
+  import type { FilterConfig, FilterRuleGroups } from '../domain/filters/FilterTypes';
   import type { Course } from '../domain/models/Course';
   import type { AcademicPeriod } from '../domain/models/AcademicPeriod';
   import type { FilterRule as Rule } from '../domain/filters/core/FilterRule';

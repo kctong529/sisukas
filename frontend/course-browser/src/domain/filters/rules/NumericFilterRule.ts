@@ -1,8 +1,8 @@
 // src/domain/filters/categories/NumericFilterRule.ts
 import type { Course } from '../../models/Course';
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
-import type { NumericRange } from '../../value-objects/NumericRange';
-import { includes } from '../../value-objects/NumericRange';
+import type { NumericRange } from '../../valueObjects/NumericRange';
+import { includes } from '../../valueObjects/NumericRange';
 
 export type NumericFieldSelector = (course: Course) => number;
 

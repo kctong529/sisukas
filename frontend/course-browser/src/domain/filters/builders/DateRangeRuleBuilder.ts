@@ -1,7 +1,7 @@
-import type { DateRangeRuleBlueprint } from "../blueprints/DateRangeRuleBlueprints";
-import type { DateRangeRelation } from "../categories/DateRangeFilterRule";
+import type { DateRangeRuleBlueprint } from "../blueprints/DateRangeRuleBlueprintRegistry";
+import type { DateRangeRelation } from "../rules/DateRangeFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
-import type { DateRange } from '../../value-objects/DateRange';
+import type { DateRange } from '../../valueObjects/DateRange';
 
 export class DateRangeRuleBuilder implements FilterRuleBuilder<DateRangeRuleBlueprint> {
   relation: DateRangeRelation | null = null;

@@ -1,7 +1,7 @@
 // src/domain/filters/blueprints/CategoricalRuleBlueprints.ts
 import type { Course } from '../../models/Course';
-import type { StudyLevel, CourseFormat, Language } from '../../value-objects/CourseTypes';
-import { CategoricalFilterRule, type CategoricalRelation, type CategoricalFilterRuleConfig } from '../categories/CategoricalFilterRule';
+import type { StudyLevel, CourseFormat, Language } from '../../valueObjects/CourseTypes';
+import { CategoricalFilterRule, type CategoricalRelation, type CategoricalFilterRuleConfig } from '../rules/CategoricalFilterRule';
 import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
 
 /**

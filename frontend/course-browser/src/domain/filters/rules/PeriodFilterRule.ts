@@ -2,7 +2,7 @@
 import type { Course } from '../../models/Course';
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 import type { AcademicPeriod } from '../../models/AcademicPeriod';
-import { containsDate, isCompletelyAfter, isCompletelyBefore, overlaps, type DateRange } from '../../value-objects/DateRange';
+import { containsDate, isCompletelyAfter, isCompletelyBefore, overlaps, type DateRange } from '../../valueObjects/DateRange';
 
 export type PeriodRelation =
   | 'overlaps'

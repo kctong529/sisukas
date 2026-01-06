@@ -1,11 +1,11 @@
 <!-- src/components/FilterRule.svelte -->
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { formatRelationLabel } from '../domain/filters/utils/RelationLabels';
+  import { formatRelationLabel } from '../domain/filters/helpers/RelationLabels';
   import { BLUEPRINT_ORDER } from '../domain/filters/config/BlueprintOrder';
-  import { DefaultValueInitializer } from '../domain/filters/utils/DefaultValueInitializer';
+  import { DefaultValueInitializer } from '../domain/filters/helpers/DefaultValueInitializer';
   import PeriodSelector from './PeriodSelector.svelte';
-  import type { FilterConfig } from '../domain/filters/types';
+  import type { FilterConfig } from '../domain/filters/FilterTypes';
   import type { AcademicPeriod } from '../domain/models/AcademicPeriod';
   
   export let blueprints: any;

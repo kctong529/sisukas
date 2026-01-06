@@ -1,7 +1,7 @@
 // src/domain/filters/blueprints/NumericRangeRuleBlueprints.ts
 import type { Course } from '../../models/Course';
-import type { NumericRange } from '../../value-objects/NumericRange';
-import { NumericRangeFilterRule, type NumericRangeRelation, type NumericRangeFilterRuleConfig } from '../categories/NumericRangeFilterRule';
+import type { NumericRange } from '../../valueObjects/NumericRange';
+import { NumericRangeFilterRule, type NumericRangeRelation, type NumericRangeFilterRuleConfig } from '../rules/NumericRangeFilterRule';
 import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
 
 export abstract class NumericRangeRuleBlueprint implements BaseRuleBlueprint {

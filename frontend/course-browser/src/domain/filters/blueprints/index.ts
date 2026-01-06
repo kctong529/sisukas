@@ -9,12 +9,12 @@
  * Blueprints are used to construct strongly-typed filter rules via their corresponding builders.
  */
 
-import { CodeRuleBlueprint, NameRuleBlueprint } from './TextRuleBlueprints';
-import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprints';
-import { StartDateRuleBlueprint, EndDateRuleBlueprint } from './DateRuleBlueprints';
-import { EnrollmentRuleBlueprint } from './DateRangeRuleBlueprints';
-import { LevelRuleBlueprint, FormatRuleBlueprint, LanguagesRuleBlueprint, TeachersRuleBlueprint, TagsRuleBlueprint, OrganizationRuleBlueprint } from './CategoricalRuleBlueprints';
-import { MajorRuleBlueprint, MinorRuleBlueprint } from './MembershipRuleBlueprints';
+import { CodeRuleBlueprint, NameRuleBlueprint } from './TextRuleBlueprintRegistry';
+import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprintRegistry';
+import { StartDateRuleBlueprint, EndDateRuleBlueprint } from './DateRuleBlueprintRegistry';
+import { EnrollmentRuleBlueprint } from './DateRangeRuleBlueprintRegistry';
+import { LevelRuleBlueprint, FormatRuleBlueprint, LanguagesRuleBlueprint, TeachersRuleBlueprint, TagsRuleBlueprint, OrganizationRuleBlueprint } from './CategoricalRuleBlueprintRegistry';
+import { MajorRuleBlueprint, MinorRuleBlueprint } from './MembershipRuleBlueprintRegistry';
 import { PeriodRuleBlueprint } from './PeriodRuleBlueprint';
 import type { CurriculaMap } from '../../models/Curriculum';
 import type { AcademicPeriod } from '../../models/AcademicPeriod';
@@ -89,31 +89,31 @@ export type {
 
 export type { 
   TextRuleBlueprint 
-} from './TextRuleBlueprints';
+} from './TextRuleBlueprintRegistry';
 
 export type { 
   NumericRuleBlueprint 
-} from './NumericRuleBlueprints';
+} from './NumericRuleBlueprintRegistry';
 
 export type { 
   NumericRangeRuleBlueprint 
-} from './NumericRangeRuleBlueprints';
+} from './NumericRangeRuleBlueprintRegistry';
 
 export type { 
   DateRuleBlueprint 
-} from './DateRuleBlueprints';
+} from './DateRuleBlueprintRegistry';
 
 export type { 
   DateRangeRuleBlueprint 
-} from './DateRangeRuleBlueprints';
+} from './DateRangeRuleBlueprintRegistry';
 
 export type { 
   CategoricalRuleBlueprint 
-} from './CategoricalRuleBlueprints';
+} from './CategoricalRuleBlueprintRegistry';
 
 export type { 
   MembershipRuleBlueprint 
-} from './MembershipRuleBlueprints';
+} from './MembershipRuleBlueprintRegistry';
 
 export type { 
   PeriodRuleBlueprint 

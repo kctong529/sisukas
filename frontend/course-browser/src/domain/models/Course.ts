@@ -1,11 +1,11 @@
 // src/domain/models/Course.ts
-import type { LocalizedString } from '../value-objects/LocalizedString';
-import type { DateRange } from '../value-objects/DateRange';
-import type { NumericRange } from '../value-objects/NumericRange';
-import { CourseCode } from '../value-objects/CourseCode'; 
-import type { Language, StudyLevel, RawCourseFormat, CourseFormat } from '../value-objects/CourseTypes';
-import { normalizeCourseFormat } from '../value-objects/CourseTypes';
-import { Prerequisites } from '../value-objects/Prerequisites';
+import type { LocalizedString } from '../valueObjects/LocalizedString';
+import type { DateRange } from '../valueObjects/DateRange';
+import type { NumericRange } from '../valueObjects/NumericRange';
+import { CourseCode } from '../valueObjects/CourseCode'; 
+import type { Language, StudyLevel, RawCourseFormat, CourseFormat } from '../valueObjects/CourseTypes';
+import { normalizeCourseFormat } from '../valueObjects/CourseTypes';
+import { Prerequisites } from '../valueObjects/Prerequisites';
 
 export class Course {
   readonly id: string;

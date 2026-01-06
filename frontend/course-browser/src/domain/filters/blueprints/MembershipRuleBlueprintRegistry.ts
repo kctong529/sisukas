@@ -6,7 +6,7 @@ import {
   type MembershipRelation,
   type MembershipFilterRuleConfig,
   type MembershipDataSource 
-} from '../categories/MembershipFilterRule';
+} from '../rules/MembershipFilterRule';
 import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
 
 /**

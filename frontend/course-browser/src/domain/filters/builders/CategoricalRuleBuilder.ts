@@ -1,5 +1,5 @@
-import type { CategoricalRuleBlueprint } from "../blueprints/CategoricalRuleBlueprints";
-import type { CategoricalRelation } from "../categories/CategoricalFilterRule";
+import type { CategoricalRuleBlueprint } from "../blueprints/CategoricalRuleBlueprintRegistry";
+import type { CategoricalRelation } from "../rules/CategoricalFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
 
 export class CategoricalRuleBuilder<T extends string, TEntity> implements FilterRuleBuilder<CategoricalRuleBlueprint<T, TEntity>> {

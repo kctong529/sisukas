@@ -1,5 +1,5 @@
-import type { MembershipRuleBlueprint } from "../blueprints/MembershipRuleBlueprints";
-import type { MembershipRelation } from "../categories/MembershipFilterRule";
+import type { MembershipRuleBlueprint } from "../blueprints/MembershipRuleBlueprintRegistry";
+import type { MembershipRelation } from "../rules/MembershipFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
 
 export class MembershipRuleBuilder<TKey, TEntity> 

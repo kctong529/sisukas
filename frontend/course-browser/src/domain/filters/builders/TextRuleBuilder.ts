@@ -1,5 +1,5 @@
-import type { TextRuleBlueprint } from "../blueprints/TextRuleBlueprints";
-import type { TextRelation } from "../categories/TextFilterRule";
+import type { TextRuleBlueprint } from "../blueprints/TextRuleBlueprintRegistry";
+import type { TextRelation } from "../rules/TextFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
 
 export class TextRuleBuilder implements FilterRuleBuilder<TextRuleBlueprint> {

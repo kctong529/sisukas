@@ -1,7 +1,7 @@
-import type { NumericRangeRuleBlueprint } from "../blueprints/NumericRangeRuleBlueprints";
-import type { NumericRangeRelation } from "../categories/NumericRangeFilterRule";
+import type { NumericRangeRuleBlueprint } from "../blueprints/NumericRangeRuleBlueprintRegistry";
+import type { NumericRangeRelation } from "../rules/NumericRangeFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
-import type { NumericRange } from '../../value-objects/NumericRange';
+import type { NumericRange } from '../../valueObjects/NumericRange';
 
 export class NumericRangeRuleBuilder implements FilterRuleBuilder<NumericRangeRuleBlueprint> {
   relation: NumericRangeRelation | null = null;

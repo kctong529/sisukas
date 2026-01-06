@@ -12,7 +12,7 @@
   import { FilterService } from './domain/services/FilterService';
   import type { Course } from './domain/models/Course';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
-  import type { FilterRuleGroups } from './domain/filters/types';
+  import type { FilterRuleGroups } from './domain/filters/FilterTypes';
   
   let RuleBlueprints: any = null;
   let courses: Course[] = [];

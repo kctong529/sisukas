@@ -1,6 +1,6 @@
 // src/domain/parsers/CurriculumParser.ts
 import type { CurriculaMap } from '../models/Curriculum';
-import { CourseCode } from '../value-objects/CourseCode';
+import { CourseCode } from '../valueObjects/CourseCode';
 
 export interface RawCurriculumEntry {
   code: string;

@@ -1,7 +1,7 @@
 // src/domain/filters/categories/NumericRangeFilterRule.ts
 import type { Course } from '../../models/Course';
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
-import type { NumericRange } from '../../value-objects/NumericRange';
+import type { NumericRange } from '../../valueObjects/NumericRange';
 import {
   containsNumber,
   isWithinRange,
@@ -17,7 +17,7 @@ import {
   spanAtLeast,
   spanAtMost,
   spanEquals
-} from '../../value-objects/NumericRange';
+} from '../../valueObjects/NumericRange';
 
 export type NumericRangeFieldSelector = (course: Course) => NumericRange;
 

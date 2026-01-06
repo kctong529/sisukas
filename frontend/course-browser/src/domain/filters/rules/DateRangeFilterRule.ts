@@ -1,8 +1,8 @@
 // src/domain/filters/categories/DateRangeFilterRule.ts
 import type { Course } from '../../models/Course';
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
-import type { DateRange } from '../../value-objects/DateRange';
-import { overlaps, contains, equals, containsDate } from '../../value-objects/DateRange';
+import type { DateRange } from '../../valueObjects/DateRange';
+import { overlaps, contains, equals, containsDate } from '../../valueObjects/DateRange';
 
 export type DateRangeFieldSelector = (course: Course) => DateRange;
 

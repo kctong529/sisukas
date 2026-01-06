@@ -1,10 +1,10 @@
 // src/domain/parsers/CourseParser.ts
 import { Course } from '../models/Course';
-import type { DateRange } from '../value-objects/DateRange';
-import type { NumericRange } from '../value-objects/NumericRange';
-import { Prerequisites } from '../value-objects/Prerequisites';
-import type { LocalizedString } from '../value-objects/LocalizedString';
-import type { StudyLevel, Language, RawCourseFormat } from '../value-objects/CourseTypes';
+import type { DateRange } from '../valueObjects/DateRange';
+import type { NumericRange } from '../valueObjects/NumericRange';
+import { Prerequisites } from '../valueObjects/Prerequisites';
+import type { LocalizedString } from '../valueObjects/LocalizedString';
+import type { StudyLevel, Language, RawCourseFormat } from '../valueObjects/CourseTypes';
 
 // --- Raw Data Shape (What courses.json looks like) ---
 export interface RawCourse {
