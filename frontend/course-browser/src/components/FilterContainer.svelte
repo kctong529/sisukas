@@ -2,9 +2,10 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import FilterRule from './FilterRule.svelte';
-  import type { FilterRule as Rule } from '../domain/filters/core/FilterRule';
-  import { Course } from '../domain/models/Course';
   import { getBuilderFor } from '../domain/filters/builder/getBuilderFor';
+  import { ValueParser } from '../domain/filters/utils/ValueParser';
+  import type { FilterRule as Rule } from '../domain/filters/core/FilterRule';
+  import type { Course } from '../domain/models/Course';
   
   export let blueprints: any;
   export let filterRules: Rule<Course>[][] = [];
@@ -90,7 +91,9 @@
       const builder = getBuilderFor(blueprint);
       (builder as any).setRelation(relation);
       
-      const parsedValue = parseValue(blueprint, relation, value);
+      // Parse the value using ValueParser
+      const parsedValue = ValueParser.parse(blueprint, relation, value);
+      
       if (parsedValue !== undefined) {
         if ('setValue' in builder) {
           (builder as any).setValue(parsedValue);
@@ -111,45 +114,6 @@
     }
   }
 
-  function parseValue(blueprint: any, relation: string, valueStr: any) {
-    // Handle empty/notEmpty relations
-    if (relation === 'isEmpty' || relation === 'isNotEmpty') {
-      return undefined;
-    }
-    
-    // Handle date range relations
-    if (relation === 'between' || relation === 'within') {
-      return { start: new Date(valueStr), end: new Date(valueStr) };
-    }
-    
-    // Handle multi-value relations
-    if (['isOneOf', 'isNotOneOf', 'includesAny', 'includesAll'].includes(relation)) {
-      if (typeof valueStr === 'string') {
-        return valueStr.split(',').map(v => v.trim());
-      }
-      return Array.isArray(valueStr) ? valueStr : [valueStr];
-    }
-    
-    // Handle numeric values
-    if (blueprint.builderType === 'numeric' || blueprint.builderType === 'numericRange') {
-      const num = typeof valueStr === 'number' ? valueStr : parseInt(valueStr);
-      return isNaN(num) ? undefined : num;
-    }
-    
-    // Handle date values
-    if (blueprint.builderType === 'date' || blueprint.builderType === 'dateRange') {
-      return new Date(valueStr);
-    }
-    
-    // Handle membership (just return the identifier string)
-    if (blueprint.builderType === 'membership') {
-      return valueStr;
-    }
-    
-    // Default: return as string
-    return valueStr;
-  }
-  
   $: if (filterConfigs.length > 0 && blueprints) {
     updateFilterRules();
   }
