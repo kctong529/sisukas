@@ -2,6 +2,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import FilterRule from './FilterRule.svelte';
+  import PeriodSelector from './PeriodSelector.svelte';
   import { getBuilderFor } from '../domain/filters/builders/getBuilderFor';
   import { ValueParser } from '../domain/filters/helpers/ValueParser';
   import { DefaultValueInitializer } from '../domain/filters/helpers/DefaultValueInitializer';
@@ -18,6 +19,33 @@
   
   let filterConfigs: FilterConfig[] = [];
   let nextId = 0;
+
+  // Period selector state
+  let activePeriodRuleId: number | null = null;
+  $: showPeriodSelector = activePeriodRuleId !== null;
+  $: activePeriodConfig = filterConfigs.find(c => c.id === activePeriodRuleId);
+  $: selectedPeriods = activePeriodConfig && typeof activePeriodConfig.value === 'string'
+    ? activePeriodConfig.value.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+  
+  function handlePeriodRuleActivate(event: CustomEvent<number>) {
+    activePeriodRuleId = event.detail;
+  }
+  
+  function handlePeriodSelectionChange(event: CustomEvent<string[]>) {
+    if (activePeriodRuleId !== null) {
+      const configIndex = filterConfigs.findIndex(c => c.id === activePeriodRuleId);
+      if (configIndex !== -1) {
+        filterConfigs[configIndex].value = event.detail.join(', ');
+        filterConfigs = [...filterConfigs]; // Force reactivity
+        updateFilterRules();
+      }
+    }
+  }
+  
+  function handlePeriodSelectorClose() {
+    activePeriodRuleId = null;
+  }
 
   // Public method to get current filter configs (for serialization)
   export function getFilterConfigs(): FilterConfig[] {
@@ -131,16 +159,25 @@
   }
 </script>
 
+<PeriodSelector 
+  {periods}
+  {selectedPeriods}
+  visible={showPeriodSelector}
+  on:change={handlePeriodSelectionChange}
+  on:close={handlePeriodSelectorClose}
+/>
+
 <div id="filter-container">
   {#if blueprints}
     {#each filterConfigs as config, index (config.id)}
       <FilterRule
         {blueprints}
         {config}
-        {periods}
         showBooleanOp={index > 0}
+        isActive={config.id === activePeriodRuleId}
         on:change={updateFilterRules}
         on:remove={() => removeFilterRule(config.id)}
+        on:periodActivate={handlePeriodRuleActivate}
       />
     {/each}
     
@@ -158,9 +195,9 @@
 
 <style>
   #filter-container {
+    position: relative;
     display: flex;
     flex-direction: column;
-    /* margin: 2rem 0; */
     min-height: 100px;
     padding: 1.7%;
     padding-bottom: 12px;

@@ -152,23 +152,22 @@
 <style>
   /* Basic styling for the container */
   #periods-container {
-    position: absolute;
+    position: relative;
     display: flex;
-    top: -8em;
+    margin-top: 14px;
     left: 2%;
     flex-wrap: wrap;
     gap: 2px;
-    padding: 2px;
-    z-index: 10;
+    max-width: 700px;
   }
 
   /* Styling for the year div */
   .year {
-    width: 68%;
+    width: 86%;
     display: flex;
-    justify-content: space-between;
     align-items: center;
     margin-bottom: 5px;
+    max-width: 600px;
   }
 
   #year {
@@ -188,8 +187,9 @@
     box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
     border: 1px solid #ddd;
     border-radius: 4px;
-    padding-left: 0.7em;
-    padding-right: 0.7em;
+    margin-left: 4px;
+    padding-left: 3.6%;
+    padding-right: 3.6%;
     font-size: 1em;
     cursor: pointer;
     height: 2.7em;
@@ -235,7 +235,12 @@
   }
 
   /* Custom Responsive Styling for .period */
-  @media (width <= 500px) {
+  @media (width <= 484px) {
+    .period {
+      padding-left: 7%;
+      padding-right: 7%;
+    }
+
     .period .full-text {
       display: none;
     }

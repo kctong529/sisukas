@@ -4,14 +4,14 @@
   import { formatRelationLabel } from '../domain/filters/helpers/RelationLabels';
   import { BLUEPRINT_ORDER } from '../domain/filters/config/BlueprintOrder';
   import { DefaultValueInitializer } from '../domain/filters/helpers/DefaultValueInitializer';
-  import PeriodSelector from './PeriodSelector.svelte';
   import type { FilterConfig } from '../domain/filters/FilterTypes';
   import type { AcademicPeriod } from '../domain/models/AcademicPeriod';
   
   export let blueprints: any;
   export let config: FilterConfig;
-  export let showBooleanOp: boolean = false;
   export let periods: AcademicPeriod[] = [];
+  export let showBooleanOp: boolean = false;
+  export let isActive: boolean = false;
   
   const dispatch = createEventDispatcher();
   
@@ -21,22 +21,24 @@
   
   $: blueprint = blueprints?.[config.blueprintKey];
   $: relations = blueprint?.validRelations || [];
-  $: showPeriodSelector = config.blueprintKey === 'period';
-  $: selectedPeriods = typeof config.value === 'string' 
-    ? config.value.split(',').map(s => s.trim()).filter(Boolean)
-    : [];
+  $: isPeriodField = config.blueprintKey === 'period';
   
   function handleFieldChange() {
     const newBlueprint = blueprints[config.blueprintKey];
     config.relation = newBlueprint.defaultRelation || newBlueprint.validRelations[0];
     config.value = DefaultValueInitializer.getDefaultValue(newBlueprint);
     dispatch('change');
+    
+    // If switching to period field, activate the period selector
+    if (config.blueprintKey === 'period') {
+      dispatch('periodActivate', config.id);
+    }
   }
-
-  function handlePeriodSelectionChange(event: CustomEvent<string[]>) {
-    const periodIds = event.detail;
-    config.value = periodIds.join(', ');
-    dispatch('change');
+  
+  function handlePeriodInputClick() {
+    if (isPeriodField) {
+      dispatch('periodActivate', config.id);
+    }
   }
   
   $: needsValue = !['isEmpty', 'isNotEmpty'].includes(config.relation);
@@ -48,7 +50,7 @@
 
 <svelte:window bind:innerWidth={windowWidth} />
 
-<div class="filter-rule">
+<div class="filter-rule" class:period-active={isPeriodField && isActive}>
   {#if showBooleanOp}
     <select class="filter-boolean" bind:value={config.booleanOp} on:change={() => dispatch('change')}>
       <option value="AND">{booleanAndText}</option>
@@ -77,6 +79,8 @@
           value={config.value}
           placeholder="Select period(s)"
           readonly
+          on:click={handlePeriodInputClick}
+          on:focus={handlePeriodInputClick}
         />
       {:else if blueprint?.builderType === 'text'}
         <input type="text" class="filter-value" bind:value={config.value} on:input={() => dispatch('change')} placeholder="Enter value" />
@@ -114,19 +118,14 @@
   </button>
 </div>
 
-{#if showPeriodSelector}
-  <PeriodSelector 
-    {periods} 
-    {selectedPeriods}
-    visible={showPeriodSelector}
-    on:change={handlePeriodSelectionChange}
-  />
-{/if}
-
 <style>
   .filter-rule {
     margin-bottom: 0.3em;
     position: relative;
+  }
+  
+  .filter-rule.period-active {
+    background: #ffeeee;
   }
 
   .filter-boolean {

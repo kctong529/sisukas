@@ -1,6 +1,7 @@
 <!-- src/App.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
+  import Navigation from './components/Navigation.svelte';
   import FilterContainer from './components/FilterContainer.svelte';
   import CourseTable from './components/CourseTable.svelte';
   import SearchControls from './components/SearchControls.svelte';
@@ -18,6 +19,10 @@
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { FilterRuleGroups, FilterConfig } from './domain/filters/FilterTypes';
   
+  let currentView = 'courses';
+  let isSignedIn = false;
+  let userName = '';
+
   let RuleBlueprints: any = null;
   let courses: Course[] = [];
   let filteredCourses: Course[] = [];
@@ -30,6 +35,21 @@
   // Loading states
   let loading = true;
   let loadError: string | null = null;
+
+  function handleNavigation(event: CustomEvent<string>) {
+    currentView = event.detail;
+    // Add routing logic here
+  }
+  
+  function handleSignIn() {
+    // Implement sign-in logic
+    console.log('Sign in clicked');
+  }
+  
+  function handleSignOut() {
+    isSignedIn = false;
+    userName = '';
+  }
   
   // Initialize data on mount
   onMount(async () => {
@@ -184,51 +204,67 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 </svelte:head>
 
-<div id="title-container">
-  <h1>Sisukas</h1>
-  <h2><a href="https://github.com/kctong529/sisukas">since 2025</a></h2>
-</div>
+<Navigation 
+  {currentView}
+  {isSignedIn}
+  {userName}
+  on:navigate={handleNavigation}
+  on:signin={handleSignIn}
+  on:signout={handleSignOut}
+/>
 
-<p id="dedication">// Dedicated to every cursed soul in Hel</p>
-
-<div id="global-container">
-  <NotificationContainer />
-
-  {#if loading}
-    <div style="text-align: center; padding: 2rem;">
-      <p>Loading course data...</p>
+<div id="main-content">
+  {#if currentView === 'courses'}
+    {#if loading}
+      <div style="text-align: center; padding: 2rem;">
+        <p>Loading course data...</p>
+      </div>
+    {:else if loadError}
+      <div style="text-align: center; padding: 2rem;">
+        <p style="color: red;">Error: {loadError}</p>
+        <button on:click={() => window.location.reload()}>Retry</button>
+      </div>
+    {:else}
+      <FilterContainer 
+        bind:this={filterContainerRef}
+        blueprints={RuleBlueprints} 
+        bind:filterRules 
+        {periods}
+        on:search={handleSearch}
+      />
+      
+      <SearchControls 
+        bind:showUnique 
+        on:addRule={handleAddRule}
+        on:search={handleSearch}
+        on:save={handleSaveFilters}
+        on:load={handleLoadFilters}
+      />
+      
+      <CourseTable 
+        courses={filteredCourses}
+      />
+    {/if}
+  {:else if currentView === 'saved'}
+    <!-- Saved Filters View -->
+    <div class="view-container">
+      <h2>Saved Filters</h2>
+      <p>Your saved filter configurations will appear here.</p>
     </div>
-  {:else if loadError}
-    <div style="text-align: center; padding: 2rem;">
-      <p style="color: red;">Error: {loadError}</p>
-      <button on:click={() => window.location.reload()}>Retry</button>
+    
+  {:else if currentView === 'about'}
+    <!-- About View -->
+    <div class="view-container">
+      <h2>About Sisukas</h2>
+      <p>Alternative frontend for Aalto University's SISU system.</p>
+      <p><a href="https://github.com/kctong529/sisukas" target="_blank">View on GitHub</a></p>
     </div>
-  {:else}
-    <FilterContainer 
-      bind:this={filterContainerRef}
-      blueprints={RuleBlueprints} 
-      bind:filterRules 
-      {periods}
-      on:search={handleSearch}
-    />
-    
-    <SearchControls 
-      bind:showUnique 
-      on:addRule={handleAddRule}
-      on:search={handleSearch}
-      on:save={handleSaveFilters}
-      on:load={handleLoadFilters}
-    />
-    
-    <CourseTable 
-      courses={filteredCourses}
-    />
-    
-    <footer>
-      <p id="footer-text">© 2026 Sisukas. All rights reserved.</p>
-    </footer>
   {/if}
 </div>
+
+<footer>
+  <p id="footer-text">© 2026 Sisukas. All rights reserved.</p>
+</footer>
 
 <style>
   :global(body) {
