@@ -164,7 +164,7 @@
 
   /* Styling for the year div */
   .year {
-    width: 55%;
+    width: 68%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -235,7 +235,7 @@
   }
 
   /* Custom Responsive Styling for .period */
-  @media (width <= 620px) {
+  @media (width <= 500px) {
     .period .full-text {
       display: none;
     }

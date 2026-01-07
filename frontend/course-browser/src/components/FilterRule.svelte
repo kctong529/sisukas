@@ -15,23 +15,18 @@
   
   const dispatch = createEventDispatcher();
   
-  // Sort blueprint keys by custom order
   $: blueprintKeys = blueprints 
     ? BLUEPRINT_ORDER.filter(key => key in blueprints)
     : [];
   
   $: blueprint = blueprints?.[config.blueprintKey];
   $: relations = blueprint?.validRelations || [];
-
   $: showPeriodSelector = config.blueprintKey === 'period';
-
-  // Parse period IDs from value string
   $: selectedPeriods = typeof config.value === 'string' 
     ? config.value.split(',').map(s => s.trim()).filter(Boolean)
     : [];
   
   function handleFieldChange() {
-    // Reset relation and value when field changes
     const newBlueprint = blueprints[config.blueprintKey];
     config.relation = newBlueprint.defaultRelation || newBlueprint.validRelations[0];
     config.value = DefaultValueInitializer.getDefaultValue(newBlueprint);
@@ -45,13 +40,19 @@
   }
   
   $: needsValue = !['isEmpty', 'isNotEmpty'].includes(config.relation);
+
+  let windowWidth = 0;
+  $: booleanAndText = windowWidth <= 272 ? '&' : 'AND';
+  $: booleanOrText = windowWidth <= 272 ? '/' : 'OR';
 </script>
+
+<svelte:window bind:innerWidth={windowWidth} />
 
 <div class="filter-rule">
   {#if showBooleanOp}
     <select class="filter-boolean" bind:value={config.booleanOp} on:change={() => dispatch('change')}>
-      <option value="AND">AND</option>
-      <option value="OR">OR</option>
+      <option value="AND">{booleanAndText}</option>
+      <option value="OR">{booleanOrText}</option>
     </select>
   {/if}
   
@@ -123,55 +124,61 @@
 {/if}
 
 <style>
+  .filter-rule {
+    margin-bottom: 0.3em;
+    position: relative;
+  }
+
   .filter-boolean {
     position: absolute;
   }
   
-  .filter-input, button, select, input{
-      display: inline-block;
-      background-color: #fff;
-      appearance: none;
-      font-size: 1em;
-      cursor: pointer;
-      height: 2.7em;
-      vertical-align: middle;
-      text-align: start; /* Align text consistently */
+  .filter-input, button, select, input {
+    display: inline-block;
+    background-color: #fff;
+    appearance: none;
+    font-size: 1em;
+    cursor: pointer;
+    height: 2.7em;
+    vertical-align: middle;
+    text-align: start;
   }
 
   button, select, .filter-input {
-      margin: 0 0.1em;
+    margin: 0 0.1em;
   }
 
   button, select, input {
-      box-sizing: border-box;
-      box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding-left: 0.7em;
-      padding-right: 0.7em;
+    box-sizing: border-box;
+    box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding-left: 0.7em;
+    padding-right: 0.7em;
   }
 
   input[type="date"] {
-      align-items: center;
-      display: inline-flex;
+    align-items: center;
+    display: inline-flex;
   }
 
   .filter-field {
     margin-left: 4.3em;
-    max-width: 120px;
+    width: 20%;
+    max-width: 150px;
     min-width: 80px;
   }
   
   .filter-relation {
-    max-width: 308px;
+    width: 18%;
+    max-width: 200px;
     min-width: 80px;
-    width: 26%;
   }
   
   .filter-input {
+    width: 30%;
     max-width: 320px;
-    min-width: 120px;
-    width: 20%;
+    min-width: 100px;
   }
   
   .filter-value {
@@ -186,5 +193,73 @@
   .delete-btn:hover {
     background-color: #d9534f;
     color: white;
+  }
+
+  /* Adjust widths for smaller screens */
+  @media (max-width: 768px) {
+    .filter-field {
+      width: 20%;
+      max-width: 154px;
+    }
+    
+    .filter-relation {
+      width: 18%;
+      max-width: 138px;
+    }
+    
+    .filter-input {
+      width: 30%;
+      max-width: 230px;
+    }
+  }
+
+  @media (max-width: 540px) {
+    .filter-field {
+      width: 20%;
+      max-width: 100px;
+      min-width: 40px;
+    }
+    
+    .filter-relation {
+      width: 18%;
+      max-width: 120px;
+      min-width: 36px;
+    }
+    
+    .filter-input {
+      width: 30%;
+      max-width: 150px;
+      min-width: 60px;
+    }
+  }
+
+  /* Adjust widths for very narrow screens */
+  @media (max-width: 272px) {
+    .filter-rule {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3em;
+      font-size: 0.8em;
+    }
+
+    .filter-boolean {
+      width: calc(10%);
+    }
+
+    .filter-field {
+      margin-left: calc(10% + 0.6em);
+      width: calc(20%);
+      max-width: none;
+    }
+
+    .filter-relation {
+      width: calc(18%);
+      max-width: none;
+    }
+
+    .filter-input {
+      width: calc(28%);
+      max-width: none;
+    }
   }
 </style>

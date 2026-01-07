@@ -8,52 +8,68 @@
 </script>
 
 <div id="search-container">
-  <button on:click={() => dispatch('addRule')}>
-    <i class="bi bi-plus-circle"></i> Add Rule
-  </button>
-  
-  <button on:click={() => dispatch('search')} class="primary">
-    <i class="bi bi-search"></i> Search
-  </button>
-  
-  <label class="switch">
-    <input type="checkbox" id="uniqueToggle" bind:checked={showUnique} on:change={() => dispatch('search')} />
-    <span class="slider"></span>
-  </label>
-  <span class="toggle-label">Unique Only</span>
-  
-  <button on:click={() => dispatch('save')}>
-    <i class="bi bi-floppy"></i> Save
-  </button>
-  
-  <button on:click={() => dispatch('load')}>
-    <i class="bi bi-folder-open"></i> Load
-  </button>
+  <div class="button-group">
+    <button on:click={() => dispatch('addRule')}>
+      <i class="bi bi-plus-circle"></i>
+      <span class="button-text">Add Rule</span>
+    </button>
+    
+    <button on:click={() => dispatch('search')} class="primary">
+      <i class="bi bi-search"></i>
+      <span class="button-text">Search</span>
+    </button>
+  </div>
+
+  <div class="options-group">
+    <label class="switch">
+      <input type="checkbox" id="uniqueToggle" bind:checked={showUnique} on:change={() => dispatch('search')} />
+      <span class="slider"></span>
+    </label>
+    <span class="toggle-label">Unique</span>
+    
+    <button on:click={() => dispatch('save')}>
+      <i class="bi bi-floppy"></i>
+      <span class="button-text">Save</span>
+    </button>
+    
+    <button on:click={() => dispatch('load')}>
+      <i class="bi bi-folder"></i>
+      <span class="button-text">Load</span>
+    </button>
+  </div>
 </div>
 
 <style>
   #search-container {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 0.1em;
+    gap: 0.5em;
     padding-left: 1.7%;
     padding-bottom: 12px;
   }
+
+  .button-group,
+  .options-group {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    flex-wrap: wrap;
+  }
   
   button {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
     background-color: #fff;
     font-size: 1em;
     cursor: pointer;
     height: 2.7em;
-    vertical-align: middle;
     box-sizing: border-box;
     box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
     border: 1px solid #ddd;
     border-radius: 4px;
-    padding-left: 0.7em;
-    padding-right: 0.7em;
-    margin: 0 0.1em;
+    padding: 0 0.7em;
   }
   
   button:active, button:focus {
@@ -86,8 +102,8 @@
     display: inline-block;
     width: 40px;
     height: 20px;
-    margin-left: 10px;
     vertical-align: middle;
+    flex-shrink: 0;
   }
   
   .switch input {
@@ -126,10 +142,30 @@
   }
   
   .toggle-label {
-    margin-left: 2px;
-    font-size: 1em;
+    font-size: 0.9em;
     cursor: pointer;
-    vertical-align: middle;
-    text-align: start;
+    white-space: nowrap;
+  }
+
+  /* Mobile responsive - hide button text on narrow screens */
+  @media (max-width: 330px) {
+    #search-container {
+      padding-left: 2%;
+      padding-right: 2%;
+    }
+
+    .button-text {
+      display: none;
+    }
+
+    button {
+      min-width: 2.7em;
+      justify-content: center;
+      padding: 0 0.5em;
+    }
+
+    .toggle-label {
+      font-size: 0.85em;
+    }
   }
 </style>
