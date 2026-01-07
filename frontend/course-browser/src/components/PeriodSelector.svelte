@@ -208,16 +208,16 @@
 
   /* Selected state */
   .period.selected {
-    background-color: #08D;
+    background-color: #4a90e2;
     color: white;
-    border-color: #DDD;
+    border-color: #08D;
     box-shadow: 0 4px 8px rgb(0 0 0 / 20%);
   }
 
   /* Active state during dragging */
   .period:active {
-    background-color: #08D;
-    border-color: #DDD;
+    background-color: #4a90e2;
+    border-color: #08D;
   }
 
   /* Focus outline for accessibility */

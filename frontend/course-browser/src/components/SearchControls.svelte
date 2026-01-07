@@ -85,7 +85,7 @@
   button.primary {
     background: #4a90e2;
     color: white;
-    border-color: #4a90e2;
+    border-color: #08D;
   }
   
   button.primary:hover {
