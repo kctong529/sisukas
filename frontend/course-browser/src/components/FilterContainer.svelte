@@ -18,6 +18,22 @@
   
   let filterConfigs: FilterConfig[] = [];
   let nextId = 0;
+
+  // Public method to get current filter configs (for serialization)
+  export function getFilterConfigs(): FilterConfig[] {
+    return filterConfigs;
+  }
+  
+  // Public method to load filter configs (for deserialization)
+  export function loadFilterConfigs(configs: FilterConfig[]) {
+    // Reset nextId based on loaded configs
+    nextId = configs.length > 0 
+      ? Math.max(...configs.map(c => c.id)) + 1 
+      : 0;
+    
+    filterConfigs = configs;
+    updateFilterRules();
+  }
   
   export function addFilterRule() {
     if (!blueprints) {

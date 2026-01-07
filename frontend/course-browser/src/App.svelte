@@ -10,9 +10,10 @@
   import { loadCoursesWithCache } from './infrastructure/loaders/RemoteCourseLoader';
   import { loadAcademicPeriods } from './infrastructure/loaders/AcademicPeriodLoader';
   import { FilterService } from './domain/services/FilterService';
+  import { FilterSerializer } from './domain/filters/helpers/FilterSerializer';
   import type { Course } from './domain/models/Course';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
-  import type { FilterRuleGroups } from './domain/filters/FilterTypes';
+  import type { FilterRuleGroups, FilterConfig } from './domain/filters/FilterTypes';
   
   let RuleBlueprints: any = null;
   let courses: Course[] = [];
@@ -73,8 +74,21 @@
   }
   
   function handleSaveFilters() {
-    // TODO: Implement save functionality
-    console.log("Save filters:", filterRules);
+    if (!filterContainerRef) return;
+    
+    const configs = filterContainerRef.getFilterConfigs();
+    
+    if (configs.length === 0) {
+      console.log('No filters to save');
+      return;
+    }
+
+    try {
+      const serialized = FilterSerializer.toJSON(configs);
+      console.log(serialized);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to save filters';
+    }
   }
   
   function handleLoadFilters() {
