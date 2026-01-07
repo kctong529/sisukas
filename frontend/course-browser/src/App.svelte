@@ -4,6 +4,7 @@
   import FilterContainer from './components/FilterContainer.svelte';
   import CourseTable from './components/CourseTable.svelte';
   import SearchControls from './components/SearchControls.svelte';
+  import NotificationContainer from './components/NotificationContainer.svelte';
   import { createRuleBlueprints } from './domain/filters/blueprints';
   import { loadCurricula } from './infrastructure/loaders/CurriculumLoader';
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
@@ -191,6 +192,8 @@
 <p id="dedication">// Dedicated to every cursed soul in Hel</p>
 
 <div id="global-container">
+  <NotificationContainer />
+
   {#if loading}
     <div style="text-align: center; padding: 2rem;">
       <p>Loading course data...</p>
@@ -281,95 +284,6 @@
     position: absolute;
     width: 100%;
     margin-top: 9em;
-  }
-  
-  .loading-state,
-  .error-state {
-    text-align: center;
-    padding: 2rem;
-  }
-  
-  .error-state button {
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    background-color: #4a90e2;
-    color: white;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  :global(#notification-container) {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 1000;
-    pointer-events: none;
-    max-width: calc(100vw - 40px);
-  }
-
-  :global(.filter-notification) {
-    padding: 5px 10px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
-    animation: slide-in 0.3s ease;
-    margin-bottom: 10px;
-    pointer-events: auto;
-    max-width: 500px;
-    word-wrap: break-word;
-  }
-
-  :global(.filter-notification.error) {
-    background: #fee;
-    border-left: 4px solid #c33;
-    color: #c33;
-  }
-
-  :global(.filter-notification.success) {
-    background: #efe;
-    border-left: 4px solid #3c3;
-    color: #3c3;
-  }
-
-  /* Icon Sizing */
-  :global(.filter-notification i) {
-    flex-shrink: 0;
-  }
-
-  /* Text Content */
-  :global(.filter-notification span) {
-    flex: 1;
-    min-width: 0;
-  }
-
-  /* Slide-in Animation */
-  @keyframes slide-in {
-    from {
-      transform: translateX(-400px);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-
-  /* Responsive Design for Notifications */
-  @media (width <= 620px) {
-    :global(#notification-container) {
-      left: 10px;
-      right: 10px;
-      max-width: calc(100vw - 20px);
-    }
-
-    :global(.filter-notification) {
-      padding: 12px 15px;
-      font-size: clamp(10px, 1.3vw, 15px);
-      max-width: 100%;
-    }
   }
   
   footer {

@@ -103,7 +103,14 @@
     </div>
   {/if}
   
-  <button on:click={() => dispatch('remove')}><i class="bi bi-trash"></i></button>
+  <button
+    class="delete-btn"
+    on:click={() => dispatch('remove')}
+    aria-label="Remove filter rule"
+    title="Remove filter rule"
+  >
+    <i class="bi bi-trash" aria-hidden="true"></i>
+  </button>
 </div>
 
 {#if showPeriodSelector}

@@ -26,7 +26,23 @@
   function isPeriodSelected(periodId: string): boolean {
     return selectedPeriods.includes(periodId);
   }
+
+  function endSelection() {
+    isSelecting = false;
+  }
+
+  function updateSelectionRange(index: number) {
+    if (!isSelecting || firstSelectedIndex === -1) return;
+
+    const start = Math.min(firstSelectedIndex, index);
+    const end = Math.max(firstSelectedIndex, index);
+
+    const allPeriods = periods.map(p => p.id);
+    selectedPeriods = allPeriods.slice(start, end + 1);
+    dispatch('change', selectedPeriods);
+  }
   
+  // Mouse handlers
   function handleMouseDown(index: number, periodId: string, event: MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
@@ -38,25 +54,17 @@
   
   function handleMouseOver(index: number, event: MouseEvent) {
     event.stopPropagation();
-    if (isSelecting && firstSelectedIndex !== -1) {
-      const start = Math.min(firstSelectedIndex, index);
-      const end = Math.max(firstSelectedIndex, index);
-      
-      // Get all period IDs in range
-      const allPeriods = periods.map(p => p.id);
-      selectedPeriods = allPeriods.slice(start, end + 1);
-      dispatch('change', selectedPeriods);
-    }
+    updateSelectionRange(index);
   }
   
   function handleMouseUp(event: MouseEvent) {
     event.stopPropagation();
-    isSelecting = false;
+    endSelection();
   }
   
+  // Touch handlers
   function handleTouchStart(index: number, periodId: string, event: TouchEvent) {
     event.preventDefault();
-    event.stopPropagation();
     isSelecting = true;
     firstSelectedIndex = index;
     selectedPeriods = [periodId];
@@ -65,26 +73,38 @@
   
   function handleTouchMove(event: TouchEvent) {
     event.preventDefault();
-    event.stopPropagation();
     const touch = event.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    
     if (element?.classList.contains('period')) {
       const index = parseInt(element.getAttribute('data-index') || '-1');
-      if (index !== -1 && isSelecting && firstSelectedIndex !== -1) {
-        const start = Math.min(firstSelectedIndex, index);
-        const end = Math.max(firstSelectedIndex, index);
-        
-        const allPeriods = periods.map(p => p.id);
-        selectedPeriods = allPeriods.slice(start, end + 1);
-        dispatch('change', selectedPeriods);
-      }
+      if (index !== -1) updateSelectionRange(index);
     }
   }
   
   function handleTouchEnd(event: TouchEvent) {
-    event.stopPropagation();
-    isSelecting = false;
+    endSelection();
+  }
+
+  function handleFocus(_: FocusEvent) {
+    // intentionally empty
+  }
+
+  function handleBlur(_: FocusEvent) {
+    endSelection();
+  }
+
+  // Keyboard handler
+  function handleKeyDown(event: KeyboardEvent, index: number, periodId: string) {
+    if (event.key === ' ' || event.key === 'Enter') {
+      event.preventDefault();
+      firstSelectedIndex = index;
+      selectedPeriods = [periodId];
+      dispatch('change', selectedPeriods);
+      isSelecting = true;
+    }
+    if (event.key === 'Escape') {
+      endSelection();
+    }
   }
   
   // Format period name for display
@@ -105,14 +125,20 @@
             class:selected={isPeriodSelected(period.id)}
             data-period={period.id}
             data-index={globalIndex}
+            role="button"
+            tabindex="0"
+
             on:mousedown={(e) => handleMouseDown(globalIndex, period.id, e)}
             on:mouseover={(e) => handleMouseOver(globalIndex, e)}
             on:mouseup={handleMouseUp}
+            
+            on:focus={handleFocus}
+            on:blur={handleBlur}
+            on:keydown={(e) => handleKeyDown(e, globalIndex, period.id)}
+
             on:touchstart={(e) => handleTouchStart(globalIndex, period.id, e)}
             on:touchmove={handleTouchMove}
             on:touchend={handleTouchEnd}
-            role="button"
-            tabindex="0"
           >
             <span class="full-text">{period.name}</span>
             <span class="abbreviated-text">{formatPeriodName(period.name)}</span>
