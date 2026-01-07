@@ -12,6 +12,7 @@
   import { FilterService } from './domain/services/FilterService';
   import { FilterSerializer } from './domain/filters/helpers/FilterSerializer';
   import { FiltersApiService } from './infrastructure/services/FiltersApiService';
+  import { NotificationService } from './infrastructure/services/NotificationService';
   import type { Course } from './domain/models/Course';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { FilterRuleGroups, FilterConfig } from './domain/filters/FilterTypes';
@@ -78,15 +79,14 @@
     if (!filterContainerRef) return;
     
     const configs = filterContainerRef.getFilterConfigs();
-    
+
     if (configs.length === 0) {
-      console.log('No filters to save');
+      NotificationService.error('No filters to save');
       return;
     }
 
     try {
       const serialized = FilterSerializer.toJSON(configs);
-      console.log(serialized);
       const hashId = await FiltersApiService.saveFilters(serialized);
 
       if (!hashId) {
@@ -94,7 +94,14 @@
       }
 
       const shareableUrl = FiltersApiService.createShareableUrl(hashId);
-      console.log(shareableUrl);
+      
+      // Copy to clipboard
+      try {
+        await navigator.clipboard.writeText(shareableUrl);
+        NotificationService.success('Filter link copied to clipboard!');
+      } catch {
+        NotificationService.success('Filters saved successfully!');
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save filters';
     }
@@ -232,6 +239,79 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     cursor: pointer;
+  }
+
+  :global(#notification-container) {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    z-index: 1000;
+    pointer-events: none;
+    max-width: calc(100vw - 40px);
+  }
+
+  :global(.filter-notification) {
+    padding: 5px 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+    animation: slide-in 0.3s ease;
+    margin-bottom: 10px;
+    pointer-events: auto;
+    max-width: 500px;
+    word-wrap: break-word;
+  }
+
+  :global(.filter-notification.error) {
+    background: #fee;
+    border-left: 4px solid #c33;
+    color: #c33;
+  }
+
+  :global(.filter-notification.success) {
+    background: #efe;
+    border-left: 4px solid #3c3;
+    color: #3c3;
+  }
+
+  /* Icon Sizing */
+  :global(.filter-notification i) {
+    flex-shrink: 0;
+  }
+
+  /* Text Content */
+  :global(.filter-notification span) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Slide-in Animation */
+  @keyframes slide-in {
+    from {
+      transform: translateX(-400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  /* Responsive Design for Notifications */
+  @media (width <= 620px) {
+    :global(#notification-container) {
+      left: 10px;
+      right: 10px;
+      max-width: calc(100vw - 20px);
+    }
+
+    :global(.filter-notification) {
+      padding: 12px 15px;
+      font-size: clamp(10px, 1.3vw, 15px);
+      max-width: 100%;
+    }
   }
   
   footer {

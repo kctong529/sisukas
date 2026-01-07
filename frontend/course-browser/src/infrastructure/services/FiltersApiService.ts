@@ -1,5 +1,6 @@
 // src/infrastructure/services/FiltersApiService.ts
 import type { SerializedFilters } from '../../domain/filters/helpers/FilterSerializer';
+import { NotificationService } from './NotificationService';
 
 const FILTERS_API_URL = import.meta.env.VITE_FILTERS_API;
 
@@ -13,6 +14,7 @@ export interface SaveFilterResponse {
 export class FiltersApiService {
   /**
    * Save filters to API and get shareable hash
+   * Returns hash_id on success, null on failure (error is shown via notification)
    */
   static async saveFilters(filters: SerializedFilters): Promise<string | null> {
     try {
@@ -30,26 +32,45 @@ export class FiltersApiService {
         } catch {
           errorMessage = response.statusText;
         }
-        throw new Error(errorMessage);
+
+        // Provide specific error messages based on status code
+        switch (response.status) {
+          case 422:
+            NotificationService.error('Invalid filter data format');
+            break;
+          case 500:
+            NotificationService.error('Server error while saving filters');
+            break;
+          case 503:
+            NotificationService.error('Filter service is temporarily unavailable');
+            break;
+          default:
+            NotificationService.error(errorMessage);
+        }
+        
+        return null;
       }
 
       const data: SaveFilterResponse = await response.json();
       
       if (!data.hash_id) {
-        throw new Error('Invalid response structure');
+        NotificationService.error('Invalid response from server');
+        return null;
       }
 
       return data.hash_id;
     } catch (error) {
       console.error('Error saving filters:', error);
-      throw error;
+      NotificationService.error('Unable to connect to filter service');
+      return null;
     }
   }
 
   /**
    * Load filters from API by hash ID
+   * Returns filter data on success, null on failure (error is shown via notification)
    */
-  static async loadFilters(hashId: string): Promise<SerializedFilters> {
+  static async loadFilters(hashId: string): Promise<SerializedFilters | null> {
     try {
       const response = await fetch(`${FILTERS_API_URL}/api/filters/${hashId}`);
       
@@ -65,26 +86,36 @@ export class FiltersApiService {
         // Provide specific error messages
         switch (response.status) {
           case 404:
-            throw new Error('These filters no longer exist or have been deleted');
+            NotificationService.error('These filters no longer exist or have been deleted');
+            break;
           case 422:
-            throw new Error('Invalid filter URL format');
+            NotificationService.error('Invalid filter URL format');
+            break;
+          case 500:
+            NotificationService.error('Server error while loading filters');
+            break;
           case 503:
-            throw new Error('Filter service is temporarily unavailable');
+            NotificationService.error('Filter service is temporarily unavailable');
+            break;
           default:
-            throw new Error(errorMessage);
+            NotificationService.error(errorMessage);
         }
+        
+        return null;
       }
 
       const data: SerializedFilters = await response.json();
       
       if (!data.groups || !Array.isArray(data.groups)) {
-        throw new Error('Invalid filter data structure');
+        NotificationService.error('Invalid filter data structure');
+        return null;
       }
 
       return data;
     } catch (error) {
       console.error('Error loading filters:', error);
-      throw error;
+      NotificationService.error('Unable to connect to filter service');
+      return null;
     }
   }
 
