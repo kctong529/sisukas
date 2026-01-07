@@ -9,6 +9,7 @@ import { Prerequisites } from '../valueObjects/Prerequisites';
 
 export class Course {
   readonly id: string;
+  readonly unitId: string;
   readonly code: CourseCode;
   readonly name: LocalizedString;
   readonly courseDate: DateRange;
@@ -24,6 +25,7 @@ export class Course {
 
   constructor(params: {
     id: string;
+    unitId: string;
     code: string;
     name: LocalizedString;
     courseDate: DateRange;
@@ -38,6 +40,7 @@ export class Course {
     tags?: string[];
   }) {
     this.id = params.id;
+    this.unitId = params.unitId;
     this.code = new CourseCode(params.code);
     this.name = params.name;
     this.courseDate = params.courseDate;

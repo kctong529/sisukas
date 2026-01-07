@@ -9,6 +9,7 @@ import type { StudyLevel, Language, RawCourseFormat } from '../valueObjects/Cour
 // --- Raw Data Shape (What courses.json looks like) ---
 export interface RawCourse {
   id: string;
+  courseUnitId: string;
   code: string;
   name: LocalizedString;
   startDate: string;
@@ -71,6 +72,7 @@ export function parseRawCourse(raw: RawCourse): Course {
   
   return new Course({
     id: raw.id,
+    unitId: raw.courseUnitId,
     code: raw.code,
     name: raw.name,
     courseDate,

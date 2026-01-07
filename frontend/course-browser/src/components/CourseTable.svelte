@@ -212,7 +212,7 @@
       <tr>
         <td>{course.code.value}</td>
         <td>
-          <a href="https://sisu.aalto.fi/student/courseunit/{course.id}/brochure" target="_blank">
+          <a href="https://sisu.aalto.fi/student/courseunit/{course.unitId}/brochure" target="_blank">
             {course.name.en}
           </a>
         </td>
@@ -270,7 +270,7 @@
         <span class="card-period">{formatDate(course.courseDate.start)} – {formatDate(course.courseDate.end)}</span>
       </div>
       
-      <a href="https://sisu.aalto.fi/student/courseunit/{course.id}/brochure" target="_blank" class="card-title">
+      <a href="https://sisu.aalto.fi/student/courseunit/{course.unitId}/brochure" target="_blank" class="card-title">
         {course.name.en}
       </a>
       
