@@ -57,7 +57,7 @@ jobs:
 
       - name: Verify frontend installation
         run: |
-          cd course-browser
+          cd frontend/course-browser
           node --version
           npm --version
           test -f node_modules/.bin/vite
@@ -105,7 +105,7 @@ jobs:
 
       - name: Test frontend build
         run: |
-          cd course-browser
+          cd frontend/course-browser
           npm run build
           test -d dist
 

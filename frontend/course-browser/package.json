@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
+    "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
+    "compile-metadata": "node compile-metadata.js"
   },
   "devDependencies": {
     "@modyfi/vite-plugin-yaml": "1.1.1",
@@ -19,7 +20,8 @@
     "svelte-check": "4.3.3",
     "typescript": "5.9.3",
     "vite": "7.1.12",
-    "vitest": "4.0.10"
+    "vitest": "4.0.10",
+    "yaml": "2.8.1"
   },
   "overrides": {
     "js-yaml": "4.1.1"
