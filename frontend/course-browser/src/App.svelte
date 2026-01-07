@@ -23,6 +23,8 @@
   let periods: AcademicPeriod[] = [];
   let filterRules: FilterRuleGroups = [];
   let showUnique = false;
+  let filterContainerRef: any;
+  let pendingFilterLoad: string | null = null;
   
   // Loading states
   let loading = true;
@@ -51,6 +53,9 @@
       courses = await loadCoursesWithCache();
       filteredCourses = [...courses];
       console.log("Courses loaded:", courses.length);
+
+      // Check for filter hash in URL and load if present
+      await loadFiltersFromUrl();
       
     } catch (error) {
       loadError = `Failed to load data: ${error instanceof Error ? error.message : 'Unknown error'}`;
@@ -59,6 +64,36 @@
       loading = false;
     }
   });
+
+  async function loadFiltersFromUrl() {
+    const hashId = FiltersApiService.getHashFromUrl();
+    if (!hashId || !RuleBlueprints) return;
+    
+    // If filterContainerRef isn't ready yet, store the hash for later
+    if (!filterContainerRef) {
+      pendingFilterLoad = hashId;
+      return;
+    }
+
+    const data = await FiltersApiService.loadFilters(hashId);
+    if (!data) {
+      return;
+    }
+
+    const configs = FilterSerializer.fromJSON(data, RuleBlueprints);
+      
+    filterContainerRef.loadFilterConfigs(configs);
+    // Trigger search after loading
+    setTimeout(() => handleSearch(), 100);
+      
+    NotificationService.success('Loaded filters from shared link');
+    pendingFilterLoad = null;
+  }
+
+  // Handle pending filter load once filterContainerRef is bound
+  $: if (filterContainerRef && pendingFilterLoad) {
+    loadFiltersFromUrl();
+  }
   
   function handleSearch() {
     if (!RuleBlueprints || filterRules.length === 0) {
@@ -108,11 +143,34 @@
   }
   
   function handleLoadFilters() {
-    // TODO: Implement load functionality
-    console.log("Load filters");
-  }
+    // Create file input for JSON import
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/json';
+    
+    input.onchange = async (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      const file = target.files?.[0];
+      if (!file) return;
 
-  let filterContainerRef: any;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        const configs = FilterSerializer.fromJSON(data, RuleBlueprints);
+        
+        if (filterContainerRef) {
+          filterContainerRef.loadFilterConfigs(configs);
+          setTimeout(() => handleSearch(), 100);
+        }
+        
+        NotificationService.success('Filters loaded from file');
+      } catch (error) {
+        NotificationService.error('Failed to parse filter file');
+      }
+    };
+    
+    input.click();
+  }
   
   function handleAddRule() {
     if (filterContainerRef) {
