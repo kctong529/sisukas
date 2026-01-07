@@ -43,9 +43,13 @@
       sortColumn = column;
       sortDirection = 1;
     }
-    
     courses = sortCourses(courses);
-    visibleCardCount = 50; // Reset when sorting
+  }
+
+  function handleMobileSortChange() {
+    sortDirection = 1;
+    courses = sortCourses(courses);
+    visibleCardCount = 20;
   }
   
   function sortCourses(coursesToSort: Course[]): Course[] {
@@ -235,7 +239,7 @@
       id="mobile-sort" 
       class="mobile-sort-select"
       bind:value={sortColumn} 
-      on:change={() => handleSort(sortColumn)}
+      on:change={handleMobileSortChange}
     >
       <option value="courseName">Course Name</option>
       <option value="courseCode">Course Code</option>
