@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: 'course-browser/package-lock.json'
+          cache-dependency-path: 'frontend/course-browser/package-lock.json'
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -75,7 +75,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: 'course-browser/package-lock.json'
+          cache-dependency-path: 'frontend/course-browser/package-lock.json'
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
