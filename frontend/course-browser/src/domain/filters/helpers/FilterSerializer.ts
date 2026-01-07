@@ -1,4 +1,4 @@
-// src/domain/filters/utils/FilterSerializer.ts
+// src/domain/filters/helpers/FilterSerializer.ts
 import type { FilterConfig } from '../FilterTypes';
 
 export interface SerializedFilterRule {

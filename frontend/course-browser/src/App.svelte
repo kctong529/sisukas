@@ -11,6 +11,7 @@
   import { loadAcademicPeriods } from './infrastructure/loaders/AcademicPeriodLoader';
   import { FilterService } from './domain/services/FilterService';
   import { FilterSerializer } from './domain/filters/helpers/FilterSerializer';
+  import { FiltersApiService } from './infrastructure/services/FiltersApiService';
   import type { Course } from './domain/models/Course';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { FilterRuleGroups, FilterConfig } from './domain/filters/FilterTypes';
@@ -73,7 +74,7 @@
       : results;
   }
   
-  function handleSaveFilters() {
+  async function handleSaveFilters() {
     if (!filterContainerRef) return;
     
     const configs = filterContainerRef.getFilterConfigs();
@@ -86,6 +87,14 @@
     try {
       const serialized = FilterSerializer.toJSON(configs);
       console.log(serialized);
+      const hashId = await FiltersApiService.saveFilters(serialized);
+
+      if (!hashId) {
+        throw new Error('Failed to get hash ID');
+      }
+
+      const shareableUrl = FiltersApiService.createShareableUrl(hashId);
+      console.log(shareableUrl);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save filters';
     }
