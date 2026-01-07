@@ -353,15 +353,15 @@
   }
   
   /* Column Widths */
-  th:nth-child(1), td:nth-child(1) { width: 12%; }
+  th:nth-child(1), td:nth-child(1) { width: 11%; }
   th:nth-child(2), td:nth-child(2) { width: 20%; }
-  th:nth-child(3), td:nth-child(3) { width: 15%; }
-  th:nth-child(4), td:nth-child(4) { width: 6%; }
-  th:nth-child(5), td:nth-child(5) { width: 8%; }
-  th:nth-child(6), td:nth-child(6) { width: 8%; }
-  th:nth-child(7), td:nth-child(7) { width: 8%; }
+  th:nth-child(3), td:nth-child(3) { width: 13%; }
+  th:nth-child(4), td:nth-child(4) { width: 7%; }
+  th:nth-child(5), td:nth-child(5) { width: 9%; }
+  th:nth-child(6), td:nth-child(6) { width: 10%; }
+  th:nth-child(7), td:nth-child(7) { width: 10%; }
   th:nth-child(8), td:nth-child(8) { width: 10%; }
-  th:nth-child(9), td:nth-child(9) { width: 8%; }
+  th:nth-child(9), td:nth-child(9) { width: 10%; }
   th:nth-child(10), td:nth-child(10) { width: 25%; }
   
   .prerequisites-cell {
@@ -547,7 +547,7 @@
   }
   
   /* Tablet breakpoint - abbreviated headers */
-  @media (max-width: 900px) {
+  @media (max-width: 920px) {
     th .full-text {
       display: none;
     }
