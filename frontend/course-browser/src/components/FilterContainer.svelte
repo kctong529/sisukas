@@ -157,6 +157,10 @@
   $: if (filterConfigs.length > 0 && blueprints) {
     updateFilterRules();
   }
+
+  function handleFilterSearch() {
+    dispatch('search');
+  }
 </script>
 
 <PeriodSelector 
@@ -178,6 +182,7 @@
         on:change={updateFilterRules}
         on:remove={() => removeFilterRule(config.id)}
         on:periodActivate={handlePeriodRuleActivate}
+        on:search={handleFilterSearch}
       />
     {/each}
     

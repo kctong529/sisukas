@@ -5,11 +5,9 @@
   import { BLUEPRINT_ORDER } from '../domain/filters/config/BlueprintOrder';
   import { DefaultValueInitializer } from '../domain/filters/helpers/DefaultValueInitializer';
   import type { FilterConfig } from '../domain/filters/FilterTypes';
-  import type { AcademicPeriod } from '../domain/models/AcademicPeriod';
   
   export let blueprints: any;
   export let config: FilterConfig;
-  export let periods: AcademicPeriod[] = [];
   export let showBooleanOp: boolean = false;
   export let isActive: boolean = false;
   
@@ -46,6 +44,13 @@
   let windowWidth = 0;
   $: booleanAndText = windowWidth <= 272 ? '&' : 'AND';
   $: booleanOrText = windowWidth <= 272 ? '/' : 'OR';
+
+  function handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      dispatch('search');
+    }
+  }
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} />
@@ -83,11 +88,31 @@
           on:focus={handlePeriodInputClick}
         />
       {:else if blueprint?.builderType === 'text'}
-        <input type="text" class="filter-value" bind:value={config.value} on:input={() => dispatch('change')} placeholder="Enter value" />
+        <input 
+          type="text" 
+          class="filter-value" 
+          bind:value={config.value} 
+          on:input={() => dispatch('change')} 
+          on:keydown={handleKeyDown}
+          placeholder="Enter value" 
+        />
       {:else if blueprint?.builderType === 'numeric' || blueprint?.builderType === 'numericRange'}
-        <input type="number" class="filter-value" bind:value={config.value} on:input={() => dispatch('change')} placeholder="Enter value" />
+        <input 
+          type="number" 
+          class="filter-value" 
+          bind:value={config.value} 
+          on:input={() => dispatch('change')}
+          on:keydown={handleKeyDown}
+          placeholder="Enter value" 
+        />
       {:else if blueprint?.builderType === 'date' || blueprint?.builderType === 'dateRange'}
-        <input type="date" class="filter-value" bind:value={config.value} on:change={() => dispatch('change')} />
+        <input 
+          type="date" 
+          class="filter-value" 
+          bind:value={config.value} 
+          on:change={() => dispatch('change')}
+          on:keydown={handleKeyDown}
+        />
       {:else if blueprint?.builderType === 'categorical'}
         {#if blueprint.validValues && blueprint.validValues.length > 0}
           <select class="filter-value" bind:value={config.value} on:change={() => dispatch('change')}>
@@ -96,7 +121,14 @@
             {/each}
           </select>
         {:else}
-          <input type="text" class="filter-value" bind:value={config.value} on:input={() => dispatch('change')} placeholder="Enter value" />
+          <input 
+            type="text" 
+            class="filter-value" 
+            bind:value={config.value} 
+            on:input={() => dispatch('change')}
+            on:keydown={handleKeyDown}
+            placeholder="Enter value" 
+          />
         {/if}
       {:else if blueprint?.builderType === 'membership'}
         <select class="filter-value" bind:value={config.value} on:change={() => dispatch('change')}>

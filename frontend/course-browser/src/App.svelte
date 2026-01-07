@@ -158,6 +158,11 @@
       } catch {
         NotificationService.success('Filters saved successfully!');
       }
+
+      // Navigate to the shareable URL
+      setTimeout(() => {
+        window.location.href = shareableUrl;
+      }, 1000);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save filters';
     }
@@ -212,6 +217,8 @@
   on:signin={handleSignIn}
   on:signout={handleSignOut}
 />
+
+<NotificationContainer />
 
 <div id="main-content">
   {#if currentView === 'courses'}
@@ -285,11 +292,6 @@
     display: none;
   }
   
-  #title-container {
-    float: right;
-    padding: 2px 5% 0 0;
-  }
-  
   :global(h1) {
     font-size: clamp(20px, 4vw, 48px);
   }
@@ -307,19 +309,6 @@
   
   :global(h2 a:hover) {
     color: #d9534f;
-  }
-  
-  #dedication {
-    font-family: cursive;
-    font-size: 1.2em;
-    color: #888;
-    padding-left: 2%;
-  }
-  
-  #global-container {
-    position: absolute;
-    width: 100%;
-    margin-top: 9em;
   }
   
   footer {

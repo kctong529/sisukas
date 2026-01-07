@@ -153,6 +153,7 @@
   /* Basic styling for the container */
   #periods-container {
     position: relative;
+    width: 98%;
     display: flex;
     margin-top: 14px;
     left: 2%;

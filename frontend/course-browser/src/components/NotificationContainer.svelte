@@ -15,7 +15,7 @@
 <style>
   #notification-container {
     position: fixed;
-    top: 15px;
+    top: 48px;
     left: 15px;
     z-index: 1000;
     pointer-events: none;

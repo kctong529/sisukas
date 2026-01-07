@@ -92,7 +92,11 @@
     </div>
     
     <!-- Mobile Menu Toggle -->
-    <button class="mobile-menu-toggle" on:click={toggleMobileMenu}>
+    <button
+      class="mobile-menu-toggle"
+      on:click={toggleMobileMenu}
+      aria-label="Toggle sort direction"
+    >
       <i class="bi {mobileMenuOpen ? 'bi-x' : 'bi-list'}"></i>
     </button>
   </div>
