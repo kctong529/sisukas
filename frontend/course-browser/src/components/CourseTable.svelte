@@ -168,73 +168,115 @@
 
 <style>
   #course-count {
-    margin: 1rem 0;
-    font-weight: bold;
+    position: relative;
+    float: right;
+    margin: -20px 15px 0 0;
   }
   
   table {
-    width: 100%;
+    width: 96%;
+    margin: auto;
     border-collapse: collapse;
-    margin: 1rem 0;
+    table-layout: fixed;
   }
   
   th, td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
+    border: 1px solid #ddd;
+    text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    padding: 6px 1px;
   }
   
   th {
-    background: #f8f9fa;
-    font-weight: 600;
+    background-color: #f2f2f2;
     cursor: pointer;
+    position: relative;
     user-select: none;
   }
   
   th:hover {
-    background: #e9ecef;
+    background-color: #eee;
   }
   
   th.sort-asc::after {
-    content: ' ▲';
     font-size: 0.7em;
+    content: " ↑";
+    position: absolute;
+    top: 2px;
+    right: 2px;
   }
   
   th.sort-desc::after {
-    content: ' ▼';
     font-size: 0.7em;
+    content: " ↓";
+    position: absolute;
+    top: 2px;
+    right: 2px;
   }
   
-  tr:hover {
-    background: #f8f9fa;
+  tr:hover td {
+    background-color: #f1f1f1;
+  }
+  
+  /* Column Widths */
+  th:nth-child(1), td:nth-child(1) { width: 12%; }
+  th:nth-child(2), td:nth-child(2) { width: 20%; }
+  th:nth-child(3), td:nth-child(3) { width: 15%; }
+  th:nth-child(4), td:nth-child(4) { width: 6%; }
+  th:nth-child(5), td:nth-child(5) { width: 8%; }
+  th:nth-child(6), td:nth-child(6) { width: 8%; }
+  th:nth-child(7), td:nth-child(7) { width: 8%; }
+  th:nth-child(8), td:nth-child(8) { width: 10%; }
+  th:nth-child(9), td:nth-child(9) { width: 8%; }
+  th:nth-child(10), td:nth-child(10) { width: 25%; }
+  
+  .prerequisites-cell {
+    text-align: left;
+    padding-left: 3px;
   }
   
   a {
-    color: #007bff;
+    color: #4a90e2;
     text-decoration: none;
+    transition: color 0.3s, transform 0.2s;
+  }
+  
+  a:visited {
+    color: #6f42c1;
   }
   
   a:hover {
-    text-decoration: underline;
+    color: #d9534f;
+    transform: scale(1.05);
+  }
+  
+  a:active {
+    color: #b32d35;
+    transform: scale(1);
+  }
+  
+  a:focus {
+    outline: 2px solid #4a90e2;
+    outline-offset: 2px;
+  }
+  
+  .abbreviated-text {
+    display: none;
+  }
+  
+  .full-text {
+    display: inline;
   }
   
   @media (max-width: 900px) {
-    .full-text {
+    th .full-text {
       display: none;
     }
     
-    .abbreviated-text {
+    th .abbreviated-text {
       display: inline;
-    }
-  }
-  
-  @media (min-width: 901px) {
-    .full-text {
-      display: inline;
-    }
-    
-    .abbreviated-text {
-      display: none;
     }
   }
 </style>
