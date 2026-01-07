@@ -8,51 +8,58 @@
 </script>
 
 <div id="search-container">
-  <div id="searchGroup">
-    <button on:click={() => dispatch('addRule')}>
-      ➕ Add Rule
-    </button>
-    
-    <button on:click={() => dispatch('search')} class="primary">
-      🔍 Search
-    </button>
-    
-    <label class="switch">
-      <input type="checkbox" bind:checked={showUnique} on:change={() => dispatch('search')} />
-      <span class="slider round"></span>
-    </label>
-    <span class="toggle-label">Unique Only</span>
-    
-    <button on:click={() => dispatch('save')}>
-      💾 Save
-    </button>
-    
-    <button on:click={() => dispatch('load')}>
-      📂 Load
-    </button>
-  </div>
+  <button on:click={() => dispatch('addRule')}>
+    <i class="bi bi-plus-circle"></i> Add Rule
+  </button>
+  
+  <button on:click={() => dispatch('search')} class="primary">
+    <i class="bi bi-search"></i> Search
+  </button>
+  
+  <label class="switch">
+    <input type="checkbox" id="uniqueToggle" bind:checked={showUnique} on:change={() => dispatch('search')} />
+    <span class="slider"></span>
+  </label>
+  <span class="toggle-label">Unique Only</span>
+  
+  <button on:click={() => dispatch('save')}>
+    <i class="bi bi-floppy"></i> Save
+  </button>
+  
+  <button on:click={() => dispatch('load')}>
+    <i class="bi bi-folder-open"></i> Load
+  </button>
 </div>
 
 <style>
   #search-container {
-    margin: 1rem 0;
-  }
-  
-  #searchGroup {
     display: flex;
-    gap: 0.5rem;
     align-items: center;
-    flex-wrap: wrap;
+    gap: 0.1em;
+    padding-left: 1.7%;
+    padding-bottom: 12px;
   }
   
   button {
-    padding: 0.6rem 1.2rem;
+    display: inline-block;
+    background-color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+    height: 2.7em;
+    vertical-align: middle;
+    box-sizing: border-box;
+    box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
     border: 1px solid #ddd;
     border-radius: 4px;
-    background: white;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s;
+    padding-left: 0.7em;
+    padding-right: 0.7em;
+    margin: 0 0.1em;
+  }
+  
+  button:active, button:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgb(74 144 226 / 50%);
+    outline: none;
   }
   
   button:hover {
@@ -60,20 +67,27 @@
   }
   
   button.primary {
-    background: #007bff;
+    background: #4a90e2;
     color: white;
-    border-color: #007bff;
+    border-color: #4a90e2;
   }
   
   button.primary:hover {
-    background: #0056b3;
+    background: #357abd;
+  }
+
+  button.primary:active, button.primary:focus {
+    border-color: #357abd;
+    box-shadow: 0 0 5px rgb(53 122 189 / 50%);
   }
   
   .switch {
     position: relative;
     display: inline-block;
-    width: 50px;
-    height: 24px;
+    width: 40px;
+    height: 20px;
+    margin-left: 10px;
+    vertical-align: middle;
   }
   
   .switch input {
@@ -85,43 +99,37 @@
   .slider {
     position: absolute;
     cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background-color: #ccc;
-    transition: 0.4s;
+    transition: .4s;
+    border-radius: 20px;
   }
   
-  .slider.round {
-    border-radius: 24px;
-  }
-  
-  .slider.round:before {
-    border-radius: 50%;
-  }
-  
-  .slider:before {
+  .slider::before {
     position: absolute;
     content: "";
-    height: 18px;
-    width: 18px;
+    height: 14px;
+    width: 14px;
     left: 3px;
     bottom: 3px;
     background-color: white;
-    transition: 0.4s;
+    transition: .4s;
+    border-radius: 50%;
   }
   
   input:checked + .slider {
-    background-color: #007bff;
+    background-color: #4caf50;
   }
   
-  input:checked + .slider:before {
-    transform: translateX(26px);
+  input:checked + .slider::before {
+    transform: translateX(20px);
   }
   
   .toggle-label {
-    font-size: 0.9rem;
-    margin-left: 0.5rem;
+    margin-left: 2px;
+    font-size: 1em;
+    cursor: pointer;
+    vertical-align: middle;
+    text-align: start;
   }
 </style>
