@@ -15,6 +15,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
+interface TestRequest {
+  name: string;
+  value: number;
+}
+
 // Routes
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Hello from Sisukas backend!' });
@@ -28,9 +33,11 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 app.post('/test', (req: Request, res: Response) => {
+  const data = req.body as TestRequest;
   res.json({ 
     message: 'Got your data!',
-    data: req.body 
+    data: data,
+    nameLength: data.name.length
   });
 });
 
