@@ -1,13 +1,14 @@
 // src/server.js
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true  // allow cookies/auth headers to be sent
+  origin: process.env.FRONTEND_URL,
+  credentials: true
 }));
 
 app.use(express.json());
@@ -33,4 +34,5 @@ app.post('/test', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`CORS allows requests from ${process.env.FRONTEND_URL}`);
 });
