@@ -60,6 +60,29 @@ app.post('/test', (req: Request, res: Response) => {
   });
 });
 
+app.get('/db-test', async (req: Request, res: Response) => {
+  try {
+    // Insert a test user
+    await pool.query(
+      'INSERT INTO users (email, name) VALUES ($1, $2) ON CONFLICT (email) DO NOTHING',
+      ['test@aalto.fi', 'Test User']
+    );
+    
+    // Read all users
+    const result = await pool.query('SELECT * FROM users');
+    
+    res.json({
+      message: 'Database working!',
+      users: result.rows
+    });
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ 
+      error: error instanceof Error ? error.message : 'Database error' 
+    });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
