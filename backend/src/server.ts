@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+import pool from './config/database';
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -25,11 +27,28 @@ app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Hello from Sisukas backend!' });
 });
 
-app.get('/health', (req: Request, res: Response) => {
-  res.json({ 
-    status: 'ok',
-    timestamp: new Date().toISOString()
-  });
+// Health check with detailed error logging
+app.get('/health', async (req: Request, res: Response) => {
+  try {
+    console.log('Attempting database query...');
+    const result = await pool.query('SELECT NOW()');
+    console.log('Database query successful!');
+    
+    res.json({ 
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      database: 'connected',
+      dbTime: result.rows[0].now
+    });
+  } catch (error) {
+    console.error('Database connection error:', error);
+    res.status(503).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
 });
 
 app.post('/test', (req: Request, res: Response) => {
