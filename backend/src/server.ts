@@ -2,12 +2,12 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-
 dotenv.config();
 
 import pool from './config/database';
 import { db } from './db';
 import { users } from './db/schema';
+import favouritesRoutes from './routes/favourites';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,7 +29,6 @@ app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Hello from Sisukas backend!' });
 });
 
-// Health check with detailed error logging
 app.get('/health', async (req: Request, res: Response) => {
   try {
     const result = await pool.query('SELECT NOW()');
@@ -51,7 +50,6 @@ app.get('/health', async (req: Request, res: Response) => {
   }
 });
 
-// Test Drizzle ORM
 app.get('/users', async (req: Request, res: Response) => {
   try {
     const allUsers = await db.select().from(users);
@@ -63,7 +61,8 @@ app.get('/users', async (req: Request, res: Response) => {
   }
 });
 
-// Start server
+app.use('/api/favourites', favouritesRoutes);
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   console.log(`CORS allows requests from ${process.env.FRONTEND_URL}`);
