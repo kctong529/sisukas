@@ -5,8 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import pool from './config/database';
-import { db } from './db';
-import { users } from './db/schema';
+import usersRoutes from './routes/users';
 import favouritesRoutes from './routes/favourites';
 
 const app = express();
@@ -50,17 +49,7 @@ app.get('/health', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/users', async (req: Request, res: Response) => {
-  try {
-    const allUsers = await db.select().from(users);
-    res.json({ users: allUsers });
-  } catch (error) {
-    res.status(500).json({ 
-      error: error instanceof Error ? error.message : 'Database error' 
-    });
-  }
-});
-
+app.use('/api/users', usersRoutes);
 app.use('/api/favourites', favouritesRoutes);
 
 app.listen(PORT, () => {
