@@ -1,13 +1,8 @@
 // src/services/UsersService.ts
+import { auth } from '../lib/auth';
 import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
-
-export interface CreateUserDto {
-  email: string;
-  name?: string;
-  emailVerified?: boolean;
-}
 
 export class UsersService {
   static async getAllUsers() {
@@ -16,22 +11,16 @@ export class UsersService {
       email: users.email,
       name: users.name,
       emailVerified: users.emailVerified,
+      image: users.image,
       createdAt: users.createdAt,
     }).from(users);
   }
 
   static async getUserById(id: string) {
     const [user] = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        emailVerified: users.emailVerified,
-        createdAt: users.createdAt,
-      })
+      .select()
       .from(users)
       .where(eq(users.id, id));
-
     return user;
   }
 
@@ -44,41 +33,32 @@ export class UsersService {
     return user;
   }
 
-  static async createUser(data: CreateUserDto) {
-    const existing = await this.getUserByEmail(data.email);
-    if (existing) {
-      throw new Error('Email already registered');
-    }
-
-    const [user] = await db
-      .insert(users)
-      .values({
-        id: `user_${Date.now()}`,
+  // Use Better Auth's built-in API to create a user
+  static async createUser(data: { email: string; password: string; name: string }) {
+    return await auth.api.signUpEmail({
+      body: {
         email: data.email,
-        name: data.name || '',
-        emailVerified: data.emailVerified || false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .returning({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        createdAt: users.createdAt,
-      });
+        password: data.password,
+        name: data.name,
+      },
+    });
+  }
 
-    return user;
+  static async updateUser(id: string, name: string) {
+    const [updated] = await db
+      .update(users)
+      .set({ name, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    
+    return updated;
   }
 
   static async deleteUser(id: string) {
     const [deleted] = await db
       .delete(users)
       .where(eq(users.id, id))
-      .returning({
-        id: users.id,
-        email: users.email,
-      });
-
+      .returning({ id: users.id });
     return deleted;
   }
 }

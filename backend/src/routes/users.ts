@@ -45,33 +45,29 @@ router.get('/:id', async (req: Request, res: Response) => {
 /**
  * POST /api/users
  * Create a new user
- * Body: { email, name? }
+ * Body: { email, password, name? }
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { email, name } = req.body;
+    const { email, password, name } = req.body;
+    const result = await UsersService.createUser({ email, password, name });
+    return res.status(201).json(result);
+  } catch (error: any) {console.error("Create User Error:", error);
 
-    if (!email) {
-      return res.status(400).json({ 
-        error: 'Email is required' 
-      });
+    let statusCode = 500;
+    if (typeof error.status === 'number') {
+      statusCode = error.status;
+    } else if (error.status === "UNPROCESSABLE_ENTITY" || error.code === "VALIDATION_ERROR") {
+      statusCode = 422;
+    } else if (error.status === "BAD_REQUEST") {
+      statusCode = 400;
+    } else if (error.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
+      statusCode = 409;
     }
 
-    const user = await UsersService.createUser({
-      email,
-      name,  // Changed from displayName
-    });
-
-    res.status(201).json({ user });
-  } catch (error) {
-    console.error('Create user error:', error);
-    
-    if (error instanceof Error && error.message === 'Email already registered') {
-      return res.status(409).json({ error: error.message });
-    }
-
-    res.status(500).json({ 
-      error: error instanceof Error ? error.message : 'Failed to create user' 
+    return res.status(statusCode).json({
+      code: error.code || "INTERNAL_SERVER_ERROR",
+      message: error.message || "An unexpected error occurred"
     });
   }
 });
