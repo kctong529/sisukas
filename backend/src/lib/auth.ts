@@ -7,4 +7,10 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
+
+  emailAndPassword: {
+    enabled: false,
+  },
 });
+
+console.log('Auth initialized:', typeof auth, typeof auth.handler);

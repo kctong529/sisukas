@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import pool from './config/database';
+import { toNodeHandler } from "better-auth/node";
+import { auth } from './lib/auth';
 import usersRoutes from './routes/users';
 import favouritesRoutes from './routes/favourites';
 
@@ -16,12 +18,9 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true
 }));
-app.use(express.json());
 
-interface TestRequest {
-  name: string;
-  value: number;
-}
+app.all('/api/auth/{*any}', toNodeHandler(auth));
+app.use(express.json());
 
 // Routes
 app.get('/', (req: Request, res: Response) => {
