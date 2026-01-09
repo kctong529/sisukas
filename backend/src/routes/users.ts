@@ -45,27 +45,21 @@ router.get('/:id', async (req: Request, res: Response) => {
 /**
  * POST /api/users
  * Create a new user
- * Body: { email, password, displayName? }
+ * Body: { email, name? }
  */
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { email, password, displayName } = req.body;
+    const { email, name } = req.body;
 
-    // Validation
-    if (!email || !password) {
+    if (!email) {
       return res.status(400).json({ 
-        error: 'Email and password are required' 
+        error: 'Email is required' 
       });
     }
 
-    // TODO: Hash password properly when we add auth
-    // For now, just store it as-is (NOT SECURE - temporary!)
-    const passwordHash = password;
-
     const user = await UsersService.createUser({
       email,
-      passwordHash,
-      displayName,
+      name,  // Changed from displayName
     });
 
     res.status(201).json({ user });

@@ -5,8 +5,8 @@ import { eq } from 'drizzle-orm';
 
 export interface CreateUserDto {
   email: string;
-  passwordHash: string;
-  displayName?: string;
+  name?: string;
+  emailVerified?: boolean;
 }
 
 export class UsersService {
@@ -14,9 +14,9 @@ export class UsersService {
     return await db.select({
       id: users.id,
       email: users.email,
-      displayName: users.displayName,
+      name: users.name,
+      emailVerified: users.emailVerified,
       createdAt: users.createdAt,
-      // Don't return passwordHash
     }).from(users);
   }
 
@@ -25,7 +25,8 @@ export class UsersService {
       .select({
         id: users.id,
         email: users.email,
-        displayName: users.displayName,
+        name: users.name,
+        emailVerified: users.emailVerified,
         createdAt: users.createdAt,
       })
       .from(users)
@@ -52,14 +53,17 @@ export class UsersService {
     const [user] = await db
       .insert(users)
       .values({
+        id: `user_${Date.now()}`,
         email: data.email,
-        passwordHash: data.passwordHash,
-        displayName: data.displayName,
+        name: data.name || '',
+        emailVerified: data.emailVerified || false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       })
       .returning({
         id: users.id,
         email: users.email,
-        displayName: users.displayName,
+        name: users.name,
         createdAt: users.createdAt,
       });
 
