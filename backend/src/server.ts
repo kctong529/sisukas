@@ -14,11 +14,23 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 app.set("trust proxy", 1);
 
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
+  : ['http://localhost:5173'];
+
 // Middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://localhost:5173',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS policy: Origin ${origin} not allowed`));
+      }
+    },
+    credentials: true,
+  })
+);
 
 app.all('/api/auth/{*any}', toNodeHandler(auth));
 app.use(express.json());
@@ -53,6 +65,6 @@ app.use('/api/users', usersRoutes);
 app.use('/api/favourites', favouritesRoutes);
 
 app.listen(PORT, () => {
-  console.log(`Server is running on https://localhost:${PORT}`);
+  console.log(`Server is running on ${process.env.BACKEND_URL}`);
   console.log(`CORS allows requests from ${process.env.FRONTEND_URL}`);
 });

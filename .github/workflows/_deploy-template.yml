@@ -18,10 +18,16 @@ on:
       fly_io_url:
         required: true
         type: string
+      backend_url:
+        required: true
+        type: string
       cors_origins:
         required: true
         type: string
       gcp_project_id:
+        required: true
+        type: string
+      backend_cloud_run_service:
         required: true
         type: string
       filters_api_cloud_run_service:
@@ -59,4 +65,16 @@ jobs:
       filters_api_cloud_run_service: ${{ inputs.filters_api_cloud_run_service }}
       cors_origins: ${{ inputs.cors_origins }}
       gcs_bucket_name: ${{ inputs.gcs_bucket_name }}
+    secrets: inherit
+
+  deploy_backend:
+    uses: ./.github/workflows/_deploy-backend.yml
+    with:
+      environment: ${{ inputs.environment }}
+      gcp_project_id: ${{ inputs.gcp_project_id }}
+      region: ${{ inputs.region }}
+      backend_cloud_run_service: ${{ inputs.backend_cloud_run_service }}
+      cors_origins: ${{ inputs.cors_origins }}
+      frontend_url: ${{ inputs.fly_io_url }}
+      backend_url: ${{ inputs.backend_url }}
     secrets: inherit
