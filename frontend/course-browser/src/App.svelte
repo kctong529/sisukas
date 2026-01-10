@@ -6,6 +6,7 @@
   import CourseTable from './components/CourseTable.svelte';
   import SearchControls from './components/SearchControls.svelte';
   import NotificationContainer from './components/NotificationContainer.svelte';
+  import AuthTest from './components/AuthTest.svelte';
   import { createRuleBlueprints } from './domain/filters/blueprints';
   import { loadCurricula } from './infrastructure/loaders/CurriculumLoader';
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
@@ -208,6 +209,8 @@
 <svelte:head>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 </svelte:head>
+
+<AuthTest />
 
 <Navigation 
   {currentView}
