@@ -9,6 +9,7 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from './lib/auth';
 import usersRoutes from './routes/users';
 import favouritesRoutes from './routes/favourites';
+import { extractSession } from './middleware/auth';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -62,6 +63,7 @@ app.get('/health', async (req: Request, res: Response) => {
 });
 
 app.use('/api/users', usersRoutes);
+app.use(extractSession);
 app.use('/api/favourites', favouritesRoutes);
 
 app.listen(PORT, () => {
