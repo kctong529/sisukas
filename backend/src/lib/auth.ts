@@ -17,7 +17,11 @@ export const auth = betterAuth({
     },
   }),
   baseURL: `${process.env.BACKEND_URL}/api/auth`,
-  trustedOrigins: [process.env.BETTER_AUTH_URL as string],
+  trustedOrigins: [
+    "http://localhost:5173",
+    "https://localhost:5173",
+    "https://sisukas.eu"
+  ],
 
   emailAndPassword: {
     enabled: true,
@@ -43,7 +47,14 @@ export const auth = betterAuth({
         }
       }
     })
-  ]
+  ],
+
+  advanced: {
+    defaultCookieAttributes: {
+      secure: true,
+      sameSite: 'none'
+    }
+  }
 });
 
 console.log('Auth initialized:', typeof auth, typeof auth.handler);

@@ -16,7 +16,7 @@ app.set("trust proxy", 1);
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: process.env.FRONTEND_URL || 'https://localhost:5173',
   credentials: true
 }));
 
@@ -53,6 +53,6 @@ app.use('/api/users', usersRoutes);
 app.use('/api/favourites', favouritesRoutes);
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on https://localhost:${PORT}`);
   console.log(`CORS allows requests from ${process.env.FRONTEND_URL}`);
 });
