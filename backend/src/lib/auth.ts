@@ -16,8 +16,8 @@ export const auth = betterAuth({
       user: schema.users,
     },
   }),
-  baseURL: "http://localhost:3000/api/auth",
-  trustedOrigins: ["http://localhost:5173"],
+  baseURL: `${process.env.BACKEND_URL}/api/auth`,
+  trustedOrigins: [process.env.BETTER_AUTH_URL as string],
 
   emailAndPassword: {
     enabled: true,
@@ -29,7 +29,7 @@ export const auth = betterAuth({
         const { data, error } = await resend.emails.send({
           from: "Sisukas <auth@sisukas.eu>",
           to: [email],
-          subject: "Sign in to your account",
+          subject: "Sign in to Sisukas",
           html: `
             <p>Click the link below to sign in:</p>
             <a href="${url}">Verify Email & Sign In</a>
