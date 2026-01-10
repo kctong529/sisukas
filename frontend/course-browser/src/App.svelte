@@ -20,6 +20,7 @@
   import type { Course } from './domain/models/Course';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { FilterRuleGroups, FilterConfig } from './domain/filters/FilterTypes';
+  import AuthDebugPanel from './components/AuthDebugPanel.svelte';
   
   let currentView = 'courses';
   let isSignedIn = false;
@@ -223,6 +224,10 @@
   on:signin={handleSignIn}
   on:signout={handleSignOut}
 />
+
+{#if import.meta.env.VITE_DEBUG_AUTH === "true"}
+  <AuthDebugPanel />
+{/if}
 
 {#if showAuthModal}
   <AuthModal on:close={() => (showAuthModal = false)} />

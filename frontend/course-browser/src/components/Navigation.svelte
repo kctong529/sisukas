@@ -48,7 +48,7 @@
         on:click={() => handleNavigation('courses')}
       >
         <i class="bi bi-search"></i>
-        <span>Browse Courses</span>
+        <span>Browse</span>
       </button>
       
       <button 
@@ -57,7 +57,7 @@
         on:click={() => handleNavigation('saved')}
       >
         <i class="bi bi-bookmark"></i>
-        <span>Saved Filters</span>
+        <span>Favourites</span>
       </button>
       
       <button 
@@ -66,7 +66,7 @@
         on:click={() => handleNavigation('about')}
       >
         <i class="bi bi-info-circle"></i>
-        <span>About</span>
+        <span>GitHub</span>
       </button>
     </div>
     
@@ -110,7 +110,7 @@
         on:click={() => handleNavigation('courses')}
       >
         <i class="bi bi-search"></i>
-        <span>Browse Courses</span>
+        <span>Browse</span>
       </button>
       
       <button 
@@ -119,7 +119,7 @@
         on:click={() => handleNavigation('saved')}
       >
         <i class="bi bi-bookmark"></i>
-        <span>Saved Filters</span>
+        <span>Favourites</span>
       </button>
       
       <button 
@@ -128,7 +128,7 @@
         on:click={() => handleNavigation('about')}
       >
         <i class="bi bi-info-circle"></i>
-        <span>About</span>
+        <span>GitHub</span>
       </button>
       
       <div class="mobile-divider"></div>
