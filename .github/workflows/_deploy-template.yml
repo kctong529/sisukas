@@ -54,6 +54,7 @@ jobs:
       vite_wrapper_api: ${{ inputs.vite_wrapper_api }}
       vite_gcs_bucket: ${{ inputs.vite_gcs_bucket }}
       fly_io_url: ${{ inputs.fly_io_url }}
+      backend_url: ${{ inputs.backend_url }}
     secrets: inherit
 
   deploy_filters_api:
