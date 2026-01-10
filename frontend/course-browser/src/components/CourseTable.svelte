@@ -1,51 +1,43 @@
-<!-- src/components/CourseTable.svelte -->
+<!-- src/components/CourseTable.svelte - With Pagination -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { useSession } from '../lib/authClient';
   import { favouritesStore } from '../lib/stores/favouritesStore';
   import type { Course } from '../domain/models/Course';
-  import type { Favourite } from '../infrastructure/services/FavouritesService';
-  
+
   export let courses: Course[] = [];
   
   let sortColumn = 'courseName';
   let sortDirection = 1;
   let windowWidth = 0;
-  let visibleCardCount = 20;
-  let cardContainerRef: HTMLElement;
+  let isNarrowScreen = false;
 
+  // Pagination state
+  let currentPage = 1;
+  const pageSize = 50;
+  
   const session = useSession();
   $: isSignedIn = !!$session.data?.user;
-
   $: isNarrowScreen = windowWidth < 380;
-  $: visibleCourses = courses.slice(0, visibleCardCount);
+
+  // Calculate paginated courses
+  $: sortedCourses = sortCourses(courses);
+  $: totalPages = Math.ceil(sortedCourses.length / pageSize);
+  $: paginatedCourses = sortedCourses.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+  
+  // Validate page number
+  $: if (currentPage > totalPages) {
+    currentPage = Math.max(1, totalPages);
+  }
 
   onMount(() => {
     // Load favourites when user signs in
     if (isSignedIn) {
       favouritesStore.load();
     }
-
-    const handleScroll = () => {
-      if (!cardContainerRef || cardContainerRef.offsetParent === null) return;
-      if (visibleCardCount >= courses.length) return;
-      
-      const containerRect = cardContainerRef.getBoundingClientRect();
-      const containerBottom = containerRect.bottom;
-      const windowHeight = window.innerHeight;
-      
-      // Load more when bottom of container is within 800px of viewport bottom
-      const threshold = 800;
-      if (containerBottom < windowHeight + threshold) {
-        visibleCardCount = Math.min(visibleCardCount + 20, courses.length);
-      }
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    // Also check on mount in case content doesn't fill screen
-    handleScroll();
-    
-    return () => window.removeEventListener('scroll', handleScroll);
   });
 
   // Clear when signing out
@@ -79,13 +71,8 @@
       sortColumn = column;
       sortDirection = 1;
     }
-    courses = sortCourses(courses);
-  }
-
-  function handleMobileSortChange() {
-    sortDirection = 1;
-    courses = sortCourses(courses);
-    visibleCardCount = 20;
+    // Reset to page 1 when sorting changes
+    currentPage = 1;
   }
   
   function sortCourses(coursesToSort: Course[]): Course[] {
@@ -173,124 +160,209 @@
     const lastInitial = parts[parts.length - 1][0];
     return `${firstName} ${lastInitial}.`;
   }
+
+  function goToPage(page: number) {
+    currentPage = Math.max(1, Math.min(page, totalPages));
+  }
+
+  function nextPage() {
+    if (currentPage < totalPages) {
+      currentPage++;
+      // Scroll to top of table
+      const tableEl = document.querySelector('.desktop-table');
+      tableEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function prevPage() {
+    if (currentPage > 1) {
+      currentPage--;
+      // Scroll to top of table
+      const tableEl = document.querySelector('.desktop-table');
+      tableEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} />
 
-<div id="course-count">
-  Total courses: {courses.length}
+<div class="table-header">
+  <div id="course-count">
+    Total courses: {sortedCourses.length}
+  </div>
+  <div class="pagination-info">
+    {#if totalPages > 1}
+      <span>Page {currentPage} of {totalPages}</span>
+    {/if}
+  </div>
 </div>
 
 <!-- Desktop Table View -->
-<table class="desktop-table">
-  <thead>
-    <tr>
-      {#if isSignedIn}
-        <th class="favourite-col" style="width: 3%;"></th>
-      {/if}
-      <th 
-        class:sort-asc={sortColumn === 'courseCode' && sortDirection === 1}
-        class:sort-desc={sortColumn === 'courseCode' && sortDirection === -1}
-        on:click={() => handleSort('courseCode')}
-      >
-        <span class="full-text">Course Code</span>
-        <span class="abbreviated-text">code</span>
-      </th>
-      <th 
-        class:sort-asc={sortColumn === 'courseName' && sortDirection === 1}
-        class:sort-desc={sortColumn === 'courseName' && sortDirection === -1}
-        on:click={() => handleSort('courseName')}
-      >
-        <span class="full-text">Course Name</span>
-        <span class="abbreviated-text">name</span>
-      </th>
-      <th 
-        class:sort-asc={sortColumn === 'teachers' && sortDirection === 1}
-        class:sort-desc={sortColumn === 'teachers' && sortDirection === -1}
-        on:click={() => handleSort('teachers')}
-      >
-        <span class="full-text">Teacher(s)</span>
-        <span class="abbreviated-text">teachr</span>
-      </th>
-      <th 
-        class:sort-asc={sortColumn === 'credits' && sortDirection === 1}
-        class:sort-desc={sortColumn === 'credits' && sortDirection === -1}
-        on:click={() => handleSort('credits')}
-      >
-        <span class="full-text">Credits</span>
-        <span class="abbreviated-text">cr</span>
-      </th>
-      <th on:click={() => handleSort('language')}>
-        <span class="full-text">Language</span>
-        <span class="abbreviated-text">lang</span>
-      </th>
-      <th on:click={() => handleSort('startDate')}>
-        <span class="full-text">Start Date</span>
-        <span class="abbreviated-text">start</span>
-      </th>
-      <th on:click={() => handleSort('endDate')}>
-        <span class="full-text">End Date</span>
-        <span class="abbreviated-text">end</span>
-      </th>
-      <th on:click={() => handleSort('enrollFrom')}>
-        <span class="full-text">Enroll From</span>
-        <span class="abbreviated-text">frm</span>
-      </th>
-      <th on:click={() => handleSort('enrollTo')}>
-        <span class="full-text">Enroll To</span>
-        <span class="abbreviated-text">to</span>
-      </th>
-      <th on:click={() => handleSort('prerequisites')}>
-        <span class="full-text">Prerequisites</span>
-        <span class="abbreviated-text">preq</span>
-      </th>
-    </tr>
-  </thead>
-  <tbody>
-    {#each courses as course}
+<div class="desktop-table-wrapper">
+  <table class="desktop-table">
+    <thead>
       <tr>
         {#if isSignedIn}
-          <td class="favourite-col">
-            <button
-              class="favourite-btn"
-              class:favourited={$favouritesStore.favourites.some(f => f.courseId === course.code.value)}
-              on:click={() => toggleFavourite(course.code.value)}
-              title={$favouritesStore.favourites.some(f => f.courseId === course.code.value) ? 'Remove from favourites' : 'Add to favourites'}
-            >
-              {$favouritesStore.favourites.some(f => f.courseId === course.code.value) ? '♥' : '♡'}
-            </button>
-          </td>
+          <th class="favourite-col" style="width: 3%;"></th>
         {/if}
-        <td>{course.code.value}</td>
-        <td>
-          <a href="https://sisu.aalto.fi/student/courseunit/{course.unitId}/brochure" target="_blank">
-            {course.name.en}
-          </a>
-        </td>
-        <td>{course.teachers.join(', ')}</td>
-        <td>{course.credits.min}</td>
-        <td>{course.languages.join(', ')}</td>
-        <td>{formatDate(course.courseDate.start, true)}</td>
-        <td>{formatDate(course.courseDate.end, true)}</td>
-        <td>{formatDate(course.enrollmentDate.start, true)}</td>
-        <td>{formatDate(course.enrollmentDate.end, true)}</td>
-        <td class="prerequisites-cell">
-          {formatPrerequisites(course)}
-        </td>
+        <th 
+          class:sort-asc={sortColumn === 'courseCode' && sortDirection === 1}
+          class:sort-desc={sortColumn === 'courseCode' && sortDirection === -1}
+          on:click={() => handleSort('courseCode')}
+        >
+          <span class="full-text">Course Code</span>
+          <span class="abbreviated-text">code</span>
+        </th>
+        <th 
+          class:sort-asc={sortColumn === 'courseName' && sortDirection === 1}
+          class:sort-desc={sortColumn === 'courseName' && sortDirection === -1}
+          on:click={() => handleSort('courseName')}
+        >
+          <span class="full-text">Course Name</span>
+          <span class="abbreviated-text">name</span>
+        </th>
+        <th 
+          class:sort-asc={sortColumn === 'teachers' && sortDirection === 1}
+          class:sort-desc={sortColumn === 'teachers' && sortDirection === -1}
+          on:click={() => handleSort('teachers')}
+        >
+          <span class="full-text">Teacher(s)</span>
+          <span class="abbreviated-text">teachr</span>
+        </th>
+        <th 
+          class:sort-asc={sortColumn === 'credits' && sortDirection === 1}
+          class:sort-desc={sortColumn === 'credits' && sortDirection === -1}
+          on:click={() => handleSort('credits')}
+        >
+          <span class="full-text">Credits</span>
+          <span class="abbreviated-text">cr</span>
+        </th>
+        <th on:click={() => handleSort('language')}>
+          <span class="full-text">Language</span>
+          <span class="abbreviated-text">lang</span>
+        </th>
+        <th on:click={() => handleSort('startDate')}>
+          <span class="full-text">Start Date</span>
+          <span class="abbreviated-text">start</span>
+        </th>
+        <th on:click={() => handleSort('endDate')}>
+          <span class="full-text">End Date</span>
+          <span class="abbreviated-text">end</span>
+        </th>
+        <th on:click={() => handleSort('enrollFrom')}>
+          <span class="full-text">Enroll From</span>
+          <span class="abbreviated-text">frm</span>
+        </th>
+        <th on:click={() => handleSort('enrollTo')}>
+          <span class="full-text">Enroll To</span>
+          <span class="abbreviated-text">to</span>
+        </th>
+        <th on:click={() => handleSort('prerequisites')}>
+          <span class="full-text">Prerequisites</span>
+          <span class="abbreviated-text">preq</span>
+        </th>
       </tr>
-    {/each}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {#each paginatedCourses as course}
+        <tr>
+          {#if isSignedIn}
+            <td class="favourite-col">
+              <button
+                class="favourite-btn"
+                class:favourited={$favouritesStore.favourites.some(f => f.courseId === course.code.value)}
+                on:click={() => toggleFavourite(course.code.value)}
+                title={$favouritesStore.favourites.some(f => f.courseId === course.code.value) ? 'Remove from favourites' : 'Add to favourites'}
+              >
+                {$favouritesStore.favourites.some(f => f.courseId === course.code.value) ? '♥' : '♡'}
+              </button>
+            </td>
+          {/if}
+          <td>{course.code.value}</td>
+          <td>
+            <a href="https://sisu.aalto.fi/student/courseunit/{course.unitId}/brochure" target="_blank">
+              {course.name.en}
+            </a>
+          </td>
+          <td>{course.teachers.join(', ')}</td>
+          <td>{course.credits.min}</td>
+          <td>{course.languages.join(', ')}</td>
+          <td>{formatDate(course.courseDate.start, true)}</td>
+          <td>{formatDate(course.courseDate.end, true)}</td>
+          <td>{formatDate(course.enrollmentDate.start, true)}</td>
+          <td>{formatDate(course.enrollmentDate.end, true)}</td>
+          <td class="prerequisites-cell">
+            {formatPrerequisites(course)}
+          </td>
+        </tr>
+      {/each}
+    </tbody>
+  </table>
+</div>
 
-<!-- Mobile Card View -->
-<div class="mobile-cards" bind:this={cardContainerRef}>
+<!-- Desktop Pagination Controls -->
+{#if totalPages > 1}
+  <div class="pagination-controls">
+    <button
+      class="pagination-btn"
+      on:click={prevPage}
+      disabled={currentPage === 1}
+      aria-label="Previous page"
+    >
+      ← Previous
+    </button>
+
+    <div class="page-numbers">
+      {#each Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+        let page;
+        if (totalPages <= 5) {
+          page = i + 1;
+        } else if (currentPage <= 3) {
+          page = i + 1;
+        } else if (currentPage >= totalPages - 2) {
+          page = totalPages - 4 + i;
+        } else {
+          page = currentPage - 2 + i;
+        }
+        return page;
+      }) as page}
+        <button
+          class="page-btn"
+          class:active={page === currentPage}
+          on:click={() => goToPage(page)}
+        >
+          {page}
+        </button>
+      {/each}
+
+      {#if totalPages > 5 && currentPage < totalPages - 2}
+        <span class="page-ellipsis">...</span>
+      {/if}
+    </div>
+
+    <button
+      class="pagination-btn"
+      on:click={nextPage}
+      disabled={currentPage === totalPages}
+      aria-label="Next page"
+    >
+      Next →
+    </button>
+  </div>
+{/if}
+
+<!-- Mobile Card View (Infinite Scroll) -->
+<div class="mobile-cards">
   <div class="mobile-sort-controls">
     <label for="mobile-sort">Sort by:</label>
     <select 
       id="mobile-sort" 
       class="mobile-sort-select"
       bind:value={sortColumn} 
-      on:change={handleMobileSortChange}
+      on:change={() => {
+        sortDirection = 1;
+        currentPage = 1;
+      }}
     >
       <option value="courseName">Course Name</option>
       <option value="courseCode">Course Code</option>
@@ -306,7 +378,7 @@
       class="sort-direction-btn"
       on:click={() => {
         sortDirection *= -1;
-        courses = sortCourses(courses);
+        currentPage = 1;
       }}
       aria-label="Toggle sort direction"
     >
@@ -314,7 +386,7 @@
     </button>
   </div>
 
-  {#each visibleCourses as course}
+  {#each paginatedCourses as course}
     <div class="course-card">
       <div class="card-header">
         {#if isSignedIn}
@@ -348,21 +420,46 @@
     </div>
   {/each}
 
-  {#if visibleCardCount < courses.length}
-    <div class="loading-indicator">
-      Loading more courses...
+  <!-- Mobile Pagination Info -->
+  {#if totalPages > 1}
+    <div class="mobile-pagination">
+      <button
+        class="mobile-pagination-btn"
+        on:click={prevPage}
+        disabled={currentPage === 1}
+      >
+        ← Previous
+      </button>
+      <span class="mobile-page-info">Page {currentPage} of {totalPages}</span>
+      <button
+        class="mobile-pagination-btn"
+        on:click={nextPage}
+        disabled={currentPage === totalPages}
+      >
+        Next →
+      </button>
     </div>
   {/if}
 </div>
 
 <style>
-  #course-count {
-    position: relative;
-    float: right;
-    margin: -20px 15px 0 0;
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
   
   /* Desktop Table Styles */
+  .desktop-table-wrapper {
+    overflow-x: auto;
+    margin-bottom: 1rem;
+  }
+
   .desktop-table {
     width: 96%;
     margin: auto;
@@ -523,8 +620,76 @@
   .full-text {
     display: inline;
   }
+
+  /* Pagination Controls */
+  .pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+  }
+
+  .pagination-btn {
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+    transition: all 0.2s;
+  }
+
+  .pagination-btn:hover:not(:disabled) {
+    background: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .page-numbers {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .page-btn {
+    padding: 0.4rem 0.6rem;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: #666;
+    transition: all 0.2s;
+    min-width: 32px;
+  }
+
+  .page-btn:hover {
+    background: #f0f0f0;
+    border-color: #999;
+  }
+
+  .page-btn.active {
+    background: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+    font-weight: 600;
+  }
+
+  .page-ellipsis {
+    padding: 0 0.25rem;
+    color: #999;
+  }
   
-  /* Mobile Card Styles - Compact */
+  /* Mobile Card Styles */
   .course-card {
     background: white;
     border: 1px solid #ddd;
@@ -625,13 +790,6 @@
   .detail-value {
     color: #888;
   }
-
-  .loading-indicator {
-    text-align: center;
-    padding: 1rem;
-    color: #666;
-    font-size: 0.9rem;
-  }
   
   /* Mobile sort controls */
   .mobile-sort-controls {
@@ -699,6 +857,43 @@
     box-shadow: 0 0 5px rgb(74 144 226 / 50%);
     outline: none;
   }
+
+  /* Mobile Pagination */
+  .mobile-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+  }
+
+  .mobile-pagination-btn {
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #333;
+    transition: all 0.2s;
+  }
+
+  .mobile-pagination-btn:hover:not(:disabled) {
+    background: #4a90e2;
+    color: white;
+  }
+
+  .mobile-pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .mobile-page-info {
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+  }
   
   /* Tablet breakpoint - abbreviated headers */
   @media (max-width: 1170px) {
@@ -713,7 +908,11 @@
   
   /* Mobile breakpoint - switch to cards */
   @media (max-width: 555px) {
-    .desktop-table {
+    .desktop-table-wrapper {
+      display: none;
+    }
+
+    .pagination-controls {
       display: none;
     }
     
@@ -721,14 +920,6 @@
       display: block;
       padding: 0 2%;
       margin: 1rem 0;
-    }
-  }
-
-  @media (max-width: 432px) {
-    #course-count {
-      float: none;
-      text-align: right;
-      margin: 0 15px 0 0;
     }
   }
 </style>
