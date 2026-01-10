@@ -74,9 +74,9 @@
     <div class="nav-user">
       {#if isSignedIn}
         <div class="user-menu">
-          <button class="user-button">
+          <button class="nav-link user-link">
             <i class="bi bi-person-circle"></i>
-            <span class="user-name">{userName}</span>
+            <span>{userName}</span>
           </button>
           <button class="sign-out-btn" on:click={handleSignOut}>
             <i class="bi bi-box-arrow-right"></i>
@@ -245,27 +245,18 @@
     align-items: center;
     gap: 0.5rem;
   }
-  
-  .user-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
+
+  .user-link {
+    color: #666;
   }
-  
-  .user-button i {
-    font-size: 1.5rem;
+
+  .user-link i {
     color: #4a90e2;
   }
-  
-  .user-name {
+
+  .user-link:hover {
+    background: #f0f0f0;
     color: #333;
-    font-weight: 500;
   }
   
   .sign-in-btn,
@@ -340,29 +331,42 @@
     color: white;
   }
   
-  .mobile-nav-link i {
-    font-size: 1.3rem;
-    width: 1.5rem;
-  }
-  
   .mobile-divider {
     height: 1px;
     background: #ddd;
     margin: 0.5rem 0;
   }
-  
+
   .mobile-user-info {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1rem;
+    padding: 0.75rem 0.6rem;
     color: #333;
-    font-weight: 500;
+    font-weight: 400;
+    font-size: 1.1rem;
+    word-break: break-all;
   }
-  
+
   .mobile-user-info i {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     color: #4a90e2;
+    flex-shrink: 0;
+  }
+
+  .mobile-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 0.6rem;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: #666;
+    text-align: left;
+    transition: background 0.2s;
   }
   
   .mobile-nav-link.sign-in {

@@ -6,7 +6,8 @@
   import CourseTable from './components/CourseTable.svelte';
   import SearchControls from './components/SearchControls.svelte';
   import NotificationContainer from './components/NotificationContainer.svelte';
-  import AuthTest from './components/AuthTest.svelte';
+  import AuthModal from "./components/AuthModal.svelte";
+  import { authClient, useSession } from "./lib/auth-client";
   import { createRuleBlueprints } from './domain/filters/blueprints';
   import { loadCurricula } from './infrastructure/loaders/CurriculumLoader';
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
@@ -37,19 +38,20 @@
   let loading = true;
   let loadError: string | null = null;
 
+  const session = useSession();
+  let showAuthModal = false;
+
   function handleNavigation(event: CustomEvent<string>) {
     currentView = event.detail;
     // Add routing logic here
   }
   
   function handleSignIn() {
-    // Implement sign-in logic
-    console.log('Sign in clicked');
+    showAuthModal = true;
   }
   
   function handleSignOut() {
-    isSignedIn = false;
-    userName = '';
+    authClient.signOut();
   }
   
   // Initialize data on mount
@@ -204,13 +206,14 @@
       filterContainerRef.addFilterRule();
     }
   }
+
+  $: isSignedIn = !!$session.data?.user;
+  $: userName = $session.data?.user?.email ?? "";
 </script>
 
 <svelte:head>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
 </svelte:head>
-
-<AuthTest />
 
 <Navigation 
   {currentView}
@@ -220,6 +223,10 @@
   on:signin={handleSignIn}
   on:signout={handleSignOut}
 />
+
+{#if showAuthModal}
+  <AuthModal on:close={() => (showAuthModal = false)} />
+{/if}
 
 <NotificationContainer />
 
