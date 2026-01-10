@@ -20,6 +20,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     "http://localhost:5173",
     "https://localhost:5173",
+    "https://sisukas-test.fly.dev",
     "https://sisukas.eu"
   ],
 
