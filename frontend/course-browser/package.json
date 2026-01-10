@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
-    "compile-metadata": "node compile-metadata.js"
+    "compile-metadata": "node compile-metadata.js",
+    "dev:mkcert": "mkcert -install && mkcert localhost 127.0.0.1 ::1"
   },
   "devDependencies": {
     "@modyfi/vite-plugin-yaml": "1.1.1",
@@ -25,5 +26,8 @@
   },
   "overrides": {
     "js-yaml": "4.1.1"
+  },
+  "dependencies": {
+    "better-auth": "^1.4.10"
   }
 }
