@@ -1,7 +1,7 @@
 <!-- src/components/AuthModal.svelte -->
 <script lang="ts">
   import { createEventDispatcher, onMount } from "svelte";
-  import { useSession, authClient } from "../lib/auth-client";
+  import { useSession, authClient } from "../lib/authClient";
   
   const dispatch = createEventDispatcher();
   const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
@@ -45,7 +45,6 @@
 
 <dialog
   bind:this={dialog}
-  on:close={closeModal}
   on:click|self={closeModal}
   aria-labelledby="modal-title"
 >

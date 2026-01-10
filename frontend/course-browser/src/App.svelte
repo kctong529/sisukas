@@ -7,7 +7,8 @@
   import SearchControls from './components/SearchControls.svelte';
   import NotificationContainer from './components/NotificationContainer.svelte';
   import AuthModal from "./components/AuthModal.svelte";
-  import { authClient, useSession } from "./lib/auth-client";
+  import FavouritesView from "./components/FavouritesView.svelte";
+  import { authClient, useSession } from "./lib/authClient";
   import { createRuleBlueprints } from './domain/filters/blueprints';
   import { loadCurricula } from './infrastructure/loaders/CurriculumLoader';
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
@@ -21,6 +22,7 @@
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { FilterRuleGroups, FilterConfig } from './domain/filters/FilterTypes';
   import AuthDebugPanel from './components/AuthDebugPanel.svelte';
+  import { courseStore } from './lib/stores/courseStore';
   
   let currentView = 'courses';
   let isSignedIn = false;
@@ -78,6 +80,10 @@
       courses = await loadCoursesWithCache();
       filteredCourses = [...courses];
       console.log("Courses loaded:", courses.length);
+
+      // Build coursesId Map using courseStore
+      await courseStore.setCourses(courses);
+      console.log("Courses loaded into courseStore");
 
       // Check for filter hash in URL and load if present
       await loadFiltersFromUrl();
@@ -236,15 +242,14 @@
 <NotificationContainer />
 
 <div id="main-content">
-  {#if currentView === 'courses'}
+  <!-- Courses View -->
+  <div 
+    class="view" 
+    class:hidden={currentView !== 'courses'}
+  >
     {#if loading}
       <div style="text-align: center; padding: 2rem;">
         <p>Loading course data...</p>
-      </div>
-    {:else if loadError}
-      <div style="text-align: center; padding: 2rem;">
-        <p style="color: red;">Error: {loadError}</p>
-        <button on:click={() => window.location.reload()}>Retry</button>
       </div>
     {:else}
       <FilterContainer 
@@ -263,25 +268,25 @@
         on:load={handleLoadFilters}
       />
       
-      <CourseTable 
-        courses={filteredCourses}
-      />
+      <CourseTable courses={filteredCourses} />
     {/if}
-  {:else if currentView === 'saved'}
-    <!-- Saved Filters View -->
-    <div class="view-container">
-      <h2>Saved Filters</h2>
-      <p>Your saved filter configurations will appear here.</p>
-    </div>
-    
-  {:else if currentView === 'about'}
-    <!-- About View -->
-    <div class="view-container">
-      <h2>About Sisukas</h2>
-      <p>Alternative frontend for Aalto University's SISU system.</p>
-      <p><a href="https://github.com/kctong529/sisukas" target="_blank">View on GitHub</a></p>
-    </div>
-  {/if}
+  </div>
+
+  <!-- Favourites View -->
+  <div 
+    class="view" 
+    class:hidden={currentView !== 'favourites'}
+  >
+    <FavouritesView />
+  </div>
+
+  <!-- About View -->
+  <div 
+    class="view" 
+    class:hidden={currentView !== 'about'}
+  >
+    About
+  </div>
 </div>
 
 <footer>
@@ -324,6 +329,18 @@
   
   :global(h2 a:hover) {
     color: #d9534f;
+  }
+
+  #main-content {
+    min-height: 80vh; /* Keeps the page long enough so scroll context stays stable */
+  }
+
+  .view {
+    display: block;
+  }
+
+  .view.hidden {
+    display: none;
   }
   
   footer {

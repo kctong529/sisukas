@@ -53,21 +53,22 @@
       
       <button 
         class="nav-link" 
-        class:active={currentView === 'saved'}
-        on:click={() => handleNavigation('saved')}
+        class:active={currentView === 'favourites'}
+        on:click={() => handleNavigation('favourites')}
       >
         <i class="bi bi-bookmark"></i>
         <span>Favourites</span>
       </button>
       
-      <button 
-        class="nav-link" 
-        class:active={currentView === 'about'}
-        on:click={() => handleNavigation('about')}
+      <a 
+        href="https://github.com/kctong529/sisukas" 
+        target="_blank"
+        rel="noopener noreferrer"
+        class="nav-link"
       >
-        <i class="bi bi-info-circle"></i>
+        <i class="bi bi-github"></i>
         <span>GitHub</span>
-      </button>
+      </a>
     </div>
     
     <!-- User Section -->
@@ -76,7 +77,7 @@
         <div class="user-menu">
           <button class="nav-link user-link">
             <i class="bi bi-person-circle"></i>
-            <span>{userName}</span>
+            <span class="user-name">{userName}</span>
           </button>
           <button class="sign-out-btn" on:click={handleSignOut}>
             <i class="bi bi-box-arrow-right"></i>
@@ -115,21 +116,22 @@
       
       <button 
         class="mobile-nav-link" 
-        class:active={currentView === 'saved'}
-        on:click={() => handleNavigation('saved')}
+        class:active={currentView === 'favourites'}
+        on:click={() => handleNavigation('favourites')}
       >
         <i class="bi bi-bookmark"></i>
         <span>Favourites</span>
       </button>
       
-      <button 
-        class="mobile-nav-link" 
-        class:active={currentView === 'about'}
-        on:click={() => handleNavigation('about')}
+      <a 
+        href="https://github.com/kctong529/sisukas" 
+        target="_blank"
+        rel="noopener noreferrer"
+        class="mobile-nav-link"
       >
-        <i class="bi bi-info-circle"></i>
+        <i class="bi bi-github"></i>
         <span>GitHub</span>
-      </button>
+      </a>
       
       <div class="mobile-divider"></div>
       
@@ -202,7 +204,7 @@
   /* Desktop Navigation Links */
   .nav-links {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.2rem;
     flex: 1;
     justify-content: center;
   }
@@ -210,15 +212,16 @@
   .nav-link {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1rem;
+    gap: 0.35rem;
+    padding: 0.6rem 0.7rem;
     background: none;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: #666;
     transition: all 0.2s;
+    text-decoration: none;
   }
   
   .nav-link:hover {
@@ -258,13 +261,17 @@
     background: #f0f0f0;
     color: #333;
   }
+
+  .user-name {
+    font-size: 0.9rem;
+  }
   
   .sign-in-btn,
   .sign-out-btn {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.6rem 1.2rem;
+    padding: 0.6rem 0.7rem;
     background: #4a90e2;
     color: white;
     border: none;
@@ -320,6 +327,7 @@
     color: #666;
     text-align: left;
     transition: background 0.2s;
+    text-decoration: none;
   }
   
   .mobile-nav-link:hover {

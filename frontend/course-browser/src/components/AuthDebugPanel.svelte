@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { useSession, authClient } from "../lib/auth-client";
+  import { useSession, authClient } from "../lib/authClient";
   import { onMount } from "svelte";
 
   const session = useSession();
