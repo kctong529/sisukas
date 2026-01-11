@@ -5,6 +5,7 @@
   let token = "";
   let loading = false;
   let errorMsg = "";
+  let status = "ready"; // ready, loading, success, error
 
   onMount(() => {
     const params = new URLSearchParams(window.location.search);
@@ -16,20 +17,19 @@
   });
 
   async function handleVerify() {
-    loading = true;
-    errorMsg = "";
-
-    // This calls the backend, sets the cookie, and then redirects
+    status = "loading";
     const { error } = await authClient.magicLink.verify({
-      query: {
-        token: token,
-        callbackURL: "/",
-      }
+      query: { token, callbackURL: "/" }
     });
 
-    if (error) {
-      errorMsg = error.message || "Verification failed. The link may have expired.";
-      loading = false;
+    if (error && error.message) {
+      errorMsg = error.message;
+      status = "error";
+    } else {
+      status = "success";
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     }
   }
 </script>
@@ -48,11 +48,13 @@
 
     <button 
       on:click={handleVerify} 
-      disabled={loading || !token}
+      disabled={status === "loading" || status === "success"}
       class="verify-btn"
     >
       {#if loading}
         Verifying...
+      {:else if status === "success"}
+        Success! Redirecting...
       {:else}
         Sign In Now
       {/if}
