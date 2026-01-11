@@ -11,7 +11,6 @@ Sisukas is a course discovery and study planning tool for university students in
 
 The live application is available at [https://sisukas.eu](https://sisukas.eu), with documentation hosted at [https://docs.sisukas.eu](https://docs.sisukas.eu).
 
----
 
 ## Motivation
 
@@ -21,8 +20,6 @@ More importantly, SISU offers very limited support for *planning*. Courses are p
 
 > [!IMPORTANT]
 > In practice, students frequently deal with overlapping lectures, exercises, or exams. They make trade-offs, skip sessions, watch recordings later, or prioritize one course over another. Sisukas is built around this reality instead of ignoring it.
-
----
 
 ## Current State of the Project
 
@@ -34,8 +31,6 @@ Early planning features are just beginning to take shape. Authenticated users ca
 
 > [!TIP]
 > From a technical perspective, Sisukas is built with production-style practices. It uses CI/CD pipelines, maintains separate development and production environments, and is deployed across Fly.io, Google Cloud Run, and Supabase. While this infrastructure exceeds what a hobby project strictly needs, it reflects the goal of experimenting with real-world system design.
-
----
 
 ## Direction and Ongoing Work
 
@@ -58,7 +53,7 @@ This starts with a key distinction: an abstract course ("MS-A0111") is useful fo
 
 **SchedulePairs** are optimized combinations of study groups for 2+ instances in a Plan. When a student picks two courses and wants to know "what's the best way to combine study groups?", the system generates all valid pairings, scores them by level of conflicts, and shows the ranked options. A good pairing might have zero conflicts; a weaker one might have 1 hour of overlap on Tuesday mornings. The student chooses based on what works for them.
 
-> ![NOTE]
+> [!NOTE]
 > The *LEGO View* is where this happens: students select 2+ instances from their Plan, see ranked SchedulePairs, and lock in the best option.
 
 ### What's Coming Later (Phase 2)
@@ -82,8 +77,6 @@ Once a student commits to a pairing, **Decision Slots** activate. These are time
 > [!TIP]
 > These are being built iteratively. Some features exist as prototypes or design sketches; others are fully functional. The project intentionally avoids committing to a rigid roadmap upfront, preferring small testable steps over big promises.
 
----
-
 ## Technical Overview
 
 Sisukas is structured as a set of loosely coupled components rather than a single monolithic application. The frontend is intentionally lightweight and avoids heavy frameworks, prioritizing fast load times and responsive interaction. It operates as a local-first application; by caching course data in the browser, it enables instant searching and remains usable even with limited or no network connectivity.
@@ -93,8 +86,6 @@ Backend functionality is split into focused services. The main API handles authe
 Course data is fetched from the Aalto Open API and updated automatically via GitHub Actions. The client relies on aggressive caching and conditional requests to stay fast while remaining reasonably up to date.
 
 The project is containerized and deployed using modern cloud tooling. CI/CD pipelines ensure changes are tested and deployed consistently, and the overall setup emphasizes maintainability over minimalism.
-
----
 
 ## Running Locally
 
@@ -143,8 +134,6 @@ Run `make help` to see all available commands.
 > [!TIP]
 > `courses.json` is blocked when accessed directly via `file://` in the browser (due to browser security restrictions). Using the local server ensures proper loading of `courses.json`.
 
----
-
 ## Contributing
 
 Sisukas is open to contributions, ideas, and discussion. Because the project is still evolving, there are no rigid contribution rules or fixed architecture constraints. [Discussions](https://github.com/kctong529/sisukas/discussions), [issue reports](https://github.com/kctong529/sisukas/issues), [project backlog](https://github.com/users/kctong529/projects/1), documentation improvements, and small code contributions are all welcome.
@@ -152,13 +141,9 @@ Sisukas is open to contributions, ideas, and discussion. Because the project is 
 > [!NOTE]
 > Feedback on the mental model, terminology, planning concepts, and design decisions is particularly valuable at this stage. The system is still evolving, and shaping how students think about schedules is as important as the implementation itself.
 
----
-
 ## Project Philosophy
 
 Sisukas is built around a few guiding principles. Scheduling conflicts are treated as a normal part of academic life rather than an error state. The system aims to surface trade-offs clearly instead of hiding them behind rigid constraints. Optimization is used to assist users, not to replace human judgment. Above all, the project values incremental progress and conceptual clarity over premature completeness.
-
----
 
 ## License
 
