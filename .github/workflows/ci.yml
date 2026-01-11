@@ -11,7 +11,7 @@ on:
       - main
 
 env:
-  WORKING_DIR: course-browser
+  WORKING_DIR: frontend/course-browser
   NODE_VERSION: '20'
 
 jobs:
