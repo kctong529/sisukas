@@ -18,6 +18,9 @@ on:
       fly_io_url:
         required: true
         type: string
+      frontend_url:
+        required: true
+        type: string
       backend_url:
         required: true
         type: string
@@ -62,6 +65,7 @@ jobs:
           VITE_WRAPPER_API: ${{ inputs.vite_wrapper_api }}
           VITE_GCS_BUCKET: ${{ inputs.vite_gcs_bucket }}
           VITE_FRONTEND_URL: ${{ inputs.fly_io_url }}
+          VITE_FRONTEND_URL: ${{ inputs.frontend_url }}
           VITE_BACKEND_URL: ${{ inputs.backend_url }}
         run: |
           npm run build
