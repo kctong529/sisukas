@@ -18,4 +18,4 @@ EXPOSE 8080
 COPY config.json /srv/http/config.json
 
 # Start the server
-CMD ["-port", "8080", "-https-promote", "-enable-logging"]
+CMD ["-port", "8080", "-https-promote", "-enable-logging", "-fallback", "index.html"]
