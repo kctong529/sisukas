@@ -33,15 +33,16 @@ export const auth = betterAuth({
 
   plugins: [
     magicLink({
-      sendMagicLink: async ({ email, token }) => {
-        const url = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
-
+      sendMagicLink: async ({ email, url }) => {
         const { data, error } = await resend.emails.send({
           from: "Sisukas <auth@sisukas.eu>",
           to: [email],
           subject: "Sign in to Sisukas",
-          html: `<p>Click below to sign in:</p>
-                <a href="${url}">Verify and Sign In</a>`
+          html: `
+            <p>Click the link below to sign in:</p>
+            <a href="${url}">Verify Email & Sign In</a>
+            <p>This link will expire in 1 hour.</p>
+          `
         });
 
         if (error) {
@@ -54,9 +55,7 @@ export const auth = betterAuth({
 
   advanced: {
     defaultCookieAttributes: {
-      secure: true,
-      sameSite: 'none',
-      httpOnly: true,
+      httpOnly: true
     }
   }
 });

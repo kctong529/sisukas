@@ -6,6 +6,9 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export const authClient = createAuthClient({
   baseURL: `${BACKEND_URL}`,
+  fetchOptions: {
+    credentials: "include",
+  },
   plugins: [
     magicLinkClient()
   ]
