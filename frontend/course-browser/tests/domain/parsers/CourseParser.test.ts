@@ -1,28 +1,20 @@
-import { describe, it, expect, vi, beforeEach, Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { parseRawCourse, type RawCourse } from '../../../src/domain/parsers/CourseParser';
 
-// Mock the Course and Prerequisites classes so we can track their instantiation
-// and ensure we only test the parser logic, not the model's constructor logic
+// Mock the Course and Prerequisites classes
 vi.mock('../../../src/domain/models/Course', () => {
-  // We use a function that behaves like a class constructor to save parameters.
-  const MockCourse = vi.fn(function (this: any, params: any) {
-    this.params = params;
-  });
+  const MockCourse = vi.fn();
   return { Course: MockCourse };
 });
 
 vi.mock('../../../src/domain/valueObjects/Prerequisites', () => {
-  const MockPrerequisites = vi.fn(function (this: any, localized: any) {
-    this.localized = localized;
-  });
+  const MockPrerequisites = vi.fn();
   return { Prerequisites: MockPrerequisites };
 });
 
 import { Course } from '../../../src/domain/models/Course';
 import { Prerequisites } from '../../../src/domain/valueObjects/Prerequisites';
 
-// Define a consistent, valid raw course object for use in tests,
-// populated with actual data from a representative flat sample (CS-A1120)
 const mockValidRawCourse: RawCourse = {
   id: 'aalto-CUR-206094-3121874',
   courseUnitId: 'aalto-CU-1150973072-20240801',
@@ -57,8 +49,6 @@ const mockValidRawCourse: RawCourse = {
   lastUpdated: '2024-10-01T10:00:00.000Z',
 };
 
-
-// Function to reset mocks before each test
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -70,7 +60,7 @@ describe('parseRawCourse', () => {
     parseRawCourse(rawData);
 
     expect(Course).toHaveBeenCalledTimes(1);
-    const courseParams = (Course as unknown as Mock).mock.calls[0][0];
+    const courseParams = vi.mocked(Course).mock.calls[0][0];
 
     // Check basic string/number fields
     expect(courseParams.id).toBe(rawData.id);
@@ -89,7 +79,7 @@ describe('parseRawCourse', () => {
 
     // Check Value Object wrapping (Prerequisites)
     expect(Prerequisites).toHaveBeenCalledTimes(1);
-    expect((Prerequisites as unknown as Mock).mock.calls[0][0]).toEqual(rawData.summary.prerequisites);
+    expect(vi.mocked(Prerequisites).mock.calls[0][0]).toEqual(rawData.summary.prerequisites);
   });
 
   it('should handle string prerequisites correctly (mapping to en: string)', () => {
@@ -106,7 +96,7 @@ describe('parseRawCourse', () => {
     expect(Prerequisites).toHaveBeenCalledTimes(1);
 
     // Check that the string prerequisite was wrapped in LocalizedString format before being passed to Prerequisites constructor
-    expect((Prerequisites as unknown as Mock).mock.calls[0][0]).toEqual({ en: rawData.summary.prerequisites });
+    expect(vi.mocked(Prerequisites).mock.calls[0][0]).toEqual({ en: rawData.summary.prerequisites });
   });
 
   it('should handle LocalizedString prerequisites correctly', () => {
@@ -123,7 +113,7 @@ describe('parseRawCourse', () => {
     parseRawCourse(rawData);
 
     expect(Prerequisites).toHaveBeenCalledTimes(1);
-    expect((Prerequisites as unknown as Mock).mock.calls[0][0]).toEqual(localizedPrereq);
+    expect(vi.mocked(Prerequisites).mock.calls[0][0]).toEqual(localizedPrereq);
   });
 
   it('should handle missing optional fields (description, tags, prerequisites)', () => {
@@ -139,7 +129,7 @@ describe('parseRawCourse', () => {
 
     parseRawCourse(rawData);
 
-    const courseParams = (Course as unknown as Mock).mock.calls[0][0];
+    const courseParams = vi.mocked(Course).mock.calls[0][0];
 
     expect(courseParams.tags).toBeUndefined();
     expect(courseParams.prerequisites).toBeUndefined();

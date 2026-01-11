@@ -16,7 +16,7 @@ export class CourseCode {
     const dotCount = (trimmedCode.match(/\./g) || []).length;
 
     // Ensure only alphanumeric, dash, or dot are present
-    const forbiddenCharMatch = trimmedCode.match(/[^a-zA-Z0-9\-\.]/);
+    const forbiddenCharMatch = trimmedCode.match(/[^a-zA-Z0-9-.]/);
     if (forbiddenCharMatch) {
       throw new Error(
         `Invalid character in Course Code: "${trimmedCode}". Character "${forbiddenCharMatch[0]}" is forbidden.`,

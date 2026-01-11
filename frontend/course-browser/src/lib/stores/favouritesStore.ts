@@ -112,20 +112,16 @@ function createFavouritesStore() {
      * Update notes for a favourite
      */
     async updateNotes(courseId: string, notes: string | null) {
-      try {
-        const updated = await FavouritesService.updateFavouriteNotes(courseId, notes);
-        
-        update(state => ({
-          ...state,
-          favourites: state.favourites.map(f =>
-            f.courseId === courseId ? updated : f
-          ),
-        }));
-        
-        return updated;
-      } catch (err) {
-        throw err;
-      }
+      const updated = await FavouritesService.updateFavouriteNotes(courseId, notes);
+      
+      update(state => ({
+        ...state,
+        favourites: state.favourites.map(f =>
+          f.courseId === courseId ? updated : f
+        ),
+      }));
+      
+      return updated;
     },
 
     /**

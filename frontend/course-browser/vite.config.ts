@@ -12,6 +12,9 @@ export default defineConfig(({ mode }) => ({
     svelte(),
     ViteYaml()
   ],
+  test: {
+    environment: 'jsdom',
+  },
   server: mode === 'development' ? {
     https: {
       key: fs.readFileSync(keyPath),
