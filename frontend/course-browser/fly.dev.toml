@@ -17,6 +17,7 @@ primary_region = 'arn'
 [[statics]]
   guest_path = "/app/dist"
   url_prefix = "/"
+  index_path = "index.html"
   [statics.headers]
     "Cache-Control" = "public, max-age=0, must-revalidate"
 
