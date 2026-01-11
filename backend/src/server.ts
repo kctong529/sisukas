@@ -12,7 +12,7 @@ import favouritesRoutes from './routes/favourites';
 import { extractSession } from './middleware/auth';
 import { exchangeCodes } from './db/schema';
 import { db } from './db';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,27 +37,23 @@ app.use(
 );
 
 app.use(express.json());
-app.all('/api/auth/{*any}', toNodeHandler(auth));
 
 app.get("/api/auth/magic-link/verify", async (req, res) => {
-  // Ensure token and callbackURL are strings
-  const token = Array.isArray(req.query.token) ? req.query.token[0] : req.query.token;
-  const callbackURL = Array.isArray(req.query.callbackURL) ? req.query.callbackURL[0] : req.query.callbackURL;
-
+  const token = req.query.token as string;
   if (!token) return res.redirect(`${process.env.FRONTEND_URL}/auth/error`);
 
   try {
-    // Verify the magic link — this creates a session cookie
-    const result = await auth.api.magicLinkVerify({
-      query: { token: token as string },
+    // Call verify with asResponse to get the cookies Better-Auth generates
+    const authRes = await auth.api.magicLinkVerify({
+      query: { token },
       headers: req.headers as any,
+      asResponse: true 
     });
 
-    if (!result?.user) {
-      return res.redirect(`${process.env.FRONTEND_URL}/auth/error`);
-    }
+    const result = await authRes.json();
+    if (!result?.user) return res.redirect(`${process.env.FRONTEND_URL}/auth/error`);
 
-    // Create a short-lived exchange code for frontend to finalize session
+    // Create the short-lived exchange code
     const code = crypto.randomUUID();
     await db.insert(exchangeCodes).values({
       code,
@@ -66,7 +62,6 @@ app.get("/api/auth/magic-link/verify", async (req, res) => {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
 
-    // Redirect frontend to callback page with code
     return res.redirect(`${process.env.FRONTEND_URL}/auth/callback?code=${code}`);
   } catch (err) {
     console.error("Magic link verification failed:", err);
@@ -74,34 +69,58 @@ app.get("/api/auth/magic-link/verify", async (req, res) => {
   }
 });
 
-app.post("/api/auth/exchange-code", express.json(), async (req, res) => {
+app.post("/api/auth/exchange-code", async (req, res) => {
   const { code } = req.body;
-
   if (!code) return res.status(400).json({ error: "No code provided" });
 
-  const rows = await db.select().from(exchangeCodes).where(eq(exchangeCodes.code, code)).execute();
-
-  if (!rows.length) return res.status(400).json({ error: "Invalid or expired code" });
-
-  const userId = rows[0].userId;
-  const email = rows[0].email; // if your schema doesn’t have email, use auth db lookup
-
   try {
-    // Sign in via better-auth — this sets the session cookie
-    await auth.api.signInMagicLink({
-      body: { email },  // email must exist in your auth DB
-      headers: req.headers as any,
+    const [record] = await db.select()
+      .from(exchangeCodes)
+      .where(eq(exchangeCodes.code, code));
+
+    if (!record || record.expiresAt < new Date()) {
+      return res.status(400).json({ error: "Invalid or expired code" });
+    }
+
+    const context = await auth.$context;
+
+    // 1. Create the session in DB
+    const session = await context.internalAdapter.createSession(
+      record.userId, 
+      false, 
+      {
+        ipAddress: req.ip || "",
+        userAgent: req.headers["user-agent"] || "",
+      }
+    );
+
+    // 2. Extract cookie configuration from Better-Auth context
+    // In Better-Auth, authCookies holds the configuration for all cookies
+    const sessionCookieConfig = context.authCookies.sessionToken;
+    const cookieName = sessionCookieConfig.name;
+    const cookieOptions = sessionCookieConfig.options;
+
+    // 3. Set the cookie via Express
+    res.cookie(cookieName, session.token, {
+      ...cookieOptions,
+      expires: session.expiresAt, // Ensure the cookie matches the DB expiry
+      // Explicitly override these just in case your config is being tricky
+      secure: true,
+      sameSite: 'none',
+      httpOnly: true,
     });
 
-    // Optionally delete the code so it can't be reused
-    await db.delete(exchangeCodes).where(eq(exchangeCodes.code, code)).execute();
+    // 4. Cleanup
+    await db.delete(exchangeCodes).where(eq(exchangeCodes.code, code));
 
-    res.json({ ok: true });
+    return res.json({ status: "ok" });
   } catch (err) {
-    console.error('Error signing in:', err);
-    res.status(500).json({ error: 'Failed to sign in' });
+    console.error('Exchange error:', err);
+    res.status(500).json({ error: 'Failed to finalize session' });
   }
 });
+
+app.all('/api/auth/{*any}', toNodeHandler(auth));
 
 // Routes
 app.get('/', (req: Request, res: Response) => {
