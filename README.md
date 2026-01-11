@@ -25,9 +25,9 @@ More importantly, SISU offers very limited support for *planning*. Courses are p
 
 Sisukas focuses on two core areas: fast, structured course discovery and early-stage planning.
 
-Discovery is powered by a browser-cached course database. Once loaded, searching and filtering thousands of courses happens instantly without network requests. The filtering system is intentionally expressive. Users can combine multiple conditions, use Boolean logic, constrain time ranges, and build complex queries. These filters can be saved and shared via short URLs.
+**Discovery** is powered by a browser-cached course database. Once loaded, searching and filtering thousands of courses happens instantly without network requests. The filtering system is intentionally expressive. Users can combine multiple conditions, use Boolean logic, constrain time ranges, and build complex queries. These filters can be saved and shared via short URLs.
 
-Early planning features are just beginning to take shape. Authenticated users can bookmark courses as favorites, forming the foundation for semester planning features currently under development. The application also tracks course instances (specific offerings in a given semester), which is essential for meaningful planning.
+**Early planning** features are just beginning to take shape. Authenticated users can bookmark courses as favorites, forming the foundation for semester planning features currently under development. The application also tracks course instances (specific offerings in a given semester), which is essential for meaningful planning.
 
 > [!TIP]
 > From a technical perspective, Sisukas is built with production-style practices. It uses CI/CD pipelines, maintains separate development and production environments, and is deployed across Fly.io, Google Cloud Run, and Supabase. While this infrastructure exceeds what a hobby project strictly needs, it reflects the goal of experimenting with real-world system design.
