@@ -22,7 +22,9 @@ export const auth = betterAuth({
     "https://localhost:5173",
     "https://sisukas-test.fly.dev",
     "https://sisukas.eu",
-    "https://api.sisukas.eu"
+    "https://test.sisukas.eu",
+    "https://api.sisukas.eu",
+    "https://api.test.sisukas.eu"
   ],
 
   emailAndPassword: {
@@ -31,16 +33,15 @@ export const auth = betterAuth({
 
   plugins: [
     magicLink({
-      sendMagicLink: async ({ email, token, url }, req) => {
+      sendMagicLink: async ({ email, token }) => {
+        const url = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
+
         const { data, error } = await resend.emails.send({
           from: "Sisukas <auth@sisukas.eu>",
           to: [email],
           subject: "Sign in to Sisukas",
-          html: `
-            <p>Click the link below to sign in:</p>
-            <a href="${url}">Verify Email & Sign In</a>
-            <p>This link will expire in 1 hour.</p>
-          `,
+          html: `<p>Click below to sign in:</p>
+                <a href="${url}">Verify and Sign In</a>`
         });
 
         if (error) {
@@ -54,7 +55,8 @@ export const auth = betterAuth({
   advanced: {
     defaultCookieAttributes: {
       secure: true,
-      sameSite: 'none'
+      sameSite: 'none',
+      httpOnly: true,
     }
   }
 });
