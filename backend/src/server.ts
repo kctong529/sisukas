@@ -10,9 +10,6 @@ import { auth } from './lib/auth';
 import usersRoutes from './routes/users';
 import favouritesRoutes from './routes/favourites';
 import { extractSession } from './middleware/auth';
-import { exchangeCodes } from './db/schema';
-import { db } from './db';
-import { eq } from 'drizzle-orm';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

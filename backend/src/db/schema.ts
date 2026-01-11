@@ -114,10 +114,3 @@ export const feedback = pgTable('feedback', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
-
-export const exchangeCodes = pgTable("exchange_codes", {
-  code: text("code").primaryKey(),
-  userId: text("user_id").notNull(),
-  email: text("email").notNull(),
-  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-});
