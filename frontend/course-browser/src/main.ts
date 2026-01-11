@@ -1,8 +1,12 @@
 import { mount } from 'svelte'
 import App from './App.svelte'
+import AuthCallback from './pages/AuthCallback.svelte'
 
-const app = mount(App, {
-  target: document.getElementById('app')!,
-})
+const path = window.location.pathname;
+const target = document.getElementById("app")!;
 
-export default app
+if (path === "/auth/callback") {
+  mount(AuthCallback, { target });
+} else {
+  mount(App, { target });
+}
