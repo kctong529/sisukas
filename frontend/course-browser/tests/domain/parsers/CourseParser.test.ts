@@ -11,7 +11,7 @@ vi.mock('../../../src/domain/models/Course', () => {
   return { Course: MockCourse };
 });
 
-vi.mock('../../../src/domain/value-objects/Prerequisites', () => {
+vi.mock('../../../src/domain/valueObjects/Prerequisites', () => {
   const MockPrerequisites = vi.fn(function (this: any, localized: any) {
     this.localized = localized;
   });
@@ -19,32 +19,40 @@ vi.mock('../../../src/domain/value-objects/Prerequisites', () => {
 });
 
 import { Course } from '../../../src/domain/models/Course';
-import { Prerequisites } from '../../../src/domain/value-objects/Prerequisites';
-import type { NumericRange } from '../../../src/domain/value-objects/NumericRange';
-import type { CourseCode, StudyLevel, Language, RawCourseFormat } from '../../../src/domain/value-objects/CourseTypes';
+import { Prerequisites } from '../../../src/domain/valueObjects/Prerequisites';
 
 // Define a consistent, valid raw course object for use in tests,
 // populated with actual data from a representative flat sample (CS-A1120)
 const mockValidRawCourse: RawCourse = {
   id: 'aalto-CUR-206094-3121874',
-  code: 'CS-A1120' as CourseCode,
+  courseUnitId: 'aalto-CU-1150973072-20240801',
+  code: 'CS-A1120',
   name: { en: 'Programming 2, Lecture', fi: 'Ohjelmointi 2, Luento-opetus', sv: 'Programmering 2, Föreläsning' },
-  description: undefined, // Description is often optional/missing
   startDate: '2026-02-23',
   endDate: '2026-05-29',
   enrolmentStartDate: '2026-01-26',
   enrolmentEndDate: '2026-03-02',
-  credits: { min: 5, max: 5 } as NumericRange,
-  level: 'basic-studies' as StudyLevel, // Corrected from 'Bachelor' to a valid type
-  prerequisites: {
-    fi: "Suositellut esitiedot: CS-A1110 Ohjelmointi 1",
-    sv: "Rekommenderade förkunskapar: CS-A1110 Programmering 1",
-    en: "Recommended prerequisites: CS-A1110 Programming 1"
+  credits: { min: 5, max: 5 },
+  summary: {
+    prerequisites: {
+      en: "Recommended prerequisites: CS-A1110 Programming 1",
+      fi: "Suositellut esitiedot: CS-A1110 Ohjelmointi 1",
+      sv: "Rekommenderade förkunskaper: CS-A1110 Programmering 1"
+    },
+    level: {
+      fi: "basic-studies",
+      sv: "basic-studies",
+      en: "basic-studies"
+    }
   },
-  organization: 'Department of Computer Science',
+  organizationName: {
+    fi: "Tietotekniikan laitos",
+    sv: "Institutionen för datateknik",
+    en: "Department of Computer Science"
+  },
   teachers: ['Johan Lukas Ahrenberg', 'Sanna Helena Suoranta'],
-  languages: ['en'] as Language[],
-  type: 'teaching-participation-lectures' as RawCourseFormat,
+  languageOfInstructionCodes: ['en'],
+  type: 'teaching-participation-lectures',
   tags: ['programming', 'core'],
   lastUpdated: '2024-10-01T10:00:00.000Z',
 };
@@ -81,21 +89,24 @@ describe('parseRawCourse', () => {
 
     // Check Value Object wrapping (Prerequisites)
     expect(Prerequisites).toHaveBeenCalledTimes(1);
-    expect((Prerequisites as unknown as Mock).mock.calls[0][0]).toBe(rawData.prerequisites);
+    expect((Prerequisites as unknown as Mock).mock.calls[0][0]).toEqual(rawData.summary.prerequisites);
   });
 
   it('should handle string prerequisites correctly (mapping to en: string)', () => {
     const rawData: RawCourse = {
       ...mockValidRawCourse,
       id: 'STRING_PREREQ',
-      prerequisites: 'Basic math skills required (string)',
+      summary: {
+        ...mockValidRawCourse.summary,
+        prerequisites: 'Basic math skills required (string)',
+      },
     };
 
     parseRawCourse(rawData);
     expect(Prerequisites).toHaveBeenCalledTimes(1);
 
     // Check that the string prerequisite was wrapped in LocalizedString format before being passed to Prerequisites constructor
-    expect((Prerequisites as unknown as Mock).mock.calls[0][0]).toEqual({ en: rawData.prerequisites });
+    expect((Prerequisites as unknown as Mock).mock.calls[0][0]).toEqual({ en: rawData.summary.prerequisites });
   });
 
   it('should handle LocalizedString prerequisites correctly', () => {
@@ -103,29 +114,33 @@ describe('parseRawCourse', () => {
     const rawData: RawCourse = {
       ...mockValidRawCourse,
       id: 'LOCALIZED_PREREQ',
-      prerequisites: localizedPrereq,
+      summary: {
+        ...mockValidRawCourse.summary,
+        prerequisites: localizedPrereq,
+      },
     };
 
     parseRawCourse(rawData);
 
     expect(Prerequisites).toHaveBeenCalledTimes(1);
-    expect((Prerequisites as unknown as Mock).mock.calls[0][0]).toBe(localizedPrereq);
+    expect((Prerequisites as unknown as Mock).mock.calls[0][0]).toEqual(localizedPrereq);
   });
 
   it('should handle missing optional fields (description, tags, prerequisites)', () => {
     const rawData: RawCourse = {
       ...mockValidRawCourse,
       id: 'MISSING_FIELDS',
-      description: undefined,
+      summary: {
+        ...mockValidRawCourse.summary,
+        prerequisites: undefined,
+      },
       tags: undefined,
-      prerequisites: undefined,
     };
 
     parseRawCourse(rawData);
 
     const courseParams = (Course as unknown as Mock).mock.calls[0][0];
 
-    expect(courseParams.description).toBeUndefined();
     expect(courseParams.tags).toBeUndefined();
     expect(courseParams.prerequisites).toBeUndefined();
     expect(Prerequisites).not.toHaveBeenCalled();
