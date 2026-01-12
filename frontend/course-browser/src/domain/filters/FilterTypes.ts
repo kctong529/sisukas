@@ -9,7 +9,7 @@ export interface FilterConfig {
   id: number;
   blueprintKey: string;
   relation: string;
-  value: any;
+  value: unknown;
   booleanOp: 'AND' | 'OR';
 }
 

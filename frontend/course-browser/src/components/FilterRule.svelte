@@ -5,8 +5,18 @@
   import { BLUEPRINT_ORDER } from '../domain/filters/config/BlueprintOrder';
   import { DefaultValueInitializer } from '../domain/filters/helpers/DefaultValueInitializer';
   import type { FilterConfig } from '../domain/filters/FilterTypes';
+  import type { BaseRuleBlueprint } from '../domain/filters/blueprints/BaseRuleBlueprint';
   
-  export let blueprints: any;
+  interface BlueprintLike extends BaseRuleBlueprint {
+    validRelations: readonly string[];
+    defaultRelation: string;
+    validValues?: string[];
+    valueLabels?: Record<string, string>;
+    availableSets?: string[];
+    getSetLabel?: (id: string) => string;
+  }
+
+  export let blueprints: Record<string, BlueprintLike>;
   export let config: FilterConfig;
   export let showBooleanOp: boolean = false;
   export let isActive: boolean = false;
@@ -62,15 +72,15 @@
       <option value="OR">{booleanOrText}</option>
     </select>
   {/if}
-  
+
   <select class="filter-field" bind:value={config.blueprintKey} on:change={handleFieldChange}>
-    {#each blueprintKeys as key}
+    {#each blueprintKeys as key (key)}
       <option value={key}>{blueprints[key].label}</option>
     {/each}
   </select>
   
   <select class="filter-relation" bind:value={config.relation} on:change={() => dispatch('change')}>
-    {#each relations as relation}
+    {#each relations as relation (relation)}
       <option value={relation}>{formatRelationLabel(relation)}</option>
     {/each}
   </select>
@@ -116,7 +126,7 @@
       {:else if blueprint?.builderType === 'categorical'}
         {#if blueprint.validValues && blueprint.validValues.length > 0}
           <select class="filter-value" bind:value={config.value} on:change={() => dispatch('change')}>
-            {#each blueprint.validValues as val}
+            {#each blueprint.validValues as val (val)}
               <option value={val}>{blueprint.valueLabels?.[val] || val}</option>
             {/each}
           </select>
@@ -132,8 +142,8 @@
         {/if}
       {:else if blueprint?.builderType === 'membership'}
         <select class="filter-value" bind:value={config.value} on:change={() => dispatch('change')}>
-          {#each blueprint.availableSets as id}
-            <option value={id}>{blueprint.getSetLabel(id)}</option>
+          {#each blueprint.availableSets || [] as id (id)}
+            <option value={id}>{blueprint.getSetLabel?.(id) || id}</option>
           {/each}
         </select>
       {/if}

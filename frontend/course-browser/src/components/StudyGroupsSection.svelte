@@ -1,16 +1,10 @@
 <!-- src/components/StudyGroupsSection.svelte -->
 <script lang="ts">
+  import { SvelteMap } from 'svelte/reactivity';
   import type { Course } from '../domain/models/Course';
 
   export let course: Course;
   export let expandAll: boolean = false;
-
-  let studyGroups: any[] = [];
-  let loading = true;
-  let expanded = false;
-
-  // Sync expansion state with parent
-  $: expanded = expandAll;
 
   interface StudyGroup {
     group_id: string;
@@ -18,6 +12,13 @@
     type: string;
     study_events: Array<{ start: string; end: string }>;
   }
+
+  let studyGroups: StudyGroup[] = [];
+  let loading = true;
+  let expanded = false;
+
+  // Sync expansion state with parent
+  $: expanded = expandAll;
 
   async function fetchStudyGroups(): Promise<StudyGroup[]> {
     try {
@@ -38,7 +39,7 @@
   function aggregateStudyEvents(events: Array<{ start: string; end: string }>): string {
     if (events.length === 0) return 'No events';
     
-    const timeSlotMap = new Map<string, Set<string>>();
+    const timeSlotMap = new SvelteMap<string, Set<string>>();
     
     events.forEach(event => {
       const startDate = new Date(event.start);

@@ -1,9 +1,7 @@
 // src/domain/filters/blueprints/PeriodRuleBlueprint.ts
-import type { Course } from '../../models/Course';
 import type { AcademicPeriod } from '../../models/AcademicPeriod';
 import { PeriodFilterRule, type PeriodRelation } from '../rules/PeriodFilterRule';
 import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
-import { readonly } from 'svelte/store';
 
 export class PeriodRuleBlueprint implements BaseRuleBlueprint {
   readonly builderType = 'period' as const;

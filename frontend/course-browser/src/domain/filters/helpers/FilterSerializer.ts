@@ -4,6 +4,11 @@ import type { BaseRuleBlueprint } from '../blueprints/BaseRuleBlueprint';
 
 type BlueprintMap = Record<string, BaseRuleBlueprint>;
 
+export interface SerializedDateRange {
+  start: string;
+  end: string;
+}
+
 export interface SerializedFilterRule {
   field: string;
   relation: string;
@@ -45,7 +50,7 @@ export class FilterSerializer {
     let currentGroup: SerializedFilterRule[] = [];
 
     filterConfigs.forEach((config, index) => {
-      const valueStr = this.valueToString(config.value);
+      const valueStr = this.valueToString(config.value as SerializableValue);
 
       const rule: SerializedFilterRule = {
         field: config.blueprintKey,

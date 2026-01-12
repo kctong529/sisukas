@@ -1,11 +1,14 @@
 // src/domain/filters/builder/MembershipRuleBuilder.ts
 import type { MembershipRuleBlueprint } from "../blueprints/MembershipRuleBlueprintRegistry";
-import type { MembershipRelation } from "../rules/MembershipFilterRule";
+import type { MembershipFilterRule, MembershipRelation } from "../rules/MembershipFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
 
-export class MembershipRuleBuilder<TKey, TEntity> 
-  implements FilterRuleBuilder<MembershipRuleBlueprint<TKey, TEntity>> {
-  
+type MembershipBuilder<TKey, TEntity> = FilterRuleBuilder<
+  MembershipRuleBlueprint<TKey, TEntity>,
+  MembershipFilterRule<TKey, TEntity>
+>;
+
+export class MembershipRuleBuilder<TKey, TEntity> implements MembershipBuilder<TKey, TEntity> {
   relation: MembershipRelation | null = null;
   identifier: string | null = null;
 

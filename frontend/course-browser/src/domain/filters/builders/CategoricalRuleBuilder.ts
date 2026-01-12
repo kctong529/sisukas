@@ -1,9 +1,14 @@
 // src/domain/filters/builder/CategoricalRuleBuilder.ts
 import type { CategoricalRuleBlueprint } from "../blueprints/CategoricalRuleBlueprintRegistry";
-import type { CategoricalRelation } from "../rules/CategoricalFilterRule";
+import type { CategoricalFilterRule, CategoricalRelation } from "../rules/CategoricalFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
 
-export class CategoricalRuleBuilder<T extends string, TEntity> implements FilterRuleBuilder<CategoricalRuleBlueprint<T, TEntity>> {
+type CategoricalBuilder<T extends string, TEntity> = FilterRuleBuilder<
+  CategoricalRuleBlueprint<T, TEntity>,
+  CategoricalFilterRule<T, TEntity>
+>;
+
+export class CategoricalRuleBuilder<T extends string, TEntity> implements CategoricalBuilder<T, TEntity> {
   relation: CategoricalRelation | null = null;
   value: T | T[] | null = null;
 

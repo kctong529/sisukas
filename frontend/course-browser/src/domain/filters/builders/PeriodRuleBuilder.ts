@@ -1,9 +1,9 @@
 // src/domain/filters/builder/PeriodRuleBuilder.ts
 import type { PeriodRuleBlueprint } from '../blueprints/PeriodRuleBlueprint';
-import type { PeriodRelation } from '../rules/PeriodFilterRule';
+import type { PeriodFilterRule, PeriodRelation } from '../rules/PeriodFilterRule';
 import type { FilterRuleBuilder } from './FilterRuleBuilder';
 
-export class PeriodRuleBuilder implements FilterRuleBuilder<PeriodRuleBlueprint> {
+export class PeriodRuleBuilder implements FilterRuleBuilder<PeriodRuleBlueprint, PeriodFilterRule> {
   readonly builderType = 'period' as const;
   
   private relation: PeriodRelation | null = null;

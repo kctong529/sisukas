@@ -8,6 +8,8 @@ export default [
   js.configs.recommended,
   ...ts.configs.recommended,
   ...svelte.configs['flat/recommended'],
+
+  // Browser (Svelte)
   {
     files: ['**/*.svelte'],
     languageOptions: {
@@ -18,6 +20,15 @@ export default [
       globals: globals.browser,
     },
   },
+
+  // Node.js scripts (CLI / tooling)
+  {
+    files: ['**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+
   {
     ignores: ['dist/', 'node_modules/', '.svelte-kit/'],
   },

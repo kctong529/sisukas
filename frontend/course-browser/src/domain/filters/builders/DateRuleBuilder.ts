@@ -1,10 +1,10 @@
 // src/domain/filters/builder/DateRuleBuilder.ts
 import type { DateRange } from "../../valueObjects/DateRange";
 import type { DateRuleBlueprint } from "../blueprints/DateRuleBlueprintRegistry";
-import type { DateRelation } from "../rules/DateFilterRule";
+import type { DateFilterRule, DateRelation } from "../rules/DateFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
 
-export class DateRuleBuilder implements FilterRuleBuilder<DateRuleBlueprint> {
+export class DateRuleBuilder implements FilterRuleBuilder<DateRuleBlueprint, DateFilterRule> {
   relation: DateRelation | null = null;
   value: Date | DateRange | null = null;
 

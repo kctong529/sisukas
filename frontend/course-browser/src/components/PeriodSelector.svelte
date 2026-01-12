@@ -57,8 +57,7 @@
     updateSelectionRange(index);
   }
   
-  function handleMouseUp(event: MouseEvent) {
-    event.stopPropagation();
+  function handleMouseUp() {
     endSelection();
   }
   
@@ -81,15 +80,15 @@
     }
   }
   
-  function handleTouchEnd(event: TouchEvent) {
+  function handleTouchEnd() {
     endSelection();
   }
 
-  function handleFocus(_: FocusEvent) {
+  function handleFocus() {
     // intentionally empty
   }
 
-  function handleBlur(_: FocusEvent) {
+  function handleBlur() {
     endSelection();
   }
 
@@ -115,10 +114,10 @@
 
 {#if visible}
   <div id="periods-container">
-    {#each yearEntries as [year, yearPeriods], yearIndex}
+    {#each yearEntries as [year, yearPeriods] (year)}
       <div class="year">
         <span id="year">{year}</span>
-        {#each yearPeriods as period, periodIndex}
+        {#each yearPeriods as period (period.id)}
           {@const globalIndex = periods.findIndex(p => p.id === period.id)}
           <div
             class="period"

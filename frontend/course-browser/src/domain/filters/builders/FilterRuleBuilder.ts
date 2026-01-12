@@ -1,8 +1,9 @@
 // src/domain/filters/builder/FilterRuleBuilder.ts
-export interface FilterRuleBuilder<T extends { createRule: any }> {
-  readonly blueprint: T;
+
+export interface FilterRuleBuilder<TBlueprint, TRule = unknown> {
+  readonly blueprint: TBlueprint;
 
   isComplete(): boolean;
 
-  build(): ReturnType<T["createRule"]>;
+  build(): TRule;
 }

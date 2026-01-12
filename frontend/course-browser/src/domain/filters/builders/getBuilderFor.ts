@@ -60,8 +60,8 @@ export function getBuilderFor(
     | NumericRangeRuleBlueprint
     | DateRuleBlueprint
     | DateRangeRuleBlueprint
-    | CategoricalRuleBlueprint<any, any>
-    | MembershipRuleBlueprint<any, any>
+    | CategoricalRuleBlueprint<string, unknown>
+    | MembershipRuleBlueprint<unknown, unknown>
     | PeriodRuleBlueprint
 ) {
   switch (blueprint.builderType) {

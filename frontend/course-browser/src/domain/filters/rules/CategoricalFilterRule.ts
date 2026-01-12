@@ -140,7 +140,7 @@ export class CategoricalFilterRule<T extends string, TEntity> implements FilterR
       type: 'categorical',
       field: this.config.fieldName,
       relation: this.config.relation,
-      value: this.config.value,
+      ...(this.config.value !== undefined && { value: this.config.value }),
     };
   }
 }

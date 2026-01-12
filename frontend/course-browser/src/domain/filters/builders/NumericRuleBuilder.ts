@@ -1,10 +1,10 @@
 // src/domain/filters/builder/NumericRuleBuilder.ts
 import type { NumericRange } from "../../valueObjects/NumericRange";
 import type { NumericRuleBlueprint } from "../blueprints/NumericRuleBlueprintRegistry";
-import type { NumericRelation } from "../rules/NumericFilterRule";
+import type { NumericFilterRule, NumericRelation } from "../rules/NumericFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
 
-export class NumericRuleBuilder implements FilterRuleBuilder<NumericRuleBlueprint> {
+export class NumericRuleBuilder implements FilterRuleBuilder<NumericRuleBlueprint, NumericFilterRule> {
   relation: NumericRelation | null = null;
   value: number | NumericRange | null = null;
 

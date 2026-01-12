@@ -1,5 +1,9 @@
 // src/domain/filters/helpers/DefaultValueInitializer.ts
 
+import { BaseRuleBlueprint } from '../blueprints/BaseRuleBlueprint';
+
+type DefaultValue = string | { start: string; end: string };
+
 /**
  * Utility class for initializing default values for filter fields based on blueprint type
  */
@@ -10,14 +14,14 @@ export class DefaultValueInitializer {
    * @param blueprint - The blueprint defining the field type
    * @returns Default value appropriate for the blueprint type
    */
-  static getDefaultValue(blueprint: any): any {
+  static getDefaultValue(blueprint: BaseRuleBlueprint): DefaultValue {
     switch (blueprint.builderType) {
       case 'dateRange':
         return this.getDateRangeDefault(blueprint);
       case 'date':
         return this.getTodayString();
       case 'membership':
-        return blueprint.availableSets[0] || '';
+        return this.getMembershipDefault(blueprint);
       case 'categorical':
         return this.getCategoricalDefault(blueprint);
       case 'numeric':
@@ -39,10 +43,10 @@ export class DefaultValueInitializer {
   /**
    * Get default value for date range fields
    */
-  private static getDateRangeDefault(blueprint: any): any {
+  private static getDateRangeDefault(blueprint: BaseRuleBlueprint): DefaultValue {
     const todayString = this.getTodayString();
 
-    if (blueprint.defaultRelation === 'containsDate') {
+    if ('defaultRelation' in blueprint && blueprint.defaultRelation === 'containsDate') {
       // Single date for containsDate - default to today
       return todayString;
     }
@@ -55,12 +59,26 @@ export class DefaultValueInitializer {
   }
 
   /**
+   * Get default value for membership fields
+   */
+  private static getMembershipDefault(blueprint: BaseRuleBlueprint): string {
+    if ('availableSets' in blueprint && blueprint.availableSets) {
+      const availableSets = blueprint.availableSets as string[];
+      return availableSets[0] || '';
+    }
+    return '';
+  }
+
+  /**
    * Get default value for categorical fields
    */
-  private static getCategoricalDefault(blueprint: any): any {
+  private static getCategoricalDefault(blueprint: BaseRuleBlueprint): DefaultValue {
     // If there are predefined valid values, use the first one
-    if (blueprint.validValues && blueprint.validValues.length > 0) {
-      return blueprint.validValues[0];
+    if ('validValues' in blueprint && blueprint.validValues) {
+      const validValues = blueprint.validValues as string[];
+      if (validValues.length > 0) {
+        return validValues[0];
+      }
     }
     // Otherwise empty string (for open-ended categorical like teachers, tags)
     return '';
