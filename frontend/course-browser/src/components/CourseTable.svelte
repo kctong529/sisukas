@@ -1,4 +1,4 @@
-<!-- src/components/CourseTable.svelte - With Pagination -->
+<!-- src/components/CourseTable.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { useSession } from '../lib/authClient';
@@ -21,7 +21,7 @@
   $: isNarrowScreen = windowWidth < 380;
 
   // Calculate paginated courses
-  $: sortedCourses = sortCourses(courses);
+  $: sortedCourses = sortCourses(courses, sortColumn, sortDirection);
   $: totalPages = Math.ceil(sortedCourses.length / pageSize);
   $: paginatedCourses = sortedCourses.slice(
     (currentPage - 1) * pageSize,
@@ -74,16 +74,20 @@
     // Reset to page 1 when sorting changes
     currentPage = 1;
   }
-  
-  function sortCourses(coursesToSort: Course[]): Course[] {
+
+  function sortCourses(coursesToSort: Course[], _column?: string, _direction?: number): Course[] {
     return [...coursesToSort].sort((a, b) => {
       const valueA = getSortableValue(a, sortColumn);
       const valueB = getSortableValue(b, sortColumn);
       
-      if (typeof valueA === 'string') {
+      if (typeof valueA === 'string' && typeof valueB === 'string') {
         return valueA.localeCompare(valueB) * sortDirection;
+      } else if (valueA instanceof Date && valueB instanceof Date) {
+        return (valueA.getTime() - valueB.getTime()) * sortDirection;
       } else {
-        return (valueA - valueB) * sortDirection;
+        const numA = typeof valueA === 'number' ? valueA : 0;
+        const numB = typeof valueB === 'number' ? valueB : 0;
+        return (numA - numB) * sortDirection;
       }
     });
   }
@@ -131,7 +135,7 @@
     return course.prerequisites.codePatterns.join(', ');
   }
   
-  function formatDate(date: Date, withYear: boolean=false): string {
+  function formatDate(date: Date, withYear: boolean = false): string {
     if (withYear) {
       return date.toLocaleDateString('fi-FI', { 
         day: '2-digit', 
@@ -237,34 +241,58 @@
           <span class="full-text">Credits</span>
           <span class="abbreviated-text">cr</span>
         </th>
-        <th on:click={() => handleSort('language')}>
+        <th 
+          class:sort-asc={sortColumn === 'language' && sortDirection === 1}
+          class:sort-desc={sortColumn === 'language' && sortDirection === -1}
+          on:click={() => handleSort('language')}
+        >
           <span class="full-text">Language</span>
           <span class="abbreviated-text">lang</span>
         </th>
-        <th on:click={() => handleSort('startDate')}>
+        <th 
+          class:sort-asc={sortColumn === 'startDate' && sortDirection === 1}
+          class:sort-desc={sortColumn === 'startDate' && sortDirection === -1}
+          on:click={() => handleSort('startDate')}
+        >
           <span class="full-text">Start Date</span>
           <span class="abbreviated-text">start</span>
         </th>
-        <th on:click={() => handleSort('endDate')}>
+        <th 
+          class:sort-asc={sortColumn === 'endDate' && sortDirection === 1}
+          class:sort-desc={sortColumn === 'endDate' && sortDirection === -1}
+          on:click={() => handleSort('endDate')}
+        >
           <span class="full-text">End Date</span>
           <span class="abbreviated-text">end</span>
         </th>
-        <th on:click={() => handleSort('enrollFrom')}>
+        <th 
+          class:sort-asc={sortColumn === 'enrollFrom' && sortDirection === 1}
+          class:sort-desc={sortColumn === 'enrollFrom' && sortDirection === -1}
+          on:click={() => handleSort('enrollFrom')}
+        >
           <span class="full-text">Enroll From</span>
           <span class="abbreviated-text">frm</span>
         </th>
-        <th on:click={() => handleSort('enrollTo')}>
+        <th 
+          class:sort-asc={sortColumn === 'enrollTo' && sortDirection === 1}
+          class:sort-desc={sortColumn === 'enrollTo' && sortDirection === -1}
+          on:click={() => handleSort('enrollTo')}
+        >
           <span class="full-text">Enroll To</span>
           <span class="abbreviated-text">to</span>
         </th>
-        <th on:click={() => handleSort('prerequisites')}>
+        <th 
+          class:sort-asc={sortColumn === 'prerequisites' && sortDirection === 1}
+          class:sort-desc={sortColumn === 'prerequisites' && sortDirection === -1}
+          on:click={() => handleSort('prerequisites')}
+        >
           <span class="full-text">Prerequisites</span>
           <span class="abbreviated-text">preq</span>
         </th>
       </tr>
     </thead>
     <tbody>
-      {#each paginatedCourses as course}
+      {#each paginatedCourses as course (course.id)}
         <tr>
           {#if isSignedIn}
             <td class="favourite-col">
@@ -325,7 +353,7 @@
           page = currentPage - 2 + i;
         }
         return page;
-      }) as page}
+      }) as page (page)}
         <button
           class="page-btn"
           class:active={page === currentPage}
@@ -386,7 +414,7 @@
     </button>
   </div>
 
-  {#each paginatedCourses as course}
+  {#each paginatedCourses as course (course.id)}
     <div class="course-card">
       <div class="card-header">
         {#if isSignedIn}

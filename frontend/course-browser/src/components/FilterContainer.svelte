@@ -10,8 +10,26 @@
   import type { Course } from '../domain/models/Course';
   import type { AcademicPeriod } from '../domain/models/AcademicPeriod';
   import type { FilterRule as Rule } from '../domain/filters/core/FilterRule';
+  import type { BaseRuleBlueprint } from '../domain/filters/blueprints/BaseRuleBlueprint';
+
+  interface BlueprintLike extends BaseRuleBlueprint {
+    validRelations: readonly string[];
+    defaultRelation: string;
+    validValues?: string[];
+    valueLabels?: Record<string, string>;
+    availableSets?: string[];
+    getSetLabel?: (id: string) => string;
+  }
+
+  interface FilterRuleBuilder {
+    isComplete(): boolean;
+    build(): Rule<Course>;
+    setRelation?(relation: string): void;
+    setValue?(value: unknown): void;
+    setIdentifier?(identifier: string): void;
+  }
   
-  export let blueprints: any;
+  export let blueprints: Record<string, BlueprintLike>;
   export let filterRules: FilterRuleGroups = [];
   export let periods: AcademicPeriod[] = [];
   
@@ -128,17 +146,38 @@
         console.warn(`Invalid relation "${relation}" for blueprint "${blueprintKey}"`);
         return null;
       }
-      const builder = getBuilderFor(blueprint);
-      (builder as any).setRelation(relation);
+
+      let builder: FilterRuleBuilder;
+      
+      switch (blueprint.builderType) {
+        case 'text':
+        case 'numeric':
+        case 'numericRange':
+        case 'date':
+        case 'dateRange':
+        case 'categorical':
+        case 'membership':
+        case 'period':
+          builder = getBuilderFor(blueprint as never) as FilterRuleBuilder;
+          break;
+        default: {
+          const _exhaustive: never = blueprint.builderType;
+          throw new Error(`Unknown blueprint type: ${_exhaustive}`);
+        }
+      }
+      
+      if (builder.setRelation) {
+        builder.setRelation(relation);
+      }
       
       // Parse the value using ValueParser
       const parsedValue = ValueParser.parse(blueprint, relation, value);
 
       if (parsedValue !== undefined) {
-        if ('setValue' in builder) {
-          (builder as any).setValue(parsedValue);
-        } else if ('setIdentifier' in builder) {
-          (builder as any).setIdentifier(parsedValue);
+        if (builder.setValue) {
+          builder.setValue(parsedValue);
+        } else if (builder.setIdentifier) {
+          builder.setIdentifier(parsedValue as string);
         }
       }
       

@@ -17,8 +17,6 @@
   let hasLoadedForUser = false;
   let expandAllStudyGroups = false;
 
-
-
   onMount(async () => {
     if (isSignedIn && !hasLoadedForUser) {
       await favouritesStore.load();
@@ -126,73 +124,6 @@
       month: '2-digit',
       year: 'numeric'
     }) + ` at ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
-  }
-
-  // Study groups interface
-  interface StudyGroup {
-    group_id: string;
-    name: string;
-    type: string;
-    study_events: Array<{ start: string; end: string }>;
-  }
-
-  // Fetch study groups for a course
-  async function fetchStudyGroups(course: Course): Promise<StudyGroup[]> {
-    try {
-      const url = new URL('https://sisu-wrapper-api-test.sisukas.eu/study-groups');
-      url.searchParams.append('course_unit_id', course.unitId);
-      url.searchParams.append('course_offering_id', course.id);
-
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        return [];
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('Error fetching study groups:', error);
-      return [];
-    }
-  }
-
-  // Aggregate study events into recurring patterns
-  function aggregateStudyEvents(events: Array<{ start: string; end: string }>): string {
-    if (events.length === 0) return 'No scheduled events';
-    
-    const timeSlotMap = new Map<string, Set<string>>();
-    
-    events.forEach(event => {
-      const startDate = new Date(event.start);
-      const endDate = new Date(event.end);
-      
-      const startTime = startDate.toLocaleTimeString('en-FI', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      });
-      
-      const endTime = endDate.toLocaleTimeString('en-FI', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      });
-      
-      const dayOfWeek = startDate.toLocaleDateString('en-US', { weekday: 'short' });
-      const timeSlot = `${startTime} - ${endTime}`;
-      
-      if (!timeSlotMap.has(timeSlot)) {
-        timeSlotMap.set(timeSlot, new Set());
-      }
-      timeSlotMap.get(timeSlot)!.add(dayOfWeek);
-    });
-    
-    const patterns: string[] = [];
-    timeSlotMap.forEach((days, timeSlot) => {
-      const daysList = Array.from(days).join(' + ');
-      patterns.push(`${daysList} ${timeSlot}`);
-    });
-    
-    return patterns.length === 1 ? patterns[0] : patterns.join(' | ');
   }
 </script>
 
