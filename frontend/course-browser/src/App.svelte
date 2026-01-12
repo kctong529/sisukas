@@ -20,7 +20,7 @@
   import { NotificationService } from './infrastructure/services/NotificationService';
   import type { Course } from './domain/models/Course';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
-  import type { FilterRuleGroups, FilterConfig } from './domain/filters/FilterTypes';
+  import type { FilterRuleGroups } from './domain/filters/FilterTypes';
   import AuthDebugPanel from './components/AuthDebugPanel.svelte';
   import { courseStore } from './lib/stores/courseStore';
   
@@ -28,18 +28,17 @@
   let isSignedIn = false;
   let userName = '';
 
-  let RuleBlueprints: any = null;
+  let RuleBlueprints: ReturnType<typeof createRuleBlueprints> | null = null;
   let courses: Course[] = [];
   let filteredCourses: Course[] = [];
   let periods: AcademicPeriod[] = [];
   let filterRules: FilterRuleGroups = [];
   let showUnique = false;
-  let filterContainerRef: any;
+  let filterContainerRef: FilterContainer | undefined;
   let pendingFilterLoad: string | null = null;
   
   // Loading states
   let loading = true;
-  let loadError: string | null = null;
 
   const session = useSession();
   let showAuthModal = false;
@@ -89,7 +88,6 @@
       await loadFiltersFromUrl();
       
     } catch (error) {
-      loadError = `Failed to load data: ${error instanceof Error ? error.message : 'Unknown error'}`;
       console.error("Error loading data:", error);
     } finally {
       loading = false;
@@ -107,7 +105,7 @@
     }
 
     const data = await FiltersApiService.loadFilters(hashId);
-    if (!data) {
+    if (!data || !RuleBlueprints) {
       return;
     }
 
@@ -175,6 +173,7 @@
       }, 1000);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save filters';
+      NotificationService.error(message);
     }
   }
   
@@ -187,7 +186,7 @@
     input.onchange = async (event: Event) => {
       const target = event.target as HTMLInputElement;
       const file = target.files?.[0];
-      if (!file) return;
+      if (!file || !RuleBlueprints) return;
 
       try {
         const text = await file.text();
@@ -200,7 +199,7 @@
         }
         
         NotificationService.success('Filters loaded from file');
-      } catch (error) {
+      } catch {
         NotificationService.error('Failed to parse filter file');
       }
     };
@@ -251,10 +250,10 @@
       <div style="text-align: center; padding: 2rem;">
         <p>Loading course data...</p>
       </div>
-    {:else}
+    {:else if RuleBlueprints}
       <FilterContainer 
         bind:this={filterContainerRef}
-        blueprints={RuleBlueprints} 
+        blueprints={RuleBlueprints as Record<string, unknown>} 
         bind:filterRules 
         {periods}
         on:search={handleSearch}
@@ -269,6 +268,10 @@
       />
       
       <CourseTable courses={filteredCourses} />
+    {:else}
+      <div style="text-align: center; padding: 2rem;">
+        <p>Failed to load filter blueprints. Please refresh the page.</p>
+      </div>
     {/if}
   </div>
 

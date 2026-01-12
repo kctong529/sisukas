@@ -75,24 +75,24 @@
     currentPage = 1;
   }
 
-  function sortCourses(coursesToSort: Course[], _column?: string, _direction?: number): Course[] {
+  function sortCourses(coursesToSort: Course[], column: string, direction: number): Course[] {
     return [...coursesToSort].sort((a, b) => {
-      const valueA = getSortableValue(a, sortColumn);
-      const valueB = getSortableValue(b, sortColumn);
+      const valueA = getSortableValue(a, column);
+      const valueB = getSortableValue(b, column);
       
       if (typeof valueA === 'string' && typeof valueB === 'string') {
-        return valueA.localeCompare(valueB) * sortDirection;
+        return valueA.localeCompare(valueB) * direction;
       } else if (valueA instanceof Date && valueB instanceof Date) {
-        return (valueA.getTime() - valueB.getTime()) * sortDirection;
+        return (valueA.getTime() - valueB.getTime()) * direction;
       } else {
         const numA = typeof valueA === 'number' ? valueA : 0;
         const numB = typeof valueB === 'number' ? valueB : 0;
-        return (numA - numB) * sortDirection;
+        return (numA - numB) * direction;
       }
     });
   }
   
-  function getSortableValue(course: Course, column: string): any {
+  function getSortableValue(course: Course, column: string): string | number | Date {
     switch (column) {
       case 'courseCode':
         return course.code.value.toLowerCase();
