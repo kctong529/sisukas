@@ -1,4 +1,4 @@
-// src/domain/filters/categories/MembershipFilterRule.ts
+// src/domain/filters/rules/MembershipFilterRule.ts
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 
 export type MembershipRelation = 

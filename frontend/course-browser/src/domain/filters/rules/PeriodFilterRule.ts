@@ -1,4 +1,4 @@
-// src/domain/filters/categories/PeriodFilterRule.ts
+// src/domain/filters/rules/PeriodFilterRule.ts
 import type { Course } from '../../models/Course';
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 import type { AcademicPeriod } from '../../models/AcademicPeriod';
@@ -53,10 +53,13 @@ export class PeriodFilterRule implements FilterRule<Course> {
         return this.periodRanges.every(periodRange =>
           isCompletelyAfter(courseRange, periodRange)
         );
-      case 'equals':
-        const periods = this.periodRanges.sort();
-        return containsDate(periods[0], courseRange.start)
-          && containsDate(periods[periods.length-1], courseRange.end);
+      case 'equals': {
+        const periods = [...this.periodRanges].sort();
+        return (
+          containsDate(periods[0], courseRange.start) &&
+          containsDate(periods[periods.length - 1], courseRange.end)
+        );
+      }
       default:
         throw new Error(`Unknown date range relation: ${this.config.relation}`);
     }

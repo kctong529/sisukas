@@ -1,4 +1,4 @@
-// src/domain/value-objects/CourseCode.ts
+// src/domain/valueObjects/CourseCode.ts
 
 /**
  * CourseCode Value Object

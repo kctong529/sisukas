@@ -1,4 +1,4 @@
-// src/domain/filters/categories/TextFilterRule.ts
+// src/domain/filters/rules/TextFilterRule.ts
 import type { Course } from '../../models/Course';
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 

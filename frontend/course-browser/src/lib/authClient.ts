@@ -1,4 +1,4 @@
-// src/lib/auth-client.ts
+// src/lib/authClient.ts
 import { createAuthClient } from "better-auth/svelte";
 import { magicLinkClient } from "better-auth/client/plugins";
 

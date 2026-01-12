@@ -1,4 +1,4 @@
-// src/domain/value-objects/Prerequisites.ts
+// src/domain/valueObjects/Prerequisites.ts
 import type { LocalizedString } from './LocalizedString';
 import type { CourseCode } from './CourseCode';
 

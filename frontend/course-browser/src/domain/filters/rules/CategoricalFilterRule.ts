@@ -1,4 +1,4 @@
-// src/domain/filters/categories/CategoricalFilterRule.ts
+// src/domain/filters/rules/CategoricalFilterRule.ts
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 import * as ArrayComp from '../../valueObjects/ArrayComparison';
 

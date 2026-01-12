@@ -1,3 +1,4 @@
+// src/domain/filters/builder/TextRuleBuilder.ts
 import type { TextRuleBlueprint } from "../blueprints/TextRuleBlueprintRegistry";
 import type { TextRelation } from "../rules/TextFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";

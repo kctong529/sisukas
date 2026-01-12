@@ -1,4 +1,4 @@
-// src/domain/value-objects/ArrayComparison.ts
+// src/domain/valueObjects/ArrayComparison.ts
 
 /**
  * Generic array comparison utilities for categorical values.

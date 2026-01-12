@@ -1,4 +1,4 @@
-// src/domain/value-objects/NumericRange.ts
+// src/domain/valueObjects/NumericRange.ts
 export interface NumericRange {
   min: number;
   max?: number;

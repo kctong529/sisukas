@@ -1,4 +1,4 @@
-// src/domain/value-objects/DateRange.ts
+// src/domain/valueObjects/DateRange.ts
 export interface DateRange {
   start: Date;
   end: Date;

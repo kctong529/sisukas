@@ -1,4 +1,25 @@
-// src/domain/filters/utils/ValueParser.ts
+// src/domain/filters/helpers/ValueParser.ts
+import type { BaseRuleBlueprint } from '../blueprints/BaseRuleBlueprint';
+
+type BuilderType = BaseRuleBlueprint['builderType'];
+
+interface ParsableBlueprint {
+  builderType: BuilderType;
+  availableSets?: readonly string[];
+}
+
+interface FilterBlueprint {
+  builderType: BuilderType;
+  availableSets?: string[];
+}
+
+type ParsedValue =
+  | string
+  | number
+  | Date
+  | { start: Date; end: Date }
+  | string[]
+  | undefined;
 
 /**
  * Utility class for parsing filter values from UI inputs into domain types
@@ -12,7 +33,11 @@ export class ValueParser {
    * @param valueStr - The raw value from the UI
    * @returns Parsed value or undefined if invalid/incomplete
    */
-  static parse(blueprint: any, relation: string, valueStr: any): any {
+  static parse(
+    blueprint: FilterBlueprint,
+    relation: string,
+    value: unknown
+  ): ParsedValue {
     // Relations that don't need a value
     if (relation === 'isEmpty' || relation === 'isNotEmpty') {
       return undefined;
@@ -20,104 +45,133 @@ export class ValueParser {
     
     switch (blueprint.builderType) {
       case 'dateRange':
-        return this.parseDateRange(relation, valueStr);
+        return this.parseDateRange(relation, value);
       case 'date':
-        return this.parseDate(valueStr);
+        return this.parseDate(value);
       case 'numeric':
       case 'numericRange':
-        return this.parseNumeric(valueStr);
+        return this.parseNumeric(value);
       case 'membership':
-        return this.parseMembership(valueStr, blueprint);
+        return this.parseMembership(value, blueprint);
       case 'categorical':
-        return this.parseCategorical(relation, valueStr);
+        return this.parseCategorical(relation, value);
       case 'text':
       default:
-        return this.parseText(valueStr);
+        return this.parseText(value);
     }
   }
 
   /**
    * Parse date range value (either single date or range)
    */
-  private static parseDateRange(relation: string, valueStr: any): any {
+  private static parseDateRange(
+    relation: string,
+    value: unknown
+  ): Date | { start: Date; end: Date } | undefined {
     if (relation === 'containsDate') {
-      if (!valueStr || valueStr === '') return undefined;
-      const date = new Date(valueStr);
+      if (typeof value !== 'string' || value === '') return undefined;
+      const date = new Date(value);
       return isNaN(date.getTime()) ? undefined : date;
     }
-    
-    // Date range for other relations
-    if (!valueStr || !valueStr.start || !valueStr.end) {
+
+    if (
+      typeof value !== 'object' ||
+      value === null ||
+      !('start' in value) ||
+      !('end' in value)
+    ) {
       return undefined;
     }
-    
-    const start = new Date(valueStr.start);
-    const end = new Date(valueStr.end);
-    
-    // Return undefined if either date is invalid
+
+    const start = new Date((value as any).start);
+    const end = new Date((value as any).end);
+
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return undefined;
     }
-    
+
     return { start, end };
   }
 
   /**
    * Parse single date value
    */
-  private static parseDate(valueStr: any): Date | undefined {
-    if (!valueStr || valueStr === '') return undefined;
-    const date = new Date(valueStr);
+  private static parseDate(value: unknown): Date | undefined {
+    if (typeof value !== 'string' || value === '') return undefined;
+    const date = new Date(value);
     return isNaN(date.getTime()) ? undefined : date;
   }
 
   /**
    * Parse numeric value
    */
-  private static parseNumeric(valueStr: any): number | undefined {
-    if (valueStr === '' || valueStr === null || valueStr === undefined) {
+  private static parseNumeric(value: unknown): number | undefined {
+    if (value === '' || value === null || value === undefined) {
       return undefined;
     }
-    const num = typeof valueStr === 'number' ? valueStr : parseInt(valueStr);
+
+    const num =
+      typeof value === 'number'
+        ? value
+        : typeof value === 'string'
+        ? parseInt(value, 10)
+        : NaN;
+
     return isNaN(num) ? undefined : num;
   }
 
   /**
    * Parse membership identifier (validates against available sets)
    */
-  private static parseMembership(valueStr: any, blueprint: any): string | undefined {
-    if (!valueStr || valueStr === '') return undefined;
-    
-    // Validate identifier is in available sets
-    if (!blueprint.availableSets.includes(valueStr)) {
-      console.warn(`Invalid membership identifier: ${valueStr}`);
+  private static parseMembership(
+    value: unknown,
+    blueprint: FilterBlueprint
+  ): string | undefined {
+    if (typeof value !== 'string' || value === '') return undefined;
+
+    if (!blueprint.availableSets?.includes(value)) {
+      console.warn(`Invalid membership identifier: ${value}`);
       return undefined;
     }
-    
-    return valueStr;
+
+    return value;
   }
 
   /**
    * Parse categorical value (handles multi-value relations)
    */
-  private static parseCategorical(relation: string, valueStr: any): any {
-    const multiValueRelations = ['isOneOf', 'isNotOneOf', 'includesAny', 'includesAll'];
-    
+  private static parseCategorical(
+    relation: string,
+    value: unknown
+  ): string | string[] | undefined {
+    const multiValueRelations = [
+      'isOneOf',
+      'isNotOneOf',
+      'includesAny',
+      'includesAll',
+    ];
+
     if (multiValueRelations.includes(relation)) {
-      if (typeof valueStr === 'string') {
-        const values = valueStr.split(',').map(v => v.trim()).filter(v => v);
+      if (typeof value === 'string') {
+        const values = value
+          .split(',')
+          .map(v => v.trim())
+          .filter(Boolean);
         return values.length > 0 ? values : undefined;
       }
-      return Array.isArray(valueStr) && valueStr.length > 0 ? valueStr : undefined;
+
+      return Array.isArray(value) && value.length > 0
+        ? value.filter(v => typeof v === 'string')
+        : undefined;
     }
-    
-    return this.parseText(valueStr);
+
+    return this.parseText(value);
   }
 
   /**
    * Parse text value (default case)
    */
-  private static parseText(valueStr: any): string | undefined {
-    return valueStr && valueStr !== '' ? valueStr : undefined;
+  private static parseText(value: unknown): string | undefined {
+    return typeof value === 'string' && value !== '' ? value : undefined;
   }
 }

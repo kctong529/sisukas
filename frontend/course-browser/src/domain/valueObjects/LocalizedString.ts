@@ -1,4 +1,4 @@
-// src/domain/value-objects/LocalizedString.ts
+// src/domain/valueObjects/LocalizedString.ts
 export interface LocalizedString {
   en: string;
   fi?: string;

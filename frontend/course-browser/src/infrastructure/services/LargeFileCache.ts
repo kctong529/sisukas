@@ -1,3 +1,5 @@
+// src/infrastructure/services/LargeFileCache.ts
+// 
 /**
  * LargeFileCache: Implements an IndexedDB-based cache for large files 
  * with a hash-driven Stale-While-Revalidate (SWR) fetching strategy.

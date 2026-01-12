@@ -1,3 +1,4 @@
+// src/domain/filters/builder/NumericRangeRuleBuilder.ts
 import type { NumericRangeRuleBlueprint } from "../blueprints/NumericRangeRuleBlueprintRegistry";
 import type { NumericRangeRelation } from "../rules/NumericRangeFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";

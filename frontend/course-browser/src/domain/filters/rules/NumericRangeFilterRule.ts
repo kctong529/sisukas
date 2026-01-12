@@ -1,4 +1,4 @@
-// src/domain/filters/categories/NumericRangeFilterRule.ts
+// src/domain/filters/rules/NumericRangeFilterRule.ts
 import type { Course } from '../../models/Course';
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 import type { NumericRange } from '../../valueObjects/NumericRange';

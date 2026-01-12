@@ -1,4 +1,4 @@
-// src/domain/filters/categories/DateRangeFilterRule.ts
+// src/domain/filters/rules/DateRangeFilterRule.ts
 import type { Course } from '../../models/Course';
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 import type { DateRange } from '../../valueObjects/DateRange';

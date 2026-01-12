@@ -1,4 +1,4 @@
-// src/domain/filters/utils/RelationLabels.ts
+// src/domain/filters/helpers/RelationLabels.ts
 
 export const RELATION_LABELS: Record<string, string> = {
   // Text relations

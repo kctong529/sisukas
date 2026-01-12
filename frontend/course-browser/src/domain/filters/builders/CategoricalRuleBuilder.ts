@@ -1,3 +1,4 @@
+// src/domain/filters/builder/CategoricalRuleBuilder.ts
 import type { CategoricalRuleBlueprint } from "../blueprints/CategoricalRuleBlueprintRegistry";
 import type { CategoricalRelation } from "../rules/CategoricalFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";

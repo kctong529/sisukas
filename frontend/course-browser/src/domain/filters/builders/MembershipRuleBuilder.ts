@@ -1,3 +1,4 @@
+// src/domain/filters/builder/MembershipRuleBuilder.ts
 import type { MembershipRuleBlueprint } from "../blueprints/MembershipRuleBlueprintRegistry";
 import type { MembershipRelation } from "../rules/MembershipFilterRule";
 import type { FilterRuleBuilder } from "./FilterRuleBuilder";
