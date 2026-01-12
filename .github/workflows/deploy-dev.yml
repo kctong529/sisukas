@@ -18,7 +18,7 @@ jobs:
       backend_url: https://api.test.sisukas.eu
       cors_origins: https://test.sisukas.eu,https://sisukas-test.fly.dev,http://localhost:5173,https://localhost:5173
       gcp_project_id: sisukas-fastapi
-      backend_cloud_run_service: sisukas-backend
+      backend_cloud_run_service: sisukas-backend-test
       filters_api_cloud_run_service: sisukas-filters-api-test
       sisu_wrapper_api_cloud_run_service: sisu-wrapper-api-test
       gcs_bucket_name: sisukas-filters-api-test
