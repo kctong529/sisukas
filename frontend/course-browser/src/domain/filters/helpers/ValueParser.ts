@@ -8,11 +8,6 @@ interface ParsableBlueprint {
   availableSets?: readonly string[];
 }
 
-interface FilterBlueprint {
-  builderType: BuilderType;
-  availableSets?: string[];
-}
-
 type ParsedValue =
   | string
   | number
@@ -20,6 +15,20 @@ type ParsedValue =
   | { start: Date; end: Date }
   | string[]
   | undefined;
+
+interface DateRangeInput {
+  start: unknown;
+  end: unknown;
+}
+
+function isDateRangeInput(value: unknown): value is DateRangeInput {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'start' in value &&
+    'end' in value
+  );
+}
 
 /**
  * Utility class for parsing filter values from UI inputs into domain types
@@ -34,7 +43,7 @@ export class ValueParser {
    * @returns Parsed value or undefined if invalid/incomplete
    */
   static parse(
-    blueprint: FilterBlueprint,
+    blueprint: ParsableBlueprint,
     relation: string,
     value: unknown
   ): ParsedValue {
@@ -74,17 +83,12 @@ export class ValueParser {
       return isNaN(date.getTime()) ? undefined : date;
     }
 
-    if (
-      typeof value !== 'object' ||
-      value === null ||
-      !('start' in value) ||
-      !('end' in value)
-    ) {
+    if (!isDateRangeInput(value)) {
       return undefined;
     }
 
-    const start = new Date((value as any).start);
-    const end = new Date((value as any).end);
+    const start = new Date(value.start as string);
+    const end = new Date(value.end as string);
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return undefined;
@@ -125,7 +129,7 @@ export class ValueParser {
    */
   private static parseMembership(
     value: unknown,
-    blueprint: FilterBlueprint
+    blueprint: ParsableBlueprint
   ): string | undefined {
     if (typeof value !== 'string' || value === '') return undefined;
 

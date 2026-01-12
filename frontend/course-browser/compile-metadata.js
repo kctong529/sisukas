@@ -42,36 +42,40 @@ function compileMetadata() {
     console.log('Compiling metadata from YAML files...\n');
     
     const metadata = {};
-    let totalSize = 0;
+    let totalOriginalSize = 0;
 
-    // Load each YAML file and add to metadata object
+    // Load each YAML file and calculate size
     for (const { path, key } of FILES_TO_COMBINE) {
         console.log(`Loading ${key}.yaml...`);
         const data = loadYamlFile(path);
         metadata[key] = data;
-        
+
         const size = JSON.stringify(data).length;
-        totalSize += size;
+        totalOriginalSize += size;
         console.log(`   - Loaded ${key}: ${(size / 1024).toFixed(2)} KB`);
     }
 
-    // Write combined metadata to JSON file
-    const jsonOutput = JSON.stringify(metadata, null, 2);
-    writeFileSync(OUTPUT_FILE, jsonOutput, 'utf8');
-    
-    const outputSize = jsonOutput.length;
+    // Write pretty JSON to disk
+    const prettyJson = JSON.stringify(metadata, null, 2);
+    writeFileSync(OUTPUT_FILE, prettyJson, 'utf8');
+
+    // Minified JSON for stats
+    const minifiedJson = JSON.stringify(metadata);
+    const outputSize = minifiedJson.length;
+
+    const overhead = outputSize - totalOriginalSize;
+    const compressionRatio = ((1 - outputSize / totalOriginalSize) * 100).toFixed(1);
+
     console.log(`\nSuccessfully compiled metadata.json`);
-    console.log(`   Total size: ${(outputSize / 1024).toFixed(2)} KB`);
+    console.log(`   Total size (pretty): ${(prettyJson.length / 1024).toFixed(2)} KB`);
     console.log(`   Location: ${OUTPUT_FILE}`);
-    
-    // Show compression stats
-    const overhead = outputSize - totalSize;
-    const compressionRatio = ((1 - (outputSize / (totalSize + (FILES_TO_COMBINE.length * 200)))) * 100).toFixed(1);
-    
-    console.log(`\nNetwork savings:`);
-    console.log(`   Before: 4 requests (~${((totalSize + 800) / 1024).toFixed(2)} KB + 4 RTTs)`);
-    console.log(`   After: 1 request (~${(outputSize / 1024).toFixed(2)} KB + 1 RTT)`);
-    console.log(`   Estimated time saved on Fast 4G (174ms RTT): ~${(3 * 174).toFixed(0)}ms`);
+
+    console.log(`\nNetwork savings (approx.):`);
+    console.log(`   Original size: ${(totalOriginalSize / 1024).toFixed(2)} KB across ${FILES_TO_COMBINE.length} requests`);
+    console.log(`   Minified JSON: ${(outputSize / 1024).toFixed(2)} KB in 1 request`);
+    console.log(`   Overhead from combining: ${(overhead / 1024).toFixed(2)} KB`);
+    console.log(`   Compression ratio: ${compressionRatio}%`);
+    console.log(`   Estimated time saved on Fast 4G (174ms RTT per request): ~${((FILES_TO_COMBINE.length - 1) * 174).toFixed(0)}ms`);
 }
 
 // Run the script

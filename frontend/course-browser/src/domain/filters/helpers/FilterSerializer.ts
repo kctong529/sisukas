@@ -1,5 +1,8 @@
 // src/domain/filters/helpers/FilterSerializer.ts
 import type { FilterConfig } from '../FilterTypes';
+import type { BaseRuleBlueprint } from '../blueprints/BaseRuleBlueprint';
+
+type BlueprintMap = Record<string, BaseRuleBlueprint>;
 
 export interface SerializedFilterRule {
   field: string;
@@ -15,6 +18,15 @@ export interface SerializedFilterGroup {
 export interface SerializedFilters {
   groups: SerializedFilterGroup[];
 }
+
+type SerializableValue =
+  | string
+  | number
+  | Date
+  | { start: Date | string; end: Date | string }
+  | readonly string[]
+  | undefined
+  | null;
 
 /**
  * Utility for serializing and deserializing filter configurations
@@ -70,7 +82,7 @@ export class FilterSerializer {
   /**
    * Convert API JSON format back to FilterConfig array
    */
-  static fromJSON(data: SerializedFilters, blueprints: any): FilterConfig[] {
+  static fromJSON(data: SerializedFilters, blueprints: BlueprintMap): FilterConfig[] {
     const configs: FilterConfig[] = [];
     let nextId = 0;
     let isFirstRule = true;
@@ -99,7 +111,7 @@ export class FilterSerializer {
           id: nextId++,
           blueprintKey: rule.field,
           relation: rule.relation,
-          value: rule.value,
+          value: parsedValue,
           booleanOp
         });
 
@@ -113,7 +125,7 @@ export class FilterSerializer {
   /**
    * Convert any value to string for API
    */
-  private static valueToString(value: any): string {
+  private static valueToString(value: SerializableValue): string {
     if (value === null || value === undefined) {
       return '';
     }
@@ -146,7 +158,8 @@ export class FilterSerializer {
   /**
    * Parse string value back to appropriate type based on blueprint
    */
-  private static stringToValue(valueStr: string, blueprint: any): any {
+  private static stringToValue(valueStr: string, blueprint: BaseRuleBlueprint
+  ): string | number | { start: string; end: string } {
     if (!valueStr) {
       return '';
     }
@@ -165,10 +178,11 @@ export class FilterSerializer {
         return valueStr;
 
       case 'numeric':
-      case 'numericRange':
+      case 'numericRange': {
         // Try to parse as number, fall back to string
-        const num = parseInt(valueStr);
+        const num = parseInt(valueStr, 10);
         return isNaN(num) ? valueStr : num;
+      }
 
       case 'period':
         // Period selections are comma-separated
