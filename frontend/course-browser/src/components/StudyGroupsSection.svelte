@@ -3,6 +3,8 @@
   import { SvelteMap } from 'svelte/reactivity';
   import type { Course } from '../domain/models/Course';
 
+  const WRAPPER_API_URL = import.meta.env.VITE_WRAPPER_API;
+
   export let course: Course;
   export let expandAll: boolean = false;
 
@@ -22,7 +24,7 @@
 
   async function fetchStudyGroups(): Promise<StudyGroup[]> {
     try {
-      const url = new URL('https://sisu-wrapper-api-test.sisukas.eu/study-groups');
+      const url = new URL(`${WRAPPER_API_URL}/study-groups`);
       url.searchParams.append('course_unit_id', course.unitId);
       url.searchParams.append('course_offering_id', course.id);
 

@@ -61,6 +61,18 @@ jobs:
       backend_url: ${{ inputs.backend_url }}
     secrets: inherit
 
+  deploy_backend:
+    uses: ./.github/workflows/_deploy-backend.yml
+    with:
+      environment: ${{ inputs.environment }}
+      gcp_project_id: ${{ inputs.gcp_project_id }}
+      region: ${{ inputs.region }}
+      backend_cloud_run_service: ${{ inputs.backend_cloud_run_service }}
+      cors_origins: ${{ inputs.cors_origins }}
+      frontend_url: ${{ inputs.frontend_url }}
+      backend_url: ${{ inputs.backend_url }}
+    secrets: inherit
+
   deploy_filters_api:
     uses: ./.github/workflows/_deploy-filters-api.yml
     with:
@@ -72,14 +84,12 @@ jobs:
       gcs_bucket_name: ${{ inputs.gcs_bucket_name }}
     secrets: inherit
 
-  deploy_backend:
-    uses: ./.github/workflows/_deploy-backend.yml
+  deploy_sisu_wrapper_api:
+    uses: ./.github/workflows/_deploy-sisu-wrapper-api.yml
     with:
       environment: ${{ inputs.environment }}
       gcp_project_id: ${{ inputs.gcp_project_id }}
       region: ${{ inputs.region }}
-      backend_cloud_run_service: ${{ inputs.backend_cloud_run_service }}
+      sisu_wrapper_api_cloud_run_service: ${{ inputs.sisu_wrapper_api_cloud_run_service }}
       cors_origins: ${{ inputs.cors_origins }}
-      frontend_url: ${{ inputs.frontend_url }}
-      backend_url: ${{ inputs.backend_url }}
     secrets: inherit

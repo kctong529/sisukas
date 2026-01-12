@@ -1,4 +1,4 @@
-name: Deploy Filters API to Cloud Run
+name: Deploy Sisu Wrapper API to Cloud Run
 
 on:
   workflow_call:
@@ -13,10 +13,7 @@ on:
         required: false
         type: string
         default: europe-north1
-      filters_api_cloud_run_service:
-        required: true
-        type: string
-      gcs_bucket_name:
+      sisu_wrapper_api_cloud_run_service:
         required: true
         type: string
       cors_origins:
@@ -26,7 +23,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Filters API
+    name: Deploy Sisu Wrapper API
     runs-on: 'ubuntu-latest'
 
     permissions:
@@ -51,14 +48,12 @@ jobs:
       - name: Deploy to Cloud Run
         uses: 'google-github-actions/deploy-cloudrun@33553064113a37d688aa6937bacbdc481580be17' # google-github-actions/deploy-cloudrun@v2
         with:
-          service: '${{ inputs.filters_api_cloud_run_service }}'
+          service: '${{ inputs.sisu_wrapper_api_cloud_run_service }}'
           region: '${{ inputs.region }}'
-          # NOTE: If using a different source folder, update the image name below:
-          source: './filters-api/'
+          source: './sisu-wrapper/'
           project_id: '${{ inputs.gcp_project_id }}'
           env_vars: |
             SISUKAS_ENV=${{ inputs.environment }}
-            GCS_BUCKET_NAME=${{ inputs.gcs_bucket_name }}
             CORS_ORIGINS=${{ inputs.cors_origins }}
 
       # If required, use the Cloud Run URL output in later steps
