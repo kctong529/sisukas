@@ -9,7 +9,7 @@ jobs:
   deploy:
     uses: ./.github/workflows/_deploy-template.yml
     with:
-      environment: test
+      environment: production
       vite_filters_api: https://filters-api.sisukas.eu
       vite_wrapper_api: https://sisu-wrapper-api.sisukas.eu
       vite_gcs_bucket: https://storage.googleapis.com/sisukas-core-test
