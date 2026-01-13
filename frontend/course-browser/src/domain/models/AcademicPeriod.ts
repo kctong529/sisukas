@@ -1,5 +1,5 @@
 // src/domain/models/AcademicPeriod.ts
-import type { DateRange } from '../value-objects/DateRange';
+import type { DateRange } from '../valueObjects/DateRange';
 
 export interface AcademicPeriod {
   id: string;

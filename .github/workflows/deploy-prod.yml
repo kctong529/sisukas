@@ -1,0 +1,26 @@
+name: Deploy to Prod
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/_deploy-template.yml
+    with:
+      environment: production
+      vite_filters_api: https://filters-api.sisukas.eu
+      vite_wrapper_api: https://sisu-wrapper-api.sisukas.eu
+      vite_gcs_bucket: https://storage.googleapis.com/sisukas-core-test
+      fly_io_url: https://sisukas.fly.dev
+      frontend_url: https://sisukas.eu
+      backend_url: https://api.sisukas.eu
+      cors_origins: https://sisukas.eu,https://sisukas.fly.dev,http://localhost:5173,https://localhost:5173
+      gcp_project_id: sisukas-fastapi
+      backend_cloud_run_service: sisukas-backend
+      filters_api_cloud_run_service: sisukas-filters-api
+      sisu_wrapper_api_cloud_run_service: sisu-wrapper-api
+      gcs_bucket_name: sisukas-filters-api-test
+      region: europe-north1
+    secrets: inherit

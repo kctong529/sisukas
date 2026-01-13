@@ -1,14 +1,27 @@
-// src/infrastructure/loaders/AcademicPeriods.ts
+// src/infrastructure/loaders/AcademicPeriodLoader.ts
 import type { AcademicPeriod } from '../../domain/models/AcademicPeriod';
-import type { DateRange } from '../../domain/value-objects/DateRange';
+import type { DateRange } from '../../domain/valueObjects/DateRange';
 import periodsYaml from '../../data/periods.yaml';
+
+type RawPeriodsYaml = {
+  periods: Array<{
+    year: string;
+    periods?: Array<{
+      period?: string;
+      start_date?: string;
+      end_date?: string;
+    }>;
+  }>;
+};
 
 /**
  * Transforms YAML periods data into AcademicPeriod objects
  * Validates each entry and skips malformed ones
  */
-export function loadAcademicPeriods(yamlData = periodsYaml): AcademicPeriod[] {
-  if (!yamlData || !Array.isArray(yamlData.periods)) {
+export function loadAcademicPeriods(
+  yamlData: RawPeriodsYaml = periodsYaml as RawPeriodsYaml
+): AcademicPeriod[] {
+  if (!yamlData || typeof yamlData !== 'object' || !Array.isArray(yamlData.periods)) {
     throw new Error('Invalid periods data: root must have a "periods" array');
   }
 

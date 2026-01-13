@@ -41,7 +41,7 @@ setup-sisu-wrapper:
 # --- Frontend / Node ---
 
 setup-frontend:
-	cd course-browser && \
+	cd frontend/course-browser && \
 	npm ci --ignore-scripts && \
 	cp .env.example .env || true
 
@@ -49,4 +49,4 @@ setup-frontend:
 
 clean:
 	rm -rf filters-api/.venv sisu-wrapper/.venv
-	rm -rf course-browser/node_modules
+	rm -rf frontend/course-browser/node_modules

@@ -11,17 +11,16 @@ on:
       - main
 
 env:
-  WORKING_DIR: course-browser
+  WORKING_DIR: frontend/course-browser
   NODE_VERSION: '20'
 
 jobs:
-  test:
-    name: Run Linters and Unit Tests
+  lint-and-test:
+    name: Lint, Type Check, and Test
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ${{ env.WORKING_DIR }}
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -30,18 +29,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
 
       - name: Install Dependencies
-        run: npm ci --ignore-scripts
+        run: npm ci
 
-      - name: Lint HTML
-        run: npm run htmllint
+      - name: Lint with ESLint
+        run: npm run lint
 
-      - name: Lint CSS
-        run: npm run stylelint
-
-      - name: Lint JavaScript
-        run: npm run eslint
+      - name: Type Check with TypeScript
+        run: npm run type-check
 
       - name: Run Unit Tests
         run: npm run test
+
+      - name: Build
+        run: npm run build

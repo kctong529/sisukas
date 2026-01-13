@@ -4,45 +4,93 @@
 [![PyPI](https://img.shields.io/pypi/v/sisu_wrapper?label=sisu-wrapper)](https://pypi.org/project/sisu-wrapper/)
 [![Documentation](https://img.shields.io/badge/docs-sisukas.eu-blue)](https://docs.sisukas.eu/)
 
-A lightweight, fast alternative to the official SISU system for course filtering, [right here](https://sisukas.eu/).
-
-> [!TIP]
-> **New to Sisukas?** Check out the [official documentation](https://docs.sisukas.eu/) for guides, API references, and detailed feature explanations.
-
-> [!IMPORTANT]
-> If you're a university student in the Finnish education system, you’ve likely encountered the frustrations of the SISU system. With limited filters, navigation that hides key details behind multiple clicks, and a confusing pagination system that makes it easy to lose track, finding courses can be unnecessarily tedious. Slow performance only adds to the hassle, making the whole experience more cumbersome than it needs to be. On top of that, the lack of curriculum information makes planning your studies more difficult.
-
-Sisukas offers a faster, more intuitive way to browse and filter courses:
-
-- Quick response with preloaded data, with no additional requests
-- Intuitive drag-and-drop selection across periods
-- Refined search using Boolean logic (AND, OR) for more specific results
-- Filter courses by start and end dates to focus on specific time frames
-- Predefined course lists for specific majors and minors
-- Share filter configurations via short URLs
+Sisukas is a course discovery and study planning tool for university students in the Finnish education system. It is developed as an independent side project and is actively evolving.
 
 > [!NOTE]
-> Sisukas strikes the right balance in presenting course information. It features a compact layout that displays all necessary course details at a glance, with no extra clicks. A unique toggle merges duplicate entries, showing only one per course code. The app is fully responsive, ensuring smooth performance across both desktop and mobile devices.
+> The project began as a lightweight, performance-focused alternative to the SISU course browser. Over time, it has grown into a broader exploration of how students actually browse, compare, and plan courses, especially when schedules do not fit together cleanly. Sisukas does not aim to replace SISU, but to complement it by focusing on clarity, speed, and decision-making support.
 
-> [!TIP]
-> Want to stay informed about important course details, key registration deadlines, and exam schedules? Sisukas now features a public newsletter! Check out the latest issue or subscribe [here](https://newsletter.sisukas.eu).
+The live application is available at [https://sisukas.eu](https://sisukas.eu), with documentation hosted at [https://docs.sisukas.eu](https://docs.sisukas.eu).
 
-## How It Works
 
-Sisukas is built for speed and simplicity. The frontend uses Vanilla JavaScript to deliver a lightweight, responsive experience without the overhead of heavy frameworks. Course data is fetched once from the Aalto Open API and cached locally using IndexedDB, eliminating the need for repeated network requests. This approach ensures instant filtering and searching, even with thousands of courses. The development workflow is powered by Vite for fast builds and hot module replacement, while Vitest handles unit testing to ensure reliability.
+## Motivation
 
-Behind the scenes, a serverless API backend running on Google Cloud Run manages filter sharing functionality, allowing users to save and distribute their configurations via short URLs. A GitHub Actions workflow automatically checks for course updates daily and commits changes to the repository, keeping the data fresh without manual intervention. The entire application is containerized with Docker and deployed globally via Fly.io's edge network, ensuring fast access for users regardless of their location. Work is currently underway on the `sisu-wrapper` module to aggregate study group schedules and teaching sessions, which will enable users to view all relevant events and recurring patterns directly on their dashboard.
+SISU is the official system for course information and registration, but it often makes exploration and comparison unnecessarily difficult. Finding relevant courses typically involves navigating through multiple views, filtering options are limited, and important details are buried behind repeated clicks. Performance issues add further friction, especially when browsing large course catalogs.
 
-> [!NOTE]
-> The course data (`courses.json`) was retrieved using the Aalto Open API, following the instructions at [3scale Aalto Open API Docs](https://3scale.apps.ocp4.aalto.fi/docs/swagger/open_courses_sisu). The data was obtained using the `GET /courseunitrealisations` endpoint, with the parameter: `startTimeAfter=2024-01-01`.
+More importantly, SISU offers very limited support for *planning*. Courses are presented mostly in isolation, and scheduling conflicts are treated as something to avoid entirely, rather than something students routinely work around.
 
 > [!IMPORTANT]
-> The app uses a cached version of this data with HTTP conditional requests (If-Modified-Since) to ensure fast performance while staying up-to-date. The browser will automatically fetch updates only when the data has changed on the server.
+> In practice, students frequently deal with overlapping lectures, exercises, or exams. They make trade-offs, skip sessions, watch recordings later, or prioritize one course over another. Sisukas is built around this reality instead of ignoring it.
+
+## Current State of the Project
+
+Sisukas focuses on two core areas: fast, structured course discovery and early-stage planning.
+
+**Discovery** is powered by a browser-cached course database. Once loaded, searching and filtering thousands of courses happens instantly without network requests. The filtering system is intentionally expressive. Users can combine multiple conditions, use Boolean logic, constrain time ranges, and build complex queries. These filters can be saved and shared via short URLs.
+
+**Early planning** features are just beginning to take shape. Authenticated users can bookmark courses as favorites, forming the foundation for semester planning features currently under development. The application also tracks course instances (specific offerings in a given semester), which is essential for meaningful planning.
+
+> [!TIP]
+> From a technical perspective, Sisukas is built with production-style practices. It uses CI/CD pipelines, maintains separate development and production environments, and is deployed across Fly.io, Google Cloud Run, and Supabase. While this infrastructure exceeds what a hobby project strictly needs, it reflects the goal of experimenting with real-world system design.
+
+## Direction and Ongoing Work
+
+Sisukas is gradually moving beyond course browsing toward semester planning and conflict-aware scheduling. This transition is deliberate and incremental.
+
+### The Core Insight
+
+> [!IMPORTANT]
+> Most scheduling tools treat overlapping courses as an error to prevent. Sisukas takes the opposite view: overlaps are inevitable and normal. The goal is not to eliminate them, but to surface them clearly so students can make explicit trade-offs.
+
+This starts with a key distinction: an abstract course ("MS-A0111") is useful for discovery, but real planning requires concrete instances ("MS-A0111 2025 Autumn"). Once students have instances, they need to:
+
+1. Group them into a Plan for a semester
+2. Explore combinations of study groups (lectures, exercises, exams) to find good pairings
+3. See where conflicts arise, and choose which events to prioritize
+
+### What's Being Built (Phase 1)
+
+**Plans** are collections of course instances a student is considering together. Instead of comparing courses one by one, students can say "I'm thinking about these 4 courses in Spring 2025" and work from there.
+
+**SchedulePairs** are optimized combinations of study groups for 2+ instances in a Plan. When a student picks two courses and wants to know "what's the best way to combine study groups?", the system generates all valid pairings, scores them by level of conflicts, and shows the ranked options. A good pairing might have zero conflicts; a weaker one might have 1 hour of overlap on Tuesday mornings. The student chooses based on what works for them.
+
+> [!NOTE]
+> The *LEGO View* is where this happens: students select 2+ instances from their Plan, see ranked SchedulePairs, and lock in the best option.
+
+### What's Coming Later (Phase 2)
+
+Once a student commits to a pairing, **Decision Slots** activate. These are time intervals where 2+ events overlap, requiring an explicit choice about which to attend. Rather than hiding complexity, the system makes every trade-off visible:
+
+- One event is marked primary (you attend)
+- Others are marked secondary (you skip, watch later, or negotiate)
+- The system remembers what you sacrificed, feeding into workload metrics and reflection tools
+
+> [!IMPORTANT]
+> The *Schedule View* will then answer: "What am I actually doing?" not just "What exists on my calendar?"
+
+### Current Implementation Status
+
+- Plans: Partial backend, UI coming soon
+- SchedulePairs: Service prototype in progress
+- Decision Slots: Designed but not yet implemented
+- Full calendar view: Planned but not started
+
+> [!TIP]
+> These are being built iteratively. Some features exist as prototypes or design sketches; others are fully functional. The project intentionally avoids committing to a rigid roadmap upfront, preferring small testable steps over big promises.
+
+## Technical Overview
+
+Sisukas is structured as a set of loosely coupled components rather than a single monolithic application. The frontend is intentionally lightweight and avoids heavy frameworks, prioritizing fast load times and responsive interaction. It operates as a local-first application; by caching course data in the browser, it enables instant searching and remains usable even with limited or no network connectivity.
+
+Backend functionality is split into focused services. The main API handles authentication and communication with the PostgreSQL database for user-specific data. The Filters API handles persistence and sharing of filter configurations, while the sisu-wrapper module is being developed to aggregate and normalize SISU teaching session data.
+
+Course data is fetched from the Aalto Open API and updated automatically via GitHub Actions. The client relies on aggressive caching and conditional requests to stay fast while remaining reasonably up to date.
+
+The project is containerized and deployed using modern cloud tooling. CI/CD pipelines ensure changes are tested and deployed consistently, and the overall setup emphasizes maintainability over minimalism.
 
 ## Running Locally
 
 > [!NOTE]
-> Local setup has been verified on macOS and Linux. Windows users may need WSL (Windows Subsystem for Linux). Feedback on other platforms is welcome!
+> Local setup has been tested on macOS and Linux. Windows users may need to rely on WSL (Windows Subsystem for Linux).
 
 ### Prerequisites
 
@@ -86,105 +134,17 @@ Run `make help` to see all available commands.
 > [!TIP]
 > `courses.json` is blocked when accessed directly via `file://` in the browser (due to browser security restrictions). Using the local server ensures proper loading of `courses.json`.
 
-## To-Do List
-
-### Core Functionality
-
-- [ ] Implement filtering by course descriptions. https://github.com/kctong529/sisukas/issues/4
-- [ ] Refactor the organization filter rule. https://github.com/kctong529/sisukas/issues/15
-- [ ] Design and build Must Rules UI following conceptual models.
-- [ ] Benchmark the actual performance gain of Must Rule implementation.
-- [ ] Generate timeline based on course schedules.
-- [ ] Integrate a study calendar for planning courses and tracking deadlines.
-- [ ] Extract reusable filter logic into `sisukas-core` npm package.
-
-### Frontend & UX Improvements
-
-- [x] Improve responsive design for better usability across devices. https://github.com/kctong529/sisukas/issues/2
-- [x] Enable users to save and reuse filter sets. https://github.com/kctong529/sisukas/issues/8
-- [ ] Refactor frontend to TypeScript (or migrate to Svelte).
-- [ ] Add navigation bar with login, documentation, and GitHub links.
-- [ ] Allow users to pin selected courses to the top of the list.
-- [ ] Add a comment field for student feedback.
-- [ ] Enhance accessibility for a more inclusive experience.
-- [ ] Refine the interface using Skeleton/TailwindCSS with DaisyUI components.
-
-### User Management & Collaboration
-
-- [ ] Build user authentication system with Express.js and SQL database.
-- [ ] Design and implement database schema for user profiles and preferences.
-- [ ] Implement user login/registration endpoints.
-- [ ] Build user dashboard interface for personalized course tracking.
-- [ ] Implement favorites/bookmarks API endpoints for saving courses.
-- [ ] Implement feedback submission API endpoints.
-- [ ] Add notification system for key registration deadlines and exam schedules.
-
-### Data Management & Updates
-
-- [ ] Use AWS CloudFront to cache `courses.json` and serve it from edge locations. https://github.com/kctong529/sisukas/issues/9
-- [x] Automate daily course data updates via GitHub Actions workflow.
-- [ ] Complete `sisu-wrapper` module for SISU teaching session data aggregation and normalization.
-- [ ] Implement API input validation and normalization layer.
-- [ ] Design and implement cache fetch/update lifecycle with clear cache invalidation strategy.
-- [ ] Add async/await patterns consistently across all API endpoints.
-- [ ] Add health check endpoint to filters API.
-- [ ] Evaluate balance between performance and real-time course data fetching.
-- [ ] Support importing courses from raw or loosely formatted text.
-- [ ] Enable exporting filtered results in JSON, CSV, and Excel.
-
-### Newsletter & Announcements
-
-- [x] Automate newsletter delivery via GitHub Actions.
-- [ ] Add basic email subscription management (unsubscribe, preferences, email validation).
-- [ ] Build newsletter archive viewer for past issues, ensure consistency in Markdown + HTML.
-
-### Development & Maintenance
-- [x] Refactor the project and file structure for better maintainability. https://github.com/kctong529/sisukas/issues/3
-- [x] Establish package management and code guidelines.
-- [x] Set up Vitest for unit testing frontend filtering logic.
-- [ ] Adopt MVC (Model-View-Controller) architecture pattern for backend services.
-- [ ] Implement layered architecture (presentation, business logic, data access layers).
-- [ ] Set up pytest for Python backend testing.
-- [ ] Integrate mypy for static type checking in Python codebase.
-- [ ] Integrate Black for consistent Python code formatting.
-- [ ] Define and document terminology across the system. https://github.com/kctong529/sisukas/issues/14
-- [ ] Expand test coverage for core filtering functionalities. https://github.com/kctong529/sisukas/issues/16
-- [ ] Implement comprehensive test suite for backend services.
-
 ## Contributing
 
-We welcome contributions of all kinds! Whether you want to share ideas, report issues, or improve the code, your input is valuable. Here’s how you can get involved:
+Sisukas is open to contributions, ideas, and discussion. Because the project is still evolving, there are no rigid contribution rules or fixed architecture constraints. [Discussions](https://github.com/kctong529/sisukas/discussions), [issue reports](https://github.com/kctong529/sisukas/issues), [project backlog](https://github.com/users/kctong529/projects/1), documentation improvements, and small code contributions are all welcome.
 
-### Discuss & Brainstorm
+> [!NOTE]
+> Feedback on the mental model, terminology, planning concepts, and design decisions is particularly valuable at this stage. The system is still evolving, and shaping how students think about schedules is as important as the implementation itself.
 
-- Share ideas, ask questions, or start open-ended discussions in the [Discussions forum](https://github.com/kctong529/sisukas/discussions).
+## Project Philosophy
 
-### Improve & Fix
-
-- Help improve the documentation.
-- Monitor the [issue queue](https://github.com/kctong529/sisukas/issues) and [project backlog](https://github.com/users/kctong529/projects/1).
-- Claim tasks, check priorities, and track ongoing work.
-
-### Suggest Features
-
-- If you have an idea for a new feature or enhancement, create a new issue in the [project backlog](https://github.com/users/kctong529/projects/1).
-
-### Add Your Own Curriculum
-
-- Anyone can contribute by populating the YAML file(s) with their own curriculum—it only takes a few minutes!
-- This is a simple way to expand the project and help others by sharing useful learning information.
-
-### Submitting Changes
-
-- Fork the repository, make your changes, and submit a pull request.
-- There are no strict formatting requirements for pull requests at the moment.
-
-### Show Your Support
-
-Even if you’re not contributing code, you can support the project by giving it a ⭐ on GitHub! Every star helps increase visibility and encourages more contributions.
-
-Your contributions help shape the project, and we appreciate every effort—big or small!
+Sisukas is built around a few guiding principles. Scheduling conflicts are treated as a normal part of academic life rather than an error state. The system aims to surface trade-offs clearly instead of hiding them behind rigid constraints. Optimization is used to assist users, not to replace human judgment. Above all, the project values incremental progress and conceptual clarity over premature completeness.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is released under the MIT License. See the [LICENSE](LICENSE) file for details.
