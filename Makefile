@@ -26,20 +26,12 @@ compile-requirements:
 setup-certs:
 	@echo "Setting up localhost certificates with mkcert..."
 	@if ! command -v mkcert >/dev/null 2>&1; then \
-		echo "Error: mkcert not found"; \
-		echo "Install mkcert from: https://github.com/FiloSottile/mkcert"; \
-		echo ""; \
-		echo "On macOS (with Homebrew):"; \
-		echo "  brew install mkcert"; \
-		echo ""; \
-		echo "On Linux:"; \
-		echo "  wget https://github.com/FiloSottile/mkcert/releases/download/v1.4.4/mkcert-v1.4.4-linux-amd64"; \
-		echo "  chmod +x mkcert-v1.4.4-linux-amd64"; \
-		echo "  sudo mv mkcert-v1.4.4-linux-amd64 /usr/local/bin/mkcert"; \
-		echo ""; \
-		echo "On Windows:"; \
-		echo "  choco install mkcert"; \
-		exit 1; \
+		echo "⚠️  mkcert not found (skipping - optional for development)"; \
+		echo "To generate certificates locally, install mkcert:"; \
+		echo "  macOS: brew install mkcert"; \
+		echo "  Linux: https://github.com/FiloSottile/mkcert#installation"; \
+		echo "  Windows: choco install mkcert"; \
+		exit 0; \
 	fi
 	@mkdir -p frontend/course-browser
 	@if [ ! -f frontend/course-browser/localhost.pem ] || [ ! -f frontend/course-browser/localhost-key.pem ]; then \
