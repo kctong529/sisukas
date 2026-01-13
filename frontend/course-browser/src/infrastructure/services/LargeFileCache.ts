@@ -1,19 +1,12 @@
-<<<<<<< HEAD
 // src/infrastructure/services/LargeFileCache.ts
 // 
-=======
->>>>>>> main
 /**
  * LargeFileCache: Implements an IndexedDB-based cache for large files 
  * with a hash-driven Stale-While-Revalidate (SWR) fetching strategy.
  * This class isolates the complexities of I/O (IndexedDB and fetch) 
  * from the core application logic.
  */
-<<<<<<< HEAD
 export class LargeFileCache<T = unknown> {
-=======
-export class LargeFileCache {
->>>>>>> main
   db: IDBDatabase | null = null;
 
   constructor(
@@ -53,11 +46,7 @@ export class LargeFileCache {
   }
 
   // Get cached data
-<<<<<<< HEAD
   async getCache(url: string): Promise<{ url: string, hash: string, data: T, timestamp: number, size: number } | undefined> {
-=======
-  async getCache(url: string): Promise<{ url: string, hash: string, data: any, timestamp: number, size: number } | undefined> {
->>>>>>> main
     await this.init();
 
     return new Promise((resolve, reject) => {
@@ -71,11 +60,7 @@ export class LargeFileCache {
   }
 
   // Save data to cache
-<<<<<<< HEAD
   async setCache(url: string, hash: string, data: T): Promise<void> {
-=======
-  async setCache(url: string, hash: string, data: any): Promise<void> {
->>>>>>> main
     await this.init();
 
     return new Promise((resolve, reject) => {
@@ -105,11 +90,7 @@ export class LargeFileCache {
    * @param hashUrl The URL to the hash file for cache validation.
    * @returns The data from the cache or a fresh network request.
    */
-<<<<<<< HEAD
   async fetch(dataUrl: string, hashUrl: string): Promise<T> {
-=======
-  async fetch(dataUrl: string, hashUrl: string): Promise<any> {
->>>>>>> main
     await this.init();
     const cached = await this.getCache(dataUrl);
 
@@ -129,11 +110,7 @@ export class LargeFileCache {
     return this.updateCacheIfNeeded(dataUrl, hashUrl, null);
   }
 
-<<<<<<< HEAD
   async updateCacheIfNeeded(dataUrl: string, hashUrl: string, oldHash: string | null): Promise<T> {
-=======
-  async updateCacheIfNeeded(dataUrl: string, hashUrl: string, oldHash: string | null): Promise<any> {
->>>>>>> main
     try {
       // 1. Fetch the hash file to check for updates
       const hashRes = await fetch(hashUrl);
@@ -144,27 +121,18 @@ export class LargeFileCache {
       if (oldHash === newHash) {
         console.log(`Cache up-to-date for ${dataUrl}`);
         const cached = await this.getCache(dataUrl);
-<<<<<<< HEAD
         // Return cached data or throw if missing
         if (cached?.data) {
           return cached.data;
         }
         throw new Error(`Cache missing for ${dataUrl}`);
-=======
-        // Return cached data for background update check, or null if cache was empty
-        return cached?.data ?? null;
->>>>>>> main
       }
 
       // 3. Cache is outdated or empty, fetch new data
       console.log(`Fetching updated data ${dataUrl}`);
       const dataRes = await fetch(dataUrl);
       if (!dataRes.ok) throw new Error(`Failed to fetch data: ${dataRes.status}`);
-<<<<<<< HEAD
       const data = await dataRes.json() as T;
-=======
-      const data = await dataRes.json();
->>>>>>> main
 
       const sizeMB = Math.round(JSON.stringify(data).length / 1024 / 1024);
       console.log(`Downloaded ${sizeMB}MB, hash: ${newHash}`);

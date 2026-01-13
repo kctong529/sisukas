@@ -1,5 +1,4 @@
 import { mount } from 'svelte'
-<<<<<<< HEAD
 import App from './App.svelte'
 import AuthVerify from './pages/AuthVerify.svelte'
 
@@ -11,13 +10,3 @@ if (path === "/auth/verify") {
 } else {
   mount(App, { target });
 }
-=======
-import './app.css'
-import App from './App.svelte'
-
-const app = mount(App, {
-  target: document.getElementById('app')!,
-})
-
-export default app
->>>>>>> main

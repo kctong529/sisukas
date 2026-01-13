@@ -9,7 +9,6 @@
  * Blueprints are used to construct strongly-typed filter rules via their corresponding builders.
  */
 
-<<<<<<< HEAD
 import { CodeRuleBlueprint, NameRuleBlueprint } from './TextRuleBlueprintRegistry';
 import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprintRegistry';
 import { StartDateRuleBlueprint, EndDateRuleBlueprint } from './DateRuleBlueprintRegistry';
@@ -27,23 +26,6 @@ export const StaticRuleBlueprints = {
   // Text
   code: new CodeRuleBlueprint(),
   name: new NameRuleBlueprint(),
-=======
-import { CodeRuleBlueprint, NameRuleBlueprint, OrganizationRuleBlueprint } from './TextRuleBlueprints';
-import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprints';
-import { StartDateRuleBlueprint, EndDateRuleBlueprint } from './DateRuleBlueprints';
-import { EnrollmentPeriodRuleBlueprint, CoursePeriodRuleBlueprint } from './DateRangeRuleBlueprints';
-import { LevelRuleBlueprint, FormatRuleBlueprint, LanguagesRuleBlueprint, TeachersRuleBlueprint, TagsRuleBlueprint } from './CategoricalRuleBlueprints';
-
-/**
- * Singleton instances of all available rule blueprints.
- * Use these to create rule instances.
- */
-export const RuleBlueprints = {
-  // Text
-  code: new CodeRuleBlueprint(),
-  name: new NameRuleBlueprint(),
-  organization: new OrganizationRuleBlueprint(),
->>>>>>> main
 
   // NumericRange
   credits: new CreditsRangeRuleBlueprint(),
@@ -53,12 +35,7 @@ export const RuleBlueprints = {
   endDate: new EndDateRuleBlueprint(),
   
   // DateRange
-<<<<<<< HEAD
   enrollment: new EnrollmentRuleBlueprint(),
-=======
-  enrollmentPeriod: new EnrollmentPeriodRuleBlueprint(),
-  coursePeriod: new CoursePeriodRuleBlueprint(),
->>>>>>> main
   
   // Categorical
   level: new LevelRuleBlueprint(),
@@ -68,7 +45,6 @@ export const RuleBlueprints = {
   tags: new TagsRuleBlueprint(),
 } as const;
 
-<<<<<<< HEAD
 /**
  * Configuration for creating blueprints that require external data
  */
@@ -106,10 +82,6 @@ export function createRuleBlueprints(config: BlueprintsConfig) {
 
 // Type for all blueprint keys
 export type RuleBlueprintKey = keyof ReturnType<typeof createRuleBlueprints>;
-=======
-// Type for all blueprint keys
-export type RuleBlueprintKey = keyof typeof RuleBlueprints;
->>>>>>> main
 
 export type { 
   BaseRuleBlueprint 
@@ -117,7 +89,6 @@ export type {
 
 export type { 
   TextRuleBlueprint 
-<<<<<<< HEAD
 } from './TextRuleBlueprintRegistry';
 
 export type { 
@@ -147,26 +118,3 @@ export type {
 export type { 
   PeriodRuleBlueprint 
 } from './PeriodRuleBlueprint';
-=======
-} from './TextRuleBlueprints';
-
-export type { 
-  NumericRuleBlueprint 
-} from './NumericRuleBlueprints';
-
-export type { 
-  NumericRangeRuleBlueprint 
-} from './NumericRangeRuleBlueprints';
-
-export type { 
-  DateRuleBlueprint 
-} from './DateRuleBlueprints';
-
-export type { 
-  DateRangeRuleBlueprint 
-} from './DateRangeRuleBlueprints';
-
-export type { 
-  CategoricalRuleBlueprint 
-} from './CategoricalRuleBlueprints';
->>>>>>> main

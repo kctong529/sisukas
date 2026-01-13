@@ -33,7 +33,7 @@ jobs:
           cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
 
       - name: Install Dependencies
-        run: npm ci --ignore-scripts
+        run: npm ci
 
       - name: Lint with ESLint
         run: npm run lint
