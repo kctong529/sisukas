@@ -12,15 +12,6 @@
   import type { FilterRule as Rule } from '../domain/filters/core/FilterRule';
   import type { BaseRuleBlueprint } from '../domain/filters/blueprints/BaseRuleBlueprint';
 
-  interface BlueprintLike extends BaseRuleBlueprint {
-    validRelations: readonly string[];
-    defaultRelation: string;
-    validValues?: string[];
-    valueLabels?: Record<string, string>;
-    availableSets?: string[];
-    getSetLabel?: (id: string) => string;
-  }
-
   interface FilterRuleBuilder {
     isComplete(): boolean;
     build(): Rule<Course>;
@@ -29,7 +20,7 @@
     setIdentifier?(identifier: string): void;
   }
   
-  export let blueprints: Record<string, BlueprintLike>;
+  export let blueprints: Record<string, BaseRuleBlueprint>;
   export let filterRules: FilterRuleGroups = [];
   export let periods: AcademicPeriod[] = [];
   

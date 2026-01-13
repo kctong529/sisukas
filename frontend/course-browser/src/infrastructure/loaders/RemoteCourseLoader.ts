@@ -29,7 +29,7 @@ export async function loadCoursesWithCache(): Promise<Course[]> {
     const rawData: RawCourse[] = await cache.fetch(
       COURSES_DATA_URL,
       COURSES_HASH_URL
-    );
+    ) as RawCourse[];
 
     // If fetch failed and cache was empty, rawData might be null/undefined,
     // or the cache might throw an error. Assuming it throws on critical failure.

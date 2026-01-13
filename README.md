@@ -21,6 +21,18 @@ More importantly, SISU offers very limited support for *planning*. Courses are p
 > [!IMPORTANT]
 > In practice, students frequently deal with overlapping lectures, exercises, or exams. They make trade-offs, skip sessions, watch recordings later, or prioritize one course over another. Sisukas is built around this reality instead of ignoring it.
 
+## Data Sources
+
+Sisukas combines data from two Aalto sources:
+
+**Course Catalog (Aalto Open API)** — Static course metadata, updated daily. Powers 
+search, filtering, and discovery. See [Data Pipeline](https://docs.sisukas.eu/data-pipeline/#why-both-aalto-open-api-and-sisu-api) for details.
+
+**Study Groups & Schedules (Aalto Sisu API)** — Real-time study group and schedule 
+data. Accessed via the [sisu-wrapper](https://github.com/kctong529/sisukas/tree/main/sisu-wrapper) library. Provides detailed schedules, lecture times, exercise groups, etc.
+
+These are separate data sources with different update frequencies and purposes.
+
 ## Current State of the Project
 
 Sisukas focuses on two core areas: fast, structured course discovery and early-stage planning.
@@ -30,7 +42,7 @@ Sisukas focuses on two core areas: fast, structured course discovery and early-s
 **Early planning** features are just beginning to take shape. Authenticated users can bookmark courses as favorites, forming the foundation for semester planning features currently under development. The application also tracks course instances (specific offerings in a given semester), which is essential for meaningful planning.
 
 > [!TIP]
-> From a technical perspective, Sisukas is built with production-style practices. It uses CI/CD pipelines, maintains separate development and production environments, and is deployed across Fly.io, Google Cloud Run, and Supabase. While this infrastructure exceeds what a hobby project strictly needs, it reflects the goal of experimenting with real-world system design.
+> This infrastructure supports experimentation with real-world system design rather than optimizing for minimal setup. It uses CI/CD pipelines, maintains separate development and production environments, and is deployed across Fly.io, Google Cloud Run, and Supabase.
 
 ## Direction and Ongoing Work
 

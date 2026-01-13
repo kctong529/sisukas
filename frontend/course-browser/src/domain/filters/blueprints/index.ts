@@ -77,7 +77,7 @@ export function createRuleBlueprints(config: BlueprintsConfig) {
 
     // Future blueprints:
     // department: config.departmentsMap ? new DepartmentRuleBlueprint(config.departmentsMap) : undefined,
-  } as const;
+  };
 }
 
 // Type for all blueprint keys

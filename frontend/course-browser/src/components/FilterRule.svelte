@@ -6,17 +6,8 @@
   import { DefaultValueInitializer } from '../domain/filters/helpers/DefaultValueInitializer';
   import type { FilterConfig } from '../domain/filters/FilterTypes';
   import type { BaseRuleBlueprint } from '../domain/filters/blueprints/BaseRuleBlueprint';
-  
-  interface BlueprintLike extends BaseRuleBlueprint {
-    validRelations: readonly string[];
-    defaultRelation: string;
-    validValues?: string[];
-    valueLabels?: Record<string, string>;
-    availableSets?: string[];
-    getSetLabel?: (id: string) => string;
-  }
 
-  export let blueprints: Record<string, BlueprintLike>;
+  export let blueprints: Record<string, BaseRuleBlueprint>;
   export let config: FilterConfig;
   export let showBooleanOp: boolean = false;
   export let isActive: boolean = false;
