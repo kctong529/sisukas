@@ -76,7 +76,7 @@ setup-sisu-wrapper:
 setup-backend:
 	@echo "Setting up backend..."
 	cd backend && \
-	npm ci && \
+	npm ci --ignore-scripts && \
 	cp .env.example .env || true
 	@echo "✓ backend setup complete"
 
