@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 // src/domain/parsers/CurriculumParser.ts
 import type { CurriculaMap } from '../models/Curriculum';
 import { CourseCode } from '../valueObjects/CourseCode';
+=======
+import type { CurriculaMap } from '../models/Curriculum';
+import { CourseCode } from '../value-objects/CourseCode';
+>>>>>>> main
 
 export interface RawCurriculumEntry {
   code: string;
@@ -28,12 +33,20 @@ const processCurriculumEntries = (
       continue;
     }
 
+<<<<<<< HEAD
     const validatedCourseCodes = new Set<string>();
+=======
+    const validatedCourseCodes = new Set<CourseCode>();
+>>>>>>> main
 
     for (const rawCode of entry.courses) {
       try {
         const courseCodeVo = new CourseCode(rawCode);
+<<<<<<< HEAD
         validatedCourseCodes.add(courseCodeVo.value);
+=======
+        validatedCourseCodes.add(courseCodeVo);
+>>>>>>> main
       } catch (error) {
         console.error(`Skipping invalid course code "${rawCode}" in curriculum "${entry.code}":`, error instanceof Error ? error.message : String(error));
       }
