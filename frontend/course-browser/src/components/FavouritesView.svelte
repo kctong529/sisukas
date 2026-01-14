@@ -15,7 +15,7 @@
   let editingCourseId: string | null = null;
   let editingNotes: string = '';
   let hasLoadedForUser = false;
-  let expandAllStudyGroups = false;
+  let expandedInstanceIds = new Set<string>();
 
   onMount(async () => {
     if (isSignedIn && !hasLoadedForUser) {
@@ -125,6 +125,22 @@
       year: 'numeric'
     }) + ` at ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
   }
+
+  function toggleInstance(courseId: string, instanceId: string) {
+    // If the clicked instance is already expanded → collapse it
+    if (expandedInstanceIds.has(instanceId)) {
+      expandedInstanceIds.delete(instanceId);
+    } else {
+      // Collapse all instances of this course first
+      const courses = getCoursesForId(courseId);
+      courses.forEach(c => expandedInstanceIds.delete(c.id));
+      // Then expand the clicked instance
+      expandedInstanceIds.add(instanceId);
+    }
+    
+    // Reassign to trigger reactivity
+    expandedInstanceIds = new Set(expandedInstanceIds);
+  }
 </script>
 
 <div class="favourites-container">
@@ -168,15 +184,6 @@
       </div>
       
       <div class="controls">
-        <button 
-          class="expand-all-btn"
-          on:click={() => expandAllStudyGroups = !expandAllStudyGroups}
-          title={expandAllStudyGroups ? 'Collapse all study groups' : 'Expand all study groups'}
-        >
-          <i class="bi {expandAllStudyGroups ? 'bi-chevron-up' : 'bi-chevron-down'}"></i>
-          <span>{expandAllStudyGroups ? 'Collapse' : 'Expand'} Study Groups</span>
-        </button>
-
         <div class="sort-box">
           <label for="sort">Sort by:</label>
           <select id="sort" bind:value={sortBy} on:change={() => handleSort(sortBy)}>
@@ -196,9 +203,18 @@
     <!-- Favourites list -->
     <div class="favourites-list">
       {#each sortedFavourites as favourite (favourite.courseId)}
-        {@const courses = getCoursesForId(favourite.courseId)}
+        {@const courses =
+          [...getCoursesForId(favourite.courseId)].sort(
+            (a, b) => new Date(a.courseDate.start).getTime() - new Date(b.courseDate.start).getTime()
+          )
+        }
+        
+        {@const visibleInstances = (() => {
+          const active = courses.find(c => expandedInstanceIds.has(c.id));
+          return active ? [active] : courses;
+        })()}
+
         <div class="favourite-item">
-          <!-- Item header with course code, name, and remove button -->
           <div class="item-header">
             <div class="code-and-info">
               <a 
@@ -209,12 +225,11 @@
                 <h3 class="course-code">{favourite.courseId}</h3>
               </a>
               {#if courses.length > 0}
-                <p class="course-name">{courses[0].name.en}</p>
+                <p class="course-name">{courses[0].name.en.split(",").slice(0, -1).join(",")}</p>
               {/if}
-              <div class="instance-count">
-                {#if courses.length > 1}
-                  <span class="badge-secondary">{courses.length} instances</span>
-                {/if}
+              <!-- Added date -->
+              <div class="metadata">
+                <span class="added-date">Added {formatDateTime(favourite.addedAt)}</span>
               </div>
             </div>
             <button 
@@ -229,8 +244,18 @@
 
           <!-- Course instances -->
           <div class="instances-container">
-            {#each courses as course (course.id)}
-              <div class="instance">
+            {#each visibleInstances as course (course.id)}
+              <div
+                class="instance {expandedInstanceIds.has(course.id) ? 'selected' : ''}"
+                role="button"
+                tabindex="0"
+                on:click={(e) => { 
+                  if ((e.target as HTMLElement).closest('.study-group-button') == null) {
+                    toggleInstance(favourite.courseId, course.id);
+                  }
+                }}
+                on:keydown={(e) => e.key === 'Enter' && toggleInstance(favourite.courseId, course.id)}
+              >
                 <div class="instance-top">
                   <div class="instance-dates">
                     <span class="date-range">
@@ -243,29 +268,13 @@
                     {course.format}
                   </div>
                 </div>
-
-                <div class="instance-meta">
-                  <span class="meta-item">
-                    <span class="label">Credits:</span>
-                    <span class="value">{course.credits.min}</span>
-                  </span>
-                  {#if course.teachers.length > 0}
-                    <span class="meta-item">
-                      <span class="label">Teacher:</span>
-                      <span class="value">{course.teachers[0]}</span>
-                    </span>
-                  {/if}
-                </div>
-
-                <!-- Study Groups (lazy loaded) -->
-                <StudyGroupsSection {course} expandAll={expandAllStudyGroups} />
+                {#if expandedInstanceIds.has(course.id)}
+                  <div role="presentation" on:click|stopPropagation>
+                    <StudyGroupsSection {course} />
+                  </div>
+                {/if}
               </div>
             {/each}
-          </div>
-
-          <!-- Added date -->
-          <div class="metadata">
-            <span class="added-date">Added {formatDateTime(favourite.addedAt)}</span>
           </div>
 
           <!-- Notes section -->
@@ -297,7 +306,7 @@
               <!-- Display mode -->
               <div class="display">
                 <p class:placeholder={!favourite.notes}>
-                  {favourite.notes || 'No private notes added yet...'}
+                  {favourite.notes || ''}
                 </p>
                 {#if favourite.notes}
                   <button 
@@ -347,8 +356,8 @@
   .header-section {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 1.5rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
     gap: 1rem;
     flex-wrap: wrap;
   }
@@ -371,15 +380,6 @@
     margin: 0;
   }
 
-  .badge-secondary {
-    background: #f0f0f0;
-    color: var(--text-muted);
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-
   .controls {
     display: flex;
     align-items: center;
@@ -391,33 +391,6 @@
 
   .controls label {
     white-space: nowrap;
-  }
-
-  .expand-all-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.7rem;
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    color: #000000;
-    transition: all 0.2s;
-  }
-
-  .expand-all-btn:hover {
-    background: #eeeeee;
-  }
-
-  .expand-all-btn:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
-
-  .expand-all-btn i {
-    font-size: 1.1rem;
   }
 
   select {
@@ -460,8 +433,8 @@
   /* ========== Favourites Grid ========== */
   .favourites-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(253px, 1fr));
+    gap: 0.3rem;
   }
 
   .favourite-item {
@@ -515,12 +488,6 @@
     margin-top: 0.1rem;
   }
 
-  .instance-count {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-
   .favourite-btn {
     background: transparent;
     border: none;
@@ -552,12 +519,25 @@
 
   .instance {
     background: #f9fafb;
-    padding: 0.5rem;
+    padding: 0.45rem;
     border-radius: 6px;
     border: 1px solid #f0f0f0;
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    border-radius: 4px;
+  }
+
+  .instance:hover {
+    background: rgb(205, 255, 205);
+    transform: translateY(-1px);
+  }
+
+  .instance.selected {
+    background-color: rgb(205, 255, 205);
+    border-color: var(--primary);
   }
 
   .instance-top {
@@ -583,12 +563,12 @@
   }
 
   .format-badge {
-    padding: 0.2rem 0.5rem;
+    padding: 0.2rem 0.4rem;
     border-radius: 3px;
     font-size: 0.65rem;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     white-space: nowrap;
     flex-shrink: 0;
   }
@@ -613,36 +593,12 @@
     color: #374151;
   }
 
-  .instance-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    font-size: 0.75rem;
-  }
-
-  .instance-meta .meta-item {
-    display: flex;
-    gap: 0.25rem;
-  }
-
-  .instance-meta .label {
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-
-  .instance-meta .value {
-    color: var(--text-main);
-    font-weight: 500;
-  }
-
   /* ========== Added Date ========== */
   .metadata {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-top: 0.35rem;
     font-size: 0.7rem;
     color: var(--text-muted);
   }
@@ -654,7 +610,7 @@
   /* ========== Notes Section ========== */
   .notes-section {
     background: #f1f5f9;
-    padding: 0.75rem;
+    padding: 0.6rem;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
@@ -664,8 +620,11 @@
     font-size: 0.85rem;
     line-height: 1.4;
     color: var(--text-main);
-    min-height: 2em;
-    margin-bottom: 0.4rem;
+    padding-bottom: 0.45rem;
+  }
+
+  .notes-section p:empty {
+    padding: 0;
   }
 
   .notes-section p.placeholder {
@@ -676,7 +635,6 @@
   .display {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
   }
 
   .edit-trigger {
@@ -864,29 +822,10 @@
     color: var(--danger);
   }
 
-  /* ========== Responsive ========== */
-  @media (max-width: 1024px) {
-    .favourites-list {
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    }
-  }
-
-  @media (max-width: 620px) {
+  @media (max-width: 440px) {
     .header-section {
       flex-direction: column;
       align-items: flex-start;
-    }
-
-    .controls {
-      width: 100%;
-    }
-
-    select {
-      flex: 1;
-    }
-
-    .favourites-list {
-      grid-template-columns: 1fr;
     }
   }
 </style>
