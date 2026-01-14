@@ -5,6 +5,9 @@ Provides a hierarchy of exceptions for different types of failures
 when interacting with the Aalto University Sisu API.
 """
 
+from typing import List
+
+
 class SisuAPIError(Exception):
     """Base exception for Sisu API errors"""
 

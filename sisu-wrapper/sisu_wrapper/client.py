@@ -9,7 +9,7 @@ import logging
 from typing import Any, Dict, List, Optional
 import requests
 from .exceptions import (
-    SisuHTTPError, SisuTimeoutError, SisuConnectionError, SisuNotFoundError
+    SisuAPIError, SisuBatchError, SisuHTTPError, SisuTimeoutError, SisuConnectionError, SisuNotFoundError
 )
 
 
