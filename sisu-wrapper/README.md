@@ -17,7 +17,9 @@ Both components share the same robust core, providing clean access to course uni
 ## Table of Contents
 
 - [Features](#features)
+- [Quick Start](#quick-start)
 - [Python Library](#python-library)
+- [REST API](#rest-api)
 - [Development](#development)
 - [Limitations](#limitations)
 - [Requirements](#requirements)
@@ -28,6 +30,7 @@ Both components share the same robust core, providing clean access to course uni
 ### Core Functionality
 - Fetch course units, offerings, and study groups
 - Access lecture and exercise schedules
+- Batch operations for efficient multi-course queries
 - Connection pooling for efficient API usage
 - Robust error handling
 - Modern Python with type hints
@@ -37,12 +40,54 @@ Both components share the same robust core, providing clean access to course uni
 - Clean, intuitive API
 - Context manager support
 - Comprehensive data models
+- Batch request support
 
 ### REST API
 - Fast and async with FastAPI
 - Auto-generated interactive documentation
 - Request validation with Pydantic
+- Structured error responses with proper HTTP codes
 - Easy to deploy and integrate
+
+
+## Quick Start
+
+### As a Python Library
+
+```python
+from sisu_wrapper import SisuClient, SisuService, SisuAPIError
+
+# Initialize
+client = SisuClient(timeout=15)
+service = SisuService(client)
+
+try:
+    # Fetch course data
+    offering = service.fetch_course_offering(
+        course_unit_id="aalto-OPINKOHD-1125839311-20210801",
+        offering_id="aalto-CUR-206690-3122470"
+    )
+    
+    print(f"Course: {offering.name}")
+    for group in offering.study_groups:
+        print(f"  {group.type}: {group.name}")
+        
+finally:
+    client.close()
+```
+
+### As a REST API
+
+```bash
+# Start the server
+uvicorn api.main:app --reload
+
+# Fetch study groups
+curl "http://localhost:8000/api/courses/study-groups?course_unit_id=...&course_offering_id=..."
+
+# API documentation
+open http://localhost:8000/docs
+```
 
 
 ## Python Library
@@ -109,6 +154,21 @@ for group in groups:
         print(event.start)  # "2026-02-24T12:15:00+02:00"
 ```
 
+#### Batch Operations
+
+```python
+# Fetch multiple courses efficiently
+batch_requests = [
+    ("aalto-OPINKOHD-1125839311-20210801", "aalto-CUR-206690-3122470"),
+    ("otm-e737f80e-5bc4-4a34-9524-8243d7f9f14a", "aalto-CUR-206050-3121830"),
+]
+
+results = service.fetch_study_groups_batch(batch_requests)
+
+for (unit_id, offering_id), groups in results.items():
+    print(f"{unit_id}: {len(groups)} study groups")
+```
+
 #### Context Manager (Recommended)
 
 ```python
@@ -136,6 +196,8 @@ SisuClient(base_url: str | None = None, timeout: int = 10)
 - `fetch_course_unit(course_unit_id: str) -> Dict` - Fetch course unit metadata
 - `fetch_course_realisations(assessment_item_id: str) -> List[Dict]` - Fetch course realisations
 - `fetch_study_events(study_event_ids: List[str]) -> List` - Fetch study events
+- `fetch_course_units_batch(course_unit_ids: List[str]) -> Dict` - Batch fetch course units
+- `fetch_course_realisations_batch(assessment_item_ids: List[str]) -> Dict` - Batch fetch realisations
 - `close()` - Close the session
 
 #### `SisuService`
@@ -150,6 +212,8 @@ SisuService(client: SisuClient)
 **Methods:**
 - `fetch_course_offering(course_unit_id: str, offering_id: str) -> CourseOffering` - Fetch complete course data
 - `fetch_study_groups(course_unit_id: str, offering_id: str) -> List[StudyGroup]` - Fetch only study groups
+- `fetch_course_offerings_batch(requests: List[Tuple[str, str]]) -> Dict` - Batch fetch complete offerings
+- `fetch_study_groups_batch(requests: List[Tuple[str, str]]) -> Dict` - Batch fetch study groups
 
 #### Data Models
 
@@ -188,48 +252,195 @@ class CourseOffering:
 ```
 
 
+## REST API
+
+### Running the API
+
+```bash
+# Development
+uvicorn api.main:app --reload
+
+# Production
+uvicorn api.main:app --host 0.0.0.0 --port 8000
+```
+
+### Endpoints
+
+#### Get API Metadata
+```
+GET /
+```
+
+Returns API version, environment, and available endpoints.
+
+#### Fetch Study Groups
+```
+GET /api/courses/study-groups?course_unit_id=<id>&course_offering_id=<id>
+```
+
+Fetch all study groups (lectures, exercises, etc.) for a course offering.
+
+**Parameters:**
+- `course_unit_id` (string, required) - The course unit ID
+- `course_offering_id` (string, required) - The course offering ID
+
+**Response:**
+```json
+{
+    "course_unit_id": "aalto-OPINKOHD-1125839311-20210801",
+    "course_offering_id": "aalto-CUR-206690-3122470",
+    "study_groups": [
+        {
+            "group_id": "...",
+            "name": "L01",
+            "type": "Lecture",
+            "study_events": [...]
+        }
+    ]
+}
+```
+
+#### Batch Fetch Study Groups
+```
+POST /api/courses/batch/study-groups
+```
+
+Fetch study groups for multiple course offerings in a single request.
+
+**Request Body:**
+```json
+{
+    "requests": [
+        {
+            "course_unit_id": "aalto-OPINKOHD-1125839311-20210801",
+            "course_offering_id": "aalto-CUR-206690-3122470"
+        },
+        {
+            "course_unit_id": "otm-e737f80e-5bc4-4a34-9524-8243d7f9f14a",
+            "course_offering_id": "aalto-CUR-206050-3121830"
+        }
+    ]
+}
+```
+
+**Response:**
+```json
+{
+    "results": {
+        "aalto-OPINKOHD-1125839311-20210801:aalto-CUR-206690-3122470": [...],
+        "otm-e737f80e-5bc4-4a34-9524-8243d7f9f14a:aalto-CUR-206050-3121830": [...]
+    },
+    "total_requests": 2
+}
+```
+
+#### Batch Fetch Course Offerings
+```
+POST /api/courses/batch/offerings
+```
+
+Fetch complete course offering data for multiple courses (includes all study groups and events).
+
+**Request Body:** Same format as batch study groups endpoint.
+
+**Response:**
+```json
+{
+    "results": {
+        "course_unit_id:offering_id": {
+            "course_unit_id": "...",
+            "offering_id": "...",
+            "name": "...",
+            "study_groups": [...]
+        }
+    },
+    "total_requests": 2
+}
+```
+
+### Error Responses
+
+All endpoints return consistent error responses:
+
+```json
+{
+    "detail": "Course not found"
+}
+```
+
+**HTTP Status Codes:**
+- `200` - Success
+- `404` - Course not found
+- `422` - Invalid request (validation error)
+- `500` - Server error
+- `502` - Sisu API unavailable
+- `504` - Sisu API timeout
+
+### Interactive Documentation
+
+The API includes auto-generated interactive documentation:
+
+```
+http://localhost:8000/docs  # Swagger UI
+http://localhost:8000/redoc  # ReDoc
+```
+
+Use these to explore endpoints, test requests, and view complete response schemas.
+
+
 ## Development
 
 ### Architecture Overview
 
 The library follows a layered architecture:
 
-- **`client.py`** - Low-level HTTP communication with Sisu API
-- **`service.py`** - Business logic and orchestration
-- **`models.py`** - Domain objects (dataclasses)
-- **`exceptions.py`** - Custom error types
-
-The FastAPI application (`api/`) is a thin wrapper that exposes the service layer via HTTP endpoints.
+- **`sisu_wrapper/client.py`** - Low-level HTTP communication with Sisu API
+- **`sisu_wrapper/service.py`** - Business logic and orchestration
+- **`sisu_wrapper/models.py`** - Domain objects (dataclasses)
+- **`sisu_wrapper/exceptions.py`** - Custom error types
+- **`api/routers/courses.py`** - FastAPI endpoints for course operations
+- **`api/routers/root.py`** - FastAPI root endpoint with metadata
+- **`api/main.py`** - FastAPI application setup
+- **`api/models.py`** - Shared API models
+- **`api/utils/responses.py`** - Response definitions and error handling
 
 ### Project Structure
 
 ```
 sisu-wrapper/
-├── sisu_wrapper/         # Python library (core package)
-│   ├── __init__.py       # Package exports
-│   ├── client.py         # HTTP client
-│   ├── service.py        # Business logic
-│   ├── models.py         # Data models
-│   └── exceptions.py     # Custom exceptions
-├── tests/                # Test suite
-│   └── test_client.py    # Client unit tests
-├── api/                  # FastAPI application
-│   ├── __init__.py
-│   └── main.py           # FastAPI app and routes
-├── examples/             # Usage examples
-│   └── demo.py           # Library demo
-├── pyproject.toml        # Package configuration
-└── README.md             # This file
+├── sisu_wrapper/              # Python library (core package)
+│   ├── __init__.py            # Package exports
+│   ├── client.py              # HTTP client
+│   ├── service.py             # Business logic
+│   ├── models.py              # Data models
+│   └── exceptions.py          # Custom exceptions
+├── api/                       # FastAPI application
+│   ├── core/
+│   │   └── config.py          # Configuration
+│   ├── routers/
+│   │   ├── courses.py         # Course endpoints
+│   │   └── root.py            # Root endpoint
+│   ├── utils/
+│   │   └── responses.py       # Response definitions
+│   ├── models.py              # Shared API models
+│   └── main.py                # FastAPI app
+├── tests/                     # Test suite
+│   └── test_client.py         # Client unit tests
+├── examples/                  # Usage examples
+│   └── demo.py                # Library and batch examples
+├── pyproject.toml             # Package configuration
+└── README.md                  # This file
 ```
 
 ### Code Quality
 
 - **Type hints**: Full type annotation coverage for better IDE support
-- **Documentation**: Comprehensive module and function docstrings
+- **Documentation**: Comprehensive module, function, and endpoint docstrings
 - **Error handling**: Custom exception hierarchy for granular error handling
 - **Logging**: Structured logging throughout with configurable levels
 - **Testing**: Unit tests with pytest and mock objects
 - **Standards**: Follows PEP 8 and modern Python best practices
+- **API Documentation**: Auto-generated Swagger UI with complete endpoint documentation
 
 ### Running Tests
 
@@ -255,7 +466,7 @@ pytest tests/test_client.py
 
 Course unit IDs and offering IDs can be found in `courses.json`:
 
-```
+```json
 {
     "id": "aalto-CUR-206690-3122470",
           └───────────┬────────────┘
@@ -263,14 +474,11 @@ Course unit IDs and offering IDs can be found in `courses.json`:
     "code": "MS-A0108",
     "startDate": "2026-02-23",
     "endDate": "2026-04-17",
-    ...,
     "courseUnitId": "aalto-OPINKOHD-1125839311-20210801",
                     └─────────────────┬────────────────┘
                            course_unit_id
-    ...,
     "enrolmentStartDate": "2026-01-26",
-    "enrolmentEndDate": "2026-03-02",
-    ...
+    "enrolmentEndDate": "2026-03-02"
 }
 ```
 
@@ -281,6 +489,7 @@ Course unit IDs and offering IDs can be found in `courses.json`:
 - **Recent offerings only**: The published realisations endpoint only returns upcoming or recently active offerings. Historical data requires different endpoints.
 - **Read-only**: This wrapper only supports fetching data, not modifying it.
 - **Rate limiting**: No built-in rate limiting - be respectful of the Sisu API
+- **Batch size**: Batch requests are limited to 100 items per request
 
 
 ## Requirements
@@ -291,6 +500,24 @@ Course unit IDs and offering IDs can be found in `courses.json`:
 ### Development Requirements
 
 - pytest >= 7.0
+- fastapi >= 0.100
+- uvicorn >= 0.23
+
+
+## Version History
+
+### v0.2.0
+
+- ✨ **New**: Batch request support for efficient multi-course queries
+- 🔧 **Refactor**: Router-based API architecture with professional documentation
+- 📝 **Breaking**: Endpoint URLs changed (`/api/courses/` namespace added)
+- 📚 **Improved**: Complete API documentation with Swagger UI
+
+### v0.1.0
+
+- Initial release
+- Core library functionality
+- Basic FastAPI endpoints
 
 
 ## License
