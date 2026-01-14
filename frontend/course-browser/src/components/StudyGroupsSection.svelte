@@ -36,7 +36,8 @@
       const response = await fetch(url.toString());
       if (!response.ok) return [];
 
-      return await response.json();
+      const data = await response.json();
+      return data.study_groups;
     } catch (error) {
       console.error('Error fetching study groups:', error);
       return [];
