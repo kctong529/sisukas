@@ -6,6 +6,7 @@
   import { courseStore } from '../lib/stores/courseStore';
   import StudyGroupsSection from './StudyGroupsSection.svelte';
   import type { Course } from '../domain/models/Course';
+  import { SvelteSet } from 'svelte/reactivity';
 
   const session = useSession();
   $: isSignedIn = !!$session.data?.user;
@@ -15,7 +16,7 @@
   let editingCourseId: string | null = null;
   let editingNotes: string = '';
   let hasLoadedForUser = false;
-  let expandedInstanceIds = new Set<string>();
+  let expandedInstanceIds = new SvelteSet<string>();
 
   onMount(async () => {
     if (isSignedIn && !hasLoadedForUser) {
@@ -139,7 +140,7 @@
     }
     
     // Reassign to trigger reactivity
-    expandedInstanceIds = new Set(expandedInstanceIds);
+    expandedInstanceIds = new SvelteSet(expandedInstanceIds);
   }
 </script>
 
