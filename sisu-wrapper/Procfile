@@ -1,1 +1,1 @@
-web: uv run fastapi run api/main.py
+web: fastapi run api/main.py
