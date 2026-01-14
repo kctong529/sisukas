@@ -4,19 +4,35 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sisu-wrapper"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
   { name="Ki Chun Tong", email="kichun.tong@aalto.fi" },
 ]
-description = "A lightweight wrapper for the Aalto University Sisu API"
+description = "Python library and REST API for Aalto University Sisu course data"
+readme = "README.md"
 requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["sisu", "aalto", "courses", "api"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
 dependencies = [
     "requests>=2.32.5",
 ]
-readme = "README.md"
-license = { text = "MIT" }
 
 [project.optional-dependencies]
+api = [
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "python-dotenv>=1.0.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
@@ -24,23 +40,11 @@ dev = [
 
 [project.urls]
 Homepage = "https://github.com/kctong529/sisukas"
-Repository = "https://github.com/kctong529/sisukas/sisu-wrapper"
+Repository = "https://github.com/kctong529/sisukas/tree/main/sisu-wrapper"
 Issues = "https://github.com/kctong529/sisukas/issues"
 
 [tool.bumpver]
-current_version = "0.1.0"
+current_version = "0.2.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 tag_message = "{new_version}"
-tag_scope = "default"
-pre_commit_hook = ""
-post_commit_hook = ""
-commit = true
-tag = true
-push = false
-
-[tool.bumpver.file_patterns]
-"pyproject.toml" = [
-    'current_version = "{version}"',
-]
-"sisu_wrapper/__init__.py" = ["{version}"]

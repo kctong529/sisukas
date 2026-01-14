@@ -24,7 +24,9 @@ import logging
 from .client import SisuClient
 from .service import SisuService
 from .models import StudyEvent, StudyGroup, CourseOffering
-from .exceptions import SisuAPIError
+from .exceptions import (
+    SisuAPIError, SisuHTTPError, SisuTimeoutError, 
+    SisuConnectionError, SisuNotFoundError, SisuBatchError)
 
 __version__ = "0.1.0"
 
@@ -39,4 +41,9 @@ __all__ = [
     "StudyGroup",
     "CourseOffering",
     "SisuAPIError",
+    "SisuHTTPError",
+    "SisuTimeoutError",
+    "SisuConnectionError",
+    "SisuNotFoundError",
+    "SisuBatchError",
 ]

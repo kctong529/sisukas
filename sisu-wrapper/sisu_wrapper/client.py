@@ -9,7 +9,7 @@ import logging
 from typing import Any, Dict, List, Optional
 import requests
 from .exceptions import (
-    SisuHTTPError, SisuTimeoutError, SisuConnectionError, SisuNotFoundError
+    SisuAPIError, SisuBatchError, SisuHTTPError, SisuTimeoutError, SisuConnectionError, SisuNotFoundError
 )
 
 
@@ -171,6 +171,79 @@ class SisuClient:
             params={"id": ",".join(study_event_ids)},
             timeout=timeout
         )
+
+    def fetch_course_units_batch(
+        self,
+        course_unit_ids: List[str],
+        timeout: Optional[int] = None
+    ) -> Dict[str, Dict[str, Any]]:
+        """
+        Fetch multiple course units in batch
+
+        Args:
+            course_unit_ids: List of course unit IDs to fetch
+            timeout: Request timeout in seconds
+
+        Returns:
+            Dictionary mapping course_unit_id -> course unit data
+
+        Raises:
+            SisuBatchError: If any requests fail
+        """
+        results = {}
+        errors = []
+
+        for unit_id in course_unit_ids:
+            try:
+                results[unit_id] = self.fetch_course_unit(unit_id, timeout)
+            except SisuAPIError as e:
+                errors.append((unit_id, str(e)))
+                logger.warning("Failed to fetch course unit %s: %s", unit_id, e)
+
+        if errors:
+            raise SisuBatchError(
+                f"Batch fetch failed: {len(errors)}/{len(course_unit_ids)} failed",
+                failed_requests=errors
+            )
+
+        return results
+
+    def fetch_course_realisations_batch(
+        self,
+        assessment_item_ids: List[str],
+        timeout: Optional[int] = None
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Fetch realisations for multiple assessment items in batch
+
+        Args:
+            assessment_item_ids: List of assessment item IDs
+            timeout: Request timeout in seconds
+
+        Returns:
+            Dictionary mapping assessment_item_id -> list of realisations
+
+        Raises:
+            SisuBatchError: If any requests fail
+        """
+        results = {}
+        errors = []
+
+        for item_id in assessment_item_ids:
+            try:
+                results[item_id] = self.fetch_course_realisations(item_id, timeout)
+            except SisuAPIError as e:
+                errors.append((item_id, str(e)))
+                logger.warning(
+                    "Failed to fetch realisations for %s: %s", item_id, e)
+
+        if errors:
+            raise SisuBatchError(
+                f"Batch fetch failed: {len(errors)}/{len(assessment_item_ids)} failed",
+                failed_requests=errors
+            )
+
+        return results
 
     def close(self) -> None:
         """Close the requests session if it exists"""

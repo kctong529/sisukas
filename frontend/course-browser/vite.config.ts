@@ -6,6 +6,7 @@ import path from 'path'
 
 const keyPath = path.resolve('./localhost-key.pem')
 const certPath = path.resolve('./localhost.pem')
+const hasCerts = fs.existsSync(keyPath) && fs.existsSync(certPath)
 
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -16,10 +17,12 @@ export default defineConfig(({ mode }) => ({
     environment: 'jsdom',
   },
   server: mode === 'development' ? {
-    https: {
-      key: fs.readFileSync(keyPath),
-      cert: fs.readFileSync(certPath),
-    },
+    ...(hasCerts ? {
+      https: {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath),
+      },
+    } : {}),
     port: 5173
   } : undefined
 }))

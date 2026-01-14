@@ -5,6 +5,9 @@ Provides a hierarchy of exceptions for different types of failures
 when interacting with the Aalto University Sisu API.
 """
 
+from typing import List
+
+
 class SisuAPIError(Exception):
     """Base exception for Sisu API errors"""
 
@@ -26,3 +29,10 @@ class SisuConnectionError(SisuAPIError):
 
 class SisuNotFoundError(SisuAPIError):
     """Resource not found (404)"""
+
+
+class SisuBatchError(SisuAPIError):
+    """Batch operation failed partially or completely"""
+    def __init__(self, message: str, failed_requests: List[tuple] = None):
+        super().__init__(message)
+        self.failed_requests = failed_requests or []

@@ -12,15 +12,6 @@
   import type { FilterRule as Rule } from '../domain/filters/core/FilterRule';
   import type { BaseRuleBlueprint } from '../domain/filters/blueprints/BaseRuleBlueprint';
 
-  interface BlueprintLike extends BaseRuleBlueprint {
-    validRelations: readonly string[];
-    defaultRelation: string;
-    validValues?: string[];
-    valueLabels?: Record<string, string>;
-    availableSets?: string[];
-    getSetLabel?: (id: string) => string;
-  }
-
   interface FilterRuleBuilder {
     isComplete(): boolean;
     build(): Rule<Course>;
@@ -29,7 +20,7 @@
     setIdentifier?(identifier: string): void;
   }
   
-  export let blueprints: Record<string, BlueprintLike>;
+  export let blueprints: Record<string, BaseRuleBlueprint>;
   export let filterRules: FilterRuleGroups = [];
   export let periods: AcademicPeriod[] = [];
   
@@ -101,6 +92,12 @@
   
   function removeFilterRule(id: number) {
     filterConfigs = filterConfigs.filter(f => f.id !== id);
+    // Handle period selector when the active rule is removed
+    if (activePeriodRuleId === id) {
+      // Look for another period rule to activate
+      const periodRules = filterConfigs.filter(f => blueprints[f.blueprintKey]?.builderType === 'period');
+      activePeriodRuleId = periodRules.length > 0 ? periodRules[0].id : null;
+    }
     updateFilterRules();
   }
   

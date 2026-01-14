@@ -6,7 +6,7 @@ course data into domain objects.
 """
 
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 from functools import lru_cache
 from .models import CourseOffering, StudyGroup, StudyEvent
 from .client import SisuClient
@@ -109,6 +109,80 @@ class SisuService:
             )
 
         return course_offering.study_groups
+
+    def fetch_course_offerings_batch(
+        self,
+        requests: List[Tuple[str, str]]
+    ) -> Dict[Tuple[str, str], CourseOffering | None]:
+        """
+        Fetch multiple course offerings in a single batch
+
+        Args:
+            requests: List of (course_unit_id, offering_id) tuples
+
+        Returns:
+            Dictionary mapping (course_unit_id, offering_id) -> CourseOffering
+            Failed requests map to None
+
+        Example:
+            offerings = service.fetch_course_offerings_batch([
+                ("unit-1", "offering-1"),
+                ("unit-2", "offering-2"),
+            ])
+        """
+        results = {}
+
+        for course_unit_id, offering_id in requests:
+            key = (course_unit_id, offering_id)
+            try:
+                results[key] = self.fetch_course_offering(
+                    course_unit_id, offering_id
+                )
+            except Exception as e:
+                logger.error(
+                    "Failed to fetch offering %s/%s: %s",
+                    course_unit_id, offering_id, e
+                )
+                results[key] = None
+
+        return results
+
+    def fetch_study_groups_batch(
+        self,
+        requests: List[Tuple[str, str]]
+    ) -> Dict[Tuple[str, str], List[StudyGroup]]:
+        """
+        Fetch study groups for multiple course offerings in a batch
+
+        Args:
+            requests: List of (course_unit_id, course_offering_id) tuples
+
+        Returns:
+            Dictionary mapping tuple -> list of StudyGroup objects
+            Failed requests map to empty list
+
+        Example:
+            groups = service.fetch_study_groups_batch([
+                ("unit-1", "offering-1"),
+                ("unit-2", "offering-2"),
+            ])
+        """
+        results = {}
+
+        for course_unit_id, course_offering_id in requests:
+            key = (course_unit_id, course_offering_id)
+            try:
+                results[key] = self.fetch_study_groups(
+                    course_unit_id, course_offering_id
+                )
+            except Exception as e:
+                logger.error(
+                    "Failed to fetch study groups %s/%s: %s",
+                    course_unit_id, course_offering_id, e
+                )
+                results[key] = []
+
+        return results
 
     def _parse_study_groups(self, group_set_data: Dict[str, Any]
                             ) -> List[StudyGroup]:

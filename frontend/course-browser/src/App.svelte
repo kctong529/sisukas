@@ -9,7 +9,8 @@
   import AuthModal from "./components/AuthModal.svelte";
   import FavouritesView from "./components/FavouritesView.svelte";
   import { authClient, useSession } from "./lib/authClient";
-  import { createRuleBlueprints } from './domain/filters/blueprints';
+  import { createRuleBlueprints, type RuleBlueprintKey } from './domain/filters/blueprints';
+  import type { BaseRuleBlueprint } from './domain/filters/blueprints';
   import { loadCurricula } from './infrastructure/loaders/CurriculumLoader';
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
   import { loadCoursesWithCache } from './infrastructure/loaders/RemoteCourseLoader';
@@ -28,7 +29,7 @@
   let isSignedIn = false;
   let userName = '';
 
-  let RuleBlueprints: ReturnType<typeof createRuleBlueprints> | null = null;
+  let RuleBlueprints: Record<RuleBlueprintKey, BaseRuleBlueprint> | null = null;
   let courses: Course[] = [];
   let filteredCourses: Course[] = [];
   let periods: AcademicPeriod[] = [];
@@ -253,7 +254,7 @@
     {:else if RuleBlueprints}
       <FilterContainer 
         bind:this={filterContainerRef}
-        blueprints={RuleBlueprints as Record<string, unknown>} 
+        blueprints={RuleBlueprints as Record<string, BaseRuleBlueprint>} 
         bind:filterRules 
         {periods}
         on:search={handleSearch}

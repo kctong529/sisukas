@@ -578,6 +578,13 @@
   .desktop-table:has(.favourite-col) th:nth-child(11),
   .desktop-table:has(.favourite-col) td:nth-child(11) { width: 25%; }
   
+  .favourite-btn,
+  .favourite-btn-mobile {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
   .favourite-col {
     width: 35px;
     padding: 0;

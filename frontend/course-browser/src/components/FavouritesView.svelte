@@ -6,6 +6,7 @@
   import { courseStore } from '../lib/stores/courseStore';
   import StudyGroupsSection from './StudyGroupsSection.svelte';
   import type { Course } from '../domain/models/Course';
+  import { SvelteSet } from 'svelte/reactivity';
 
   const session = useSession();
   $: isSignedIn = !!$session.data?.user;
@@ -15,7 +16,8 @@
   let editingCourseId: string | null = null;
   let editingNotes: string = '';
   let hasLoadedForUser = false;
-  let expandAllStudyGroups = false;
+  let expandedInstanceIds = new SvelteSet<string>();
+  let removeMode = false;
 
   onMount(async () => {
     if (isSignedIn && !hasLoadedForUser) {
@@ -97,15 +99,15 @@
   }
 
   async function removeFavourite(courseId: string) {
-    if (!confirm(`Remove "${courseId}" from favourites?`)) {
-      return;
-    }
-
     try {
       await favouritesStore.remove(courseId);
     } catch (err) {
       console.error('Failed to remove favourite:', err);
     }
+  }
+
+  function exitRemoveMode() {
+    removeMode = false;
   }
 
   function formatDate(date: Date | string): string {
@@ -124,6 +126,22 @@
       month: '2-digit',
       year: 'numeric'
     }) + ` at ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+
+  function toggleInstance(courseId: string, instanceId: string) {
+    // If the clicked instance is already expanded → collapse it
+    if (expandedInstanceIds.has(instanceId)) {
+      expandedInstanceIds.delete(instanceId);
+    } else {
+      // Collapse all instances of this course first
+      const courses = getCoursesForId(courseId);
+      courses.forEach(c => expandedInstanceIds.delete(c.id));
+      // Then expand the clicked instance
+      expandedInstanceIds.add(instanceId);
+    }
+    
+    // Reassign to trigger reactivity
+    expandedInstanceIds = new SvelteSet(expandedInstanceIds);
   }
 </script>
 
@@ -168,37 +186,46 @@
       </div>
       
       <div class="controls">
-        <button 
-          class="expand-all-btn"
-          on:click={() => expandAllStudyGroups = !expandAllStudyGroups}
-          title={expandAllStudyGroups ? 'Collapse all study groups' : 'Expand all study groups'}
-        >
-          <i class="bi {expandAllStudyGroups ? 'bi-chevron-up' : 'bi-chevron-down'}"></i>
-          <span>{expandAllStudyGroups ? 'Collapse' : 'Expand'} Study Groups</span>
-        </button>
-
-        <div class="sort-box">
-          <label for="sort">Sort by:</label>
-          <select id="sort" bind:value={sortBy} on:change={() => handleSort(sortBy)}>
-            <option value="addedAt">Recently Added</option>
-            <option value="courseId">Course Code</option>
-            <option value="courseName">Course Name</option>
-            <option value="credits">Credits</option>
-            <option value="startDate">Start Date</option>
-          </select>
-          <button class="sort-dir" on:click={() => { sortDirection *= -1; }}>
-            {sortDirection === 1 ? '↑' : '↓'}
+        {#if removeMode}
+          <button class="btn btn-secondary" on:click={exitRemoveMode}>
+            Done
           </button>
-        </div>
+        {:else}
+          <div class="sort-box">
+            <label for="sort">Sort by:</label>
+            <select id="sort" bind:value={sortBy} on:change={() => handleSort(sortBy)}>
+              <option value="addedAt">Recently Added</option>
+              <option value="courseId">Course Code</option>
+              <option value="courseName">Course Name</option>
+              <option value="credits">Credits</option>
+              <option value="startDate">Start Date</option>
+            </select>
+            <button class="sort-dir" on:click={() => { sortDirection *= -1; }}>
+              {sortDirection === 1 ? '↑' : '↓'}
+            </button>
+          </div>
+          <button class="btn btn-secondary" on:click={() => { removeMode = true; }}>
+            Remove
+          </button>
+        {/if}
       </div>
     </div>
 
     <!-- Favourites list -->
     <div class="favourites-list">
       {#each sortedFavourites as favourite (favourite.courseId)}
-        {@const courses = getCoursesForId(favourite.courseId)}
-        <div class="favourite-item">
-          <!-- Item header with course code, name, and remove button -->
+        {@const courses =
+          [...getCoursesForId(favourite.courseId)].sort(
+            (a, b) => new Date(a.courseDate.start).getTime() - new Date(b.courseDate.start).getTime()
+          )
+        }
+        
+        {@const visibleInstances = (() => {
+          const active = courses.find(c => expandedInstanceIds.has(c.id));
+          return active ? [active] : courses;
+        })()}
+
+        <div class="favourite-item" class:remove-mode={removeMode}>
           <div class="item-header">
             <div class="code-and-info">
               <a 
@@ -209,114 +236,122 @@
                 <h3 class="course-code">{favourite.courseId}</h3>
               </a>
               {#if courses.length > 0}
-                <p class="course-name">{courses[0].name.en}</p>
+                <p class="course-name">{courses[0].name.en.split(",").slice(0, -1).join(",")}</p>
               {/if}
-              <div class="instance-count">
-                {#if courses.length > 1}
-                  <span class="badge-secondary">{courses.length} instances</span>
-                {/if}
+              <!-- Added date -->
+              <div class="metadata">
+                <span class="added-date">Added {formatDateTime(favourite.addedAt)}</span>
               </div>
             </div>
-            <button 
-              class="favourite-btn" 
-              on:click={() => removeFavourite(favourite.courseId)}
-              aria-label="Remove from favourites"
-              title="Remove from favourites"
-            >
-              ♥
-            </button>
-          </div>
-
-          <!-- Course instances -->
-          <div class="instances-container">
-            {#each courses as course (course.id)}
-              <div class="instance">
-                <div class="instance-top">
-                  <div class="instance-dates">
-                    <span class="date-range">
-                      {formatDate(course.courseDate.start)}
-                      –
-                      {formatDate(course.courseDate.end)}
-                    </span>
-                  </div>
-                  <div class="format-badge" data-format={course.format}>
-                    {course.format}
-                  </div>
-                </div>
-
-                <div class="instance-meta">
-                  <span class="meta-item">
-                    <span class="label">Credits:</span>
-                    <span class="value">{course.credits.min}</span>
-                  </span>
-                  {#if course.teachers.length > 0}
-                    <span class="meta-item">
-                      <span class="label">Teacher:</span>
-                      <span class="value">{course.teachers[0]}</span>
-                    </span>
-                  {/if}
-                </div>
-
-                <!-- Study Groups (lazy loaded) -->
-                <StudyGroupsSection {course} expandAll={expandAllStudyGroups} />
-              </div>
-            {/each}
-          </div>
-
-          <!-- Added date -->
-          <div class="metadata">
-            <span class="added-date">Added {formatDateTime(favourite.addedAt)}</span>
-          </div>
-
-          <!-- Notes section -->
-          <div class="notes-section">
-            {#if editingCourseId === favourite.courseId}
-              <!-- Editing mode -->
-              <div class="editor">
-                <textarea 
-                  bind:value={editingNotes} 
-                  placeholder="Add your notes here..."
-                  aria-label="Edit notes"
-                ></textarea>
-                <div class="editor-actions">
-                  <button 
-                    on:click={() => saveNotes(favourite.courseId)} 
-                    class="btn-text save"
-                  >
-                    Save
-                  </button>
-                  <button 
-                    on:click={cancelEditingNotes} 
-                    class="btn-text cancel"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
+            {#if removeMode}
+              <button 
+                class="remove-btn" 
+                on:click={() => removeFavourite(favourite.courseId)}
+                aria-label="Remove from favourites"
+                title="Remove from favourites"
+              >
+                ✕
+              </button>
             {:else}
-              <!-- Display mode -->
-              <div class="display">
-                <p class:placeholder={!favourite.notes}>
-                  {favourite.notes || 'No private notes added yet...'}
-                </p>
-                {#if favourite.notes}
-                  <button 
-                    class="edit-trigger" 
-                    on:click={() => startEditingNotes(favourite.courseId, favourite.notes)}
-                  >
-                    Edit note
-                  </button>
-                {:else}
-                  <button 
-                    class="edit-trigger" 
-                    on:click={() => startEditingNotes(favourite.courseId, null)}
-                  >
-                    + Add note
-                  </button>
-                {/if}
+              <div class="plus-btn-wrapper">
+                <button 
+                  class="plus-btn" 
+                  aria-label="Add to plan (coming soon)"
+                  disabled
+                >
+                  +
+                </button>
+                <div class="plus-btn-tooltip">Coming soon</div>
               </div>
             {/if}
           </div>
+
+          {#if !removeMode}
+            <!-- Course instances -->
+            <div class="instances-container">
+              {#each visibleInstances as course (course.id)}
+                <div
+                  class="instance {expandedInstanceIds.has(course.id) ? 'selected' : ''}"
+                  role="button"
+                  tabindex="0"
+                  on:click={(e) => { 
+                    if ((e.target as HTMLElement).closest('.study-group-button') == null) {
+                      toggleInstance(favourite.courseId, course.id);
+                    }
+                  }}
+                  on:keydown={(e) => e.key === 'Enter' && toggleInstance(favourite.courseId, course.id)}
+                >
+                  <div class="instance-top">
+                    <div class="instance-dates">
+                      <span class="date-range">
+                        {formatDate(course.courseDate.start)}
+                        –
+                        {formatDate(course.courseDate.end)}
+                      </span>
+                    </div>
+                    <div class="format-badge" data-format={course.format}>
+                      {course.format}
+                    </div>
+                  </div>
+                  {#if expandedInstanceIds.has(course.id)}
+                    <div role="presentation" on:click|stopPropagation>
+                      <StudyGroupsSection {course} />
+                    </div>
+                  {/if}
+                </div>
+              {/each}
+            </div>
+
+            <!-- Notes section -->
+            <div class="notes-section">
+              {#if editingCourseId === favourite.courseId}
+                <!-- Editing mode -->
+                <div class="editor">
+                  <textarea 
+                    bind:value={editingNotes} 
+                    placeholder="Add your notes here..."
+                    aria-label="Edit notes"
+                  ></textarea>
+                  <div class="editor-actions">
+                    <button 
+                      on:click={() => saveNotes(favourite.courseId)} 
+                      class="btn-text save"
+                    >
+                      Save
+                    </button>
+                    <button 
+                      on:click={cancelEditingNotes} 
+                      class="btn-text cancel"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              {:else}
+                <!-- Display mode -->
+                <div class="display">
+                  <p class:placeholder={!favourite.notes}>
+                    {favourite.notes || ''}
+                  </p>
+                  {#if favourite.notes}
+                    <button 
+                      class="edit-trigger" 
+                      on:click={() => startEditingNotes(favourite.courseId, favourite.notes)}
+                    >
+                      Edit note
+                    </button>
+                  {:else}
+                    <button 
+                      class="edit-trigger" 
+                      on:click={() => startEditingNotes(favourite.courseId, null)}
+                    >
+                      + Add note
+                    </button>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+          {/if}
         </div>
       {/each}
     </div>
@@ -347,8 +382,8 @@
   .header-section {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 1.5rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
     gap: 1rem;
     flex-wrap: wrap;
   }
@@ -371,63 +406,40 @@
     margin: 0;
   }
 
-  .badge-secondary {
-    background: #f0f0f0;
-    color: var(--text-muted);
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-
   .controls {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    color: var(--text-muted);
-    font-size: 0.9rem;
+    gap: 0.3rem;
+    color: var(--text-main);
+    font-size: 0.8rem;
     flex-wrap: wrap;
+  }
+
+  .sort-box {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
   }
 
   .controls label {
     white-space: nowrap;
-  }
-
-  .expand-all-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.7rem;
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    cursor: pointer;
-    color: #000000;
-    transition: all 0.2s;
-  }
-
-  .expand-all-btn:hover {
-    background: #eeeeee;
-  }
-
-  .expand-all-btn:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
-
-  .expand-all-btn i {
-    font-size: 1.1rem;
+    font-weight: 500;
   }
 
   select {
     margin: 0;
-    padding: 0.4rem 0.8rem 0.4rem 0.8rem;
+    padding: 0.5rem 0.8rem;
     border: 1px solid var(--border);
     border-radius: 6px;
     background: var(--card-bg);
     cursor: pointer;
     appearance: none;
+    font-size: 0.8rem;
+    color: var(--text-main);
+  }
+
+  select:hover {
+    border-color: var(--primary);
   }
 
   select:focus {
@@ -437,17 +449,20 @@
   }
 
   .sort-dir {
-    width: 36px;
-    height: 30px;
-    padding: 0;
+    padding: 0.5rem 0.7rem;
     border: 1px solid var(--border);
     border-radius: 6px;
     background: var(--card-bg);
     cursor: pointer;
     transition: all 0.2s;
+    font-size: 0.8rem;
+    color: var(--text-main);
+    min-width: 32px;
+    text-align: center;
   }
 
   .sort-dir:hover {
+    border-color: var(--primary);
     background: #f1f5f9;
   }
 
@@ -460,8 +475,8 @@
   /* ========== Favourites Grid ========== */
   .favourites-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(253px, 1fr));
+    gap: 0.3rem;
   }
 
   .favourite-item {
@@ -475,6 +490,11 @@
   .favourite-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  }
+
+  .favourite-item.remove-mode {
+    background: #fef2f2;
+    border-color: #fecaca;
   }
 
   /* ========== Item Header ========== */
@@ -515,29 +535,83 @@
     margin-top: 0.1rem;
   }
 
-  .instance-count {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-
-  .favourite-btn {
+  .plus-btn {
     background: transparent;
     border: none;
     color: var(--primary);
-    cursor: pointer;
+    cursor: not-allowed;
     font-size: 1.5rem;
+    transition: color 0.2s, transform 0.2s;
+    padding: 0;
+    flex-shrink: 0;
+    opacity: 0.4;
+  }
+
+  .plus-btn:hover {
+    color: var(--primary);
+    opacity: 0.4;
+  }
+
+  .plus-btn:focus {
+    outline: none;
+  }
+
+  .plus-btn-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .plus-btn-tooltip {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: rgba(116, 122, 131, 0.9);
+    color: white;
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-bottom: 0.5rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: 10;
+  }
+
+  .plus-btn-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 0.5rem;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid rgba(30, 41, 59, 0.9);
+  }
+
+  .plus-btn-wrapper:hover .plus-btn-tooltip {
+    opacity: 0.8;
+  }
+
+  .remove-btn {
+    background: transparent;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 1.2rem;
     transition: color 0.2s, transform 0.2s;
     padding: 0;
     flex-shrink: 0;
   }
 
-  .favourite-btn:hover {
-    color: var(--danger);
+  .remove-btn:hover {
+    color: #991b1b;
     transform: scale(1.1);
   }
 
-  .favourite-btn:focus {
+  .remove-btn:focus {
     outline: 2px solid var(--danger);
     outline-offset: 2px;
   }
@@ -552,12 +626,25 @@
 
   .instance {
     background: #f9fafb;
-    padding: 0.5rem;
+    padding: 0.45rem;
     border-radius: 6px;
     border: 1px solid #f0f0f0;
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    border-radius: 4px;
+  }
+
+  .instance:hover {
+    background: rgb(205, 255, 205);
+    transform: translateY(-1px);
+  }
+
+  .instance.selected {
+    background-color: rgb(205, 255, 205);
+    border-color: var(--primary);
   }
 
   .instance-top {
@@ -583,12 +670,12 @@
   }
 
   .format-badge {
-    padding: 0.2rem 0.5rem;
+    padding: 0.2rem 0.4rem;
     border-radius: 3px;
     font-size: 0.65rem;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     white-space: nowrap;
     flex-shrink: 0;
   }
@@ -613,36 +700,12 @@
     color: #374151;
   }
 
-  .instance-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    font-size: 0.75rem;
-  }
-
-  .instance-meta .meta-item {
-    display: flex;
-    gap: 0.25rem;
-  }
-
-  .instance-meta .label {
-    font-weight: 600;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
-
-  .instance-meta .value {
-    color: var(--text-main);
-    font-weight: 500;
-  }
-
   /* ========== Added Date ========== */
   .metadata {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-top: 0.35rem;
     font-size: 0.7rem;
     color: var(--text-muted);
   }
@@ -654,7 +717,7 @@
   /* ========== Notes Section ========== */
   .notes-section {
     background: #f1f5f9;
-    padding: 0.75rem;
+    padding: 0.6rem;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
@@ -664,8 +727,11 @@
     font-size: 0.85rem;
     line-height: 1.4;
     color: var(--text-main);
-    min-height: 2em;
-    margin-bottom: 0.4rem;
+    padding-bottom: 0.45rem;
+  }
+
+  .notes-section p:empty {
+    padding: 0;
   }
 
   .notes-section p.placeholder {
@@ -676,7 +742,6 @@
   .display {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
   }
 
   .edit-trigger {
@@ -815,18 +880,26 @@
   }
 
   .btn-secondary {
-    background: #f0f0f0;
-    color: #333;
-    border: none;
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    transition: all 0.2s;
   }
 
   .btn-secondary:hover {
-    background: #e0e0e0;
+    border-color: var(--primary);
+    background: #f1f5f9;
   }
 
   .btn-secondary:focus {
-    outline: 2px solid #999;
-    outline-offset: 2px;
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
   }
 
   /* ========== Spinner ========== */
@@ -864,29 +937,10 @@
     color: var(--danger);
   }
 
-  /* ========== Responsive ========== */
-  @media (max-width: 1024px) {
-    .favourites-list {
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    }
-  }
-
-  @media (max-width: 620px) {
+  @media (max-width: 440px) {
     .header-section {
       flex-direction: column;
       align-items: flex-start;
-    }
-
-    .controls {
-      width: 100%;
-    }
-
-    select {
-      flex: 1;
-    }
-
-    .favourites-list {
-      grid-template-columns: 1fr;
     }
   }
 </style>

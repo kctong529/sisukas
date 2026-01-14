@@ -1,5 +1,6 @@
 <!-- src/components/StudyGroupsSection.svelte -->
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import type { Course } from '../domain/models/Course';
 
@@ -22,16 +23,21 @@
   // Sync expansion state with parent
   $: expanded = expandAll;
 
+  onMount(async () => {
+    loadStudyGroups();
+  });
+
   async function fetchStudyGroups(): Promise<StudyGroup[]> {
     try {
-      const url = new URL(`${WRAPPER_API_URL}/study-groups`);
+      const url = new URL(`${WRAPPER_API_URL}/api/courses/study-groups`);
       url.searchParams.append('course_unit_id', course.unitId);
       url.searchParams.append('course_offering_id', course.id);
 
       const response = await fetch(url.toString());
       if (!response.ok) return [];
 
-      return await response.json();
+      const data = await response.json();
+      return data.study_groups;
     } catch (error) {
       console.error('Error fetching study groups:', error);
       return [];
@@ -129,71 +135,42 @@
 </script>
 
 <div class="study-groups-container">
-  <button class="study-groups-toggle" on:click={loadStudyGroups}>
-    {expanded ? '▼' : '▶'} Study Groups
-  </button>
-
-  {#if expanded}
-    <div class="study-groups-content">
-      {#if loading}
-        <div class="loading">Loading study groups...</div>
-      {:else if studyGroups.length === 0}
-        <div class="empty">No study groups available</div>
-      {:else}
-        <div class="study-groups-list">
-          {#each studyGroups as group (group.group_id)}
-            <div class="study-group-item">
-              <div class="group-header">
-                <h4 class="group-name">{group.name}</h4>
-                <span class="group-type">{group.type}</span>
-              </div>
-              <div class="group-schedule">{aggregateStudyEvents(group.study_events)}</div>
-              {#if group.study_events.length > 3}
-                <details class="group-events">
-                  <summary>Show all {group.study_events.length} events</summary>
-                  <div class="events-list">
-                    {#each group.study_events as event (event.start)}
-                      <div class="event-item">{formatEventTime(event.start, event.end)}</div>
-                    {/each}
-                  </div>
-                </details>
-              {/if}
+  <div class="study-groups-content">
+    {#if loading}
+      <div class="loading">Loading study groups...</div>
+    {:else if studyGroups.length === 0}
+      <div class="empty">No study groups available</div>
+    {:else}
+      <div class="study-groups-list">
+        {#each studyGroups as group (group.group_id)}
+          <div class="study-group-item">
+            <div class="group-header">
+              <h4 class="group-name">{group.name}</h4>
+              <span class="group-type">{group.type}</span>
             </div>
-          {/each}
-        </div>
-      {/if}
-    </div>
-  {/if}
+            <div class="group-schedule">{aggregateStudyEvents(group.study_events)}</div>
+            {#if group.study_events.length > 3}
+              <details class="group-events">
+                <summary>Show all {group.study_events.length} events</summary>
+                <div class="events-list">
+                  {#each group.study_events as event (event.start)}
+                    <div class="event-item">{formatEventTime(event.start, event.end)}</div>
+                  {/each}
+                </div>
+              </details>
+            {/if}
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </div>
 </div>
 
 <style>
   .study-groups-container {
-    margin-top: 0.5rem;
+    margin-top: 0;
   }
-
-  .study-groups-toggle {
-    background: none;
-    border: none;
-    color: var(--primary);
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 0.25rem 0;
-    transition: color 0.2s;
-  }
-
-  .study-groups-toggle:hover {
-    color: var(--primary-hover);
-  }
-
-  .study-groups-content {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    background: #f9fafb;
-    border-radius: 4px;
-    border: 1px solid #f0f0f0;
-  }
-
+  
   .loading,
   .empty {
     font-size: 0.75rem;
@@ -211,7 +188,7 @@
   .study-group-item {
     padding: 0.5rem;
     background: white;
-    border-radius: 3px;
+    border-radius: 5px;
     border: 1px solid #e0e0e0;
   }
 
@@ -225,7 +202,7 @@
   .group-name {
     margin: 0;
     font-size: 0.8rem;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text-main);
   }
 
@@ -233,10 +210,9 @@
     font-size: 0.65rem;
     background: #e0e7ff;
     color: var(--primary);
-    padding: 0.15rem 0.4rem;
-    border-radius: 2px;
-    font-weight: 600;
-    text-transform: uppercase;
+    padding: 0.15rem 0.3rem;
+    border-radius: 3px;
+    font-weight: 500;
   }
 
   .group-schedule {
@@ -253,11 +229,11 @@
     font-size: 0.7rem;
     color: var(--primary);
     cursor: pointer;
-    padding: 0.15rem 0;
+    padding-top: 0.15rem;
   }
 
   .group-events summary:hover {
-    text-decoration: underline;
+    color: #d9534f;
   }
 
   .events-list {

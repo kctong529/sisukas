@@ -167,6 +167,7 @@
   .nav-container {
     max-width: 1400px;
     margin: 0 auto;
+    margin-left: 6px;
     padding: 0 2%;
     display: flex;
     align-items: center;
