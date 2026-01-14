@@ -29,7 +29,7 @@
 
   async function fetchStudyGroups(): Promise<StudyGroup[]> {
     try {
-      const url = new URL(`${WRAPPER_API_URL}/study-groups`);
+      const url = new URL(`${WRAPPER_API_URL}/api/courses/study-groups`);
       url.searchParams.append('course_unit_id', course.unitId);
       url.searchParams.append('course_offering_id', course.id);
 
