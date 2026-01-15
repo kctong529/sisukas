@@ -24,6 +24,7 @@
   import type { FilterRuleGroups } from './domain/filters/FilterTypes';
   import AuthDebugPanel from './components/AuthDebugPanel.svelte';
   import { courseStore } from './lib/stores/courseStore';
+  import StudyGroupStoreDebug from './components/StudyGroupStoreDebug.svelte';
   
   let currentView = 'courses';
   let isSignedIn = false;
@@ -233,6 +234,10 @@
 
 {#if import.meta.env.VITE_DEBUG_AUTH === "true"}
   <AuthDebugPanel />
+{/if}
+
+{#if import.meta.env.VITE_DEBUG_STORE === "true"}
+  <StudyGroupStoreDebug />
 {/if}
 
 {#if showAuthModal}

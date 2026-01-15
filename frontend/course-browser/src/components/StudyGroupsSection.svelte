@@ -1,85 +1,78 @@
 <!-- src/components/StudyGroupsSection.svelte -->
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
+  import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import type { Course } from '../domain/models/Course';
+  import type { StudyGroup } from '../domain/models/StudyGroup';
+  import type { StudyEvent } from '../domain/models/StudyEvent';
 
-  const WRAPPER_API_URL = import.meta.env.VITE_WRAPPER_API;
+  export let course: Course;           // The full, rich Course domain model
+  export let isExpanded: boolean;      // Whether this instance is currently expanded
 
-  export let course: Course;
-  export let expandAll: boolean = false;
-
-  interface StudyGroup {
-    group_id: string;
-    name: string;
-    type: string;
-    study_events: Array<{ start: string; end: string }>;
+  // Reactive load trigger: fetch when expanded
+  $: if (isExpanded && course) {
+    studyGroupStore.fetch(course.unitId, course.id);
   }
 
+  // Subscribe to store for reactive updates
   let studyGroups: StudyGroup[] = [];
-  let loading = true;
-  let expanded = false;
+  let isLoading = false;
+  let unsubscribe: (() => void) | null = null;
 
-  // Sync expansion state with parent
-  $: expanded = expandAll;
-
-  onMount(async () => {
-    loadStudyGroups();
-  });
-
-  async function fetchStudyGroups(): Promise<StudyGroup[]> {
-    try {
-      const url = new URL(`${WRAPPER_API_URL}/api/courses/study-groups`);
-      url.searchParams.append('course_unit_id', course.unitId);
-      url.searchParams.append('course_offering_id', course.id);
-
-      const response = await fetch(url.toString());
-      if (!response.ok) return [];
-
-      const data = await response.json();
-      return data.study_groups;
-    } catch (error) {
-      console.error('Error fetching study groups:', error);
-      return [];
-    }
+  $: if (course) {
+    // Clean up previous subscription
+    if (unsubscribe) unsubscribe();
+    
+    // Subscribe to store changes
+    unsubscribe = studyGroupStore.subscribe(state => {
+      const key = `${course.unitId}:${course.id}`;
+      studyGroups = state.cache[key] || [];
+      isLoading = state.loadingKeys.includes(key);
+    });
   }
 
-  function aggregateStudyEvents(events: Array<{ start: string; end: string }>): string {
+  // Clean up subscription on component destroy
+  onDestroy(() => {
+    if (unsubscribe) unsubscribe();
+  })
+
+  function aggregateStudyEvents(events: StudyEvent[]): string {
     if (events.length === 0) return 'No events';
-    
+
     const timeSlotMap = new SvelteMap<string, Set<string>>();
-    
+
     events.forEach(event => {
       const startDate = new Date(event.start);
       const endDate = new Date(event.end);
-      
+
       const startTime = startDate.toLocaleTimeString('en-FI', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false,
       });
-      
+
       const endTime = endDate.toLocaleTimeString('en-FI', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false,
       });
-      
+
       const dayOfWeek = startDate.toLocaleDateString('en-US', { weekday: 'short' });
       const timeSlot = `${startTime} - ${endTime}`;
-      
+
       if (!timeSlotMap.has(timeSlot)) {
         timeSlotMap.set(timeSlot, new Set());
       }
       timeSlotMap.get(timeSlot)!.add(dayOfWeek);
     });
-    
+
     const patterns: string[] = [];
     timeSlotMap.forEach((days, timeSlot) => {
       const daysList = Array.from(days).join(', ');
       patterns.push(`${daysList} ${timeSlot}`);
     });
-    
+
     return patterns.join(' | ');
   }
 
@@ -107,53 +100,28 @@
 
     return `${dateStr} ${startTime} – ${endTime}`;
   }
-
-  async function loadStudyGroups() {
-    if (expandAll) {
-      // If expand all is on, we're already expanded, just load if needed
-      if (studyGroups.length === 0) {
-        loading = true;
-        studyGroups = await fetchStudyGroups();
-        loading = false;
-      }
-      return;
-    }
-
-    // Normal toggle behavior
-    if (expanded) {
-      expanded = false;
-      return;
-    }
-
-    expanded = true;
-    if (studyGroups.length > 0) return; // Already loaded
-
-    loading = true;
-    studyGroups = await fetchStudyGroups();
-    loading = false;
-  }
 </script>
 
 <div class="study-groups-container">
   <div class="study-groups-content">
-    {#if loading}
+    {#if isLoading}
       <div class="loading">Loading study groups...</div>
     {:else if studyGroups.length === 0}
       <div class="empty">No study groups available</div>
     {:else}
       <div class="study-groups-list">
-        {#each studyGroups as group (group.group_id)}
+        {#each studyGroups as group (group.groupId)}
           <div class="study-group-item">
             <div class="group-header">
               <h4 class="group-name">{group.name}</h4>
               <span class="group-type">{group.type}</span>
             </div>
-            <div class="group-schedule">{aggregateStudyEvents(group.study_events)}</div>
-            {#if group.study_events.length > 3}
+            <div class="group-schedule">{aggregateStudyEvents(group.studyEvents)}</div>
+            {#if group.studyEvents.length > 3}
               <details class="group-events">
-                <summary>Show all {group.study_events.length} events</summary>
+                <summary>Show all {group.studyEvents.length} events</summary>
                 <div class="events-list">
-                  {#each group.study_events as event (event.start)}
+                  {#each group.studyEvents as event (event.start)}
                     <div class="event-item">{formatEventTime(event.start, event.end)}</div>
                   {/each}
                 </div>
@@ -170,7 +138,7 @@
   .study-groups-container {
     margin-top: 0;
   }
-  
+
   .loading,
   .empty {
     font-size: 0.75rem;
