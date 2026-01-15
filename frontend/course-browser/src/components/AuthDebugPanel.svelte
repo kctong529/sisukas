@@ -101,28 +101,14 @@
 
 <style>
   .debug-panel {
-    position: fixed;
-    bottom: 1rem;
-    right: 1rem;
     background: white;
     border: 1px solid #ddd;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     font-family: monospace;
     font-size: 0.75rem;
-    z-index: 9999;
     max-width: 400px;
     max-height: 350px;
-    --panel-index: 0;
-    transform: translateY(calc(var(--panel-index) * -360px));
-  }
-
-  :global(.debug-panel[data-index="0"]) {
-    --panel-index: 0;
-  }
-
-  :global(.debug-panel[data-index="1"]) {
-    --panel-index: 1;
   }
 
   .debug-toggle {
