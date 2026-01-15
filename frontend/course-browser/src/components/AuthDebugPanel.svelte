@@ -108,7 +108,7 @@
     font-family: monospace;
     font-size: 0.75rem;
     max-width: 400px;
-    max-height: 350px;
+    max-height: 580px;
   }
 
   .debug-toggle {
