@@ -1,9 +1,10 @@
 // src/domain/models/Plan.ts
 
 export interface Plan {
-  planId: string;
+  id: string;
+  userId: string;
   name: string;
-  description?: string;
+  isActive: boolean;
   instanceIds: string[];
   createdAt: Date;
   updatedAt: Date;
