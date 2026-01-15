@@ -4,6 +4,7 @@
   import { useSession } from '../lib/authClient';
   import { favouritesStore } from '../lib/stores/favouritesStore';
   import { courseStore } from '../lib/stores/courseStore';
+  import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import StudyGroupsSection from './StudyGroupsSection.svelte';
   import type { Course } from '../domain/models/Course';
   import { SvelteSet } from 'svelte/reactivity';
@@ -33,6 +34,20 @@
   } else if (!isSignedIn) {
     favouritesStore.clear();
     hasLoadedForUser = false;
+  }
+
+  // Batch fetch study groups for all favourited courses
+  $: if (hasLoadedForUser && $favouritesStore.favourites.length > 0) {
+    const coursesToFetch = $favouritesStore.favourites
+      .flatMap(fav => getCoursesForId(fav.courseId))
+      .map(course => ({
+        courseUnitId: course.unitId,
+        courseOfferingId: course.id,
+      }));
+    
+    if (coursesToFetch.length > 0) {
+      studyGroupStore.fetchBatch(coursesToFetch);
+    }
   }
 
   // Get all courses for a given courseId (1-to-N mapping)
@@ -295,7 +310,7 @@
                   </div>
                   {#if expandedInstanceIds.has(course.id)}
                     <div role="presentation" on:click|stopPropagation>
-                      <StudyGroupsSection {course} />
+                      <StudyGroupsSection {course} isExpanded={expandedInstanceIds.has(course.id)} />
                     </div>
                   {/if}
                 </div>
