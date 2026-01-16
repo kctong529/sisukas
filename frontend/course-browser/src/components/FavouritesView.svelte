@@ -493,6 +493,12 @@
     border-radius: 4px;
   }
 
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
   h3 {
     margin: 0;
     font-size: 1rem;
@@ -894,15 +900,59 @@
   }
 
   .icon-circle {
-    width: 64px;
-    height: 64px;
-    background: #f1f5f9;
+    width: 80px;
+    height: 80px;
+    background: var(--bg);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 2rem;
     margin: 0 auto 1.5rem;
+  }
+
+  .state-card h2 {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .state-card p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .state-card.error {
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
+
+  .state-card.error h2 {
+    color: #ef4444;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    text-align: center;
   }
 
   .btn {
@@ -951,40 +1001,6 @@
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
-
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .loading-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 4rem;
-    text-align: center;
-  }
-
-  .error {
-    background: #fee;
-    border-color: #fcc;
-  }
-
-  .error h2 {
-    color: var(--danger);
   }
 
   @media (max-width: 440px) {

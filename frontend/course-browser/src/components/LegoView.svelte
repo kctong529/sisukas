@@ -68,6 +68,7 @@
   {:else}
     <div class="header">
       <h1>Course Plans</h1>
+      <h3>This page is under active development. Come back in a week!</h3>
       <p class="subtitle">{$plansStore.plans.length} plan{$plansStore.plans.length !== 1 ? 's' : ''}</p>
     </div>
 

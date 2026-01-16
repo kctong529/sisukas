@@ -131,6 +131,15 @@
         <i class="bi bi-bookmark"></i>
         <span>Favourites</span>
       </button>
+
+      <button 
+        class="mobile-nav-link" 
+        class:active={currentView === 'lego'}
+        on:click={() => handleNavigation('lego')}
+      >
+        <i class="bi bi-box"></i>
+        <span>LEGO</span>
+      </button>
       
       <a 
         href="https://github.com/kctong529/sisukas" 
@@ -362,29 +371,14 @@
     padding: 0.75rem 0.6rem;
     color: #333;
     font-weight: 400;
-    font-size: 1.1rem;
+    font-size: 0.9rem;
     word-break: break-all;
   }
 
   .mobile-user-info i {
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     color: #4a90e2;
     flex-shrink: 0;
-  }
-
-  .mobile-nav-link {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.8rem 0.6rem;
-    background: none;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1.1rem;
-    color: #666;
-    text-align: left;
-    transition: background 0.2s;
   }
   
   .mobile-nav-link.sign-in {
