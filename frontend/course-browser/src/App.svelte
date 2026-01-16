@@ -24,6 +24,7 @@
   import type { FilterRuleGroups } from './domain/filters/FilterTypes';
   import { courseStore } from './lib/stores/courseStore';
   import DebugPanels from './components/DebugPanels.svelte';
+  import LegoView from './components/LegoView.svelte';
   
   let currentView = 'courses';
   let isSignedIn = false;
@@ -282,12 +283,12 @@
     <FavouritesView />
   </div>
 
-  <!-- About View -->
+  <!-- LEGO View -->
   <div 
     class="view" 
-    class:hidden={currentView !== 'about'}
+    class:hidden={currentView !== 'lego'}
   >
-    About
+    <LegoView />
   </div>
 </div>
 

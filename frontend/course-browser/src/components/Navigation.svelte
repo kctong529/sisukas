@@ -59,6 +59,15 @@
         <i class="bi bi-bookmark"></i>
         <span>Favourites</span>
       </button>
+
+      <button 
+        class="nav-link" 
+        class:active={currentView === 'lego'}
+        on:click={() => handleNavigation('lego')}
+      >
+        <i class="bi bi-box"></i>
+        <span>LEGO</span>
+      </button>
       
       <a 
         href="https://github.com/kctong529/sisukas" 
@@ -214,12 +223,12 @@
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.6rem 0.7rem;
+    padding: 0.5rem 0.6rem;
     background: none;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #666;
     transition: all 0.2s;
     text-decoration: none;
@@ -236,7 +245,7 @@
   }
   
   .nav-link i {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
   
   /* User Section */
@@ -247,7 +256,7 @@
   .user-menu {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.3rem;
   }
 
   .user-link {
@@ -264,21 +273,21 @@
   }
 
   .user-name {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
   
   .sign-in-btn,
   .sign-out-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     padding: 0.6rem 0.7rem;
     background: #4a90e2;
     color: white;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     transition: background 0.2s;
   }
   
