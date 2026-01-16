@@ -22,9 +22,9 @@
   import type { Course } from './domain/models/Course';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { FilterRuleGroups } from './domain/filters/FilterTypes';
-  import AuthDebugPanel from './components/AuthDebugPanel.svelte';
   import { courseStore } from './lib/stores/courseStore';
-  import StudyGroupStoreDebug from './components/StudyGroupStoreDebug.svelte';
+  import DebugPanels from './components/DebugPanels.svelte';
+  import LegoView from './components/LegoView.svelte';
   
   let currentView = 'courses';
   let isSignedIn = false;
@@ -232,13 +232,7 @@
   on:signout={handleSignOut}
 />
 
-{#if import.meta.env.VITE_DEBUG_AUTH === "true"}
-  <AuthDebugPanel />
-{/if}
-
-{#if import.meta.env.VITE_DEBUG_STORE === "true"}
-  <StudyGroupStoreDebug />
-{/if}
+<DebugPanels />
 
 {#if showAuthModal}
   <AuthModal on:close={() => (showAuthModal = false)} />
@@ -289,12 +283,12 @@
     <FavouritesView />
   </div>
 
-  <!-- About View -->
+  <!-- LEGO View -->
   <div 
     class="view" 
-    class:hidden={currentView !== 'about'}
+    class:hidden={currentView !== 'lego'}
   >
-    About
+    <LegoView />
   </div>
 </div>
 

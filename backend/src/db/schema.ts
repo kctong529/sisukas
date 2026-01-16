@@ -1,6 +1,6 @@
 // src/db/schema.ts
 import { relations } from "drizzle-orm";
-import { pgTable, uuid, varchar, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, timestamp, boolean, index, primaryKey } from "drizzle-orm/pg-core";
 
 export const users = pgTable("user", {
   id: text("id").primaryKey(),
@@ -114,3 +114,41 @@ export const feedback = pgTable('feedback', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export const plans = pgTable('plans', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  isActive: boolean('is_active').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+}, (table) => [
+  index('plans_userId_idx').on(table.userId),
+  index('plans_userId_isActive_idx').on(table.userId, table.isActive),
+]);
+
+export const planInstances = pgTable('plan_instances', {
+  planId: uuid('plan_id')
+    .notNull()
+    .references(() => plans.id, { onDelete: 'cascade' }),
+  instanceId: varchar('instance_id', { length: 100 }).notNull(),
+  addedAt: timestamp('added_at').defaultNow().notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.planId, table.instanceId] }),
+]);
+
+export const plansRelations = relations(plans, ({ many }) => ({
+  instances: many(planInstances),
+}));
+
+export const planInstancesRelations = relations(planInstances, ({ one }) => ({
+  plan: one(plans, {
+    fields: [planInstances.planId],
+    references: [plans.id],
+  }),
+}));

@@ -9,6 +9,7 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from './lib/auth';
 import usersRoutes from './routes/users';
 import favouritesRoutes from './routes/favourites';
+import plansRoutes from './routes/plans';
 import { extractSession } from './middleware/auth';
 
 const app = express();
@@ -65,6 +66,7 @@ app.get('/health', async (req: Request, res: Response) => {
 app.use('/api/users', usersRoutes);
 app.use(extractSession);
 app.use('/api/favourites', favouritesRoutes);
+app.use('/api/plans', plansRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on ${process.env.BACKEND_URL}`);

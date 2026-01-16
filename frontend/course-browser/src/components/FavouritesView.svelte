@@ -1,10 +1,11 @@
-<!-- src/components/FavouritesView.svelte -->
+<!-- src/components/FavouritesView.svelte (updated) -->
 <script lang="ts">
-  import { onMount } from 'svelte';
   import { useSession } from '../lib/authClient';
   import { favouritesStore } from '../lib/stores/favouritesStore';
+  import { plansStore } from '../lib/stores/plansStore';
   import { courseStore } from '../lib/stores/courseStore';
   import { studyGroupStore } from '../lib/stores/studyGroupStore';
+  import { NotificationService } from '../infrastructure/services/NotificationService';
   import StudyGroupsSection from './StudyGroupsSection.svelte';
   import type { Course } from '../domain/models/Course';
   import { SvelteSet } from 'svelte/reactivity';
@@ -13,27 +14,59 @@
   $: isSignedIn = !!$session.data?.user;
   
   let sortBy = 'addedAt';
-  let sortDirection = -1; // -1 for descending (newest first)
+  let sortDirection = -1;
   let editingCourseId: string | null = null;
   let editingNotes: string = '';
   let hasLoadedForUser = false;
   let expandedInstanceIds = new SvelteSet<string>();
   let removeMode = false;
 
-  onMount(async () => {
-    if (isSignedIn && !hasLoadedForUser) {
-      await favouritesStore.load();
-      hasLoadedForUser = true;
-    }
-  });
+  // Plans integration
+  let hasInitializedPlans = false;
 
   // Reload when user signs in (reactive)
   $: if (isSignedIn && !hasLoadedForUser) {
     favouritesStore.load();
     hasLoadedForUser = true;
-  } else if (!isSignedIn) {
+  }
+
+  // Initialize plans when user signs in
+  $: if (isSignedIn && hasLoadedForUser && !hasInitializedPlans) {
+    try {
+      initializePlans();
+    } catch (err) {
+      console.error('Failed to initialize plans:', err);
+    } finally {
+      hasInitializedPlans = true;
+    }
+  }
+
+  $: if (!isSignedIn) {
     favouritesStore.clear();
+    plansStore.clear();
+    expandedInstanceIds = new SvelteSet();
     hasLoadedForUser = false;
+    hasInitializedPlans = false;
+  }
+
+  async function initializePlans() {
+    // Load existing plans
+    await plansStore.load();
+    
+    // If no plans exist, create a default one
+    if ($plansStore.plans.length === 0) {
+      const defaultPlan = await plansStore.create('Default');
+      await plansStore.setActive(defaultPlan.id);
+    } else if (!$plansStore.activePlan) {
+      // If plans exist but none are active, activate the first one
+      await plansStore.setActive($plansStore.plans[0].id);
+    }
+
+    if ($plansStore.activePlan) {
+      expandedInstanceIds = new SvelteSet(
+        $plansStore.activePlan.instanceIds
+      );
+    }
   }
 
   // Batch fetch study groups for all favourited courses
@@ -50,19 +83,15 @@
     }
   }
 
-  // Get all courses for a given courseId (1-to-N mapping)
-  // Uses courseStore's built-in method for cleaner code
   function getCoursesForId(courseId: string): Course[] {
     return courseStore.getByCode(courseId);
   }
 
-  // Sort favourites (by courseId, not by instances)
   $: sortedFavourites = [...$favouritesStore.favourites].sort((a, b) => {
     switch (sortBy) {
       case 'courseId':
         return a.courseId.localeCompare(b.courseId) * sortDirection;
       case 'courseName': {
-        // Get first course's name for sorting
         const coursesA = getCoursesForId(a.courseId);
         const coursesB = getCoursesForId(b.courseId);
         const nameA = coursesA[0]?.name.en || a.courseId;
@@ -144,25 +173,61 @@
   }
 
   function toggleInstance(courseId: string, instanceId: string) {
-    // If the clicked instance is already expanded → collapse it
     if (expandedInstanceIds.has(instanceId)) {
+      // Removing instance
+      const wasInPlan = $plansStore.activePlan?.instanceIds.includes(instanceId) ?? false;
+      
       expandedInstanceIds.delete(instanceId);
+      expandedInstanceIds = new SvelteSet(expandedInstanceIds);
+
+      // Show notification if it was in the plan
+      if (wasInPlan) {
+        NotificationService.error(`Instance removed from ${$plansStore.activePlan?.name || 'plan'}`);
+        // Optionally remove from plan
+        removedInstanceFromPlan(instanceId);
+      }
     } else {
-      // Collapse all instances of this course first
       const courses = getCoursesForId(courseId);
       courses.forEach(c => expandedInstanceIds.delete(c.id));
-      // Then expand the clicked instance
       expandedInstanceIds.add(instanceId);
+      expandedInstanceIds = new SvelteSet(expandedInstanceIds);
     }
-    
-    // Reassign to trigger reactivity
-    expandedInstanceIds = new SvelteSet(expandedInstanceIds);
+  }
+
+  async function removedInstanceFromPlan(instanceId: string) {
+    try {
+      await plansStore.removeInstanceFromActivePlan(instanceId);
+    } catch (err) {
+      console.error('Failed to remove instance from plan:', err);
+    }
+  }
+
+  async function addInstanceToActivePlan(instanceId: string) {
+    try {
+      if (!$plansStore.activePlan) {
+        NotificationService.error('No active plan');
+        return;
+      }
+
+      await plansStore.addInstanceToActivePlan(instanceId);
+      NotificationService.success(`Instance added to ${$plansStore.activePlan.name}`);
+    } catch (err) {
+      console.error('Failed to add instance to plan:', err);
+      NotificationService.error('Failed to add instance to plan');
+    }
+  }
+
+  function isInstanceInActivePlan(instanceId: string): boolean {
+    return $plansStore.activePlan?.instanceIds.includes(instanceId) ?? false;
+  }
+
+  function isInstanceExpanded(instanceId: string): boolean {
+    return expandedInstanceIds.has(instanceId);
   }
 </script>
 
 <div class="favourites-container">
   {#if !isSignedIn}
-    <!-- Not signed in state -->
     <div class="state-card">
       <div class="icon-circle">👤</div>
       <h2>Sign in to save favourites</h2>
@@ -170,14 +235,12 @@
     </div>
 
   {:else if $favouritesStore.loading}
-    <!-- Loading state -->
     <div class="loading-state">
       <div class="spinner"></div>
       <p>Fetching your collection...</p>
     </div>
 
   {:else if $favouritesStore.error}
-    <!-- Error state -->
     <div class="state-card error">
       <h2>Something went wrong</h2>
       <p>{$favouritesStore.error}</p>
@@ -185,7 +248,6 @@
     </div>
 
   {:else if $favouritesStore.favourites.length === 0}
-    <!-- Empty state -->
     <div class="state-card">
       <div class="icon-circle">♥</div>
       <h2>Your list is empty</h2>
@@ -194,10 +256,14 @@
     </div>
 
   {:else}
-    <!-- Main content -->
     <div class="header-section">
       <div class="title-group">
         <h1>Your Favourites</h1>
+        {#if $plansStore.activePlan}
+          <div class="active-plan-info">
+            Plan: <strong>{$plansStore.activePlan.name}</strong> ({$plansStore.activePlan.instanceIds.length} instances)
+          </div>
+        {/if}
       </div>
       
       <div class="controls">
@@ -226,7 +292,6 @@
       </div>
     </div>
 
-    <!-- Favourites list -->
     <div class="favourites-list">
       {#each sortedFavourites as favourite (favourite.courseId)}
         {@const courses =
@@ -234,6 +299,13 @@
             (a, b) => new Date(a.courseDate.start).getTime() - new Date(b.courseDate.start).getTime()
           )
         }
+
+        {@const instanceToAdd = (() => {
+          if (!$plansStore.activePlan) return null;
+          const expanded = courses.find(c => expandedInstanceIds.has(c.id) && !isInstanceInActivePlan(c.id));
+          if (expanded && !isInstanceInActivePlan(expanded.id)) return expanded;
+          return null;
+        })()}
         
         {@const visibleInstances = (() => {
           const active = courses.find(c => expandedInstanceIds.has(c.id));
@@ -242,51 +314,51 @@
 
         <div class="favourite-item" class:remove-mode={removeMode}>
           <div class="item-header">
-            <div class="code-and-info">
-              <a 
-                href="https://sisu.aalto.fi/student/courseunit/{courses[0]?.unitId}/brochure" 
-                target="_blank"
-                class="course-code-link"
-              >
-                <h3 class="course-code">{favourite.courseId}</h3>
-              </a>
-              {#if courses.length > 0}
-                <p class="course-name">{courses[0].name.en.split(",").slice(0, -1).join(",")}</p>
-              {/if}
-              <!-- Added date -->
-              <div class="metadata">
-                <span class="added-date">Added {formatDateTime(favourite.addedAt)}</span>
-              </div>
-            </div>
-            {#if removeMode}
-              <button 
-                class="remove-btn" 
-                on:click={() => removeFavourite(favourite.courseId)}
-                aria-label="Remove from favourites"
-                title="Remove from favourites"
-              >
-                ✕
-              </button>
-            {:else}
-              <div class="plus-btn-wrapper">
-                <button 
-                  class="plus-btn" 
-                  aria-label="Add to plan (coming soon)"
-                  disabled
+              <div class="code-and-info">
+                <a 
+                  href="https://sisu.aalto.fi/student/courseunit/{courses[0]?.unitId}/brochure" 
+                  target="_blank"
+                  class="course-code-link"
                 >
-                  +
-                </button>
-                <div class="plus-btn-tooltip">Coming soon</div>
+                  <h3 class="course-code">{favourite.courseId}</h3>
+                </a>
+                {#if courses.length > 0}
+                  <p class="course-name">{courses[0].name.en.split(",").slice(0, -1).join(",")}</p>
+                {/if}
+                <div class="metadata">
+                  <span class="added-date">Added {formatDateTime(favourite.addedAt)}</span>
+                </div>
               </div>
-            {/if}
-          </div>
+              {#if removeMode}
+                <button 
+                  class="remove-btn" 
+                  on:click={() => removeFavourite(favourite.courseId)}
+                  aria-label="Remove from favourites"
+                  title="Remove from favourites"
+                >
+                  ✕
+                </button>
+              {:else}
+                {#if instanceToAdd}
+                  <button 
+                    class="add-btn" 
+                    aria-label="Add to active plan"
+                    on:click={async () => {
+                      await addInstanceToActivePlan(instanceToAdd.id);
+                    }}
+                    title="Add to {$plansStore.activePlan?.name || 'plan'}"
+                  >
+                    +
+                  </button>
+                {/if}
+              {/if}
+            </div>
 
           {#if !removeMode}
-            <!-- Course instances -->
             <div class="instances-container">
               {#each visibleInstances as course (course.id)}
                 <div
-                  class="instance {expandedInstanceIds.has(course.id) ? 'selected' : ''}"
+                  class="instance {isInstanceExpanded(course.id) ? 'selected' : ''} {isInstanceInActivePlan(course.id) ? 'in-plan' : ''}"
                   role="button"
                   tabindex="0"
                   on:click={(e) => { 
@@ -308,19 +380,17 @@
                       {course.format}
                     </div>
                   </div>
-                  {#if expandedInstanceIds.has(course.id)}
+                  {#if isInstanceExpanded(course.id)}
                     <div role="presentation" on:click|stopPropagation>
-                      <StudyGroupsSection {course} isExpanded={expandedInstanceIds.has(course.id)} />
+                      <StudyGroupsSection {course} isExpanded={isInstanceExpanded(course.id)} />
                     </div>
                   {/if}
                 </div>
               {/each}
             </div>
 
-            <!-- Notes section -->
             <div class="notes-section">
               {#if editingCourseId === favourite.courseId}
-                <!-- Editing mode -->
                 <div class="editor">
                   <textarea 
                     bind:value={editingNotes} 
@@ -343,7 +413,6 @@
                   </div>
                 </div>
               {:else}
-                <!-- Display mode -->
                 <div class="display">
                   <p class:placeholder={!favourite.notes}>
                     {favourite.notes || ''}
@@ -383,6 +452,7 @@
     --text-muted: #64748b;
     --danger: #ef4444;
     --border: #e2e8f0;
+    --success: #10b981;
   }
 
   .favourites-container {
@@ -393,7 +463,6 @@
     color: var(--text-main);
   }
 
-  /* ========== Header & Controls ========== */
   .header-section {
     display: flex;
     justify-content: space-between;
@@ -403,11 +472,31 @@
     flex-wrap: wrap;
   }
 
+  .title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
   h1 {
     font-size: 1.3rem;
     font-weight: 600;
     margin: 0;
-    margin-left: 10px;
+  }
+
+  .active-plan-info {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    padding: 0.5rem 0.75rem;
+    background: #f0fdf4;
+    border-left: 3px solid var(--success);
+    border-radius: 4px;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
   }
 
   h3 {
@@ -487,7 +576,6 @@
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
   }
 
-  /* ========== Favourites Grid ========== */
   .favourites-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(253px, 1fr));
@@ -512,7 +600,6 @@
     border-color: #fecaca;
   }
 
-  /* ========== Item Header ========== */
   .item-header {
     display: flex;
     justify-content: space-between;
@@ -550,66 +637,6 @@
     margin-top: 0.1rem;
   }
 
-  .plus-btn {
-    background: transparent;
-    border: none;
-    color: var(--primary);
-    cursor: not-allowed;
-    font-size: 1.5rem;
-    transition: color 0.2s, transform 0.2s;
-    padding: 0;
-    flex-shrink: 0;
-    opacity: 0.4;
-  }
-
-  .plus-btn:hover {
-    color: var(--primary);
-    opacity: 0.4;
-  }
-
-  .plus-btn:focus {
-    outline: none;
-  }
-
-  .plus-btn-wrapper {
-    position: relative;
-    display: inline-block;
-  }
-
-  .plus-btn-tooltip {
-    position: absolute;
-    bottom: 100%;
-    right: 0;
-    background: rgba(116, 122, 131, 0.9);
-    color: white;
-    padding: 0.4rem 0.6rem;
-    border-radius: 4px;
-    font-size: 0.7rem;
-    font-weight: 500;
-    white-space: nowrap;
-    margin-bottom: 0.5rem;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-    z-index: 10;
-  }
-
-  .plus-btn-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    right: 0.5rem;
-    width: 0;
-    height: 0;
-    border-left: 4px solid transparent;
-    border-right: 4px solid transparent;
-    border-top: 4px solid rgba(30, 41, 59, 0.9);
-  }
-
-  .plus-btn-wrapper:hover .plus-btn-tooltip {
-    opacity: 0.8;
-  }
-
   .remove-btn {
     background: transparent;
     border: none;
@@ -631,12 +658,31 @@
     outline-offset: 2px;
   }
 
-  /* ========== Instances Container ========== */
   .instances-container {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     margin-bottom: 0.75rem;
+  }
+
+  .add-btn {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 1.5rem;
+    transition: color 0.2s, transform 0.2s;
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  .add-btn:hover {
+    color: var(--primary-hover);
+    transform: scale(1.1);
+  }
+
+  .add-btn:focus {
+    outline: none;
   }
 
   .instance {
@@ -649,16 +695,15 @@
     gap: 0.3rem;
     cursor: pointer;
     transition: background 0.2s, transform 0.2s;
-    border-radius: 4px;
   }
 
   .instance:hover {
-    background: rgb(205, 255, 205);
+    background: #eff6ff;
     transform: translateY(-1px);
   }
 
   .instance.selected {
-    background-color: rgb(205, 255, 205);
+    background: rgb(205, 255, 205);
     border-color: var(--primary);
   }
 
@@ -715,7 +760,6 @@
     color: #374151;
   }
 
-  /* ========== Added Date ========== */
   .metadata {
     display: flex;
     justify-content: space-between;
@@ -729,7 +773,6 @@
     font-style: italic;
   }
 
-  /* ========== Notes Section ========== */
   .notes-section {
     background: #f1f5f9;
     padding: 0.6rem;
@@ -848,7 +891,6 @@
     outline-offset: 2px;
   }
 
-  /* ========== States ========== */
   .state-card {
     text-align: center;
     padding: 5rem 2rem;
@@ -858,15 +900,59 @@
   }
 
   .icon-circle {
-    width: 64px;
-    height: 64px;
-    background: #f1f5f9;
+    width: 80px;
+    height: 80px;
+    background: var(--bg);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 2rem;
     margin: 0 auto 1.5rem;
+  }
+
+  .state-card h2 {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .state-card p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .state-card.error {
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
+
+  .state-card.error h2 {
+    color: #ef4444;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    text-align: center;
   }
 
   .btn {
@@ -915,41 +1001,6 @@
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
-
-  /* ========== Spinner ========== */
-  .spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
-  }
-
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  .loading-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 4rem;
-    text-align: center;
-  }
-
-  .error {
-    background: #fee;
-    border-color: #fcc;
-  }
-
-  .error h2 {
-    color: var(--danger);
   }
 
   @media (max-width: 440px) {
