@@ -8,6 +8,8 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const isDev = process.env.NODE_ENV === "development";
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -55,7 +57,11 @@ export const auth = betterAuth({
 
   advanced: {
     defaultCookieAttributes: {
-      httpOnly: true
+      httpOnly: true,
+      ...(isDev && {
+        secure: true,
+        sameSite: "none"
+      })
     }
   }
 });
