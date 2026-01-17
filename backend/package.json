@@ -13,6 +13,7 @@
   "dependencies": {
     "@esbuild-kit/core-utils": "^3.3.2",
     "better-auth": "^1.4.10",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
@@ -21,6 +22,7 @@
     "resend": "^6.7.0"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.3",
