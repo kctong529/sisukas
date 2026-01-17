@@ -1,12 +1,14 @@
 // src/server.js
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 dotenv.config();
 
 import pool from './config/database';
 import { toNodeHandler } from "better-auth/node";
 import { auth } from './lib/auth';
+import adminRoutes from './routes/admin';
 import usersRoutes from './routes/users';
 import favouritesRoutes from './routes/favourites';
 import plansRoutes from './routes/plans';
@@ -34,6 +36,7 @@ app.use(
   })
 );
 
+app.use(cookieParser());
 app.all('/api/auth/{*any}', toNodeHandler(auth));
 app.use(express.json());
 
@@ -63,7 +66,14 @@ app.get('/health', async (req: Request, res: Response) => {
   }
 });
 
+// Admin routes (login is public, logout requires admin token)
+app.use('/api/admin', adminRoutes);
+
+// User routes (with extractSession applied)
+app.use('/api/users', extractSession);
 app.use('/api/users', usersRoutes);
+
+// Other authenticated routes
 app.use(extractSession);
 app.use('/api/favourites', favouritesRoutes);
 app.use('/api/plans', plansRoutes);

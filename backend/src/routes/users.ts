@@ -1,17 +1,23 @@
 // src/routes/users.ts
 import { Router, Request, Response } from 'express';
 import { UsersService } from '../services/UsersService';
+import { requireAdmin, requireAuth } from '../middleware/auth';
 
 const router = Router();
 
 /**
  * GET /api/users
  * Get all users
+ * Protected: Admin only (token-based)
  */
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', requireAdmin, async (req: Request, res: Response) => {
   try {
     const allUsers = await UsersService.getAllUsers();
-    res.json({ users: allUsers });
+    res.json({ 
+      users: allUsers,
+      count: allUsers.length,
+      adminToken: res.locals.adminToken,
+    });
   } catch (error) {
     console.error('Get users error:', error);
     res.status(500).json({ 
@@ -23,10 +29,21 @@ router.get('/', async (req: Request, res: Response) => {
 /**
  * GET /api/users/:id
  * Get user by ID
+ * Protected: Users can only view their own profile
  */
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const currentUserId = res.locals.user.id;
+
+    // User can only view their own profile
+    if (id !== currentUserId) {
+      return res.status(403).json({ 
+        error: 'Forbidden',
+        message: 'You can only view your own profile' 
+      });
+    }
+
     const user = await UsersService.getUserById(id);
 
     if (!user) {
@@ -75,10 +92,21 @@ router.post('/', async (req: Request, res: Response) => {
 /**
  * DELETE /api/users/:id
  * Delete a user
+ * Protected: Users can only delete their own account
  */
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const currentUserId = res.locals.user.id;
+
+    // User can only delete their own account
+    if (id !== currentUserId) {
+      return res.status(403).json({ 
+        error: 'Forbidden',
+        message: 'You can only delete your own account' 
+      });
+    }
+
     const deleted = await UsersService.deleteUser(id);
 
     if (!deleted) {
