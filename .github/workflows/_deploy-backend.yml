@@ -63,6 +63,8 @@ jobs:
             BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
             DATABASE_URL=${{ secrets.DATABASE_URL }}
+            ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
+            ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
 
       - name: Check Deployment Health
         run: |

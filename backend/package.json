@@ -2,13 +2,15 @@
   "name": "backend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "NODE_ENV=development ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test": "vitest",
+    "test:rls": "vitest tests/rls.*.test.ts"
   },
   "dependencies": {
     "@esbuild-kit/core-utils": "^3.3.2",
@@ -22,6 +24,7 @@
     "resend": "^6.7.0"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.90.1",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -30,6 +33,7 @@
     "drizzle-kit": "^0.31.8",
     "nodemon": "^3.1.11",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
   }
 }
