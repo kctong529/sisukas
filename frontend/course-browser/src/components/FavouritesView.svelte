@@ -9,6 +9,7 @@
   import StudyGroupsSection from './StudyGroupsSection.svelte';
   import type { Course } from '../domain/models/Course';
   import { SvelteSet } from 'svelte/reactivity';
+  import PlanManager from './PlanManager.svelte';
 
   const session = useSession();
   $: isSignedIn = !!$session.data?.user;
@@ -61,12 +62,11 @@
       // If plans exist but none are active, activate the first one
       await plansStore.setActive($plansStore.plans[0].id);
     }
+  }
 
-    if ($plansStore.activePlan) {
-      expandedInstanceIds = new SvelteSet(
-        $plansStore.activePlan.instanceIds
-      );
-    }
+  // Sync expanded instances with active plan
+  $: if ($plansStore.activePlan) {
+    expandedInstanceIds = new SvelteSet($plansStore.activePlan.instanceIds);
   }
 
   // Batch fetch study groups for all favourited courses
@@ -259,13 +259,10 @@
     <div class="header-section">
       <div class="title-group">
         <h1>Your Favourites</h1>
-        {#if $plansStore.activePlan}
-          <div class="active-plan-info">
-            Plan: <strong>{$plansStore.activePlan.name}</strong> ({$plansStore.activePlan.instanceIds.length} instances)
-          </div>
-        {/if}
       </div>
       
+      <PlanManager compact={true} />
+
       <div class="controls">
         {#if removeMode}
           <button class="btn btn-secondary" on:click={exitRemoveMode}>
@@ -484,15 +481,6 @@
     margin: 0;
   }
 
-  .active-plan-info {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    padding: 0.5rem 0.75rem;
-    background: #f0fdf4;
-    border-left: 3px solid var(--success);
-    border-radius: 4px;
-  }
-
   h2 {
     font-size: 1.1rem;
     font-weight: 600;
@@ -531,15 +519,16 @@
   }
 
   select {
-    margin: 0;
+    flex: 1;
     padding: 0.5rem 0.8rem;
-    border: 1px solid var(--border);
+    border: 1px solid #e2e8f0;
     border-radius: 6px;
-    background: var(--card-bg);
-    cursor: pointer;
-    appearance: none;
     font-size: 0.8rem;
-    color: var(--text-main);
+    cursor: pointer;
+    background: #ffffff;
+    color: #1e293b;
+    appearance: none;
+    height: 32.5px;
   }
 
   select:hover {

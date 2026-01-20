@@ -2,29 +2,16 @@
 <script lang="ts">
   import { useSession } from '../lib/authClient';
   import { plansStore } from '../lib/stores/plansStore';
-  import { SvelteSet } from 'svelte/reactivity';
+  import { courseStore } from '../lib/stores/courseStore';
+  import PlanManager from './PlanManager.svelte';
+  import StudyGroupsGrid from './StudyGroupsGrid.svelte';
+  import type { Course } from '../domain/models/Course';
 
   const session = useSession();
-  $: isSignedIn = !!$session.data?.user;
+  let isSignedIn = $derived(!!$session.data?.user);
 
-  let expandedPlans = new SvelteSet<string>();
-
-  function togglePlan(planId: string) {
-    if (expandedPlans.has(planId)) {
-      expandedPlans.delete(planId);
-    } else {
-      expandedPlans.add(planId);
-    }
-    expandedPlans = new SvelteSet(expandedPlans);
-  }
-
-  async function activatePlan(planId: string) {
-    try {
-      await plansStore.setActive(planId);
-    } catch (err) {
-      console.error('Failed to activate plan:', err);
-    }
-  }
+  // Derive active plan from store
+  let activePlan = $derived.by(() => $plansStore.activePlan);
 
   async function loadPlans() {
     try {
@@ -32,6 +19,16 @@
     } catch (err) {
       console.error('Failed to load plans:', err);
     }
+  }
+
+  function getCourseForInstance(instanceId: string): Course | undefined {
+    // Search through all courses to find the one matching this instance ID
+    const allCourses = courseStore.getAll();
+    for (const courseArray of allCourses.values()) {
+      const course = courseArray.find(c => c.id === instanceId);
+      if (course) return course;
+    }
+    return undefined;
   }
 </script>
 
@@ -53,7 +50,7 @@
     <div class="state-card error">
       <h2>Something went wrong</h2>
       <p>{$plansStore.error}</p>
-      <button on:click={loadPlans} class="btn btn-secondary">
+      <button onclick={loadPlans} class="btn btn-secondary">
         Try Again
       </button>
     </div>
@@ -65,80 +62,55 @@
       <p>Create your first plan from the Favourites view.</p>
     </div>
 
-  {:else}
-    <div class="header">
-      <h1>Course Plans</h1>
-      <h3>This page is under active development. Come back in a week!</h3>
-      <p class="subtitle">{$plansStore.plans.length} plan{$plansStore.plans.length !== 1 ? 's' : ''}</p>
+  {:else if !activePlan}
+    <div class="state-card">
+      <div class="icon-circle">📋</div>
+      <h2>No active plan</h2>
+      <p>Select a plan to view its instances.</p>
+      <PlanManager compact={true} />
     </div>
 
-    <div class="plans-container">
-      {#each $plansStore.plans as plan (plan.id)}
-        <div class="plan-card" class:active={plan.isActive}>
-          <div class="plan-header" role="button" tabindex="0" on:click={() => togglePlan(plan.id)} on:keydown={(e) => e.key === 'Enter' && togglePlan(plan.id)}>
-            <div class="plan-title">
-              <h2>{plan.name}</h2>
-              {#if plan.isActive}
-                <span class="active-badge">ACTIVE</span>
-              {/if}
-            </div>
-            <button 
-              class="toggle-btn" 
-              aria-label={expandedPlans.has(plan.id) ? 'Collapse plan' : 'Expand plan'}
-              on:click={(e) => {
-                e.stopPropagation();
-                togglePlan(plan.id);
-              }}
-            >
-              {expandedPlans.has(plan.id) ? '▼' : '▶'}
-            </button>
-          </div>
+  {:else}
+    <div class="header-section">
+      <div class="title-group">
+        <h1>LEGO Composition (Not Done Yet)</h1>
+      </div>
+      
+      <PlanManager compact={true} />
+    </div>
 
-          {#if expandedPlans.has(plan.id)}
-            <div class="plan-content">
-              <div class="plan-meta">
-                <div class="meta-item">
-                  <span class="meta-label">Instances:</span>
-                  <span class="meta-value">{plan.instanceIds.length}</span>
-                </div>
-                <div class="meta-item">
-                  <span class="meta-label">Created:</span>
-                  <span class="meta-value">{new Date(plan.createdAt).toLocaleDateString('fi-FI')}</span>
-                </div>
-              </div>
-
-              {#if plan.instanceIds.length === 0}
-                <div class="empty-state">
-                  <p>No instances added yet</p>
-                  <small>Add courses from your Favourites view</small>
-                </div>
-              {:else}
-                <div class="instances-list">
-                  <h3>Instances ({plan.instanceIds.length})</h3>
-                  <div class="instance-tags">
-                    {#each plan.instanceIds as instanceId (instanceId)}
-                      <div class="instance-tag">{instanceId}</div>
-                    {/each}
-                  </div>
-                </div>
-              {/if}
-
-              <div class="plan-actions">
-                {#if !plan.isActive}
-                  <button 
-                    class="btn btn-activate" 
-                    on:click={() => activatePlan(plan.id)}
-                  >
-                    Make Active
-                  </button>
-                {:else}
-                  <span class="btn-active">✓ Active</span>
-                {/if}
-              </div>
-            </div>
-          {/if}
+    <div class="instances-container">
+      {#if activePlan.instanceIds.length === 0}
+        <div class="state-card">
+          <div class="icon-circle">✨</div>
+          <h2>No instances yet</h2>
+          <p>Add course instances from your Favourites view to this plan.</p>
         </div>
-      {/each}
+      {:else}
+        <div class="instances-list">
+          {#each activePlan.instanceIds as instanceId (instanceId)}
+            {@const course = getCourseForInstance(instanceId)}
+            <div class="instance-card">
+              <div class="instance-header">
+                <div class="instance-info">
+                  {#if course}
+                    <h3 class="instance-id">{course.code || instanceId}</h3>
+                    <p class="instance-name">{course.name?.en}</p>
+                  {:else}
+                    <h3 class="instance-id">{instanceId}</h3>
+                  {/if}
+                </div>
+              </div>
+
+              {#if course}
+                <div class="instance-content">
+                  <StudyGroupsGrid {course} isExpanded={true} />
+                </div>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -163,250 +135,93 @@
     color: var(--text-main);
   }
 
-  .header {
-    margin-bottom: 2rem;
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 
   h1 {
     font-size: 1.3rem;
     font-weight: 600;
-    margin: 0 0 0.5rem 0;
-  }
-  /* }
-  h1 {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin: 0 0 0.5rem 0;
-  } */
-
-  .subtitle {
-    font-size: 0.95rem;
-    color: var(--text-muted);
-    margin: 0;
-  }
-
-  h2 {
-    font-size: 1.1rem;
-    font-weight: 600;
     margin: 0;
   }
 
   h3 {
-    font-size: 0.95rem;
-    font-weight: 600;
-    margin: 0 0 0.75rem 0;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary);
   }
 
   p {
     margin: 0;
   }
 
-  .plans-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 1rem;
+  .instances-container {
+    display: flex;
+    flex-direction: column;
   }
 
-  .plan-card {
+  .instances-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(224px, 0.5fr));
+    gap: 0.3rem;
+  }
+
+  .instance-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 8px;
     overflow: hidden;
-    transition: all 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
   }
 
-  .plan-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  .instance-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
 
-  .plan-card.active {
-    border-color: var(--success);
-    background: #f0fdf4;
-  }
-
-  .plan-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    cursor: pointer;
-    user-select: none;
-    gap: 1rem;
-  }
-
-  .plan-header:hover {
-    opacity: 0.95;
-  }
-
-  .plan-title {
+  .instance-header {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    padding: 0.7rem 0.7rem;
+    padding-bottom: 0;
+    background: var(--card-bg);
+    color: var(--text-main);
+  }
+
+  .instance-info {
     flex: 1;
     min-width: 0;
   }
 
-  .plan-title h2 {
-    color: white;
+  .instance-id {
+    color: var(--primary);
     margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .instance-name {
+    font-size: 0.75rem;
+    color: #333;
+    margin: 0.1rem 0 0 0;
+    line-height: 1.2;
     word-break: break-word;
   }
 
-  .active-badge {
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.3);
-    color: white;
-    padding: 0.25rem 0.5rem;
-    border-radius: 3px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .toggle-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0;
-    flex-shrink: 0;
-    transition: transform 0.2s;
-  }
-
-  .toggle-btn:hover {
-    transform: scale(1.1);
-  }
-
-  .plan-content {
-    padding: 1rem;
-    border-top: 1px solid var(--border);
-  }
-
-  .plan-meta {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .meta-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem;
-    background: var(--bg);
-    border-radius: 6px;
-    font-size: 0.85rem;
-  }
-
-  .meta-label {
-    font-weight: 600;
-    color: var(--text-muted);
-  }
-
-  .meta-value {
-    color: var(--primary);
-    font-weight: 600;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 2rem 1rem;
-    background: var(--bg);
-    border-radius: 8px;
-    margin-bottom: 1rem;
-  }
-
-  .empty-state p {
-    font-size: 1rem;
-    color: var(--text-main);
-    margin-bottom: 0.25rem;
-  }
-
-  .empty-state small {
-    color: var(--text-muted);
-    display: block;
-  }
-
-  .instances-list {
-    margin-bottom: 1rem;
-  }
-
-  .instance-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .instance-tag {
-    background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
-    color: #1e40af;
-    padding: 0.5rem 0.75rem;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    word-break: break-all;
-  }
-
-  .plan-actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .btn {
-    padding: 0.6rem 1rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-    flex: 1;
-  }
-
-  .btn-activate {
-    background: var(--primary);
-    color: white;
-  }
-
-  .btn-activate:hover {
-    background: var(--primary-hover);
-  }
-
-  .btn-activate:focus {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-
-  .btn-active {
-    display: inline-block;
-    padding: 0.6rem 1rem;
-    background: var(--success);
-    color: white;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    text-align: center;
-    flex: 1;
-  }
-
-  .btn-secondary {
-    background: var(--card-bg);
-    color: var(--text-main);
-    border: 1px solid var(--border);
-    padding: 0.6rem 1.25rem;
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--primary);
-    background: #f1f5f9;
+  .instance-content {
+    padding: 0.5rem 0.5rem;
   }
 
   .state-card {
@@ -473,17 +288,31 @@
     text-align: center;
   }
 
-  @media (max-width: 640px) {
-    .plans-container {
+  .btn {
+    padding: 0.6rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .btn-secondary {
+    background: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--primary);
+    background: #f1f5f9;
+  }
+
+  @media (max-width: 484px) {
+    .instances-list {
       grid-template-columns: 1fr;
-    }
-
-    .plan-header {
-      padding: 0.75rem;
-    }
-
-    .plan-content {
-      padding: 0.75rem;
     }
   }
 </style>
