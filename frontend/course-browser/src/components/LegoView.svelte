@@ -6,6 +6,7 @@
   import PlanManager from './PlanManager.svelte';
   import StudyGroupsGrid from './StudyGroupsGrid.svelte';
   import type { Course } from '../domain/models/Course';
+  import BlocksSection from './BlocksSection.svelte';
 
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);
@@ -30,6 +31,8 @@
     }
     return undefined;
   }
+
+  const courseInstanceId = 'aalto-CUR-206050-3121830';
 </script>
 
 <div class="lego-view">
@@ -110,6 +113,7 @@
             </div>
           {/each}
         </div>
+        <BlocksSection {courseInstanceId} courseInstanceName="CS-C2160" />
       {/if}
     </div>
   {/if}
