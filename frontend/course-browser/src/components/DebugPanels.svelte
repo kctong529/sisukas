@@ -3,15 +3,18 @@
   import AuthDebugPanel from './AuthDebugPanel.svelte';
   import StudyGroupStoreDebug from './StudyGroupStoreDebug.svelte';
   import PlansStoreDebug from './PlansStoreDebug.svelte';
+  import BlockStoreDebug from './BlockStoreDebug.svelte';
 
   const debugAuthStore = import.meta.env.VITE_DEBUG_AUTH === 'true';
   const debugStudyGroupStore = import.meta.env.VITE_DEBUG_STUDY_GROUP_STORE === 'true';
   const debugPlanStore = import.meta.env.VITE_DEBUG_PLAN_STORE === 'true';
+  const debugBlockStore = import.meta.env.VITE_DEBUG_BLOCK_STORE === 'true';
 
   const panelsToShow = [
     { name: 'AuthDebugPanel', show: debugAuthStore, component: AuthDebugPanel },
     { name: 'StudyGroupStoreDebug', show: debugStudyGroupStore, component: StudyGroupStoreDebug },
     { name: 'PlansStoreDebug', show: debugPlanStore, component: PlansStoreDebug },
+    { name: 'BlockStoreDebug', show: debugBlockStore, component: BlockStoreDebug },
   ].filter(p => p.show);
 </script>
 

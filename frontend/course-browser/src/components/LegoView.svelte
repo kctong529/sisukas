@@ -4,9 +4,8 @@
   import { plansStore } from '../lib/stores/plansStore';
   import { courseStore } from '../lib/stores/courseStore';
   import PlanManager from './PlanManager.svelte';
-  import StudyGroupsGrid from './StudyGroupsGrid.svelte';
+  import BlocksGrid from './BlocksGrid.svelte';
   import type { Course } from '../domain/models/Course';
-  import BlocksSection from './BlocksSection.svelte';
 
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);
@@ -31,8 +30,6 @@
     }
     return undefined;
   }
-
-  const courseInstanceId = 'aalto-CUR-206050-3121830';
 </script>
 
 <div class="lego-view">
@@ -76,7 +73,7 @@
   {:else}
     <div class="header-section">
       <div class="title-group">
-        <h1>LEGO Composition (Not Done Yet)</h1>
+        <h1>LEGO Composition</h1>
       </div>
       
       <PlanManager compact={true} />
@@ -107,13 +104,12 @@
 
               {#if course}
                 <div class="instance-content">
-                  <StudyGroupsGrid {course} isExpanded={true} />
+                  <BlocksGrid {course} isExpanded={true} />
                 </div>
               {/if}
             </div>
           {/each}
         </div>
-        <BlocksSection {courseInstanceId} courseInstanceName="CS-C2160" />
       {/if}
     </div>
   {/if}

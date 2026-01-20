@@ -1,24 +1,26 @@
 // src/lib/stores/blockStore.ts
-//
-// Fixes applied:
-// 1) invalidateInstance(): delete cache entry (or set undefined), not []
-//    because [] is truthy and would short-circuit fetch.
-// 2) clear(): use update/set to replace state (don’t mutate inside subscribe).
-// 3) fetchForInstance(): cache check must treat "not cached" vs "cached empty" properly.
-//    (We use `hasOwnProperty` to distinguish.)
-// 4) Small helper: getStateSnapshot() to avoid subscribe/unsubscribe boilerplate.
 
 import { writable, get, derived } from 'svelte/store';
 import { blockService } from '../../infrastructure/services/BlockService';
 import type { Block } from '../../domain/models/Block';
+import type { StudyGroup } from '../../domain/models/StudyGroup';
+
+// ========== Store State Types ==========
 
 interface BlockStoreState {
   // Map of courseInstanceId -> Block[]
-  blocksByCourseInstance: Record<string, Block[]>;
+  blocksByCourseInstance: { [courseInstanceId: string]: Block[] };
+  
+  // Set of courseInstanceId's currently loading
   loadingInstances: Set<string>;
+  
+  // Set of blockId's currently being modified
   modifyingBlocks: Set<string>;
+  
   error: string | null;
 }
+
+// ========== Initial State Factory ==========
 
 function createInitialState(): BlockStoreState {
   return {
@@ -29,41 +31,42 @@ function createInitialState(): BlockStoreState {
   };
 }
 
-function hasCachedEntry(state: BlockStoreState, courseInstanceId: string): boolean {
-  // Distinguish "not cached" (missing key) from "cached empty list" (key exists but [])
-  return Object.prototype.hasOwnProperty.call(state.blocksByCourseInstance, courseInstanceId);
-}
+// ========== Store Creation ==========
 
 function createBlockStore() {
   const store = writable<BlockStoreState>(createInitialState());
   const { subscribe, update, set } = store;
-
-  const getStateSnapshot = () => get(store);
 
   return {
     subscribe,
 
     // ========== Fetch Operations ==========
 
+    /**
+     * Fetch blocks for a course instance.
+     * Results are cached.
+     * 
+     * @param courseInstanceId - The course instance to fetch blocks for
+     * @returns Array of blocks for the instance
+     */
     async fetchForInstance(courseInstanceId: string): Promise<Block[]> {
-      const state0 = getStateSnapshot();
-
-      // If we have a cached entry (even if it is empty), return it.
-      // (If you *want* empty to mean "no data / should refetch", then don't cache empty.)
-      if (hasCachedEntry(state0, courseInstanceId)) {
-        return state0.blocksByCourseInstance[courseInstanceId];
+      // Check if already cached
+      const state = get(store);
+      if (state.blocksByCourseInstance[courseInstanceId]) {
+        return state.blocksByCourseInstance[courseInstanceId];
       }
 
       // Mark as loading
-      update(state => ({
-        ...state,
-        loadingInstances: new Set([...state.loadingInstances, courseInstanceId]),
+      update(s => ({
+        ...s,
+        loadingInstances: new Set([...s.loadingInstances, courseInstanceId]),
         error: null,
       }));
 
       try {
         const blocks = await blockService.getBlocksForInstance(courseInstanceId);
 
+        // Cache the blocks
         update(state => {
           const nextLoading = new Set(state.loadingInstances);
           nextLoading.delete(courseInstanceId);
@@ -98,19 +101,34 @@ function createBlockStore() {
       }
     },
 
+    /**
+     * Check if a course instance is currently loading.
+     */
     isLoadingInstance(courseInstanceId: string): boolean {
-      return getStateSnapshot().loadingInstances.has(courseInstanceId);
+      return get(store).loadingInstances.has(courseInstanceId);
     },
 
+    /**
+     * Get cached blocks for an instance without fetching.
+     * Returns null if not cached.
+     */
     getCachedForInstance(courseInstanceId: string): Block[] | null {
-      const state = getStateSnapshot();
-      return hasCachedEntry(state, courseInstanceId)
-        ? state.blocksByCourseInstance[courseInstanceId]
-        : null;
+      const blocks = get(store).blocksByCourseInstance[courseInstanceId];
+      return blocks || null;
     },
 
     // ========== Create Operations ==========
 
+    /**
+     * Create a new block for a course instance.
+     * Automatically updates the cache.
+     * 
+     * @param courseInstanceId - The course instance this block belongs to
+     * @param label - User-friendly label
+     * @param studyGroupIds - The study groups this block contains
+     * @param order - Position in the ordering
+     * @returns The created block
+     */
     async createBlock(
       courseInstanceId: string,
       label: string,
@@ -120,20 +138,21 @@ function createBlockStore() {
       update(s => ({ ...s, error: null }));
 
       try {
-        const newBlock = await blockService.createBlock(courseInstanceId, label, studyGroupIds, order);
+        const newBlock = await blockService.createBlock(
+          courseInstanceId,
+          label,
+          studyGroupIds,
+          order
+        );
 
+        // Add to cache
         update(state => {
-          const existing = hasCachedEntry(state, courseInstanceId)
-            ? state.blocksByCourseInstance[courseInstanceId]
-            : [];
-
-          const next = [...existing, newBlock].sort((a, b) => a.order - b.order);
-
+          const existing = state.blocksByCourseInstance[courseInstanceId] || [];
           return {
             ...state,
             blocksByCourseInstance: {
               ...state.blocksByCourseInstance,
-              [courseInstanceId]: next,
+              [courseInstanceId]: [...existing, newBlock].sort((a, b) => a.order - b.order),
             },
           };
         });
@@ -146,7 +165,15 @@ function createBlockStore() {
       }
     },
 
-    async autoPartitionByType(courseInstanceId: string): Promise<Block[]> {
+    /**
+     * Auto-partition study groups for a course instance by their type.
+     * This generates the default Lecture / Exercise / Exam blocks.
+     * 
+     * @param courseInstanceId - The course instance to partition
+     * @param studyGroups - The study groups to partition
+     * @returns Array of auto-generated blocks
+     */
+    async autoPartitionByType(courseInstanceId: string, studyGroups: StudyGroup[]): Promise<Block[]> {
       update(s => ({
         ...s,
         loadingInstances: new Set([...s.loadingInstances, courseInstanceId]),
@@ -154,37 +181,32 @@ function createBlockStore() {
       }));
 
       try {
-        const blocks = await blockService.autoPartitionByType(courseInstanceId);
+        const blocks = await blockService.autoPartitionByType(courseInstanceId, studyGroups);
 
-        update(state => {
-          const nextLoading = new Set(state.loadingInstances);
-          nextLoading.delete(courseInstanceId);
-
-          return {
-            ...state,
-            blocksByCourseInstance: {
-              ...state.blocksByCourseInstance,
-              [courseInstanceId]: blocks,
-            },
-            loadingInstances: nextLoading,
-            error: null,
-          };
-        });
+        // Update cache with the new blocks
+        update(state => ({
+          ...state,
+          blocksByCourseInstance: {
+            ...state.blocksByCourseInstance,
+            [courseInstanceId]: blocks,
+          },
+          loadingInstances: new Set(
+            [...state.loadingInstances].filter(id => id !== courseInstanceId)
+          ),
+          error: null,
+        }));
 
         return blocks;
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Failed to auto-partition';
 
-        update(state => {
-          const nextLoading = new Set(state.loadingInstances);
-          nextLoading.delete(courseInstanceId);
-
-          return {
-            ...state,
-            loadingInstances: nextLoading,
-            error: errorMsg,
-          };
-        });
+        update(state => ({
+          ...state,
+          loadingInstances: new Set(
+            [...state.loadingInstances].filter(id => id !== courseInstanceId)
+          ),
+          error: errorMsg,
+        }));
 
         throw error;
       }
@@ -192,9 +214,16 @@ function createBlockStore() {
 
     // ========== Update Operations ==========
 
+    /**
+     * Update a block's properties (label, study groups, or order).
+     * 
+     * @param blockId - The block to update
+     * @param updates - Partial update object
+     * @returns The updated block
+     */
     async updateBlock(
       blockId: string,
-      updatesObj: { label?: string; studyGroupIds?: string[]; order?: number }
+      updates: { label?: string; studyGroupIds?: string[]; order?: number }
     ): Promise<Block> {
       update(state => ({
         ...state,
@@ -203,10 +232,10 @@ function createBlockStore() {
       }));
 
       try {
-        const updated = await blockService.updateBlock(blockId, updatesObj);
+        const updated = await blockService.updateBlock(blockId, updates);
 
+        // Find and update the block in cache
         update(state => {
-          // update cached instance list if present
           let nextBlocksByInstance = state.blocksByCourseInstance;
 
           for (const [courseInstanceId, blocks] of Object.entries(state.blocksByCourseInstance)) {
@@ -253,20 +282,35 @@ function createBlockStore() {
       }
     },
 
+    /**
+     * Update only a block's label.
+     */
     async updateBlockLabel(blockId: string, label: string): Promise<Block> {
       return this.updateBlock(blockId, { label });
     },
 
+    /**
+     * Update only a block's study groups.
+     */
     async updateBlockStudyGroups(blockId: string, studyGroupIds: string[]): Promise<Block> {
       return this.updateBlock(blockId, { studyGroupIds });
     },
 
+    /**
+     * Update only a block's order.
+     */
     async updateBlockOrder(blockId: string, order: number): Promise<Block> {
       return this.updateBlock(blockId, { order });
     },
 
-    async reorderBlocks(updatesArr: Array<{ blockId: string; order: number }>): Promise<Block[]> {
-      const ids = updatesArr.map(u => u.blockId);
+    /**
+     * Reorder multiple blocks at once.
+     * 
+     * @param updates - Array of {blockId, order} updates
+     * @returns Array of updated blocks
+     */
+    async reorderBlocks(updates: Array<{ blockId: string; order: number }>): Promise<Block[]> {
+      const ids = updates.map(u => u.blockId);
 
       update(state => ({
         ...state,
@@ -275,7 +319,7 @@ function createBlockStore() {
       }));
 
       try {
-        const updatedBlocks = await blockService.reorderBlocks(updatesArr);
+        const updatedBlocks = await blockService.reorderBlocks(updates);
 
         update(state => {
           const updatedMap = new Map(updatedBlocks.map(b => [b.id, b]));
@@ -325,12 +369,21 @@ function createBlockStore() {
       }
     },
 
+    /**
+     * Check if a block is currently being modified.
+     */
     isModifying(blockId: string): boolean {
-      return getStateSnapshot().modifyingBlocks.has(blockId);
+      return get(store).modifyingBlocks.has(blockId);
     },
 
     // ========== Delete Operations ==========
 
+    /**
+     * Delete a block by ID.
+     * Automatically updates the cache.
+     * 
+     * @param blockId - The block to delete
+     */
     async deleteBlock(blockId: string): Promise<void> {
       update(state => ({
         ...state,
@@ -383,9 +436,11 @@ function createBlockStore() {
 
     // ========== Cache Management ==========
 
+    /**
+     * Invalidate the cache for a course instance.
+     * The next fetch will reload from the service.
+     */
     invalidateInstance(courseInstanceId: string): void {
-      // Fix: delete entry rather than setting it to []
-      // so a subsequent fetch will actually refetch.
       update(state => {
         const next = { ...state.blocksByCourseInstance };
         delete next[courseInstanceId];
@@ -397,8 +452,10 @@ function createBlockStore() {
       });
     },
 
+    /**
+     * Clear all cached data and reset to initial state.
+     */
     clear(): void {
-      // Fix: replace store state via set(), don't mutate via subscribe()
       set(createInitialState());
     },
   };
@@ -408,14 +465,24 @@ export const blockStore = createBlockStore();
 
 // ========== Derived Stores ==========
 
+/**
+ * Derived store: get blocks for a specific course instance.
+ * Returns empty array if not cached/loaded.
+ */
 export function blocksForInstance(courseInstanceId: string) {
   return derived(blockStore, state => state.blocksByCourseInstance[courseInstanceId] || []);
 }
 
+/**
+ * Derived store: check if a course instance is loading.
+ */
 export function isLoadingInstance(courseInstanceId: string) {
   return derived(blockStore, state => state.loadingInstances.has(courseInstanceId));
 }
 
+/**
+ * Derived store: check if a block is being modified.
+ */
 export function isModifyingBlock(blockId: string) {
   return derived(blockStore, state => state.modifyingBlocks.has(blockId));
 }

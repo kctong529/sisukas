@@ -67,7 +67,9 @@ jobs:
           VITE_FRONTEND_URL: ${{ inputs.frontend_url }}
           VITE_BACKEND_URL: ${{ inputs.backend_url }}
           VITE_DEBUG_AUTH: false
-          VITE_DEBUG_STORE: false
+          VITE_DEBUG_STUDY_GROUP_STORE: false
+          VITE_DEBUG_PLAN_STORE: false
+          VITE_DEBUG_BLOCK_STORE: false
         run: |
           npm run build
           echo "result=success" >> $GITHUB_OUTPUT
