@@ -4,19 +4,20 @@ import { writable, get, derived } from 'svelte/store';
 import { blockService } from '../../infrastructure/services/BlockService';
 import type { Block } from '../../domain/models/Block';
 import type { StudyGroup } from '../../domain/models/StudyGroup';
+  import { colorAllocator, colorAllocatorVersion } from './colorAllocator';
 
 // ========== Store State Types ==========
 
 interface BlockStoreState {
   // Map of courseInstanceId -> Block[]
-  blocksByCourseInstance: { [courseInstanceId: string]: Block[] };
-  
+  blocksByCourseInstance: Record<string, Block[]>;
+
   // Set of courseInstanceId's currently loading
   loadingInstances: Set<string>;
-  
+
   // Set of blockId's currently being modified
   modifyingBlocks: Set<string>;
-  
+
   error: string | null;
 }
 
@@ -37,21 +38,92 @@ function createBlockStore() {
   const store = writable<BlockStoreState>(createInitialState());
   const { subscribe, update, set } = store;
 
-  return {
+  // ---------- Helpers (private) ----------
+
+  function findBlockContainingStudyGroup(blocks: Block[], studyGroupId: string): Block | null {
+    for (const b of blocks) {
+      if (b.studyGroupIds.includes(studyGroupId)) return b;
+    }
+    return null;
+  }
+
+  function findCourseInstanceIdForBlock(blockId: string): string | null {
+    const state = get(store);
+    for (const [courseInstanceId, blocks] of Object.entries(state.blocksByCourseInstance)) {
+      if (blocks.some(b => b.id === blockId)) return courseInstanceId;
+    }
+    return null;
+  }
+
+  function findBlocksIntersectingStudyGroups(blocks: Block[], studyGroupIds: string[]): Block[] {
+    const selected = new Set(studyGroupIds);
+    return blocks.filter(b => b.studyGroupIds.some(gid => selected.has(gid)));
+  }
+
+  async function ensureStudyGroupsUnassigned(courseInstanceId: string, studyGroupIds: string[]) {
+    const state = get(store);
+    const blocks = state.blocksByCourseInstance[courseInstanceId] || [];
+    const intersecting = findBlocksIntersectingStudyGroups(blocks, studyGroupIds);
+
+    if (intersecting.length === 0) return;
+
+    // Delete each overlapping block once
+    const ids = Array.from(new Set(intersecting.map(b => b.id)));
+    for (const id of ids) {
+      await api.deleteBlock(id);
+    }
+  }
+
+  function removeLoading(courseInstanceId: string) {
+    return (state: BlockStoreState): BlockStoreState => {
+      const nextLoading = new Set(state.loadingInstances);
+      nextLoading.delete(courseInstanceId);
+      return { ...state, loadingInstances: nextLoading };
+    };
+  }
+
+  function removeModifying(blockId: string) {
+    return (state: BlockStoreState): BlockStoreState => {
+      const next = new Set(state.modifyingBlocks);
+      next.delete(blockId);
+      return { ...state, modifyingBlocks: next };
+    };
+  }
+
+  // ---------- Public API ----------
+
+  const api = {
     subscribe,
 
-    // ========== Fetch Operations ==========
+    // ===== Drag-select entrypoint (invariant + preview color) =====
 
     /**
-     * Fetch blocks for a course instance.
-     * Results are cached.
-     * 
-     * @param courseInstanceId - The course instance to fetch blocks for
-     * @returns Array of blocks for the instance
+     * Start a drag-select gesture.
+     * Enforces invariant: a study group may belong to at most one block.
+     * If the touched group is already in a block, that block is deleted first.
+     *
+     * Returns a reserved preview color index for the upcoming selection.
      */
+    async beginDragSelect(courseInstanceId: string): Promise<{ previewColorIndex: number }> {
+      // Always clear any stale reservation first
+      colorAllocator.clearReservation(courseInstanceId);
+
+      // Ensure we have blocks
+      if (!get(store).blocksByCourseInstance[courseInstanceId]) {
+        await api.fetchForInstance(courseInstanceId);
+      }
+
+      const blocksNow = get(store).blocksByCourseInstance[courseInstanceId] || [];
+      const previewColorIndex = colorAllocator.reserve(courseInstanceId, blocksNow);
+      return { previewColorIndex };
+    },
+
+    // ===== Fetch Operations =====
+
     async fetchForInstance(courseInstanceId: string): Promise<Block[]> {
-      // Check if already cached
       const state = get(store);
+
+      // Cached
       if (state.blocksByCourseInstance[courseInstanceId]) {
         return state.blocksByCourseInstance[courseInstanceId];
       }
@@ -86,66 +158,48 @@ function createBlockStore() {
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to fetch blocks';
 
-        update(state => {
-          const nextLoading = new Set(state.loadingInstances);
-          nextLoading.delete(courseInstanceId);
-
-          return {
-            ...state,
-            loadingInstances: nextLoading,
-            error: errorMessage,
-          };
-        });
+        update(state => ({
+          ...removeLoading(courseInstanceId)(state),
+          error: errorMessage,
+        }));
 
         return [];
       }
     },
 
-    /**
-     * Check if a course instance is currently loading.
-     */
     isLoadingInstance(courseInstanceId: string): boolean {
       return get(store).loadingInstances.has(courseInstanceId);
     },
 
-    /**
-     * Get cached blocks for an instance without fetching.
-     * Returns null if not cached.
-     */
     getCachedForInstance(courseInstanceId: string): Block[] | null {
-      const blocks = get(store).blocksByCourseInstance[courseInstanceId];
-      return blocks || null;
+      return get(store).blocksByCourseInstance[courseInstanceId] || null;
     },
 
-    // ========== Create Operations ==========
+    // ===== Create Operations =====
 
     /**
      * Create a new block for a course instance.
-     * Automatically updates the cache.
-     * 
-     * @param courseInstanceId - The course instance this block belongs to
-     * @param label - User-friendly label
-     * @param studyGroupIds - The study groups this block contains
-     * @param order - Position in the ordering
-     * @returns The created block
+     * NOTE: colorIndex must be provided (stable block color).
      */
     async createBlock(
       courseInstanceId: string,
       label: string,
       studyGroupIds: string[],
-      order: number
+      order: number,
+      colorIndex: number
     ): Promise<Block> {
       update(s => ({ ...s, error: null }));
 
       try {
+        await ensureStudyGroupsUnassigned(courseInstanceId, studyGroupIds);
         const newBlock = await blockService.createBlock(
           courseInstanceId,
           label,
           studyGroupIds,
-          order
+          order,
+          colorIndex
         );
 
-        // Add to cache
         update(state => {
           const existing = state.blocksByCourseInstance[courseInstanceId] || [];
           return {
@@ -162,17 +216,11 @@ function createBlockStore() {
         const errorMsg = error instanceof Error ? error.message : 'Failed to create block';
         update(s => ({ ...s, error: errorMsg }));
         throw error;
+      } finally {
+        colorAllocator.clearReservation(courseInstanceId);
       }
     },
 
-    /**
-     * Auto-partition study groups for a course instance by their type.
-     * This generates the default Lecture / Exercise / Exam blocks.
-     * 
-     * @param courseInstanceId - The course instance to partition
-     * @param studyGroups - The study groups to partition
-     * @returns Array of auto-generated blocks
-     */
     async autoPartitionByType(courseInstanceId: string, studyGroups: StudyGroup[]): Promise<Block[]> {
       update(s => ({
         ...s,
@@ -183,16 +231,12 @@ function createBlockStore() {
       try {
         const blocks = await blockService.autoPartitionByType(courseInstanceId, studyGroups);
 
-        // Update cache with the new blocks
         update(state => ({
-          ...state,
+          ...removeLoading(courseInstanceId)(state),
           blocksByCourseInstance: {
             ...state.blocksByCourseInstance,
             [courseInstanceId]: blocks,
           },
-          loadingInstances: new Set(
-            [...state.loadingInstances].filter(id => id !== courseInstanceId)
-          ),
           error: null,
         }));
 
@@ -201,26 +245,18 @@ function createBlockStore() {
         const errorMsg = error instanceof Error ? error.message : 'Failed to auto-partition';
 
         update(state => ({
-          ...state,
-          loadingInstances: new Set(
-            [...state.loadingInstances].filter(id => id !== courseInstanceId)
-          ),
+          ...removeLoading(courseInstanceId)(state),
           error: errorMsg,
         }));
 
         throw error;
+      } finally {
+        colorAllocator.clearReservation(courseInstanceId);
       }
     },
 
-    // ========== Update Operations ==========
+    // ===== Update Operations =====
 
-    /**
-     * Update a block's properties (label, study groups, or order).
-     * 
-     * @param blockId - The block to update
-     * @param updates - Partial update object
-     * @returns The updated block
-     */
     async updateBlock(
       blockId: string,
       updates: { label?: string; studyGroupIds?: string[]; order?: number }
@@ -234,7 +270,6 @@ function createBlockStore() {
       try {
         const updated = await blockService.updateBlock(blockId, updates);
 
-        // Find and update the block in cache
         update(state => {
           let nextBlocksByInstance = state.blocksByCourseInstance;
 
@@ -253,13 +288,9 @@ function createBlockStore() {
             }
           }
 
-          const nextModifying = new Set(state.modifyingBlocks);
-          nextModifying.delete(blockId);
-
           return {
-            ...state,
+            ...removeModifying(blockId)(state),
             blocksByCourseInstance: nextBlocksByInstance,
-            modifyingBlocks: nextModifying,
           };
         });
 
@@ -267,50 +298,29 @@ function createBlockStore() {
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Failed to update block';
 
-        update(state => {
-          const nextModifying = new Set(state.modifyingBlocks);
-          nextModifying.delete(blockId);
-
-          return {
-            ...state,
-            modifyingBlocks: nextModifying,
-            error: errorMsg,
-          };
-        });
+        update(state => ({
+          ...removeModifying(blockId)(state),
+          error: errorMsg,
+        }));
 
         throw error;
       }
     },
 
-    /**
-     * Update only a block's label.
-     */
-    async updateBlockLabel(blockId: string, label: string): Promise<Block> {
-      return this.updateBlock(blockId, { label });
+    updateBlockLabel(blockId: string, label: string): Promise<Block> {
+      return api.updateBlock(blockId, { label });
     },
 
-    /**
-     * Update only a block's study groups.
-     */
-    async updateBlockStudyGroups(blockId: string, studyGroupIds: string[]): Promise<Block> {
-      return this.updateBlock(blockId, { studyGroupIds });
+    updateBlockStudyGroups(blockId: string, studyGroupIds: string[]): Promise<Block> {
+      return api.updateBlock(blockId, { studyGroupIds });
     },
 
-    /**
-     * Update only a block's order.
-     */
-    async updateBlockOrder(blockId: string, order: number): Promise<Block> {
-      return this.updateBlock(blockId, { order });
+    updateBlockOrder(blockId: string, order: number): Promise<Block> {
+      return api.updateBlock(blockId, { order });
     },
 
-    /**
-     * Reorder multiple blocks at once.
-     * 
-     * @param updates - Array of {blockId, order} updates
-     * @returns Array of updated blocks
-     */
-    async reorderBlocks(updates: Array<{ blockId: string; order: number }>): Promise<Block[]> {
-      const ids = updates.map(u => u.blockId);
+    async reorderBlocks(updatesArr: Array<{ blockId: string; order: number }>): Promise<Block[]> {
+      const ids = updatesArr.map(u => u.blockId);
 
       update(state => ({
         ...state,
@@ -319,7 +329,7 @@ function createBlockStore() {
       }));
 
       try {
-        const updatedBlocks = await blockService.reorderBlocks(updates);
+        const updatedBlocks = await blockService.reorderBlocks(updatesArr);
 
         update(state => {
           const updatedMap = new Map(updatedBlocks.map(b => [b.id, b]));
@@ -369,22 +379,15 @@ function createBlockStore() {
       }
     },
 
-    /**
-     * Check if a block is currently being modified.
-     */
     isModifying(blockId: string): boolean {
       return get(store).modifyingBlocks.has(blockId);
     },
 
-    // ========== Delete Operations ==========
+    // ===== Delete Operations =====
 
-    /**
-     * Delete a block by ID.
-     * Automatically updates the cache.
-     * 
-     * @param blockId - The block to delete
-     */
     async deleteBlock(blockId: string): Promise<void> {
+      const instanceId = findCourseInstanceIdForBlock(blockId);
+
       update(state => ({
         ...state,
         modifyingBlocks: new Set([...state.modifyingBlocks, blockId]),
@@ -407,82 +410,77 @@ function createBlockStore() {
             }
           }
 
-          const nextModifying = new Set(state.modifyingBlocks);
-          nextModifying.delete(blockId);
-
           return {
-            ...state,
+            ...removeModifying(blockId)(state),
             blocksByCourseInstance: nextBlocksByInstance,
-            modifyingBlocks: nextModifying,
           };
         });
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Failed to delete block';
 
-        update(state => {
-          const nextModifying = new Set(state.modifyingBlocks);
-          nextModifying.delete(blockId);
-
-          return {
-            ...state,
-            modifyingBlocks: nextModifying,
-            error: errorMsg,
-          };
-        });
+        update(state => ({
+          ...removeModifying(blockId)(state),
+          error: errorMsg,
+        }));
 
         throw error;
+      } finally {
+        if (instanceId) colorAllocator.clearReservation(instanceId);
       }
     },
 
-    // ========== Cache Management ==========
+    async removeBlockIfGroupIsAssigned(courseInstanceId: string, studyGroupId: string): Promise<boolean> {
+      // Ensure blocks loaded
+      if (!get(store).blocksByCourseInstance[courseInstanceId]) {
+        await api.fetchForInstance(courseInstanceId);
+      }
 
-    /**
-     * Invalidate the cache for a course instance.
-     * The next fetch will reload from the service.
-     */
+      const state = get(store);
+      const blocks = state.blocksByCourseInstance[courseInstanceId] || [];
+      const existing = findBlockContainingStudyGroup(blocks, studyGroupId);
+      if (!existing) return false;
+
+      await api.deleteBlock(existing.id);
+      return true;
+    },
+
+    // ===== Cache Management =====
+
     invalidateInstance(courseInstanceId: string): void {
       update(state => {
         const next = { ...state.blocksByCourseInstance };
         delete next[courseInstanceId];
-
-        return {
-          ...state,
-          blocksByCourseInstance: next,
-        };
+        return { ...state, blocksByCourseInstance: next };
       });
     },
 
-    /**
-     * Clear all cached data and reset to initial state.
-     */
     clear(): void {
       set(createInitialState());
     },
   };
+
+  return api;
 }
 
 export const blockStore = createBlockStore();
 
 // ========== Derived Stores ==========
 
-/**
- * Derived store: get blocks for a specific course instance.
- * Returns empty array if not cached/loaded.
- */
 export function blocksForInstance(courseInstanceId: string) {
   return derived(blockStore, state => state.blocksByCourseInstance[courseInstanceId] || []);
 }
 
-/**
- * Derived store: check if a course instance is loading.
- */
 export function isLoadingInstance(courseInstanceId: string) {
   return derived(blockStore, state => state.loadingInstances.has(courseInstanceId));
 }
 
-/**
- * Derived store: check if a block is being modified.
- */
 export function isModifyingBlock(blockId: string) {
   return derived(blockStore, state => state.modifyingBlocks.has(blockId));
+}
+
+export function previewColorForInstance(courseInstanceId: string) {
+  return derived([blockStore, colorAllocatorVersion], ([state]) => {
+    const blocks = state.blocksByCourseInstance[courseInstanceId] || [];
+    return colorAllocator.peek(courseInstanceId, blocks);
+  });
 }

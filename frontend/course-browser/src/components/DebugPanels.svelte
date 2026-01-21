@@ -11,10 +11,10 @@
   const debugBlockStore = import.meta.env.VITE_DEBUG_BLOCK_STORE === 'true';
 
   const panelsToShow = [
-    { name: 'AuthDebugPanel', show: debugAuthStore, component: AuthDebugPanel },
-    { name: 'StudyGroupStoreDebug', show: debugStudyGroupStore, component: StudyGroupStoreDebug },
-    { name: 'PlansStoreDebug', show: debugPlanStore, component: PlansStoreDebug },
     { name: 'BlockStoreDebug', show: debugBlockStore, component: BlockStoreDebug },
+    { name: 'PlansStoreDebug', show: debugPlanStore, component: PlansStoreDebug },
+    { name: 'StudyGroupStoreDebug', show: debugStudyGroupStore, component: StudyGroupStoreDebug },
+    { name: 'AuthDebugPanel', show: debugAuthStore, component: AuthDebugPanel },
   ].filter(p => p.show);
 </script>
 

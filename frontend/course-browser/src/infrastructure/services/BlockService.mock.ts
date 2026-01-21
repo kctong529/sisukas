@@ -15,21 +15,19 @@ interface MockConfig {
   errorRate?: number; // 0 to 1
 }
 
+// Keep this in sync with your CSS palette size
+const PALETTE_SIZE = 6;
+
 /**
  * Auto-partition study groups by their type.
  * Returns blocks grouped as: Lecture | Exercise | Exam
  */
-function autoPartitionByType(
-  courseInstanceId: string,
-  studyGroups: StudyGroup[]
-): Block[] {
+function autoPartitionByType(courseInstanceId: string, studyGroups: StudyGroup[]): Block[] {
   const blocksByType = new Map<string, StudyGroup[]>();
 
   // Group study groups by type
   for (const group of studyGroups) {
-    if (!blocksByType.has(group.type)) {
-      blocksByType.set(group.type, []);
-    }
+    if (!blocksByType.has(group.type)) blocksByType.set(group.type, []);
     blocksByType.get(group.type)!.push(group);
   }
 
@@ -46,6 +44,8 @@ function autoPartitionByType(
         label: type,
         studyGroupIds: groups.map(g => g.groupId),
         order: index,
+        // ✅ stable colors for default blocks
+        colorIndex: index % PALETTE_SIZE,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -91,7 +91,8 @@ class MockBlockStorage {
     courseInstanceId: string,
     label: string,
     studyGroupIds: string[],
-    order: number
+    order: number,
+    colorIndex: number
   ): Block {
     const id = `block:${courseInstanceId}:custom-${this.nextBlockNumber++}`;
     const now = new Date();
@@ -102,6 +103,7 @@ class MockBlockStorage {
       label,
       studyGroupIds,
       order,
+      colorIndex: ((colorIndex % PALETTE_SIZE) + PALETTE_SIZE) % PALETTE_SIZE,
       createdAt: now,
       updatedAt: now,
     };
@@ -133,9 +135,7 @@ class MockBlockStorage {
     const blocks = this.blocksByInstance.get(block.courseInstanceId);
     if (blocks) {
       const index = blocks.findIndex(b => b.id === blockId);
-      if (index !== -1) {
-        blocks[index] = updated;
-      }
+      if (index !== -1) blocks[index] = updated;
     }
 
     return updated;
@@ -153,9 +153,7 @@ class MockBlockStorage {
     const blocks = this.blocksByInstance.get(block.courseInstanceId);
     if (blocks) {
       const index = blocks.findIndex(b => b.id === blockId);
-      if (index !== -1) {
-        blocks.splice(index, 1);
-      }
+      if (index !== -1) blocks.splice(index, 1);
     }
 
     return true;
@@ -169,15 +167,11 @@ class MockBlockStorage {
 
     // Clear old blocks for this instance
     const oldBlocks = this.blocksByInstance.get(courseInstanceId) || [];
-    for (const block of oldBlocks) {
-      this.blockById.delete(block.id);
-    }
+    for (const block of oldBlocks) this.blockById.delete(block.id);
 
     // Store new blocks
     this.blocksByInstance.set(courseInstanceId, blocks);
-    for (const block of blocks) {
-      this.blockById.set(block.id, block);
-    }
+    for (const block of blocks) this.blockById.set(block.id, block);
 
     return blocks;
   }
@@ -200,7 +194,7 @@ const mockStorage = new MockBlockStorage();
 
 /**
  * Mock BlockService for development.
- * 
+ *
  * Provides in-memory block management with realistic delays.
  * No external dependencies - components pass study groups when needed.
  */
@@ -208,7 +202,7 @@ export class MockBlockService {
   private config: MockConfig = {
     fetchDelayMs: 0,
     mutationDelayMs: 0,
-    errorRate: 0
+    errorRate: 0,
   };
 
   constructor() {}
@@ -230,12 +224,6 @@ export class MockBlockService {
     if (Math.random() < errorRate) {
       throw new Error('Mock Service Error');
     }
-  }
-
-  // ========== Helper Methods ==========
-
-  private async delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   // ========== Fetch Operations ==========
@@ -260,19 +248,17 @@ export class MockBlockService {
     courseInstanceId: string,
     label: string,
     studyGroupIds: string[],
-    order: number
+    order: number,
+    colorIndex: number
   ): Promise<Block> {
     await this.simulate();
     const delay = this.config.mutationDelayMs ?? 0;
     await new Promise(resolve => setTimeout(resolve, delay));
-    const block = mockStorage.createBlock(courseInstanceId, label, studyGroupIds, order);
+    const block = mockStorage.createBlock(courseInstanceId, label, studyGroupIds, order, colorIndex);
     return { ...block }; // Clone
   }
 
-  async autoPartitionByType(
-    courseInstanceId: string,
-    studyGroups: StudyGroup[]
-  ): Promise<Block[]> {
+  async autoPartitionByType(courseInstanceId: string, studyGroups: StudyGroup[]): Promise<Block[]> {
     await this.simulate();
     const delay = this.config.mutationDelayMs ?? 0;
     await new Promise(resolve => setTimeout(resolve, delay));
@@ -325,9 +311,7 @@ export class MockBlockService {
     const delay = this.config.mutationDelayMs ?? 0;
     await new Promise(resolve => setTimeout(resolve, delay));
     const success = mockStorage.deleteBlock(blockId);
-    if (!success) {
-      throw new Error(`Block ${blockId} not found`);
-    }
+    if (!success) throw new Error(`Block ${blockId} not found`);
   }
 }
 

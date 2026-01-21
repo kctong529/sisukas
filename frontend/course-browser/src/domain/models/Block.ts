@@ -3,9 +3,10 @@
 export interface Block {
   id: string;
   courseInstanceId: string;
-  label: string; // e.g. "Lecture", "Exercise H01", user-defined
-  studyGroupIds: string[]; // The study groups that belong to this block
-  order: number; // For sorting blocks within a course instance
+  label: string;
+  studyGroupIds: string[];
+  order: number;
+  colorIndex: number;
   createdAt: Date;
   updatedAt: Date;
 }

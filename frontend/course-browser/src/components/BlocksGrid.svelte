@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { blockStore } from '../lib/stores/blockStore';
+  import { blockStore, previewColorForInstance } from '../lib/stores/blockStore';
   import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import type { Block } from '../domain/models/Block';
   import type { Course } from '../domain/models/Course';
@@ -19,14 +19,24 @@
   let studyGroups: StudyGroup[] = [];
   let blocks: Block[] = [];
   let isLoading = false;
+
+  let nextColorIndex = 0;
+  let groupColorIndexById: Record<string, number> = {};
+
   let unsubscribeGroups: (() => void) | null = null;
   let unsubscribeBlocks: (() => void) | null = null;
   let unsubscribeBlocksLoading: (() => void) | null = null;
+  let unsubscribePreview: (() => void) | null = null;
+
+  let hasDragged = false;
+  let downIndex = -1;
 
   $: if (course) {
+    // reset subscriptions on course change
     if (unsubscribeGroups) unsubscribeGroups();
     if (unsubscribeBlocks) unsubscribeBlocks();
     if (unsubscribeBlocksLoading) unsubscribeBlocksLoading();
+    if (unsubscribePreview) unsubscribePreview();
 
     unsubscribeGroups = studyGroupStore.subscribe(state => {
       const key = `${course.unitId}:${course.id}`;
@@ -40,12 +50,17 @@
     unsubscribeBlocksLoading = blockStore.subscribe(state => {
       isLoading = state.loadingInstances.has(course.id);
     });
+
+    unsubscribePreview = previewColorForInstance(course.id).subscribe(v => {
+      nextColorIndex = v;
+    });
   }
 
   onDestroy(() => {
     if (unsubscribeGroups) unsubscribeGroups();
     if (unsubscribeBlocks) unsubscribeBlocks();
     if (unsubscribeBlocksLoading) unsubscribeBlocksLoading();
+    if (unsubscribePreview) unsubscribePreview();
     detachGlobalMouseUp();
   });
 
@@ -55,27 +70,21 @@
   let selectedGroupIds: string[] = [];
   let committingIds: string[] = [];
 
-  let groupColorIndexById: Record<string, number> = {};
-
-  $: {
+  function computeGroupColorIndexMap(blocks: Block[]) {
     const map: Record<string, number> = {};
-    blocks.forEach((block, i) => {
-      const colorIndex = i % 6;
-      block.studyGroupIds.forEach(gid => {
-        map[gid] = colorIndex;
-      });
-    });
-    groupColorIndexById = map;
+    for (const block of blocks) {
+      for (const gid of block.studyGroupIds) map[gid] = block.colorIndex;
+    }
+    return map;
   }
 
-  // Preview logic for the "next" color in the cycle
-  $: nextColorIndex = blocks.length % 6;
+  $: groupColorIndexById = computeGroupColorIndexMap(blocks);
 
   function updateSelectionRange(index: number) {
     if (!isSelecting || firstSelectedIndex === -1) return;
     const start = Math.min(firstSelectedIndex, index);
     const end = Math.max(firstSelectedIndex, index);
-    selectedGroupIds = studyGroups.slice(start, end + 1).map((g) => g.groupId);
+    selectedGroupIds = studyGroups.slice(start, end + 1).map(g => g.groupId);
   }
 
   function endSelection(clear = false) {
@@ -87,7 +96,7 @@
   async function createBlockFromSelection(ids: string[]) {
     if (ids.length === 0) return;
     const label = ids.length === 1 ? 'Block (1 group)' : `Block (${ids.length} groups)`;
-    await blockStore.createBlock(course.id, label, ids, blocks.length);
+    await blockStore.createBlock(course.id, label, ids, blocks.length, nextColorIndex);
   }
 
   function attachGlobalMouseUp() {
@@ -98,28 +107,61 @@
     window.removeEventListener('mouseup', handleGlobalMouseUp, true);
   }
 
-  function handleMouseDown(index: number, groupId: string, e: MouseEvent) {
+  async function handleMouseDown(index: number, groupId: string, e: MouseEvent) {
     if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
 
+    hasDragged = false;
+    downIndex = index;
+
+    // Enter dragging state immediately (your current behavior)
     isSelecting = true;
     firstSelectedIndex = index;
     selectedGroupIds = [groupId];
     attachGlobalMouseUp();
+
+    // Reserve color (no deletion)
+    await blockStore.beginDragSelect(course.id);
   }
 
   function handleMouseOver(index: number) {
+    // if we moved off the starting square, it's a drag
+    if (index !== downIndex) hasDragged = true;
     updateSelectionRange(index);
   }
 
   async function finalizeSelection() {
     if (!isSelecting) return;
     detachGlobalMouseUp();
-    
+
     const ids = [...selectedGroupIds];
-    committingIds = ids; // Bridging state to prevent "blink"
-    
+    const firstId = ids[0];
+
+    // CLICK (no drag)
+    if (!hasDragged) {
+      // If it was in a block: remove that block and stop.
+      const removed = await blockStore.removeBlockIfGroupIsAssigned(course.id, firstId);
+      endSelection(true);
+      committingIds = [];
+
+      // If it was NOT in a block: create a 1-group block.
+      if (!removed) {
+        committingIds = [firstId]; // "no blink" bridge
+        try {
+          await createBlockFromSelection([firstId]);
+        } catch (err) {
+          console.error('Failed to create block:', err);
+        } finally {
+          setTimeout(() => (committingIds = []), 1);
+        }
+      }
+
+      return;
+    }
+
+    // DRAG
+    committingIds = ids;
     endSelection(true);
 
     try {
@@ -127,31 +169,36 @@
     } catch (err) {
       console.error('Failed to create block:', err);
     } finally {
-      // Small timeout ensures the store update propagates before we clear the bridge
       setTimeout(() => {
         committingIds = [];
       }, 1);
     }
   }
 
-  async function handleMouseUp() {
-    await finalizeSelection();
-  }
 
   async function handleGlobalMouseUp() {
     await finalizeSelection();
   }
 
-  function handleTouchStart(index: number, groupId: string, e: TouchEvent) {
+  // ===== Touch =====
+
+  async function handleTouchStart(index: number, groupId: string, e: TouchEvent) {
     e.preventDefault();
+
+    hasDragged = false;
+    downIndex = index;
+
     isSelecting = true;
     firstSelectedIndex = index;
     selectedGroupIds = [groupId];
+
+    await blockStore.beginDragSelect(course.id);
   }
 
   function handleTouchMove(e: TouchEvent) {
     if (!isSelecting) return;
     e.preventDefault();
+
     const touch = e.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
     const row = (element as HTMLElement | null)?.closest?.('[data-index]') as HTMLElement | null;
@@ -159,12 +206,26 @@
 
     const raw = row.getAttribute('data-index');
     const idx = raw ? parseInt(raw, 10) : -1;
-    if (idx !== -1) updateSelectionRange(idx);
+    if (idx !== -1) {
+      if (idx !== downIndex) hasDragged = true;
+      updateSelectionRange(idx);
+    }
   }
 
-  async function handleTouchEnd() {
+  async function handleTouchEnd(e: TouchEvent) {
+    e.preventDefault();
     await finalizeSelection();
   }
+
+  async function handleTouchCancel(e: TouchEvent) {
+    e.preventDefault();
+    // Cancel without creating/removing
+    endSelection(true);
+    committingIds = [];
+    hasDragged = false;
+    downIndex = -1;
+  }
+
 </script>
 
 <div class="blocks-grid">
@@ -188,13 +249,13 @@
             data-index={idx}
             on:mousedown={(e) => handleMouseDown(idx, group.groupId, e)}
             on:mouseenter={() => handleMouseOver(idx)}
-            on:focus={() => handleMouseOver(idx)} 
-            
-            on:mouseup={handleMouseUp}
+            on:focus={() => handleMouseOver(idx)}
+
             on:touchstart={(e) => handleTouchStart(idx, group.groupId, e)}
             on:touchmove={handleTouchMove}
             on:touchend={handleTouchEnd}
-            
+            on:touchcancel={handleTouchCancel}
+
             role="button"
             tabindex="0"
           >
@@ -222,7 +283,7 @@
     --c3: 2, 132, 199;   /* Sky Blue */
     --c4: 245, 158, 11;  /* Amber */
     --c5: 219, 39, 119;  /* Deep Pink */
-    
+
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -242,8 +303,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
-    flex: 1 1 42px; /* grow to fill, shrink if needed, 80px is the "ideal" width */
-    max-width: 80px; /* Optional: prevents one single square from being too wide */
+    flex: 1 1 42px;
+    max-width: 80px;
     padding: 0.4rem;
     background: #ffffff;
     border: 1px solid var(--border);
@@ -270,11 +331,19 @@
     color: rgb(var(--next-rgb)) !important;
   }
 
-  /* 4. Priority: Block color beats selection color */
-  .study-group-square.in-block:hover {
+  /* 4. Priority: Block beats hover ONLY when not dragging */
+  .squares-container:not(.dragging) .study-group-square.in-block:hover {
     background: color-mix(in srgb, rgb(var(--rgb)), white 88%) !important;
     border-color: rgb(var(--rgb)) !important;
     color: rgb(var(--rgb)) !important;
+  }
+
+  /* During drag, preview must win (even over in-block) */
+  .squares-container.dragging .study-group-square.selected,
+  .squares-container.dragging .study-group-square:hover {
+    background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
+    border-color: rgb(var(--next-rgb)) !important;
+    color: rgb(var(--next-rgb)) !important;
   }
 
   /* Darken Amber text for legibility */

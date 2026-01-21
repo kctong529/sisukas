@@ -1,7 +1,9 @@
 <!-- src/components/BlockStoreDebug.svelte -->
 <script lang="ts">
   import { blockStore } from '../lib/stores/blockStore';
+  import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import type { Block } from '../domain/models/Block';
+  import type { StudyGroup } from '../domain/models/StudyGroup';
   import { SvelteSet } from 'svelte/reactivity';
 
   interface BlockStoreState {
@@ -11,18 +13,31 @@
     error: string | null;
   }
 
+  interface StudyGroupStoreState {
+    cache: Record<string, StudyGroup[]>;
+  }
+
   let storeState: BlockStoreState | null = $state(null);
+  let sgState: StudyGroupStoreState | null = $state(null);
+
   let isOpen = $state(false);
   let expandedInstances: Set<string> = $state(new Set());
 
-  // Subscribe to store
-  const unsubscribe = blockStore.subscribe((state: BlockStoreState) => {
+  // Subscribe to stores
+  const unsubscribeBlocks = blockStore.subscribe((state: BlockStoreState) => {
     storeState = state;
+  });
+
+  const unsubscribeStudyGroups = studyGroupStore.subscribe((state: StudyGroupStoreState) => {
+    sgState = state;
   });
 
   // Cleanup on destroy
   $effect(() => {
-    return () => unsubscribe();
+    return () => {
+      unsubscribeBlocks();
+      unsubscribeStudyGroups();
+    };
   });
 
   function togglePanel() {
@@ -30,11 +45,9 @@
   }
 
   function toggleInstanceExpanded(instanceId: string) {
-    if (expandedInstances.has(instanceId)) {
-      expandedInstances.delete(instanceId);
-    } else {
-      expandedInstances.add(instanceId);
-    }
+    if (expandedInstances.has(instanceId)) expandedInstances.delete(instanceId);
+    else expandedInstances.add(instanceId);
+
     expandedInstances = new SvelteSet(expandedInstances);
   }
 
@@ -60,19 +73,68 @@
 
   function getTotalBlocks(): number {
     if (!storeState) return 0;
-    return Object.values(storeState.blocksByCourseInstance).reduce(
-      (sum, blocks) => sum + (blocks?.length ?? 0),
-      0
-    );
+    return Object.values(storeState.blocksByCourseInstance).reduce((sum, blocks) => sum + (blocks?.length ?? 0), 0);
   }
 
   function formatBlockId(blockId: string): string {
     // block:COURSE:LABEL -> just the label part for readability
     const parts = blockId.split(':');
-    if (parts.length >= 3) {
-      return parts.slice(2).join(':');
-    }
+    if (parts.length >= 3) return parts.slice(2).join(':');
     return blockId;
+  }
+
+  // ---------- Extra debug calculations ----------
+
+  function countGroupsInInstance(blocks: Block[]): number {
+    return blocks.reduce((sum, b) => sum + (b.studyGroupIds?.length ?? 0), 0);
+  }
+
+  function uniqueGroupsInInstance(blocks: Block[]): Set<string> {
+    const set = new SvelteSet<string>();
+    for (const b of blocks) for (const gid of b.studyGroupIds) set.add(gid);
+    return set;
+  }
+
+  function findDuplicateGroupIds(blocks: Block[]): string[] {
+    const seen = new SvelteSet<string>();
+    const dup = new SvelteSet<string>();
+    for (const b of blocks) {
+      for (const gid of b.studyGroupIds) {
+        if (seen.has(gid)) dup.add(gid);
+        else seen.add(gid);
+      }
+    }
+    return Array.from(dup);
+  }
+
+  function blockColorSummary(blocks: Block[]): Record<number, number> {
+    const counts: Record<number, number> = {};
+    for (const b of blocks) {
+      const ci = (b as Block).colorIndex;
+      if (typeof ci !== 'number') continue;
+      counts[ci] = (counts[ci] ?? 0) + 1;
+    }
+    return counts;
+  }
+
+  /**
+   * Try to find study groups for an instance.
+   */
+  function getStudyGroupsForInstance(instanceId: string): StudyGroup[] {
+    const cache = sgState?.cache ?? {};
+    const key = Object.keys(cache).find(k => k.endsWith(`:${instanceId}`));
+    if (!key) return [];
+    return cache[key] ?? [];
+  }
+
+  async function autoPartition(instanceId: string) {
+    const groups = getStudyGroupsForInstance(instanceId);
+    if (!groups || groups.length === 0) {
+      console.warn(`[BlockStoreDebug] No study groups cached for instance ${instanceId}. ` +
+        `Open the course section once (so studyGroupStore.fetch runs) then try again.`);
+      return;
+    }
+    await blockStore.autoPartitionByType(instanceId, groups);
   }
 </script>
 
@@ -142,6 +204,12 @@
         {:else}
           <div class="instances-list">
             {#each Object.entries(storeState.blocksByCourseInstance) as [instanceId, blocks] (instanceId)}
+              {@const totalGroups = countGroupsInInstance(blocks ?? [])}
+              {@const uniq = uniqueGroupsInInstance(blocks ?? [])}
+              {@const dups = findDuplicateGroupIds(blocks ?? [])}
+              {@const colorCounts = blockColorSummary(blocks ?? [])}
+              {@const cachedStudyGroups = getStudyGroupsForInstance(instanceId)}
+
               <div class="instance-item">
                 <button
                   class="instance-header"
@@ -153,7 +221,27 @@
                   <span class="block-count">{blocks?.length ?? 0} blocks</span>
                 </button>
 
+                <!-- Instance summary row -->
+                <div class="instance-summary">
+                  <span class="pill">groups: {totalGroups}</span>
+                  <span class="pill">unique: {uniq.size}</span>
+                  <span class="pill">studyGroups cached: {cachedStudyGroups.length}</span>
+                  <span class="pill">colors: {Object.entries(colorCounts).map(([k,v]) => `${k}:${v}`).join(' ') || '-'}</span>
+                  <span class="pill warn" class:active={dups.length > 0}>dups: {dups.length}</span>
+                </div>
+
                 {#if expandedInstances.has(instanceId) && blocks && blocks.length > 0}
+                  {#if dups.length > 0}
+                    <div class="dups-box">
+                      <div class="dups-title">⚠️ Invariant violations (same group in multiple blocks)</div>
+                      <div class="dups-tags">
+                        {#each dups as gid (gid)}
+                          <span class="group-tag warn">{gid}</span>
+                        {/each}
+                      </div>
+                    </div>
+                  {/if}
+
                   <div class="blocks-list">
                     {#each blocks as block (block.id)}
                       <div class="block-item">
@@ -161,10 +249,13 @@
                           <span class="block-label">{block.label}</span>
                           <span class="block-order">#{block.order}</span>
                         </div>
+
                         <div class="block-meta">
                           <span class="meta-item">{block.studyGroupIds.length} groups</span>
+                          <span class="meta-item">color: {(block as Block).colorIndex ?? '?'}</span>
                           <span class="meta-item mono" title={block.id}>{formatBlockId(block.id)}</span>
                         </div>
+
                         {#if block.studyGroupIds.length > 0}
                           <div class="group-ids">
                             {#each block.studyGroupIds as groupId (groupId)}
@@ -180,6 +271,15 @@
                 {/if}
 
                 <div class="instance-actions">
+                  <button
+                    class="action-btn primary"
+                    onclick={() => autoPartition(instanceId)}
+                    title="Auto-partition this instance (requires study groups cached)"
+                    disabled={cachedStudyGroups.length === 0}
+                  >
+                    Auto Partition
+                  </button>
+
                   <button
                     class="action-btn invalidate"
                     onclick={() => invalidateInstance(instanceId)}
@@ -220,8 +320,8 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     font-family: monospace;
     font-size: 0.75rem;
-    max-width: 480px;
-    max-height: 650px;
+    max-width: 520px;
+    max-height: 680px;
   }
 
   .debug-toggle {
@@ -242,7 +342,7 @@
 
   .debug-content {
     padding: 1rem;
-    max-height: 600px;
+    max-height: 630px;
     overflow-y: auto;
     border-top: 1px solid #ddd;
   }
@@ -395,6 +495,56 @@
     font-size: 0.7rem;
   }
 
+  .instance-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0.45rem 0.5rem;
+    background: #ffffff;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .pill {
+    background: #e9ecef;
+    color: #495057;
+    padding: 0.12rem 0.35rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    line-height: 1.2;
+  }
+
+  .pill.warn {
+    background: #fff3cd;
+    color: #664d03;
+  }
+
+  .pill.warn.active {
+    background: #f8d7da;
+    color: #842029;
+  }
+
+  /* Duplicates box */
+  .dups-box {
+    margin: 0.5rem;
+    padding: 0.5rem;
+    background: #fff3cd;
+    border: 1px solid #ffe69c;
+    border-radius: 4px;
+  }
+
+  .dups-title {
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    color: #664d03;
+    font-size: 0.7rem;
+  }
+
+  .dups-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
   /* Blocks List */
   .blocks-list {
     display: flex;
@@ -463,6 +613,11 @@
     font-weight: 600;
   }
 
+  .group-tag.warn {
+    background: #f8d7da;
+    color: #842029;
+  }
+
   /* Instance Actions */
   .instance-actions {
     display: flex;
@@ -483,6 +638,24 @@
     text-transform: uppercase;
     letter-spacing: 0.3px;
     flex: 1;
+  }
+
+  .action-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .action-btn.primary {
+    background: #0d6efd;
+    color: white;
+  }
+
+  .action-btn.primary:hover {
+    background: #0b5ed7;
+  }
+
+  .action-btn.primary:disabled:hover {
+    background: #0d6efd;
   }
 
   .action-btn.invalidate {
