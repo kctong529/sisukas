@@ -31,24 +31,19 @@
   const fetchedFor = new SvelteSet<string>();
   const autoPartitionDoneFor = new SvelteSet<string>();
 
-  function getCachedGroups(): StudyGroup[] {
-    return studyGroupStore.getCached(course.unitId, course.id) ?? [];
-  }
-
   // Fetch once
   $: if (course && !fetchedFor.has(course.id)) {
+    console.log(`Now fetching study groups of ${course.id}`);
     fetchedFor.add(course.id);
     studyGroupStore.fetch(course.unitId, course.id);
     blockStore.fetchForInstance(course.id);
   }
 
   // Auto-partition once, when data becomes available
-  $: if (course && !autoPartitionDoneFor.has(course.id)) {
-    const groups = getCachedGroups();
-    if (groups.length > 0) {
-      blockStore.autoPartitionForInstance(course.id, () => groups);
-      autoPartitionDoneFor.add(course.id);
-    }
+  $: if (course && studyGroups.length > 0 && !autoPartitionDoneFor.has(course.id)) {
+    console.log(`Now partitioning ${course.id}`);
+    autoPartitionDoneFor.add(course.id);
+    blockStore.autoPartitionForInstance(course.id, () => studyGroups);
   }
 
   $: if (course) {
