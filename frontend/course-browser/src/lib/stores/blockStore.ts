@@ -1,23 +1,16 @@
 // src/lib/stores/blockStore.ts
-
 import { writable, get, derived } from 'svelte/store';
 import { blockService } from '../../infrastructure/services/BlockService';
 import type { Block } from '../../domain/models/Block';
 import type { StudyGroup } from '../../domain/models/StudyGroup';
-  import { colorAllocator, colorAllocatorVersion } from './colorAllocator';
+import { colorAllocator, colorAllocatorVersion } from './colorAllocator';
 
 // ========== Store State Types ==========
 
 interface BlockStoreState {
-  // Map of courseInstanceId -> Block[]
   blocksByCourseInstance: Record<string, Block[]>;
-
-  // Set of courseInstanceId's currently loading
   loadingInstances: Set<string>;
-
-  // Set of blockId's currently being modified
   modifyingBlocks: Set<string>;
-
   error: string | null;
 }
 
@@ -95,20 +88,12 @@ function createBlockStore() {
   const api = {
     subscribe,
 
-    // ===== Drag-select entrypoint (invariant + preview color) =====
+    // ===== Drag-select entrypoint (preview color reservation) =====
 
-    /**
-     * Start a drag-select gesture.
-     * Enforces invariant: a study group may belong to at most one block.
-     * If the touched group is already in a block, that block is deleted first.
-     *
-     * Returns a reserved preview color index for the upcoming selection.
-     */
     async beginDragSelect(courseInstanceId: string): Promise<{ previewColorIndex: number }> {
-      // Always clear any stale reservation first
       colorAllocator.clearReservation(courseInstanceId);
 
-      // Ensure we have blocks
+      // Ensure we have blocks (so preview color can be computed consistently)
       if (!get(store).blocksByCourseInstance[courseInstanceId]) {
         await api.fetchForInstance(courseInstanceId);
       }
@@ -138,7 +123,6 @@ function createBlockStore() {
       try {
         const blocks = await blockService.getBlocksForInstance(courseInstanceId);
 
-        // Cache the blocks
         update(state => {
           const nextLoading = new Set(state.loadingInstances);
           nextLoading.delete(courseInstanceId);
@@ -177,10 +161,6 @@ function createBlockStore() {
 
     // ===== Create Operations =====
 
-    /**
-     * Create a new block for a course instance.
-     * NOTE: colorIndex must be provided (stable block color).
-     */
     async createBlock(
       courseInstanceId: string,
       label: string,
@@ -192,6 +172,7 @@ function createBlockStore() {
 
       try {
         await ensureStudyGroupsUnassigned(courseInstanceId, studyGroupIds);
+
         const newBlock = await blockService.createBlock(
           courseInstanceId,
           label,
@@ -253,6 +234,25 @@ function createBlockStore() {
       } finally {
         colorAllocator.clearReservation(courseInstanceId);
       }
+    },
+
+    /**
+     * Convenience wrapper that keeps blockStore decoupled from studyGroupStore.
+     * Caller supplies a provider (from cache, fetch, etc).
+     */
+    async autoPartitionForInstance(
+      courseInstanceId: string,
+      getStudyGroups: () => StudyGroup[] | Promise<StudyGroup[]>
+    ): Promise<Block[]> {
+      const groups = await Promise.resolve(getStudyGroups());
+      if (!groups || groups.length === 0) {
+        console.warn(
+          `[blockStore] No study groups provided for instance ${courseInstanceId}. ` +
+            `Pass cached groups or fetch them first.`
+        );
+        return [];
+      }
+      return api.autoPartitionByType(courseInstanceId, groups);
     },
 
     // ===== Update Operations =====

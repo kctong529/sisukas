@@ -47,7 +47,6 @@
   function toggleInstanceExpanded(instanceId: string) {
     if (expandedInstances.has(instanceId)) expandedInstances.delete(instanceId);
     else expandedInstances.add(instanceId);
-
     expandedInstances = new SvelteSet(expandedInstances);
   }
 
@@ -117,24 +116,25 @@
     return counts;
   }
 
-  /**
-   * Try to find study groups for an instance.
-   */
+  // ---------- StudyGroup cache helpers (UI-only) ----------
+
+  function findStudyGroupCacheKeyForInstance(instanceId: string): string | null {
+    const cache = sgState?.cache ?? {};
+    const keys = Object.keys(cache);
+    // your cache keys look like `${unitId}:${instanceId}`
+    return keys.find(k => k.endsWith(`:${instanceId}`)) ?? null;
+  }
+
   function getStudyGroupsForInstance(instanceId: string): StudyGroup[] {
     const cache = sgState?.cache ?? {};
-    const key = Object.keys(cache).find(k => k.endsWith(`:${instanceId}`));
+    const key = findStudyGroupCacheKeyForInstance(instanceId);
     if (!key) return [];
     return cache[key] ?? [];
   }
 
+  // Uses the NEW blockStore wrapper (so DebugPanel shows the intended usage pattern)
   async function autoPartition(instanceId: string) {
-    const groups = getStudyGroupsForInstance(instanceId);
-    if (!groups || groups.length === 0) {
-      console.warn(`[BlockStoreDebug] No study groups cached for instance ${instanceId}. ` +
-        `Open the course section once (so studyGroupStore.fetch runs) then try again.`);
-      return;
-    }
-    await blockStore.autoPartitionByType(instanceId, groups);
+    await blockStore.autoPartitionForInstance(instanceId, () => getStudyGroupsForInstance(instanceId));
   }
 </script>
 
@@ -159,15 +159,11 @@
           </div>
           <div class="stat-item">
             <span class="label">Loading:</span>
-            <span class="value" class:active={getLoadingCount() > 0}>
-              {getLoadingCount()}
-            </span>
+            <span class="value" class:active={getLoadingCount() > 0}>{getLoadingCount()}</span>
           </div>
           <div class="stat-item">
             <span class="label">Modifying:</span>
-            <span class="value" class:active={getModifyingCount() > 0}>
-              {getModifyingCount()}
-            </span>
+            <span class="value" class:active={getModifyingCount() > 0}>{getModifyingCount()}</span>
           </div>
         </div>
       </div>
@@ -209,6 +205,7 @@
               {@const dups = findDuplicateGroupIds(blocks ?? [])}
               {@const colorCounts = blockColorSummary(blocks ?? [])}
               {@const cachedStudyGroups = getStudyGroupsForInstance(instanceId)}
+              {@const hasSG = cachedStudyGroups.length > 0}
 
               <div class="instance-item">
                 <button
@@ -225,8 +222,15 @@
                 <div class="instance-summary">
                   <span class="pill">groups: {totalGroups}</span>
                   <span class="pill">unique: {uniq.size}</span>
-                  <span class="pill">studyGroups cached: {cachedStudyGroups.length}</span>
-                  <span class="pill">colors: {Object.entries(colorCounts).map(([k,v]) => `${k}:${v}`).join(' ') || '-'}</span>
+
+                  <span class="pill" class:warn={!hasSG} class:ok={hasSG}>
+                    studyGroups cached: {cachedStudyGroups.length}
+                  </span>
+
+                  <span class="pill">
+                    colors: {Object.entries(colorCounts).map(([k, v]) => `${k}:${v}`).join(' ') || '-'}
+                  </span>
+
                   <span class="pill warn" class:active={dups.length > 0}>dups: {dups.length}</span>
                 </div>
 
@@ -275,7 +279,7 @@
                     class="action-btn primary"
                     onclick={() => autoPartition(instanceId)}
                     title="Auto-partition this instance (requires study groups cached)"
-                    disabled={cachedStudyGroups.length === 0}
+                    disabled={!hasSG}
                   >
                     Auto Partition
                   </button>
@@ -304,9 +308,7 @@
 
       <!-- Action Buttons -->
       <div class="actions">
-        <button class="action-btn danger" onclick={clearStore}>
-          Clear Store
-        </button>
+        <button class="action-btn danger" onclick={clearStore}>Clear Store</button>
       </div>
     </div>
   {/if}
@@ -335,7 +337,6 @@
     font-weight: 600;
     transition: background 0.2s;
   }
-
   .debug-toggle:hover {
     background: #1a252f;
   }
@@ -350,7 +351,6 @@
   .section {
     margin-bottom: 1rem;
   }
-
   .section:last-of-type {
     margin-bottom: 0.75rem;
   }
@@ -417,7 +417,6 @@
     border-bottom: 1px solid #e9ecef;
     color: #0d6efd;
   }
-
   .item:last-child {
     border-bottom: none;
   }
@@ -512,12 +511,14 @@
     font-size: 0.65rem;
     line-height: 1.2;
   }
-
   .pill.warn {
     background: #fff3cd;
     color: #664d03;
   }
-
+  .pill.ok {
+    background: #d1e7dd;
+    color: #0f5132;
+  }
   .pill.warn.active {
     background: #f8d7da;
     color: #842029;
@@ -649,11 +650,9 @@
     background: #0d6efd;
     color: white;
   }
-
   .action-btn.primary:hover {
     background: #0b5ed7;
   }
-
   .action-btn.primary:disabled:hover {
     background: #0d6efd;
   }
@@ -662,7 +661,6 @@
     background: #fff3cd;
     color: #664d03;
   }
-
   .action-btn.invalidate:hover {
     background: #ffe69c;
   }
@@ -681,7 +679,6 @@
     padding: 0.4rem 0.5rem;
     font-size: 0.7rem;
   }
-
   .action-btn.danger:hover {
     background: #c82333;
   }

@@ -104,7 +104,7 @@
 
               {#if course}
                 <div class="instance-content">
-                  <BlocksGrid {course} isExpanded={true} />
+                  <BlocksGrid {course} />
                 </div>
               {/if}
             </div>
