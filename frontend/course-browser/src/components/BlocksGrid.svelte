@@ -1,10 +1,10 @@
 <script lang="ts">
+  import { tick, onDestroy } from 'svelte';
   import { blockStore, previewColorForInstance } from '../lib/stores/blockStore';
   import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import type { Block } from '../domain/models/Block';
   import type { Course } from '../domain/models/Course';
   import type { StudyGroup } from '../domain/models/StudyGroup';
-  import { onDestroy } from 'svelte';
 
   export let course: Course;
   export let isExpanded: boolean;
@@ -30,6 +30,9 @@
 
   let hasDragged = false;
   let downIndex = -1;
+
+  // NEW: hold "dragging" styling during async delete+create to avoid 1-frame fallback
+  let isCommitPreviewActive = false;
 
   $: if (course) {
     // reset subscriptions on course change
@@ -115,7 +118,7 @@
     hasDragged = false;
     downIndex = index;
 
-    // Enter dragging state immediately (your current behavior)
+    // Enter dragging state immediately
     isSelecting = true;
     firstSelectedIndex = index;
     selectedGroupIds = [groupId];
@@ -126,9 +129,17 @@
   }
 
   function handleMouseOver(index: number) {
-    // if we moved off the starting square, it's a drag
     if (index !== downIndex) hasDragged = true;
     updateSelectionRange(index);
+  }
+
+  async function clearCommitBridgeAfterPaint() {
+    // Let store updates + DOM paint settle, then drop the bridge
+    await tick();
+    setTimeout(() => {
+      committingIds = [];
+      isCommitPreviewActive = false;
+    }, 0);
   }
 
   async function finalizeSelection() {
@@ -153,7 +164,7 @@
         } catch (err) {
           console.error('Failed to create block:', err);
         } finally {
-          setTimeout(() => (committingIds = []), 1);
+          await clearCommitBridgeAfterPaint();
         }
       }
 
@@ -162,6 +173,10 @@
 
     // DRAG
     committingIds = ids;
+    isCommitPreviewActive = true;
+
+    // Important: end selection early (so we don't keep extending the range),
+    // but keep "commit preview" active so overlapped in-block squares don't flash old color.
     endSelection(true);
 
     try {
@@ -169,12 +184,9 @@
     } catch (err) {
       console.error('Failed to create block:', err);
     } finally {
-      setTimeout(() => {
-        committingIds = [];
-      }, 1);
+      await clearCommitBridgeAfterPaint();
     }
   }
-
 
   async function handleGlobalMouseUp() {
     await finalizeSelection();
@@ -215,17 +227,18 @@
   async function handleTouchEnd(e: TouchEvent) {
     e.preventDefault();
     await finalizeSelection();
+    (document.activeElement as HTMLElement | null)?.blur?.();
   }
 
-  async function handleTouchCancel(e: TouchEvent) {
+  function handleTouchCancel(e: TouchEvent) {
     e.preventDefault();
-    // Cancel without creating/removing
     endSelection(true);
     committingIds = [];
+    isCommitPreviewActive = false;
     hasDragged = false;
     downIndex = -1;
+    (document.activeElement as HTMLElement | null)?.blur?.();
   }
-
 </script>
 
 <div class="blocks-grid">
@@ -237,25 +250,24 @@
     <div class="section">
       <div
         class="squares-container"
-        class:dragging={isSelecting}
+        class:dragging={(isSelecting && hasDragged) || isCommitPreviewActive}
         style="--next-rgb: var(--c{nextColorIndex});"
       >
         {#each studyGroups as group, idx (group.groupId)}
           <div
             class="study-group-square"
             class:selected={selectedGroupIds.includes(group.groupId) || committingIds.includes(group.groupId)}
+            class:commit-preview={committingIds.includes(group.groupId)}
             class:in-block={groupColorIndexById[group.groupId] !== undefined}
             data-color={groupColorIndexById[group.groupId] ?? ''}
             data-index={idx}
             on:mousedown={(e) => handleMouseDown(idx, group.groupId, e)}
             on:mouseenter={() => handleMouseOver(idx)}
             on:focus={() => handleMouseOver(idx)}
-
             on:touchstart={(e) => handleTouchStart(idx, group.groupId, e)}
             on:touchmove={handleTouchMove}
             on:touchend={handleTouchEnd}
             on:touchcancel={handleTouchCancel}
-
             role="button"
             tabindex="0"
           >
@@ -298,7 +310,7 @@
   .study-group-square[data-color="4"] { --rgb: var(--c4); }
   .study-group-square[data-color="5"] { --rgb: var(--c5); }
 
-  /* 1. Base Square (No Transitions to avoid blink) */
+  /* 1. Base Square */
   .study-group-square {
     display: flex;
     flex-direction: column;
@@ -322,34 +334,49 @@
     color: rgb(var(--rgb)) !important;
   }
 
-  /* 3. Selection/Hover Preview (Using next block color) */
-  .study-group-square:hover,
-  .study-group-square.selected {
+  /* 3. Selection Preview (non-block click should preview next color) */
+  .study-group-square.selected:not(.in-block) {
     outline: none;
     background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
     border-color: rgb(var(--next-rgb)) !important;
     color: rgb(var(--next-rgb)) !important;
   }
 
-  /* 4. Priority: Block beats hover ONLY when not dragging */
-  .squares-container:not(.dragging) .study-group-square.in-block:hover {
-    background: color-mix(in srgb, rgb(var(--rgb)), white 88%) !important;
-    border-color: rgb(var(--rgb)) !important;
-    color: rgb(var(--rgb)) !important;
-  }
-
-  /* During drag, preview must win (even over in-block) */
-  .squares-container.dragging .study-group-square.selected,
-  .squares-container.dragging .study-group-square:hover {
+  /* 3b. Commit preview (FORCE preview even if it was in an old block) */
+  .study-group-square.commit-preview {
+    outline: none;
     background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
     border-color: rgb(var(--next-rgb)) !important;
     color: rgb(var(--next-rgb)) !important;
   }
 
-  /* Darken Amber text for legibility */
-  .study-group-square.in-block[data-color="4"],
-  .squares-container[style*="--c4"].dragging .study-group-square:hover {
-    color: #b45309 !important;
+  /* Only desktop/laptop should get hover preview */
+  @media (hover: hover) and (pointer: fine) {
+    .study-group-square:hover {
+      outline: none;
+      background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
+      border-color: rgb(var(--next-rgb)) !important;
+      color: rgb(var(--next-rgb)) !important;
+    }
+
+    .squares-container:not(.dragging) .study-group-square.in-block:hover {
+      background: color-mix(in srgb, rgb(var(--rgb)), white 85%) !important;
+      border-color: rgb(var(--rgb)) !important;
+      color: rgb(var(--rgb)) !important;
+    }
+
+    .squares-container.dragging .study-group-square:hover {
+      background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
+      border-color: rgb(var(--next-rgb)) !important;
+      color: rgb(var(--next-rgb)) !important;
+    }
+  }
+
+  /* During drag, preview must win */
+  .squares-container.dragging .study-group-square.selected {
+    background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
+    border-color: rgb(var(--next-rgb)) !important;
+    color: rgb(var(--next-rgb)) !important;
   }
 
   .squares-container {
