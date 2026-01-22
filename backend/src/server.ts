@@ -12,6 +12,7 @@ import adminRoutes from './routes/admin';
 import usersRoutes from './routes/users';
 import favouritesRoutes from './routes/favourites';
 import plansRoutes from './routes/plans';
+import analyticsRoutes from './routes/analytics';
 import { extractSession } from './middleware/auth';
 
 const app = express();
@@ -68,6 +69,7 @@ app.get('/health', async (req: Request, res: Response) => {
 
 // Admin routes (login is public, logout requires admin token)
 app.use('/api/admin', adminRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // User routes (with extractSession applied)
 app.use('/api/users', extractSession);
