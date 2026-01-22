@@ -25,6 +25,8 @@ export function normalizeIntervals(intervals: IntervalInput[]): {
   intervals.forEach((it, index) => {
     const s = Date.parse(it.start);
     const e = Date.parse(it.end);
+    // const s = Number(it.start);
+    // const e = Number(it.end);
 
     if (!Number.isFinite(s) || !Number.isFinite(e)) {
       dropped.push({ index, reason: "invalid-iso", value: it });
