@@ -19,27 +19,40 @@ export function searchTopKCombinations(
   entitiesRaw: ChoiceEntity[],
   {
     k = 20,
-    maxCombinations = Number.POSITIVE_INFINITY,
+    capCombinations = 100_000,
     overlap = {},
     scoreFn,
   }: {
     k?: number;
-    maxCombinations?: number;
+    capCombinations?: number;
     overlap?: ComputeOptions;
     scoreFn?: (analytics: OverlapAnalytics, selection: CombinationSelection) => number;
   } = {}
 ): {
   top: CombinationResult[];
   evaluated: number;
+  capped: boolean;
+  capCombinations: number;
+  totalPossible: number;
   normalized: NormalizedChoiceEntity[];
 } {
   const normalizedEntities = normalizeChoiceEntities(entitiesRaw);
 
+  const totalPossible = normalizedEntities.reduce(
+    (acc, e) => acc * e.options.length,
+    1
+  );
+
   const top: CombinationResult[] = [];
   let evaluated = 0;
+  let capped = false;
 
-  for (const selection of enumerateSelections(normalizedEntities, maxCombinations)) {
+  for (const selection of enumerateSelections(normalizedEntities)) {
     evaluated++;
+    if (evaluated > capCombinations) {
+      capped = true;
+      break;
+    }
 
     const flat = flattenSelectionIntervals(normalizedEntities, selection);
     const analytics = computeOverlapAnalyticsFromMs(flat, overlap);
@@ -47,7 +60,6 @@ export function searchTopKCombinations(
 
     const result: CombinationResult = { selection, analytics, score };
 
-    // Insert into sorted top-K list (O(K), fine for small K)
     let insertAt = top.findIndex((r) => score < r.score);
     if (insertAt === -1) insertAt = top.length;
 
@@ -59,5 +71,12 @@ export function searchTopKCombinations(
     }
   }
 
-  return { top, evaluated, normalized: normalizedEntities };
+  return {
+    top,
+    evaluated: Math.min(evaluated, capCombinations),
+    capped,
+    capCombinations,
+    totalPossible,
+    normalized: normalizedEntities,
+  };
 }
