@@ -1,11 +1,15 @@
 <!-- src/components/LegoView.svelte -->
 <script lang="ts">
   import { useSession } from '../lib/authClient';
-  import { plansStore } from '../lib/stores/plansStore';
   import { courseStore } from '../lib/stores/courseStore';
+  import { plansStore } from '../lib/stores/plansStore';
+  import { blockStore } from '../lib/stores/blockStore';
+  import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import PlanManager from './PlanManager.svelte';
   import BlocksGrid from './BlocksGrid.svelte';
   import type { Course } from '../domain/models/Course';
+  import type { Block } from '../domain/models/Block';
+  import type { StudyGroup } from '../domain/models/StudyGroup';
 
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);
@@ -29,6 +33,22 @@
       if (course) return course;
     }
     return undefined;
+  }
+
+  async function displayEverything() {
+    const instanceIds = activePlan?.instanceIds;
+    for (const instanceId of instanceIds as string[]) {
+      const this_course = getCourseForInstance(instanceId) as Course;
+      const all_study_groups = await studyGroupStore.fetch(this_course.unitId, instanceId);
+      const study_groups_in_block = blockStore.getCachedForInstance(instanceId) as Block[];
+      for (const blk of study_groups_in_block) {
+        console.log(`${this_course.code.value}, Block name: ${blk.label}`);
+        const wanted_sgs = all_study_groups.filter(s => blk.studyGroupIds.includes(s.groupId));
+        for (const wanted_sg of wanted_sgs) {
+          console.log(wanted_sg.name, wanted_sg.studyEvents);
+        }
+      }
+    }
   }
 </script>
 
@@ -110,6 +130,7 @@
             </div>
           {/each}
         </div>
+          <button class="btn btn-secondary" onclick={displayEverything}>Here</button>
       {/if}
     </div>
   {/if}
