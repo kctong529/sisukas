@@ -8,6 +8,9 @@ import type { StudyEvent } from '../../domain/models/StudyEvent';
 interface SisuStudyEvent {
   start: string;
   end: string;
+  start_iso?: string; // preferred
+  end_iso?: string;   // preferred
+  location?: string;
 }
 
 interface SisuStudyGroup {
@@ -79,6 +82,11 @@ export interface CourseOfferingData {
  * 1. Single study groups fetch: GET /api/courses/study-groups
  * 2. Batch study groups fetch: POST /api/courses/batch/study-groups
  * 3. Batch course offerings fetch: POST /api/courses/batch/offerings
+ * 
+ * Event Deduplication:
+ * When multiple study events in the same group have identical time slots (start/end),
+ * they are deduplicated and their locations are merged into a comma-separated string.
+ * This reduces noise in schedules where the same lecture/exercise is offered in multiple locations.
  */
 export class StudyGroupService {
   private wrapperApiUrl: string;
@@ -239,26 +247,85 @@ export class StudyGroupService {
   // ========== Transform Methods ==========
 
   /**
-   * Transform SISU API response to domain models
+   * Transform SISU API response to domain models.
+   * 
+   * For each study group, deduplicates study events by time slot:
+   * - Events with identical start/end times are merged
+   * - Their locations are combined into a comma-separated string
    */
   private transformStudyGroups(sisuGroups: SisuStudyGroup[]): StudyGroup[] {
     return sisuGroups.map(group => ({
       groupId: group.group_id,
       name: group.name,
       type: group.type,
-      studyEvents: this.transformStudyEvents(group.study_events),
+      studyEvents: this.deduplicateAndTransformStudyEvents(group.study_events, group.group_id),
     }));
   }
 
   /**
-   * Transform study events from API format to domain model
+   * Deduplicates study events by time slot and transforms to domain model.
+   * 
+   * Algorithm:
+   * 1. Group events by their (start, end) time slot
+   * 2. For each time slot, merge locations into a single comma-separated string
+   * 3. Create one StudyEvent per unique time slot
+   * 
+   * Example:
+   * Input:
+   *   - Event 1: 10:00-11:00, Location A
+   *   - Event 2: 10:00-11:00, Location B
+   *   - Event 3: 11:00-12:00, Location C
+   * 
+   * Output:
+   *   - Event 1: 10:00-11:00, "Location A, Location B"
+   *   - Event 2: 11:00-12:00, "Location C"
    */
-  private transformStudyEvents(sisuEvents: SisuStudyEvent[]): StudyEvent[] {
-    return sisuEvents.map(event => ({
-      start: event.start,
-      end: event.end,
-      location: undefined, // Not provided by current API
-    }));
+  private deduplicateAndTransformStudyEvents(
+    sisuEvents: SisuStudyEvent[],
+    groupId: string
+  ): StudyEvent[] {
+    // Group events by time slot (start/end combination)
+    const timeSlotMap = new Map<string, SisuStudyEvent[]>();
+
+    for (const event of sisuEvents) {
+      // Use start and end as composite key for deduplication
+      const key = `${event.start}:${event.end}`;
+      if (!timeSlotMap.has(key)) {
+        timeSlotMap.set(key, []);
+      }
+      timeSlotMap.get(key)!.push(event);
+    }
+
+    // Transform each unique time slot into a StudyEvent
+    const dedupedEvents: StudyEvent[] = [];
+    let eventIndex = 0;
+
+    for (const eventsInSlot of timeSlotMap.values()) {
+      // Merge all locations for this time slot
+      const locations = eventsInSlot
+        .map(e => e.location?.trim() || '')
+        .filter(Boolean); // Remove empty strings
+      
+      const mergedLocation = locations.length > 0 
+        ? locations.join(', ')
+        : undefined;
+
+      // Use first event in slot as the source (they all have same start/end)
+      const sourceEvent = eventsInSlot[0];
+
+      dedupedEvents.push({
+        id: `${groupId}:${eventIndex}`,
+        start: sourceEvent.start,
+        end: sourceEvent.end,
+        startIso: sourceEvent.start_iso ?? undefined,
+        endIso: sourceEvent.end_iso ?? undefined,
+        location: mergedLocation,
+      });
+
+      eventIndex++;
+    }
+
+    return dedupedEvents;
   }
 
   // ========== Error Handling ==========

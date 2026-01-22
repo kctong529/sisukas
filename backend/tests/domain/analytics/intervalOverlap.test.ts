@@ -22,9 +22,9 @@ import {
 describe("intervalOverlap / normalizeIntervals", () => {
   it("parses valid ISO intervals and drops invalid ones", () => {
     const { normalized, dropped } = normalizeIntervals([
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
-      { start: "not-a-date", end: "2026-01-01T12:00:00Z" },
-      { start: "2026-01-01T13:00:00Z", end: "2026-01-01T13:00:00Z" },
+      { id: "i1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "i2", start: "not-a-date", end: "2026-01-01T12:00:00Z" },
+      { id: "i3", start: "2026-01-01T13:00:00Z", end: "2026-01-01T13:00:00Z" },
     ]);
 
     expect(normalized.length).toBe(1);
@@ -40,10 +40,12 @@ describe("intervalOverlap / buildBoundaries + getSpan", () => {
   it("builds correctly ordered boundary events and computes span", () => {
     const normalized = [
       {
+        id: "i1",
         startMs: Date.parse("2026-01-01T10:00:00Z"),
         endMs: Date.parse("2026-01-01T11:00:00Z"),
       },
       {
+        id: "i2",
         startMs: Date.parse("2026-01-01T10:30:00Z"),
         endMs: Date.parse("2026-01-01T12:00:00Z"),
       },
@@ -73,10 +75,12 @@ describe("intervalOverlap / sweepBoundaries", () => {
     // B: 10:30–11:30
     const normalized = [
       {
+        id: "i1",
         startMs: Date.parse("2026-01-01T10:00:00Z"),
         endMs: Date.parse("2026-01-01T11:00:00Z"),
       },
       {
+        id: "i2",
         startMs: Date.parse("2026-01-01T10:30:00Z"),
         endMs: Date.parse("2026-01-01T11:30:00Z"),
       },
@@ -104,10 +108,12 @@ describe("intervalOverlap / sweepBoundaries", () => {
   it("optionally emits concurrency=0 gaps within the span", () => {
     const normalized = [
       {
+        id: "i1",
         startMs: Date.parse("2026-01-01T10:00:00Z"),
         endMs: Date.parse("2026-01-01T10:30:00Z"),
       },
       {
+        id: "i2",
         startMs: Date.parse("2026-01-01T11:00:00Z"),
         endMs: Date.parse("2026-01-01T11:30:00Z"),
       },
@@ -149,9 +155,9 @@ describe("intervalOverlap / computeOverlapAnalytics (end-to-end)", () => {
     // B: 10:30–11:30
     // C: 11:00–13:00
     const res = computeOverlapAnalytics([
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T12:00:00Z" },
-      { start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" },
-      { start: "2026-01-01T11:00:00Z", end: "2026-01-01T13:00:00Z" },
+      { id: "a", start: "2026-01-01T10:00:00Z", end: "2026-01-01T12:00:00Z" },
+      { id: "b", start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" },
+      { id: "c", start: "2026-01-01T11:00:00Z", end: "2026-01-01T13:00:00Z" },
     ]);
 
     expect(res.maxConcurrent).toBe(3);
@@ -171,8 +177,8 @@ describe("intervalOverlap / computeOverlapAnalytics (end-to-end)", () => {
 
   it("handles empty or fully invalid input gracefully", () => {
     const res = computeOverlapAnalytics([
-      { start: "bad", end: "bad" },
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:00:00Z" },
+      { id: "bad1", start: "bad", end: "bad" },
+      { id: "bad2", start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:00:00Z" },
     ]);
 
     expect(res.intervalCountInput).toBe(2);
@@ -185,7 +191,7 @@ describe("intervalOverlap / computeOverlapAnalytics (end-to-end)", () => {
 describe("intervalOverlap edge cases", () => {
   it("single interval: no overlap, maxConcurrent=1, one segment", () => {
     const res = computeOverlapAnalytics([
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "i1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
     ]);
 
     expect(res.maxConcurrent).toBe(1);
@@ -197,8 +203,8 @@ describe("intervalOverlap edge cases", () => {
 
   it("duplicate intervals: overlap equals full duration, maxConcurrent=2", () => {
     const res = computeOverlapAnalytics([
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "i1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "i2", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
     ]);
 
     expect(res.maxConcurrent).toBe(2);
@@ -212,8 +218,8 @@ describe("intervalOverlap edge cases", () => {
     // Inner: 10:30–11:00
     // Overlap >=2: 10:30–11:00 = 30m
     const res = computeOverlapAnalytics([
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T12:00:00Z" },
-      { start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "outer", start: "2026-01-01T10:00:00Z", end: "2026-01-01T12:00:00Z" },
+      { id: "inner", start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:00:00Z" },
     ]);
 
     expect(res.maxConcurrent).toBe(2);
@@ -225,9 +231,9 @@ describe("intervalOverlap edge cases", () => {
     // All start at 10:00, end at different times:
     // concurrency decreases as each ends.
     const res = computeOverlapAnalytics([
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:10:00Z" },
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:20:00Z" },
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:30:00Z" },
+      { id: "i1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:10:00Z" },
+      { id: "i2", start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:20:00Z" },
+      { id: "i3", start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:30:00Z" },
     ]);
 
     expect(res.maxConcurrent).toBe(3);
@@ -241,9 +247,9 @@ describe("intervalOverlap edge cases", () => {
   it("many intervals with the same end time: tie-handling should not break", () => {
     // All end at 11:00, start at different times.
     const res = computeOverlapAnalytics([
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
-      { start: "2026-01-01T10:15:00Z", end: "2026-01-01T11:00:00Z" },
-      { start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "i1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "i2", start: "2026-01-01T10:15:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "i3", start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:00:00Z" },
     ]);
 
     expect(res.maxConcurrent).toBe(3);
@@ -256,9 +262,9 @@ describe("intervalOverlap edge cases", () => {
 
   it("touching chain: A touches B touches C => no overlap", () => {
     const res = computeOverlapAnalytics([
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:30:00Z" },
-      { start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:00:00Z" },
-      { start: "2026-01-01T11:00:00Z", end: "2026-01-01T11:30:00Z" },
+      { id: "i1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:30:00Z" },
+      { id: "i2", start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "i3", start: "2026-01-01T11:00:00Z", end: "2026-01-01T11:30:00Z" },
     ]);
 
     expect(res.maxConcurrent).toBe(1);
@@ -270,8 +276,8 @@ describe("intervalOverlap edge cases", () => {
     // B: 11:00–12:00
     // There should NOT be a moment with concurrency=2.
     const res = computeOverlapAnalytics([
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
-      { start: "2026-01-01T11:00:00Z", end: "2026-01-01T12:00:00Z" },
+      { id: "i1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "i2", start: "2026-01-01T11:00:00Z", end: "2026-01-01T12:00:00Z" },
     ]);
 
     expect(res.maxConcurrent).toBe(1);
@@ -280,13 +286,13 @@ describe("intervalOverlap edge cases", () => {
 
   it("intervals out of order in input: should not matter", () => {
     const res1 = computeOverlapAnalytics([
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
-      { start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" },
+      { id: "i1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "i2", start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" },
     ]);
 
     const res2 = computeOverlapAnalytics([
-      { start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" },
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
+      { id: "i2", start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" },
+      { id: "i1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
     ]);
 
     expect(res1.totalOverlapMs).toBe(res2.totalOverlapMs);
@@ -299,8 +305,8 @@ describe("intervalOverlap edge cases", () => {
   it("fractional seconds in ISO timestamps: should handle sub-minute overlap", () => {
     // Overlap: 10:00:00.500Z–10:00:01.000Z => 500ms
     const res = computeOverlapAnalytics([
-      { start: "2026-01-01T10:00:00.000Z", end: "2026-01-01T10:00:01.000Z" },
-      { start: "2026-01-01T10:00:00.500Z", end: "2026-01-01T10:00:01.500Z" },
+      { id: "i1", start: "2026-01-01T10:00:00.000Z", end: "2026-01-01T10:00:01.000Z" },
+      { id: "i2", start: "2026-01-01T10:00:00.500Z", end: "2026-01-01T10:00:01.500Z" },
     ]);
 
     expect(res.maxConcurrent).toBe(2);
@@ -310,8 +316,8 @@ describe("intervalOverlap edge cases", () => {
   it("includeGapsWithinSpan emits 0-concurrency segments only inside [minStart, maxEnd]", () => {
     const res = computeOverlapAnalytics(
       [
-        { start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:10:00Z" },
-        { start: "2026-01-01T10:20:00Z", end: "2026-01-01T10:30:00Z" },
+        { id: "i1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:10:00Z" },
+        { id: "i2", start: "2026-01-01T10:20:00Z", end: "2026-01-01T10:30:00Z" },
       ],
       { includeGapsWithinSpan: true }
     );
@@ -326,9 +332,9 @@ describe("intervalOverlap edge cases", () => {
 
   it("all invalid => analytics are empty and dropped is populated", () => {
     const res = computeOverlapAnalytics([
-      { start: "bad", end: "still bad" },
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T09:00:00Z" }, // end < start
-      { start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:00:00Z" }, // end == start
+      { id: "bad1", start: "bad", end: "still bad" },
+      { id: "bad2", start: "2026-01-01T10:00:00Z", end: "2026-01-01T09:00:00Z" }, // end < start
+      { id: "bad3", start: "2026-01-01T10:00:00Z", end: "2026-01-01T10:00:00Z" }, // end == start
     ]);
 
     expect(res.intervalCountUsed).toBe(0);

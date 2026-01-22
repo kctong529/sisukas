@@ -121,8 +121,8 @@
               <details class="group-events">
                 <summary>Show all {group.studyEvents.length} events</summary>
                 <div class="events-list">
-                  {#each group.studyEvents as event (event.start)}
-                    <div class="event-item">{formatEventTime(event.start, event.end)}</div>
+                  {#each group.studyEvents as event (event.id)}
+                    <div class="event-item">{formatEventTime(event.startIso ?? event.start, event.endIso ?? event.end)}</div>
                   {/each}
                 </div>
               </details>

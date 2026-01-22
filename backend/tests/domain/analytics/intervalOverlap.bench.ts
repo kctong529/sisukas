@@ -1,7 +1,7 @@
 import { bench, describe } from "vitest";
 import { computeOverlapAnalytics } from "../../../src/domain/analytics/intervalOverlap";
 
-type IntervalInput = { start: string; end: string };
+type IntervalInput = { id: string; start: string; end: string };
 
 /**
  * Deterministic RNG so benchmark runs are reproducible.
@@ -40,6 +40,7 @@ function generateRandomIntervals(
     const endMs = startMs + dur;
 
     intervals[i] = {
+      id: `event-${i}`,
       start: new Date(startMs).toISOString(),
       end: new Date(endMs).toISOString(),
     };

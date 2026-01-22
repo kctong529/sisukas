@@ -2,7 +2,7 @@ import { bench, describe } from "vitest";
 import { searchTopKCombinations } from "../../../src/domain/analytics/intervalOverlap/choices";
 import type { ChoiceEntity } from "../../../src/domain/analytics/intervalOverlap/choices";
 
-type IntervalInput = { start: string; end: string };
+type IntervalInput = { id: string; start: string; end: string };
 
 /**
  * Deterministic RNG so the benchmark is reproducible.
@@ -41,12 +41,15 @@ function generateChoiceEntities(params: {
 
   const rnd = mulberry32(seed);
 
+  let eventCounter = 0;
+
   const mkInterval = (): IntervalInput => {
     const startOffset = Math.floor(rnd() * windowMs);
     const dur = 1 + Math.floor(rnd() * maxDurMs);
     const startMs = baseMs + startOffset;
     const endMs = startMs + dur;
     return {
+      id: `event-${eventCounter++}`,
       start: new Date(startMs).toISOString(),
       end: new Date(endMs).toISOString(),
     };

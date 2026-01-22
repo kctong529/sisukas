@@ -83,8 +83,8 @@ describe("intervalOverlap/choices - normalizeChoiceEntities", () => {
           {
             id: "A1",
             intervals: [
-              { start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
-              { start: "bad", end: "2026-01-01T12:00:00Z" }, // dropped
+              { id: "ev1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
+              { id: "ev2", start: "bad", end: "2026-01-01T12:00:00Z" }, // dropped
             ],
           },
         ],
@@ -104,6 +104,7 @@ describe("intervalOverlap/choices - normalizeChoiceEntities", () => {
 
     expect(opt.normalized[0].startMs).toBe(Date.parse("2026-01-01T10:00:00Z"));
     expect(opt.normalized[0].endMs).toBe(Date.parse("2026-01-01T11:00:00Z"));
+    expect(opt.normalized[0].id).toBe("ev1");
   });
 });
 
@@ -115,12 +116,12 @@ describe("intervalOverlap/choices - flattenSelectionIntervals", () => {
         options: [
           {
             id: "E0O0",
-            normalized: [{ startMs: 1, endMs: 2 }],
+            normalized: [{ id: "i1", startMs: 1, endMs: 2 }],
             droppedCount: 0,
           },
           {
             id: "E0O1",
-            normalized: [{ startMs: 10, endMs: 20 }],
+            normalized: [{ id: "i2", startMs: 10, endMs: 20 }],
             droppedCount: 0,
           },
         ],
@@ -130,7 +131,7 @@ describe("intervalOverlap/choices - flattenSelectionIntervals", () => {
         options: [
           {
             id: "E1O0",
-            normalized: [{ startMs: 3, endMs: 4 }],
+            normalized: [{ id: "i3", startMs: 3, endMs: 4 }],
             droppedCount: 0,
           },
         ],
@@ -144,8 +145,8 @@ describe("intervalOverlap/choices - flattenSelectionIntervals", () => {
 
     const flat = flattenSelectionIntervals(entities as any, selection as any);
     expect(flat).toEqual([
-      { startMs: 10, endMs: 20 },
-      { startMs: 3, endMs: 4 },
+      { id: "i2", startMs: 10, endMs: 20 },
+      { id: "i3", startMs: 3, endMs: 4 },
     ]);
   });
 });
@@ -159,8 +160,8 @@ describe("intervalOverlap/choices - computeOverlapAnalyticsFromMs", () => {
     const t90 = Date.parse("2026-01-01T11:30:00Z");
 
     const res = computeOverlapAnalyticsFromMs([
-      { startMs: t0, endMs: t60 },
-      { startMs: t30, endMs: t90 },
+      { id: "a", startMs: t0, endMs: t60 },
+      { id: "b", startMs: t30, endMs: t90 },
     ]);
 
     expect(res.maxConcurrent).toBe(2);
@@ -177,12 +178,12 @@ describe("intervalOverlap/choices - searchTopKCombinations", () => {
         // E0O0 overlaps with E1O0
         {
           id: "E0O0",
-          intervals: [{ start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" }],
+          intervals: [{ id: "ev1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" }],
         },
         // E0O1 avoids overlap with E1O0
         {
           id: "E0O1",
-          intervals: [{ start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" }],
+          intervals: [{ id: "ev2", start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" }],
         },
       ],
     },
@@ -192,12 +193,12 @@ describe("intervalOverlap/choices - searchTopKCombinations", () => {
         // overlaps with E0O0 for 30 mins, does not overlap with E0O1
         {
           id: "E1O0",
-          intervals: [{ start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" }],
+          intervals: [{ id: "ev3", start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" }],
         },
         // touches E0O1 at 13:00? actually overlaps if 12:30-13:30 (overlap 30m)
         {
           id: "E1O1",
-          intervals: [{ start: "2026-01-01T12:30:00Z", end: "2026-01-01T13:30:00Z" }],
+          intervals: [{ id: "ev4", start: "2026-01-01T12:30:00Z", end: "2026-01-01T13:30:00Z" }],
         },
       ],
     },
@@ -271,8 +272,8 @@ describe("intervalOverlap/choices - ISO parsing happens only during normalizatio
         {
           id: "E0O0",
           intervals: [
-            { start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
-            { start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" },
+            { id: "ev1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" },
+            { id: "ev2", start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" },
           ],
         },
       ],
@@ -283,7 +284,7 @@ describe("intervalOverlap/choices - ISO parsing happens only during normalizatio
         {
           id: "E1O0",
           intervals: [
-            { start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" },
+            { id: "ev3", start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" },
           ],
         },
       ],
@@ -350,8 +351,8 @@ describe("intervalOverlap/choices - end-to-end (more specific fixtures)", () => 
       {
         id: "E0",
         options: [
-          { id: "A", intervals: [{ start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" }] },
-          { id: "B", intervals: [{ start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" }] },
+          { id: "A", intervals: [{ id: "a1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" }] },
+          { id: "B", intervals: [{ id: "b1", start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" }] },
         ],
       },
       {
@@ -360,11 +361,11 @@ describe("intervalOverlap/choices - end-to-end (more specific fixtures)", () => 
           {
             id: "C",
             intervals: [
-              { start: "2026-01-01T10:15:00Z", end: "2026-01-01T10:45:00Z" }, // overlaps A 30m
-              { start: "2026-01-01T12:55:00Z", end: "2026-01-01T13:00:00Z" }, // overlaps B 5m
+              { id: "c1", start: "2026-01-01T10:15:00Z", end: "2026-01-01T10:45:00Z" }, // overlaps A 30m
+              { id: "c2", start: "2026-01-01T12:55:00Z", end: "2026-01-01T13:00:00Z" }, // overlaps B 5m
             ],
           },
-          { id: "D", intervals: [{ start: "2026-01-01T10:45:00Z", end: "2026-01-01T11:00:00Z" }] }, // overlaps A 15m
+          { id: "D", intervals: [{ id: "d1", start: "2026-01-01T10:45:00Z", end: "2026-01-01T11:00:00Z" }] }, // overlaps A 15m
         ],
       },
     ];
@@ -411,8 +412,8 @@ describe("intervalOverlap/choices - end-to-end (more specific fixtures)", () => 
       {
         id: "E0",
         options: [
-          { id: "A", intervals: [{ start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" }] },
-          { id: "B", intervals: [{ start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" }] },
+          { id: "A", intervals: [{ id: "a1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" }] },
+          { id: "B", intervals: [{ id: "b1", start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" }] },
         ],
       },
       {
@@ -421,11 +422,11 @@ describe("intervalOverlap/choices - end-to-end (more specific fixtures)", () => 
           {
             id: "C",
             intervals: [
-              { start: "2026-01-01T10:15:00Z", end: "2026-01-01T10:45:00Z" },
-              { start: "2026-01-01T12:55:00Z", end: "2026-01-01T13:00:00Z" },
+              { id: "c1", start: "2026-01-01T10:15:00Z", end: "2026-01-01T10:45:00Z" },
+              { id: "c2", start: "2026-01-01T12:55:00Z", end: "2026-01-01T13:00:00Z" },
             ],
           },
-          { id: "D", intervals: [{ start: "2026-01-01T10:45:00Z", end: "2026-01-01T11:00:00Z" }] },
+          { id: "D", intervals: [{ id: "d1", start: "2026-01-01T10:45:00Z", end: "2026-01-01T11:00:00Z" }] },
         ],
       },
     ];
@@ -454,14 +455,14 @@ describe("intervalOverlap/choices - end-to-end (more specific fixtures)", () => 
       {
         id: "E0",
         options: [
-          { id: "OK", intervals: [{ start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" }] },
-          { id: "BAD", intervals: [{ start: "bad", end: "still bad" }] },
+          { id: "OK", intervals: [{ id: "ok1", start: "2026-01-01T10:00:00Z", end: "2026-01-01T11:00:00Z" }] },
+          { id: "BAD", intervals: [{ id: "bad1", start: "bad", end: "still bad" }] },
         ],
       },
       {
         id: "E1",
         options: [
-          { id: "X", intervals: [{ start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" }] },
+          { id: "X", intervals: [{ id: "x1", start: "2026-01-01T10:30:00Z", end: "2026-01-01T11:30:00Z" }] },
         ],
       },
     ];
@@ -502,22 +503,22 @@ describe("intervalOverlap/choices - end-to-end (more specific fixtures)", () => 
       {
         id: "E0",
         options: [
-          { id: "A", intervals: [{ start: "2026-01-01T15:15:00Z", end: "2026-01-01T16:15:00Z" }] },
-          { id: "B", intervals: [{ start: "2026-01-01T14:00:00Z", end: "2026-01-01T15:00:00Z" }] },
+          { id: "A", intervals: [{ id: "a1", start: "2026-01-01T15:15:00Z", end: "2026-01-01T16:15:00Z" }] },
+          { id: "B", intervals: [{ id: "b1", start: "2026-01-01T14:00:00Z", end: "2026-01-01T15:00:00Z" }] },
         ],
       },
       {
         id: "E1",
         options: [
-          { id: "C", intervals: [{ start: "2026-01-01T14:30:00Z", end: "2026-01-01T15:30:00Z" }] },
-          { id: "D", intervals: [{ start: "2026-01-01T15:00:00Z", end: "2026-01-01T16:00:00Z" }] },
+          { id: "C", intervals: [{ id: "c1", start: "2026-01-01T14:30:00Z", end: "2026-01-01T15:30:00Z" }] },
+          { id: "D", intervals: [{ id: "d1", start: "2026-01-01T15:00:00Z", end: "2026-01-01T16:00:00Z" }] },
         ],
       },
       {
         id: "E2",
         options: [
-          { id: "E", intervals: [{ start: "2026-01-01T15:15:00Z", end: "2026-01-01T16:15:00Z" }] },
-          { id: "F", intervals: [{ start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" }] },
+          { id: "E", intervals: [{ id: "e1", start: "2026-01-01T15:15:00Z", end: "2026-01-01T16:15:00Z" }] },
+          { id: "F", intervals: [{ id: "f1", start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" }] },
         ],
       },
     ];
@@ -549,26 +550,26 @@ it("many options: returns several top-K combinations (k=5) from a larger search 
     {
       id: "E0",
       options: [
-        { id: "E0-M", intervals: [{ start: "2026-01-01T08:00:00Z", end: "2026-01-01T09:00:00Z" }] },
-        { id: "E0-N", intervals: [{ start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" }] },
-        { id: "E0-A", intervals: [{ start: "2026-01-01T16:00:00Z", end: "2026-01-01T17:00:00Z" }] },
+        { id: "E0-M", intervals: [{ id: "e0m1", start: "2026-01-01T08:00:00Z", end: "2026-01-01T09:00:00Z" }] },
+        { id: "E0-N", intervals: [{ id: "e0n1", start: "2026-01-01T12:00:00Z", end: "2026-01-01T13:00:00Z" }] },
+        { id: "E0-A", intervals: [{ id: "e0a1", start: "2026-01-01T16:00:00Z", end: "2026-01-01T17:00:00Z" }] },
       ],
     },
     {
       id: "E1",
       options: [
         // Slightly shifted windows so overlaps are unambiguous
-        { id: "E1-M", intervals: [{ start: "2026-01-01T08:15:00Z", end: "2026-01-01T09:15:00Z" }] },
-        { id: "E1-N", intervals: [{ start: "2026-01-01T12:15:00Z", end: "2026-01-01T13:15:00Z" }] },
-        { id: "E1-A", intervals: [{ start: "2026-01-01T16:15:00Z", end: "2026-01-01T17:15:00Z" }] },
+        { id: "E1-M", intervals: [{ id: "e1m1", start: "2026-01-01T08:15:00Z", end: "2026-01-01T09:15:00Z" }] },
+        { id: "E1-N", intervals: [{ id: "e1n1", start: "2026-01-01T12:15:00Z", end: "2026-01-01T13:15:00Z" }] },
+        { id: "E1-A", intervals: [{ id: "e1a1", start: "2026-01-01T16:15:00Z", end: "2026-01-01T17:15:00Z" }] },
       ],
     },
     {
       id: "E2",
       options: [
-        { id: "E2-M", intervals: [{ start: "2026-01-01T08:30:00Z", end: "2026-01-01T09:30:00Z" }] },
-        { id: "E2-N", intervals: [{ start: "2026-01-01T12:30:00Z", end: "2026-01-01T13:30:00Z" }] },
-        { id: "E2-A", intervals: [{ start: "2026-01-01T16:30:00Z", end: "2026-01-01T17:30:00Z" }] },
+        { id: "E2-M", intervals: [{ id: "e2m1", start: "2026-01-01T08:30:00Z", end: "2026-01-01T09:30:00Z" }] },
+        { id: "E2-N", intervals: [{ id: "e2n1", start: "2026-01-01T12:30:00Z", end: "2026-01-01T13:30:00Z" }] },
+        { id: "E2-A", intervals: [{ id: "e2a1", start: "2026-01-01T16:30:00Z", end: "2026-01-01T17:30:00Z" }] },
       ],
     },
   ];

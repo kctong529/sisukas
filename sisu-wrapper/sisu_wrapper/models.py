@@ -11,8 +11,10 @@ Limitations:
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from typing import List
 
+HELSINKI = ZoneInfo("Europe/Helsinki")
 
 @dataclass
 class StudyEvent:
@@ -25,22 +27,32 @@ class StudyEvent:
     """
     start: str
     end: str
+    start_iso: str | None = None
+    end_iso: str | None = None
+
+    def _parse(self, s: str) -> datetime:
+        dt = datetime.fromisoformat(s)
+        # If tz missing, assume Helsinki local time
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=HELSINKI)
+        return dt
 
     @property
     def start_datetime(self) -> datetime:
         """Get start time as datetime object"""
-        return datetime.fromisoformat(self.start)
+        return self._parse(self.start)
 
     @property
     def end_datetime(self) -> datetime:
         """Get end time as datetime object"""
-        return datetime.fromisoformat(self.end)
-
-    def __repr__(self) -> str:
-        fmt = "%d.%m.%Y (%a) %H:%M"
-        start_formatted = self.start_datetime.strftime(fmt)
-        end_formatted = self.end_datetime.strftime('%H:%M')
-        return f"{start_formatted} - {end_formatted}"
+        return self._parse(self.end)
+    
+    def __post_init__(self):
+        # Populate canonical ISO strings if not provided
+        if self.start_iso is None:
+            self.start_iso = self.start_datetime.isoformat()
+        if self.end_iso is None:
+            self.end_iso = self.end_datetime.isoformat()
 
 
 @dataclass

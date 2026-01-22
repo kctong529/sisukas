@@ -1,3 +1,5 @@
+// normalize.ts
+
 import type {
   DroppedInterval,
   IntervalInput,
@@ -36,49 +38,11 @@ export function normalizeIntervals(intervals: IntervalInput[]): {
       return;
     }
 
-    normalized.push({ startMs: s, endMs: e });
-  });
-
-  return { normalized, dropped };
-}
-
-/**
- * Fast-path validation for already-normalized millisecond intervals.
- *
- * Use this in hot loops (combination enumeration) where parsing ISO repeatedly
- * would dominate runtime.
- *
- * Note:
- * - We keep the same dropped format for consistent diagnostics.
- * - There is no ISO parsing here; it assumes caller provides milliseconds.
- */
-export function normalizeIntervalsFromMs(
-  intervals: Array<{ startMs: number; endMs: number }>
-): {
-  normalized: NormalizedInterval[];
-  dropped: Array<{ index: number; reason: "invalid-ms" | "end<=start"; value: { startMs: number; endMs: number } }>;
-} {
-  const dropped: Array<{
-    index: number;
-    reason: "invalid-ms" | "end<=start";
-    value: { startMs: number; endMs: number };
-  }> = [];
-  const normalized: NormalizedInterval[] = [];
-
-  intervals.forEach((it, index) => {
-    const s = it.startMs;
-    const e = it.endMs;
-
-    if (!Number.isFinite(s) || !Number.isFinite(e)) {
-      dropped.push({ index, reason: "invalid-ms", value: it });
-      return;
-    }
-    if (e <= s) {
-      dropped.push({ index, reason: "end<=start", value: it });
-      return;
-    }
-
-    normalized.push({ startMs: s, endMs: e });
+    normalized.push({ 
+      id: it.id,
+      startMs: s, 
+      endMs: e 
+    });
   });
 
   return { normalized, dropped };

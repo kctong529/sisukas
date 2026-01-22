@@ -108,7 +108,12 @@ export type ComputeSchedulePairsResponse = {
      * Optional heavy fields.
      */
     durationByConcurrentMs?: Record<number, number>;
-    segments?: Array<{ startMs: number; endMs: number; concurrent: number }>;
+    segments?: Array<{
+      startMs: number;
+      endMs: number;
+      concurrent: number;
+      concurrentIds: string[];
+    }>;
   }>;
 
   evaluated: number;
@@ -206,6 +211,7 @@ function compileScheduleChoices(input: ComputeSchedulePairsRequest): {
         return {
           id: optionId,
           intervals: sg.events.map((ev) => ({
+            id: ev.eventId,
             start: ev.start,
             end: ev.end,
           })),
@@ -381,6 +387,7 @@ router.post("/schedule-pairs/topk", (req, res) => {
             startMs: s.startMs,
             endMs: s.endMs,
             concurrent: s.concurrent,
+            concurrentIds: s.concurrentIds,
           }));
         }
 

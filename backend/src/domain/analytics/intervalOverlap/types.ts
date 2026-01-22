@@ -12,6 +12,7 @@ export type ISODateTime = string;
  * Times are ISO strings with timezone information.
  */
 export type IntervalInput = {
+  id: string;
   start: ISODateTime;
   end: ISODateTime;
 };
@@ -21,6 +22,7 @@ export type IntervalInput = {
  * All times are converted to epoch milliseconds.
  */
 export type NormalizedInterval = {
+  id: string;
   startMs: number;
   endMs: number;
 };
@@ -63,6 +65,7 @@ export type Segment = {
   startMs: number;
   endMs: number;
   concurrent: number;
+  concurrentIds: string[];
 };
 
 /**

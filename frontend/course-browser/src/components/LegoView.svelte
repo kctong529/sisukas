@@ -1,55 +1,95 @@
 <!-- src/components/LegoView.svelte -->
 <script lang="ts">
-  import { useSession } from '../lib/authClient';
-  import { courseStore } from '../lib/stores/courseStore';
-  import { plansStore } from '../lib/stores/plansStore';
-  import { blockStore } from '../lib/stores/blockStore';
-  import { studyGroupStore } from '../lib/stores/studyGroupStore';
-  import PlanManager from './PlanManager.svelte';
-  import BlocksGrid from './BlocksGrid.svelte';
-  import type { Course } from '../domain/models/Course';
-  import type { Block } from '../domain/models/Block';
-  import type { StudyGroup } from '../domain/models/StudyGroup';
+  import { onMount } from "svelte";
+  import { useSession } from "../lib/authClient";
+  import { courseStore } from "../lib/stores/courseStore";
+  import { plansStore } from "../lib/stores/plansStore";
+  import { blockStore } from "../lib/stores/blockStore";
+  import { studyGroupStore } from "../lib/stores/studyGroupStore";
+
+  import PlanManager from "./PlanManager.svelte";
+  import BlocksGrid from "./BlocksGrid.svelte";
+  import AnalyticsResults from "./AnalyticsResults.svelte";
+
+  import type { Course } from "../domain/models/Course";
+  import { buildAnalyticsPayload } from "../lib/analytics/buildAnalyticsPayload";
+  import { fetchTopKSchedulePairs } from "../infrastructure/services/AnalyticsService";
+  import type { AnalyticsResponse } from "../lib/types/analytics";
+  import { normalizeComputeSchedulePairsResponse } from "../lib/analytics/normalizeComputeSchedulePairs";
 
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);
 
-  // Derive active plan from store
   let activePlan = $derived.by(() => $plansStore.activePlan);
+
+  let analyticsResp = $state<AnalyticsResponse | null>(null);
+  let analyticsError = $state<string | null>(null);
+  let running = $state(false);
+  let showAnalyticsModal = $state(false);
 
   async function loadPlans() {
     try {
       await plansStore.load();
     } catch (err) {
-      console.error('Failed to load plans:', err);
+      console.error("Failed to load plans:", err);
     }
   }
 
   function getCourseForInstance(instanceId: string): Course | undefined {
-    // Search through all courses to find the one matching this instance ID
     const allCourses = courseStore.getAll();
     for (const courseArray of allCourses.values()) {
-      const course = courseArray.find(c => c.id === instanceId);
+      const course = courseArray.find((c) => c.id === instanceId);
       if (course) return course;
     }
     return undefined;
   }
 
-  async function displayEverything() {
-    const instanceIds = activePlan?.instanceIds;
-    for (const instanceId of instanceIds as string[]) {
-      const this_course = getCourseForInstance(instanceId) as Course;
-      const all_study_groups = await studyGroupStore.fetch(this_course.unitId, instanceId);
-      const study_groups_in_block = blockStore.getCachedForInstance(instanceId) as Block[];
-      for (const blk of study_groups_in_block) {
-        console.log(`${this_course.code.value}, Block name: ${blk.label}`);
-        const wanted_sgs = all_study_groups.filter(s => blk.studyGroupIds.includes(s.groupId));
-        for (const wanted_sg of wanted_sgs) {
-          console.log(wanted_sg.name, wanted_sg.studyEvents);
-        }
-      }
+  function closeAnalyticsModal() {
+    showAnalyticsModal = false;
+    analyticsResp = null;
+    analyticsError = null;
+  }
+
+  async function showAnalysis() {
+    if (!activePlan) return;
+    if (running) return;
+
+    running = true;
+    analyticsError = null;
+    showAnalyticsModal = true;
+
+    try {
+      const payload = buildAnalyticsPayload({
+        instanceIds: activePlan.instanceIds,
+        getCourseForInstance,
+        getBlocksForInstance: (id) => blockStore.getCachedForInstance(id) ?? [],
+        getStudyGroupsForInstance: (unitId, offeringId) =>
+          studyGroupStore.getCached(unitId, offeringId),
+        topK: 20,
+        scoreMode: "minMaxConcurrentThenOverlap",
+      });
+
+      const raw = await fetchTopKSchedulePairs(payload);
+      analyticsResp = normalizeComputeSchedulePairsResponse(raw);
+    } catch (e) {
+      analyticsError = e instanceof Error ? e.message : String(e);
+    } finally {
+      running = false;
     }
   }
+
+  onMount(() => {
+    const onKeydown = (e: KeyboardEvent) => {
+      if (!showAnalyticsModal) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeAnalyticsModal();
+      }
+    };
+
+    window.addEventListener("keydown", onKeydown);
+    return () => window.removeEventListener("keydown", onKeydown);
+  });
 </script>
 
 <div class="lego-view">
@@ -70,9 +110,7 @@
     <div class="state-card error">
       <h2>Something went wrong</h2>
       <p>{$plansStore.error}</p>
-      <button onclick={loadPlans} class="btn btn-secondary">
-        Try Again
-      </button>
+      <button onclick={loadPlans} class="btn btn-secondary">Try Again</button>
     </div>
 
   {:else if $plansStore.plans.length === 0}
@@ -95,8 +133,16 @@
       <div class="title-group">
         <h1>LEGO Composition</h1>
       </div>
-      
+
       <PlanManager compact={true} />
+
+      <button class="btn btn-analytics" onclick={showAnalysis} disabled={running}>
+        {running ? "Running..." : "Compute best schedules"}
+      </button>
+
+      {#if analyticsError && !showAnalyticsModal}
+        <div class="alert alert-error mt-2">{analyticsError}</div>
+      {/if}
     </div>
 
     <div class="instances-container">
@@ -130,11 +176,45 @@
             </div>
           {/each}
         </div>
-          <button class="btn btn-secondary" onclick={displayEverything}>Here</button>
       {/if}
     </div>
   {/if}
 </div>
+
+{#if showAnalyticsModal}
+  <div class="modal-backdrop" role="presentation">
+    <button
+      type="button"
+      class="modal-overlay-close"
+      aria-label="Close analytics modal"
+      onclick={closeAnalyticsModal}
+    ></button>
+
+    <div class="modal-content" role="dialog" aria-modal="true" aria-label="Analytics results">
+      <div class="modal-header">
+        <button type="button" class="modal-close" aria-label="Close" onclick={closeAnalyticsModal}>
+          ✕
+        </button>
+      </div>
+
+      <div class="modal-body">
+        {#if running}
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Computing best schedules...</p>
+          </div>
+        {:else if analyticsError}
+          <div class="alert alert-error">
+            <h3>Error</h3>
+            <p>{analyticsError}</p>
+          </div>
+        {:else}
+          <AnalyticsResults data={analyticsResp} />
+        {/if}
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   :root {
@@ -331,9 +411,181 @@
     background: #f1f5f9;
   }
 
+  .btn-analytics {
+    padding: 0.5rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card-bg);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.8rem;
+    color: var(--text-main);
+    min-width: 32px;
+    text-align: center;
+    font-weight: 100;
+  }
+
+  .btn-analytics:hover {
+    border-color: var(--primary);
+    background: #f1f5f9;
+  }
+
+  .btn-analytics:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+
+  /* Modal Styles */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  /* Full-screen click-catcher behind the modal */
+  .modal-overlay-close {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+
+    border: 0;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  .modal-overlay-close:focus {
+    outline: none;
+  }
+  .modal-overlay-close:focus-visible {
+    outline: 2px solid rgba(74, 144, 226, 0.9);
+    outline-offset: -2px; /* keeps it inside viewport */
+  }
+
+
+  /* Make sure modal is above the overlay button */
+  .modal-content {
+    position: relative;
+    z-index: 1;
+    cursor: default;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 95vw;
+    max-width: 1200px;
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .modal-close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .modal-close:hover {
+    background: var(--bg);
+    color: var(--text-main);
+  }
+
+  .modal-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0.5rem;
+  }
+
+  /* Alert in modal */
+  .alert {
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid;
+  }
+
+  .alert-error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+  }
+
+  .alert h3 {
+    margin: 0 0 0.5rem 0;
+    color: inherit;
+  }
+
+  .alert p {
+    margin: 0;
+    color: inherit;
+  }
+
   @media (max-width: 484px) {
     .instances-list {
       grid-template-columns: 1fr;
+    }
+
+    /* .modal-content {
+      width: 95vw;
+      max-height: 95vh;
+    } */
+
+    .modal-header {
+      padding: 1rem;
+    }
+
+    .modal-body {
+      padding: 1rem;
     }
   }
 </style>

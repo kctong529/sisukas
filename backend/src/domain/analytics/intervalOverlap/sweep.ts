@@ -1,3 +1,5 @@
+// sweep.ts
+
 import type {
   Boundary,
   NormalizedInterval,
@@ -22,12 +24,12 @@ import type {
  */
 export function buildBoundaries(
   normalized: NormalizedInterval[]
-): Boundary[] {
-  const points: Boundary[] = [];
+): Array<Boundary & { id: string }> {
+  const points: Array<Boundary & { id: string }> = [];
 
   for (const it of normalized) {
-    points.push({ t: it.startMs, d: 1 });
-    points.push({ t: it.endMs, d: -1 });
+    points.push({ t: it.startMs, d: 1, id: it.id });
+    points.push({ t: it.endMs, d: -1, id: it.id });
   }
 
   points.sort((a, b) => (a.t - b.t) || (a.d - b.d));
@@ -73,7 +75,11 @@ export function getSpan(
  * (e.g. "overlap means >= 2").
  */
 export function sweepBoundaries(
-  boundaries: Boundary[],
+  boundaries: Array<{
+    t: number;
+    d: 1 | -1;
+    id: string;  // Track which interval caused this boundary
+  }>,
   span: { minStartMs: number; maxEndMs: number },
   opts: {
     dropZeroLengthSegments: boolean;
@@ -87,6 +93,7 @@ export function sweepBoundaries(
 
   let active = 0;
   let maxConcurrent = 0;
+  const activeIds = new Set<string>();
 
   // If including gaps, we start tracking at the earliest start.
   let prevT: number | null = includeGapsWithinSpan ? span.minStartMs : null;
@@ -105,8 +112,15 @@ export function sweepBoundaries(
           startMs: prevT,
           endMs: curT,
           concurrent: active,
+          concurrentIds: Array.from(activeIds),
         });
       }
+    }
+
+    if (b.d === 1) {
+      activeIds.add(b.id);
+    } else {
+      activeIds.delete(b.id);
     }
 
     active += b.d;
@@ -125,6 +139,7 @@ export function sweepBoundaries(
         startMs: prevT,
         endMs: span.maxEndMs,
         concurrent: active,
+        concurrentIds: Array.from(activeIds),
       });
     }
   }
