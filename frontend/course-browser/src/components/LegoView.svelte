@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { useSession } from "../lib/authClient";
-  import { courseStore } from "../lib/stores/courseStore";
+  import { courseIndexStore } from "../lib/stores/courseIndexStore";
   import { plansStore } from "../lib/stores/plansStore";
   import { blockStore } from "../lib/stores/blockStore";
   import { studyGroupStore } from "../lib/stores/studyGroupStore";
@@ -36,11 +36,8 @@
   }
 
   function getCourseForInstance(instanceId: string): Course | undefined {
-    const allCourses = courseStore.getAll();
-    for (const courseArray of allCourses.values()) {
-      const course = courseArray.find((c) => c.id === instanceId);
-      if (course) return course;
-    }
+    const course = courseIndexStore.getByInstanceId(instanceId);
+    if (course) return course;
     return undefined;
   }
 
