@@ -39,6 +39,7 @@
     "js-yaml": "4.1.1"
   },
   "dependencies": {
-    "better-auth": "^1.4.10"
+    "better-auth": "^1.4.10",
+    "pdfjs-dist": "^5.4.530"
   }
 }
