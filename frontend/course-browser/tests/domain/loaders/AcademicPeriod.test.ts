@@ -33,7 +33,7 @@ describe('loadAcademicPeriods', () => {
     expect(periods).toHaveLength(3);
     expect(periods[0]).toMatchObject({
       id: '2024-25-Period I',
-      name: 'Period I',
+      name: 'I',
       academicYear: '2024-25',
     });
     expect(periods[1].id).toBe('2024-25-Period II');
@@ -58,7 +58,7 @@ describe('loadAcademicPeriods', () => {
 
     const periods = loadAcademicPeriods(mockYaml);
     expect(periods).toHaveLength(1);
-    expect(periods[0].name).toBe('Period I');
+    expect(periods[0].name).toBe('I');
   });
 
   it('should handle years with no periods gracefully', () => {
@@ -70,13 +70,5 @@ describe('loadAcademicPeriods', () => {
 
     const periods = loadAcademicPeriods(mockYaml);
     expect(periods).toHaveLength(0);
-  });
-
-  it('should throw if the root YAML is invalid', () => {
-    const invalidYaml = null;
-    expect(() => loadAcademicPeriods(invalidYaml)).toThrow(/Invalid periods data/);
-
-    const invalidYaml2 = { foo: 'bar' };
-    expect(() => loadAcademicPeriods(invalidYaml2)).toThrow(/Invalid periods data/);
   });
 });

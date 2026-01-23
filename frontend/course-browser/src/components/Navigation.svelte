@@ -69,6 +69,15 @@
         <span>LEGO</span>
       </button>
       
+      <button 
+        class="nav-link" 
+        class:active={currentView === 'timeline'}
+        on:click={() => handleNavigation('timeline')}
+      >
+        <i class="bi bi-calendar3"></i>
+        <span>Timeline</span>
+      </button>
+
       <a 
         href="https://github.com/kctong529/sisukas" 
         target="_blank"
@@ -139,6 +148,15 @@
       >
         <i class="bi bi-box"></i>
         <span>LEGO</span>
+      </button>
+
+      <button 
+        class="mobile-nav-link" 
+        class:active={currentView === 'timeline'}
+        on:click={() => handleNavigation('timeline')}
+      >
+        <i class="bi bi-calendar3"></i>
+        <span>Timeline</span>
       </button>
       
       <a 
