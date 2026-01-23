@@ -8,6 +8,8 @@
   import NotificationContainer from './components/NotificationContainer.svelte';
   import AuthModal from "./components/AuthModal.svelte";
   import FavouritesView from "./components/FavouritesView.svelte";
+  import LegoView from './components/LegoView.svelte';
+  import PeriodTimeline from './components/PeriodTimeline.svelte';
   import { authClient, useSession } from "./lib/authClient";
   import { createRuleBlueprints, type RuleBlueprintKey } from './domain/filters/blueprints';
   import type { BaseRuleBlueprint } from './domain/filters/blueprints';
@@ -25,7 +27,6 @@
   import { courseIndexStore } from './lib/stores/courseIndexStore';
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
   import DebugPanels from './components/DebugPanels.svelte';
-  import LegoView from './components/LegoView.svelte';
   
   let currentView = 'courses';
   let isSignedIn = false;
@@ -291,6 +292,14 @@
     class:hidden={currentView !== 'lego'}
   >
     <LegoView />
+  </div>
+
+  <!-- Period Timeline View -->
+  <div 
+    class="view" 
+    class:hidden={currentView !== 'timeline'}
+  >
+    <PeriodTimeline />
   </div>
 </div>
 

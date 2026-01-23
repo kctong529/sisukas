@@ -105,11 +105,6 @@
       endSelection();
     }
   }
-  
-  // Format period name for display
-  function formatPeriodName(name: string): string {
-    return name.replace('Period ', '');
-  }
 </script>
 
 {#if visible}
@@ -139,8 +134,8 @@
             on:touchmove={handleTouchMove}
             on:touchend={handleTouchEnd}
           >
-            <span class="full-text">{period.name}</span>
-            <span class="abbreviated-text">{formatPeriodName(period.name)}</span>
+            <span class="full-text">Period {period.name}</span>
+            <span class="abbreviated-text">{period.name}</span>
           </div>
         {/each}
       </div>

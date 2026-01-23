@@ -4,16 +4,19 @@
   import StudyGroupStoreDebug from './StudyGroupStoreDebug.svelte';
   import PlansStoreDebug from './PlansStoreDebug.svelte';
   import BlockStoreDebug from './BlockStoreDebug.svelte';
+  import PeriodTimelineStoreDebug from './PeriodTimelineStoreDebug.svelte';
 
   const debugAuthStore = import.meta.env.VITE_DEBUG_AUTH === 'true';
   const debugStudyGroupStore = import.meta.env.VITE_DEBUG_STUDY_GROUP_STORE === 'true';
   const debugPlanStore = import.meta.env.VITE_DEBUG_PLAN_STORE === 'true';
   const debugBlockStore = import.meta.env.VITE_DEBUG_BLOCK_STORE === 'true';
+  const debugPeriodTimelineStore = import.meta.env.VITE_DEBUG_PERIOD_TIMELINE_STORE === 'true';
 
   const panelsToShow = [
     { name: 'BlockStoreDebug', show: debugBlockStore, component: BlockStoreDebug },
     { name: 'PlansStoreDebug', show: debugPlanStore, component: PlansStoreDebug },
     { name: 'StudyGroupStoreDebug', show: debugStudyGroupStore, component: StudyGroupStoreDebug },
+    { name: 'PeriodTimelineStoreDebug', show: debugPeriodTimelineStore, component: PeriodTimelineStoreDebug },
     { name: 'AuthDebugPanel', show: debugAuthStore, component: AuthDebugPanel },
   ].filter(p => p.show);
 </script>

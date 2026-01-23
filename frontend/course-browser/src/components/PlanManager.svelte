@@ -92,7 +92,7 @@
           <button class="btn btn-primary btn-small" onclick={handleCreatePlan} disabled={!newPlanName.trim()}>
             ◯
           </button>
-          <button class="btn btn-secondary btn-small" onclick={() => (isCreating = false)}>
+          <button class="btn btn-primary-cancel btn-small" onclick={() => (isCreating = false)}>
             ✕
           </button>
         {:else}
@@ -323,6 +323,7 @@
   .btn-primary {
     background: #4a90e2;
     color: white;
+    height: 32.5px;
   }
 
   .btn-primary:hover:not(:disabled) {
@@ -332,6 +333,24 @@
   .btn-primary:focus:not(:disabled) {
     outline: 2px solid #4a90e2;
     outline-offset: 2px;
+  }
+
+  .btn-primary-cancel {
+    background: #ffffff;
+    color: #1e293b;
+    border: 1px solid #e2e8f0;
+    height: 32.5px;
+  }
+
+  .btn-primary-cancel:hover:not(:disabled) {
+    border-color: #4a90e2;
+    background: #f8fafc;
+  }
+
+  .btn-primary-cancel:focus:not(:disabled) {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
   .btn-secondary {
