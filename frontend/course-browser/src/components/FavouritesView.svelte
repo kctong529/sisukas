@@ -3,7 +3,7 @@
   import { useSession } from '../lib/authClient';
   import { favouritesStore } from '../lib/stores/favouritesStore';
   import { plansStore } from '../lib/stores/plansStore';
-  import { courseStore } from '../lib/stores/courseStore';
+  import { courseIndexStore } from '../lib/stores/courseIndexStore';
   import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import { NotificationService } from '../infrastructure/services/NotificationService';
   import StudyGroupsSection from './StudyGroupsSection.svelte';
@@ -84,7 +84,7 @@
   }
 
   function getCoursesForId(courseId: string): Course[] {
-    return courseStore.getByCode(courseId);
+    return courseIndexStore.getInstancesByCode(courseId);
   }
 
   $: sortedFavourites = [...$favouritesStore.favourites].sort((a, b) => {

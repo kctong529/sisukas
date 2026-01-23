@@ -22,7 +22,8 @@
   import type { Course } from './domain/models/Course';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { FilterRuleGroups } from './domain/filters/FilterTypes';
-  import { courseStore } from './lib/stores/courseStore';
+  import { courseIndexStore } from './lib/stores/courseIndexStore';
+  import { academicPeriodStore } from './lib/stores/academicPeriodStore';
   import DebugPanels from './components/DebugPanels.svelte';
   import LegoView from './components/LegoView.svelte';
   
@@ -63,6 +64,7 @@
     try {
       // Load academic periods (synchronous)
       periods = loadAcademicPeriods();
+      academicPeriodStore.setPeriods(periods);
       console.log("Academic Periods loaded:", periods);
       
       // Load organizations (synchronous)
@@ -82,8 +84,8 @@
       filteredCourses = [...courses];
       console.log("Courses loaded:", courses.length);
 
-      // Build coursesId Map using courseStore
-      await courseStore.setCourses(courses);
+      // Build course indexes using courseIndexStore
+      courseIndexStore.setCourses(courses);
       console.log("Courses loaded into courseStore");
 
       // Check for filter hash in URL and load if present
