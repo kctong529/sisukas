@@ -1,7 +1,8 @@
 <!-- src/components/PeriodTimeline.svelte -->
 <script lang="ts">
   import { periodTimelineStore } from '../lib/stores/periodTimelineStore';
-  import type { PeriodTimelineModel } from '../domain/viewModels/PeriodTimelineModel';
+  import type { PeriodTimelineChip, PeriodTimelineModel } from '../domain/viewModels/PeriodTimelineModel';
+  import { SvelteMap } from 'svelte/reactivity';
 
   const model = $derived($periodTimelineStore as PeriodTimelineModel | null);
 
@@ -24,9 +25,9 @@
   const courseSpanMap = $derived.by(() => {
     if (!model) return null;
 
-    const map = new Map<
+    const map = new SvelteMap<
       string,
-      { item: any; colStart: number; colEnd: number }
+      { item: PeriodTimelineChip; colStart: number; colEnd: number }
     >();
 
     model.columns.forEach((col, colIndex) => {
@@ -46,7 +47,7 @@
 
   type Placement = {
     key: string;
-    item: any;
+    item: PeriodTimelineChip;
     colStart: number; // 0-based
     colEnd: number; // 0-based inclusive
     lane: number; // 0-based
@@ -177,7 +178,7 @@
               {#if laneCount === 0}
                 <div class="periodBody__empty">No courses</div>
               {:else}
-                {#each Array(laneCount) as _, i (i)}
+                {#each Array.from({ length: laneCount }, (_, idx) => idx) as i (i)}
                   <div class="laneSlot"></div>
                 {/each}
               {/if}

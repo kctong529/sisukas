@@ -8,6 +8,8 @@
   import type { Plan } from '../domain/models/Plan';
   import type { AcademicPeriod } from '../domain/models/AcademicPeriod';
   import type { PeriodTimelineModel } from '../domain/viewModels/PeriodTimelineModel';
+  import { SvelteSet } from 'svelte/reactivity';
+  import type { Course } from '../domain/models/Course';
 
   interface PlansStoreState {
     plans: Plan[];
@@ -17,7 +19,7 @@
   }
 
   interface CourseIndexState {
-    byInstanceId: Map<string, any>;
+    byInstanceId: Map<string, Course>;
     instanceIdsByCode?: Map<string, string[]>;
     loading?: boolean;
     error?: string | null;
@@ -53,7 +55,7 @@
   function toggleCol(id: string) {
     if (expandedCols.has(id)) expandedCols.delete(id);
     else expandedCols.add(id);
-    expandedCols = new Set(expandedCols);
+    expandedCols = new SvelteSet(expandedCols);
   }
 
   function activeInstanceIds(): string[] {
@@ -78,8 +80,8 @@
     return timeline.columns.reduce((sum, c) => sum + (c.items?.length ?? 0), 0);
   }
 
-  function uniqueInstanceIdsInTimeline(): Set<string> {
-    const set = new Set<string>();
+  function uniqueInstanceIdsInTimeline(): SvelteSet<string> {
+    const set = new SvelteSet<string>();
     if (!timeline) return set;
     for (const col of timeline.columns) for (const it of col.items) set.add(it.instanceId);
     return set;
@@ -88,8 +90,8 @@
   // NOTE: This flags cross-period repeats too; that's expected for spanning courses.
   function duplicateInstanceIdsInTimeline(): string[] {
     if (!timeline) return [];
-    const seen = new Set<string>();
-    const dup = new Set<string>();
+    const seen = new SvelteSet<string>();
+    const dup = new SvelteSet<string>();
     for (const col of timeline.columns) {
       for (const it of col.items) {
         if (seen.has(it.instanceId)) dup.add(it.instanceId);

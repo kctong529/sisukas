@@ -1,6 +1,7 @@
 <script lang="ts">
   import * as pdfjsLib from "pdfjs-dist";
   import { createEventDispatcher } from "svelte";
+  import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
   type Grade = "Pass" | "Fail" | "0" | "1" | "2" | "3" | "4" | "5";
 
@@ -35,7 +36,7 @@
   };
 
   function buildLinesFromTextContent(content: TextContentLike): string[] {
-    const lines = new Map<number, Array<{ text: string; x: number }>>();
+    const lines = new SvelteMap<number, Array<{ text: string; x: number }>>();
 
     for (const item of content.items) {
       const [, , , , x, y] = item.transform;
@@ -183,7 +184,7 @@
     }
 
     // De-dup
-    const seen = new Set<string>();
+    const seen = new SvelteSet<string>();
     return out.filter((c) => {
       const key = `${c.code}|${c.date}|${c.grade}|${c.credits}`;
       if (seen.has(key)) return false;

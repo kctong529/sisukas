@@ -29,7 +29,8 @@
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
   import DebugPanels from './components/DebugPanels.svelte';
   
-  let currentView = 'experiment';
+  // let currentView = 'experiment';
+  let currentView = 'courses';
   let isSignedIn = false;
   let userName = '';
 

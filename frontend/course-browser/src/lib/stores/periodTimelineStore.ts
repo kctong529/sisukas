@@ -5,12 +5,13 @@ import { academicPeriodStore } from './academicPeriodStore';
 import { courseIndexStore } from './courseIndexStore';
 import { PeriodTimelineService } from '../../domain/services/PeriodTimelineService';
 import type { PeriodTimelineModel } from '../../domain/viewModels/PeriodTimelineModel';
+import type { Course } from '../../domain/models/Course';
 
 function defaultAcademicYear(periods: { academicYear: string }[]): string {
   return [...new Set(periods.map((p) => p.academicYear))].sort().at(-1)!;
 }
 
-function displayName(course: any): string {
+function displayName(course: Course): string {
   const n = course?.name;
   if (!n) return 'Untitled';
   if (typeof n === 'string') return n;
@@ -27,8 +28,8 @@ export const periodTimelineStore = derived(
 
     const instances = plan.instanceIds
       .map((id) => $courseIndex.byInstanceId.get(id))
-      .filter(Boolean)
-      .map((c: any) => ({
+      .filter((c): c is Course => Boolean(c))
+      .map((c: Course) => ({
         instanceId: c.id,
         courseCode: c.code.value,
         name: displayName(c),

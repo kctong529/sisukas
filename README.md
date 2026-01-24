@@ -33,6 +33,7 @@ Discover → Plan → Optimize → Decide
 ```
 
 This lifecycle is the conceptual backbone of the system.
+Long-term context across past, current, and planned studies is provided separately by the Year Timeline.
 
 ### Phase 0: Discovery (Filtering)
 
@@ -67,7 +68,7 @@ A **Plan** is a workspace, not a decision.
 
 📘 Docs: [https://docs.sisukas.eu/concepts/plans/](https://docs.sisukas.eu/concepts/plans/)
 
-**Status:** 🟡 Backend implemented, UI in progress
+**Status:** ✅ Mostly implemented, with minor polishing
 
 ### Phase 2: Optimization (Schedule Pairs)
 
@@ -90,7 +91,7 @@ Importantly:
 
 📘 Docs: [https://docs.sisukas.eu/concepts/schedule-pairs/](https://docs.sisukas.eu/concepts/schedule-pairs/)
 
-**Status:** 🟡 Algorithm designed, service prototype in progress
+**Status:** 🟡 Backend implemented, UI in progress
 
 ### Phase 3: Resolution (Decision Slots)
 
@@ -119,9 +120,9 @@ This produces:
 
 | Phase   | Concept        | Status       |
 | ------- | -------------- | ------------ |
-| Phase 0 | Filtering      | ✅ Live       |
-| Phase 1 | Plans          | 🟡 Partial   |
-| Phase 2 | Schedule Pairs | 🟡 Prototype |
+| Phase 0 | Filtering      | ✅ Live      |
+| Phase 1 | Plans          | ✅ Live      |
+| Phase 2 | Schedule Pairs | 🟡 Partial   |
 | Phase 3 | Decision Slots | 📋 Designed  |
 
 > [!NOTE]
