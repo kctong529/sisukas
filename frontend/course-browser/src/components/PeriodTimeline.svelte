@@ -3,7 +3,11 @@
   import { periodTimelineStore } from '../lib/stores/periodTimelineStore';
   import type { PeriodTimelineChip, PeriodTimelineModel } from '../domain/viewModels/PeriodTimelineModel';
   import { SvelteMap } from 'svelte/reactivity';
+  import PlanManager from './PlanManager.svelte';
+  import { useSession } from '../lib/authClient';
 
+  const session = useSession();
+  let isSignedIn = $derived(!!$session.data?.user);
   const model = $derived($periodTimelineStore as PeriodTimelineModel | null);
 
   // Toggle: include spanning courses (split evenly) vs only single-period courses
@@ -110,159 +114,160 @@
 </script>
 
 <section class="period-timeline">
-  <header class="period-timeline__header">
-    <h1>Year Timeline</h1>
-
-    {#if model}
-      <span class="period-timeline__year">{model.academicYear}</span>
-
-      <button
-        class="credits-toggle"
-        type="button"
-        aria-pressed={useSinglePeriodOnly}
-        title="Toggle whether spanning courses are included (split evenly) or only single-period courses are counted."
-        onclick={() => (useSinglePeriodOnly = !useSinglePeriodOnly)}
-      >
-        {#if useSinglePeriodOnly}
-          Single-period courses only
-        {:else}
-          Include courses spanning multiple periods
-        {/if}
-      </button>
-    {/if}
-  </header>
-
-  {#if !model}
-    <div class="period-timeline__empty">
-      No active plan or no course instances selected.
-    </div>
-  {:else if model.columns.length === 0}
-    <div class="period-timeline__empty">
-      Timeline built, but no matching periods for {model.academicYear}.
+  {#if !isSignedIn}
+    <div class="state-card">
+      <div class="icon-circle">📋</div>
+      <h2>Sign in to view timeline</h2>
+      <p>You need to be logged in to see your year timeline.</p>
     </div>
   {:else}
-    {#if !isMobile}
-      <!-- =========================
-           DESKTOP VIEW (original)
-           ========================= -->
-      <div
-        class="timelineGrid"
-        style="
-          --col-count: {model.columns.length};
-          --lane-count: {laneCount};
-          --lane-count-safe: {Math.max(laneCount, 1)};
-        "
-      >
-        <!-- Row 1: headers -->
-        {#each model.columns as col, colIndex (col.period.id)}
-          <div class="periodCard periodCard--header" style="grid-column: {colIndex + 1};">
-            <div class="periodCard__top">
-              <div class="periodCard__title">Period {col.period.name}</div>
-              <div class="periodCard__credits" title="Total credits in this period">
-                Total: {formatCredits(creditsByPeriod?.[colIndex] ?? 0)} cr
+    <div class="header-section">
+      <div class="title-group">
+        <h1>Year Timeline</h1>
+        {#if model}
+          <span class="period-timeline__year">{model.academicYear}</span>
+        {/if}
+      </div>
+
+      <PlanManager compact={true} />
+    </div>
+
+    {#if !model}
+      <div class="state-card">
+        <div class="icon-circle">📋</div>
+        <h2>Nothing to show on timeline yet</h2>
+        <p>No active plan or no course instances selected.</p>
+      </div>
+    {:else if model.columns.length === 0}
+      <div class="state-card">
+        <div class="icon-circle">📋</div>
+        <h2>Cannot show timeline properly</h2>
+        <p>Timeline built, but no matching periods for {model.academicYear}.</p>
+      </div>
+    {:else}
+      {#if !isMobile}
+        <!-- =========================
+            DESKTOP VIEW (original)
+            ========================= -->
+        <div
+          class="timelineGrid"
+          style="
+            --col-count: {model.columns.length};
+            --lane-count: {laneCount};
+            --lane-count-safe: {Math.max(laneCount, 1)};
+          "
+        >
+          <!-- Row 1: headers -->
+          {#each model.columns as col, colIndex (col.period.id)}
+            <div class="periodCard periodCard--header" style="grid-column: {colIndex + 1};">
+              <div class="periodCard__top">
+                <div class="periodCard__title">Period {col.period.name}</div>
+                <div class="periodCard__credits" title="Total credits in this period">
+                  {formatCredits(creditsByPeriod?.[colIndex] ?? 0)} cr
+                </div>
+              </div>
+
+              <div class="periodCard__dates">
+                {col.period.dateRange.start.toLocaleDateString()}
+                –
+                {col.period.dateRange.end.toLocaleDateString()}
               </div>
             </div>
+          {/each}
 
-            <div class="periodCard__dates">
-              {col.period.dateRange.start.toLocaleDateString()}
-              –
-              {col.period.dateRange.end.toLocaleDateString()}
+          <!-- Row 2: period bodies -->
+          {#each model.columns as col, colIndex (col.period.id)}
+            <div class="periodCard periodCard--body" style="grid-column: {colIndex + 1};">
+              <div class="periodBody__inner">
+                {#if laneCount === 0}
+                  <div class="periodBody__empty">No courses</div>
+                {:else}
+                  {#each Array.from({ length: laneCount }, (_, idx) => idx) as i (i)}
+                    <div class="laneSlot"></div>
+                  {/each}
+                {/if}
+              </div>
             </div>
-          </div>
-        {/each}
+          {/each}
 
-        <!-- Row 2: period bodies -->
-        {#each model.columns as col, colIndex (col.period.id)}
-          <div class="periodCard periodCard--body" style="grid-column: {colIndex + 1};">
-            <div class="periodBody__inner">
-              {#if laneCount === 0}
-                <div class="periodBody__empty">No courses</div>
-              {:else}
-                {#each Array.from({ length: laneCount }, (_, idx) => idx) as i (i)}
-                  <div class="laneSlot"></div>
-                {/each}
-              {/if}
+          <!-- Chips overlay -->
+          <div class="chipLayer">
+            {#each placements as p (p.key)}
+              <button
+                class="course-chip"
+                class:course-chip--spanning={p.spanCount > 1}
+                type="button"
+                title={p.item.name}
+                style="
+                  --p-start: {p.colStart + 1};
+                  --p-end: {p.colEnd + 2};
+                  --lane: {p.lane + 1};
+                "
+                onclick={() => console.log('Clicked', p.item.courseCode)}
+              >
+                <div class="course-chip__header">
+                  <span class="course-chip__credits">{p.item.credits} cr</span>
+                  <span class="course-chip__code">{p.item.courseCode}</span>
+                </div>
+                <span class="course-chip__name">{p.item.name}</span>
+              </button>
+            {/each}
+          </div>
+        </div>
+
+      {:else}
+        <!-- =========================
+            MOBILE ROTATED MATRIX
+            (Rows = periods, Cols = lanes)
+            Text is rotated too.
+            ========================= -->
+        <div
+          class="mobileMatrix"
+          style="
+            --period-count: {model.columns.length};
+            --lane-count-safe: {Math.max(laneCount, 1)};
+          "
+        >
+          <!-- Period labels (col 1, row = period) -->
+          {#each model.columns as col, colIndex (col.period.id)}
+            <div
+              class="mobilePeriodLabel"
+              style="grid-row: {model.columns.length - colIndex};"
+            >
+              <div class="mobilePeriodLabel__rotate">
+                <strong>Period {col.period.name}</strong>
+                <span class="mobilePeriodLabel__cr">
+                  • {formatCredits(creditsByPeriod?.[colIndex] ?? 0)} cr
+                </span>
+              </div>
             </div>
-          </div>
-        {/each}
+          {/each}
 
-        <!-- Chips overlay -->
-        <div class="chipLayer">
+          <!-- Chips (col = lane + 1, rows = period span) -->
           {#each placements as p (p.key)}
             <button
-              class="course-chip"
-              class:course-chip--spanning={p.spanCount > 1}
+              class="mobileChip"
+              class:mobileChip--spanning={p.spanCount > 1}
               type="button"
               title={p.item.name}
               style="
-                --p-start: {p.colStart + 1};
-                --p-end: {p.colEnd + 2};
+                --p-start: {model.columns.length - p.colEnd};
+                --p-end: {model.columns.length - p.colStart + 1};
                 --lane: {p.lane + 1};
               "
               onclick={() => console.log('Clicked', p.item.courseCode)}
             >
-              <div class="course-chip__header">
-                <span class="course-chip__credits">{p.item.credits} cr</span>
-                <span class="course-chip__code">{p.item.courseCode}</span>
+              <div class="mobileChip__rotate">
+                <div class="course-chip__header">
+                  <span class="course-chip__credits">{p.item.credits} cr</span>
+                  <span class="course-chip__code">{p.item.courseCode}</span>
+                </div>
+                <span class="course-chip__name">{p.item.name}</span>
               </div>
-              <span class="course-chip__name">{p.item.name}</span>
             </button>
           {/each}
         </div>
-      </div>
-
-    {:else}
-      <!-- =========================
-           MOBILE ROTATED MATRIX
-           (Rows = periods, Cols = lanes)
-           Text is rotated too.
-           ========================= -->
-      <div
-        class="mobileMatrix"
-        style="
-          --period-count: {model.columns.length};
-          --lane-count-safe: {Math.max(laneCount, 1)};
-        "
-      >
-        <!-- Period labels (col 1, row = period) -->
-        {#each model.columns as col, colIndex (col.period.id)}
-          <div
-            class="mobilePeriodLabel"
-            style="grid-row: {model.columns.length - colIndex};"
-          >
-            <div class="mobilePeriodLabel__rotate">
-              <strong>Period {col.period.name}</strong>
-              <span class="mobilePeriodLabel__cr">
-                • {formatCredits(creditsByPeriod?.[colIndex] ?? 0)} cr
-              </span>
-            </div>
-          </div>
-        {/each}
-
-        <!-- Chips (col = lane + 1, rows = period span) -->
-        {#each placements as p (p.key)}
-          <button
-            class="mobileChip"
-            class:mobileChip--spanning={p.spanCount > 1}
-            type="button"
-            title={p.item.name}
-            style="
-              --p-start: {model.columns.length - p.colEnd};
-              --p-end: {model.columns.length - p.colStart + 1};
-              --lane: {p.lane + 1};
-            "
-            onclick={() => console.log('Clicked', p.item.courseCode)}
-          >
-            <div class="mobileChip__rotate">
-              <div class="course-chip__header">
-                <span class="course-chip__credits">{p.item.credits} cr</span>
-                <span class="course-chip__code">{p.item.courseCode}</span>
-              </div>
-              <span class="course-chip__name">{p.item.name}</span>
-            </div>
-          </button>
-        {/each}
-      </div>
+      {/if}
     {/if}
   {/if}
 </section>
@@ -271,7 +276,7 @@
   .period-timeline {
     max-width: 1400px;
     margin: 1.5rem auto;
-    padding: 0 12px;
+    padding: 0 1rem;
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--text-main);
   }
@@ -282,50 +287,68 @@
     margin: 0;
   }
 
-  .period-timeline__header {
+  p {
+    margin: 0;
+  }
+
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .title-group {
     display: flex;
     align-items: baseline;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
+    gap: 0.6rem;
+    flex-wrap: wrap;
   }
 
   .period-timeline__year {
-    font-size: 0.9em;
+    font-size: 1rem;
     color: #888;
     font-weight: 500;
   }
 
-  .credits-toggle {
-    margin-left: auto;
-    font-size: 0.82rem;
-    border: 1px solid #ddd;
-    background: #fff;
-    border-radius: 999px;
-    padding: 6px 10px;
-    cursor: pointer;
-  }
-
-  .credits-toggle:hover {
-    background: #f7f7f7;
-    border-color: #ccc;
-  }
-
-  .period-timeline__empty {
-    padding: 2rem 1rem;
-    font-size: 0.95em;
-    color: #999;
+  .state-card {
     text-align: center;
-    background: #fafafa;
-    border-radius: 8px;
-    border: 1px dashed #ddd;
+    padding: 5rem 2rem;
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 2px dashed var(--border);
+  }
+
+  .state-card h2 {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .state-card p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .icon-circle {
+    width: 80px;
+    height: 80px;
+    background: var(--bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 1.5rem;
   }
 
   /* =========================
      DESKTOP GRID
      ========================= */
   .timelineGrid {
-    --lane-height: 60px;
-    --lane-gap: 7px;
+    --lane-height: 54px;
+    --lane-gap: 5px;
     --col-gap: 0;
 
     display: grid;
@@ -451,7 +474,7 @@
     margin-right: 5px;
 
     box-sizing: border-box;
-    gap: 6px;
+    gap: 4px;
 
     padding: 8px 10px;
     border-radius: 6px;
@@ -516,7 +539,7 @@
   .mobileMatrix {
     --lane-col-width: 48px;
     --label-col-width: 42px;
-    --row-height: 128px;
+    --row-height: 148px;
 
     display: grid;
     grid-template-columns: var(--label-col-width)

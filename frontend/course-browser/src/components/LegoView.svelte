@@ -131,11 +131,11 @@
         <h1>LEGO Composition</h1>
       </div>
 
-      <PlanManager compact={true} />
-
       <button class="btn btn-analytics" onclick={showAnalysis} disabled={running}>
         {running ? "Running..." : "Compute best schedules"}
       </button>
+
+      <PlanManager compact={true} />
 
       {#if analyticsError && !showAnalyticsModal}
         <div class="alert alert-error mt-2">{analyticsError}</div>

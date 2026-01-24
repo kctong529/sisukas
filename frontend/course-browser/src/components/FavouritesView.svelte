@@ -248,13 +248,18 @@
     </div>
 
   {:else if $favouritesStore.favourites.length === 0}
+    <div class="header-section">
+      <div class="title-group">
+        <h1>Your Favourites</h1>
+      </div>
+      <PlanManager compact={true} />
+    </div>
     <div class="state-card">
       <div class="icon-circle">♥</div>
       <h2>Your list is empty</h2>
       <p>Start exploring courses and click the heart icon to add them here.</p>
       <a href="/" class="btn btn-primary">Browse Courses</a>
     </div>
-
   {:else}
     <div class="header-section">
       <div class="title-group">
@@ -477,12 +482,6 @@
 
   h1 {
     font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
-  }
-
-  h2 {
-    font-size: 1.1rem;
     font-weight: 600;
     margin: 0;
   }
