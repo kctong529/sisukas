@@ -1,4 +1,4 @@
-// normalize.ts
+// // src/domain/analytics/intervalOverlap/normalize.ts
 
 import type {
   DroppedInterval,

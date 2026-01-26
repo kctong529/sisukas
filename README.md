@@ -140,7 +140,7 @@ Sisukas combines two Aalto data sources:
 
 These sources are intentionally kept separate due to different update frequencies and responsibilities.
 
-📘 Docs: [https://docs.sisukas.eu/data-pipeline/](https://docs.sisukas.eu/data-pipeline/)
+📘 Docs: [https://docs.sisukas.eu/dev-guide/data-pipeline/](https://docs.sisukas.eu/dev-guide/data-pipeline/)
 
 ## Technical Overview
 

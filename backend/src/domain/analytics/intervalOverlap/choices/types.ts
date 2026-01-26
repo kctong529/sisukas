@@ -1,3 +1,4 @@
+// src/domain/analytics/intervalOverlap/choices/types.ts
 import type { IntervalInput, OverlapAnalytics } from "../types";
 import type { NormalizedInterval } from "../types";
 

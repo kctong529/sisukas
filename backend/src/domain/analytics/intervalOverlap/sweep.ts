@@ -1,4 +1,4 @@
-// sweep.ts
+// // src/domain/analytics/intervalOverlap/sweep.ts
 
 import type {
   Boundary,

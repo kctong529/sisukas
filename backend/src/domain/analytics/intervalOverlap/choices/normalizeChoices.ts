@@ -1,3 +1,4 @@
+// src/domain/analytics/intervalOverlap/choices/normalizeChoices.ts
 import type { ChoiceEntity, NormalizedChoiceEntity } from "./types";
 import { normalizeIntervals } from "../normalize";
 

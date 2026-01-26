@@ -1,3 +1,4 @@
+// src/domain/analytics/intervalOverlap/choices/enumerate.ts
 import type { CombinationSelection, NormalizedChoiceEntity } from "./types";
 
 /**

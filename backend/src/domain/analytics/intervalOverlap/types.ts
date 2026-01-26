@@ -1,3 +1,5 @@
+// src/domain/analytics/intervalOverlap/types.ts
+
 /**
  * Shared types for interval overlap analytics.
  *

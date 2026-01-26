@@ -1,3 +1,4 @@
+// src/domain/analytics/intervalOverlap/choices/evaluate.ts
 import type { ComputeOptions, OverlapAnalytics } from "../types";
 import type { NormalizedInterval } from "../types";
 import type { CombinationSelection, NormalizedChoiceEntity } from "./types";

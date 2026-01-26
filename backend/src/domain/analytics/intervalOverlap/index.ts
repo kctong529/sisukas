@@ -1,3 +1,5 @@
+// src/domain/analytics/intervalOverlap/index.ts
+
 /**
  * Interval Overlap Analytics — Architecture Notes
  *
