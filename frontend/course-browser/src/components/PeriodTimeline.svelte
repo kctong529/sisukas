@@ -5,6 +5,7 @@
   import { SvelteMap } from 'svelte/reactivity';
   import PlanManager from './PlanManager.svelte';
   import { useSession } from '../lib/authClient';
+  import { COURSE_PREFIX_RGB } from "../lib/coursePrefixColors";
 
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);
@@ -202,6 +203,7 @@
                   --p-start: {p.colStart + 1};
                   --p-end: {p.colEnd + 2};
                   --lane: {p.lane + 1};
+                  --chip-rgb: {COURSE_PREFIX_RGB[String(p.item.courseCode).split('-', 1)[0]] ?? COURSE_PREFIX_RGB.__OTHER__};
                 "
                 onclick={() => console.log('Clicked', p.item.courseCode)}
               >
@@ -254,6 +256,7 @@
                 --p-start: {model.columns.length - p.colEnd};
                 --p-end: {model.columns.length - p.colStart + 1};
                 --lane: {p.lane + 1};
+                --chip-rgb: {COURSE_PREFIX_RGB[String(p.item.courseCode).split('-', 1)[0]] ?? COURSE_PREFIX_RGB.__OTHER__};
               "
               onclick={() => console.log('Clicked', p.item.courseCode)}
             >
@@ -476,25 +479,36 @@
     box-sizing: border-box;
     gap: 4px;
 
-    padding: 8px 10px;
-    border-radius: 6px;
-    border: 1px solid #d8d8d8;
-    background: #fafafa;
+    padding: 8px 10px 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #b1b1b1;
+    background: #ffffff;
+    color: #111827;
+
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
     text-align: left;
+
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* colored side-edge */
+  .course-chip::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 8px;
+    background: rgb(var(--chip-rgb));
+    opacity: 0.6;
   }
 
   .course-chip:hover {
-    background: rgb(205, 255, 205);
-    border-color: #3a7fa4;
-    box-shadow: 0 3px 8px rgba(90, 159, 212, 0.12);
-  }
-
-  .course-chip,
-  .course-chip--spanning {
-    border-color: #5a9fd4;
-    background: #eff7ff;
+    border-color: #d1d5db;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
   }
 
   .course-chip__header {
@@ -506,7 +520,7 @@
   .course-chip__credits {
     font-size: 0.9em;
     color: #777;
-    background: rgba(90, 159, 212, 0.15);
+    background: rgba(var(--chip-rgb), 0.18);
     padding: 2px 5px;
     border-radius: 3px;
     width: 30px;
@@ -516,9 +530,8 @@
 
   .course-chip__code,
   .course-chip--spanning .course-chip__code {
-    font-weight: 700;
     font-size: 1em;
-    color: #0052a3;
+    color: #111827;
     white-space: nowrap;
     flex-shrink: 0;
   }
@@ -527,7 +540,7 @@
   .course-chip--spanning .course-chip__name {
     font-size: 0.9em;
     text-align: left;
-    color: #0052a3;
+    color: #374151;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -573,6 +586,7 @@
     transform-origin: center;
     white-space: nowrap;
     font-size: 0.9rem;
+    color: var(--primary);
     line-height: 1.1;
   }
 
@@ -585,20 +599,35 @@
     grid-column: calc(var(--lane) + 1);
     grid-row: var(--p-start) / var(--p-end);
 
-    border: 1px solid #5a9fd4;
-    background: #eff7ff;
-    border-radius: 8px;
+    border: 1px solid #b1b1b1;
+    background: #ffffff;
+    border-radius: 10px;
 
-    /* important */
     position: relative;
     overflow: hidden;
 
-    /* center container */
     display: grid;
     place-items: center;
 
-    padding: 0; /* remove padding, it shifts the rotated content */
+    padding: 0;
     cursor: pointer;
+
+    --row-span: calc(var(--p-end) - var(--p-start));
+    --chip-h: calc(
+      (var(--row-span) * var(--row-height)) +
+      ((var(--row-span) - 1) * 10px)
+    );
+  }
+
+  .mobileChip::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 8px;
+    background: rgb(var(--chip-rgb));
+    opacity: 0.6;
   }
 
   .mobileChip__rotate {
@@ -608,7 +637,7 @@
 
     margin: 0 !important;
     padding: 0 !important;
-    padding-left: 5px !important;
+    padding-left: 15px !important;
 
     display: block;      /* avoid inline formatting quirks */
     box-sizing: border-box;
@@ -617,6 +646,8 @@
     transform: translateY(-50%) rotate(-90deg) !important;
 
     white-space: nowrap;
+    width: calc(var(--chip-h) - 10px);
+    max-width: calc(var(--chip-h) - 10px);
   }
 
   .mobileChip__rotate .course-chip__name {
