@@ -59,35 +59,24 @@ Discovery is about **possibility**, not commitment.
 
 A **Plan** is a workspace, not a decision.
 
-- Plans group **course instances** (e.g. “CS-A1110 Autumn 2025”)
+- Plans group course instances (e.g. “CS-A1110 Autumn 2025”)
 - Nothing is registered or committed
 - Multiple plans are supported (“Option A”, “Option B”)
 
-> [!NOTE]
-> Plans allow students to think in coherent sets, rather than comparing courses one by one.
-
 📘 Docs: [https://docs.sisukas.eu/concepts/plans/](https://docs.sisukas.eu/concepts/plans/)
 
-**Status:** ✅ Mostly implemented, with minor polishing
+**Status:** ✅ Mostly implemented
 
 ### Phase 2: Optimization (Schedule Pairs)
 
 **Question:** *Given these courses, what are the best ways to combine their study groups?*
 
-This is where Sisukas fundamentally differs from SISU.
-
 - Study groups are partitioned into **blocks** (user-defined, with sensible defaults)
-- Each Schedule Pair selects **one study group per block, per course**
 - All valid combinations are generated
-- Combinations are ranked by how well they fit (level of conflicts)
+- Combinations are ranked by overlap and overall schedule fit
 
 > [!IMPORTANT]
-> Each Schedule Pair represents a complete, concrete timetable option.
-
-Importantly:
-
-- Sisukas does **not** choose for the student
-- It presents a ranked menu so trade-offs are visible and explicit
+> Sisukas does not choose for the student. It makes trade-offs visible.
 
 📘 Docs: [https://docs.sisukas.eu/concepts/schedule-pairs/](https://docs.sisukas.eu/concepts/schedule-pairs/)
 
@@ -138,7 +127,7 @@ Sisukas combines two Aalto data sources:
 - **Aalto SISU API**
   Real-time study group and schedule data, accessed via the `sisu-wrapper` service.
 
-These sources are intentionally kept separate due to different update frequencies and responsibilities.
+These sources are intentionally kept separate.
 
 📘 Docs: [https://docs.sisukas.eu/dev-guide/data-pipeline/](https://docs.sisukas.eu/dev-guide/data-pipeline/)
 
@@ -147,50 +136,36 @@ These sources are intentionally kept separate due to different update frequencie
 Sisukas is built as a set of loosely coupled services:
 
 - **Frontend:** Svelte, local-first, aggressively cached
-- **Backend:** User data, plans, authentication
-- **Filters API:** Persistence and sharing of filters
+- **Backend:** Authentication and user-scoped persistence
+- **Filters API:** Shareable filter persistence (not user-bound)
 - **SISU Wrapper:** Normalized access to study group data
 
-The system prioritizes responsiveness, maintainability, and clear boundaries over minimal setup.
+The system prioritizes clarity and correctness over minimal setup.
 
 ## Running Locally
 
-> [!NOTE]
-> Local setup is tested on macOS and Linux. Windows users should use WSL.
+> [!IMPORTANT]
+> Local development requires HTTPS on localhost and multiple services.
+> This is intentional and documented.
 
-### Prerequisites
+The repository includes a fully tested local development setup using:
+- HTTPS via mkcert
+- Dockerized Postgres
+- Independent services for frontend, backend, SISU wrapper, and filters API
 
-- [uv](https://docs.astral.sh/uv/) (Python package manager)
-- [Node.js](https://nodejs.org/) v18+
+**Do not rely on this README for setup instructions.**
 
-```sh
-uv --version && node --version
-```
-
-### Quick Start
-
-```sh
-git clone https://github.com/kctong529/sisukas.git
-cd sisukas
-make setup        # Creates venvs, installs dependencies for all components
-```
-
-Run the frontend:
-```sh
-cd frontend/course-browser && npm run dev
-# Opens at http://localhost:5173
-```
-
-Backend services are optional for discovery, but required for authenticated features.
-
-📘 Full setup: [https://docs.sisukas.eu/getting-started/](https://docs.sisukas.eu/getting-started/)
+**📘 Authoritative Guide:** [https://docs.sisukas.eu/dev-guide/running-locally/](https://docs.sisukas.eu/dev-guide/running-locally/)
 
 ## Contributing
 
-Sisukas is open to contributions, ideas, and discussion. Because the project is still evolving, there are no rigid contribution rules or fixed architecture constraints. [Discussions](https://github.com/kctong529/sisukas/discussions), [issue reports](https://github.com/kctong529/sisukas/issues), [project backlog](https://github.com/users/kctong529/projects/1), documentation improvements, and small code contributions are all welcome.
+Sisukas is open to contributions, ideas, and discussion. There are no rigid contribution rules at this stage.
+- Discussions: [https://github.com/kctong529/sisukas/discussions](https://github.com/kctong529/sisukas/discussions)
+- Issues: [https://github.com/kctong529/sisukas/issues](https://github.com/kctong529/sisukas/issues)
+- Project board: [https://github.com/users/kctong529/projects/1](https://github.com/users/kctong529/projects/1)
 
 > [!NOTE]
-> Feedback on the mental model, terminology, planning concepts, and design decisions is particularly valuable at this stage. The system is still evolving, and shaping how students think about schedules is as important as the implementation itself.
+> Feedback on mental models, terminology, and planning concepts is especially valuable. The system is still evolving.
 
 ## Project Philosophy
 
