@@ -128,7 +128,7 @@
   {:else}
     <div class="header-section">
       <div class="title-group">
-        <h1>LEGO Composition</h1>
+        <h2>LEGO Composition</h2>
       </div>
 
       <button class="btn btn-analytics" onclick={showAnalysis} disabled={running}>
@@ -248,7 +248,7 @@
     gap: 0.5rem;
   }
 
-  h1 {
+  h2 {
     font-size: 1.3rem;
     font-weight: 600;
     margin: 0;

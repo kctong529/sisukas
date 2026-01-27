@@ -250,7 +250,7 @@
   {:else if $favouritesStore.favourites.length === 0}
     <div class="header-section">
       <div class="title-group">
-        <h1>Your Favourites</h1>
+        <h2>Your Favourites</h2>
       </div>
       <PlanManager compact={true} />
     </div>
@@ -263,7 +263,7 @@
   {:else}
     <div class="header-section">
       <div class="title-group">
-        <h1>Your Favourites</h1>
+        <h2>Your Favourites</h2>
       </div>
       
       <PlanManager compact={true} />
@@ -480,7 +480,7 @@
     gap: 0.5rem;
   }
 
-  h1 {
+  h2 {
     font-size: 1.3rem;
     font-weight: 600;
     margin: 0;

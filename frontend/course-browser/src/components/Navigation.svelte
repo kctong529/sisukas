@@ -35,7 +35,7 @@
     <!-- Logo/Brand -->
     <div class="nav-brand">
       <button class="brand-link" on:click={() => handleNavigation('courses')}>
-        <span class="brand-name">Sisukas</span>
+        <span class="brand-name" aria-label="Sisukas home">Sisukas</span>
         <span class="brand-tagline">since 2025</span>
       </button>
     </div>
@@ -114,7 +114,7 @@
     <button
       class="mobile-menu-toggle"
       on:click={toggleMobileMenu}
-      aria-label="Toggle sort direction"
+      aria-label="Toggle navigation menu"
     >
       <i class="bi {mobileMenuOpen ? 'bi-x' : 'bi-list'}"></i>
     </button>

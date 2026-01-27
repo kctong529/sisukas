@@ -2,12 +2,39 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Course Browser</title>
+    <title>Sisukas – Fast Course Discovery & Study Planning for Finnish Universities</title>
+    <meta
+      name="description"
+      content="Sisukas is a fast alternative to SISU for exploring courses and planning studies at Finnish universities like Aalto."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+
+    <link rel="canonical" href="https://sisukas.eu/" />
+    <meta property="og:title" content="Sisukas – Course Planning for Finnish Universities">
+    <meta property="og:description" content="A fast alternative to SISU for discovering courses and planning your studies.">
+    <meta property="og:url" content="https://sisukas.eu/">
+    <meta property="og:type" content="website">
+
+    <style>
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+    </style>
   </head>
   <body>
+    <h1 class="sr-only">Sisukas – Fast Course Discovery & Study Planning for Finnish Universities</h1>
+
     <div id="app"></div>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

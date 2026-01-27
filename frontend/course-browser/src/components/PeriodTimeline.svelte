@@ -124,7 +124,7 @@
   {:else}
     <div class="header-section">
       <div class="title-group">
-        <h1>Year Timeline</h1>
+        <h2>Year Timeline</h2>
         {#if model}
           <span class="period-timeline__year">{model.academicYear}</span>
         {/if}
@@ -284,7 +284,7 @@
     color: var(--text-main);
   }
 
-  h1 {
+  h2 {
     font-size: 1.3rem;
     font-weight: 600;
     margin: 0;

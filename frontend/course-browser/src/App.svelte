@@ -251,6 +251,7 @@
     class="view" 
     class:hidden={currentView !== 'courses'}
   >
+    <h2 class="sr-only">Browse Courses</h2>
     {#if loading}
       <div style="text-align: center; padding: 2rem;">
         <p>Loading course data...</p>
