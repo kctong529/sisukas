@@ -164,6 +164,31 @@ function createCourseIndexStore() {
       return ids.map((id) => state.historicalByInstanceId.get(id)).filter(Boolean) as Course[];
     },
 
+    /**
+     * From active + historical, find the course instance for code whose
+     * courseDate.start is <= beforeOrOn, and as late as possible.
+     */
+    resolveLatestInstanceByCodeBeforeDate(code: string, beforeOrOn: Date): Course | null {
+      const state = get(store);
+      const cutoffMs = beforeOrOn.getTime();
+
+      const ids = new Set<string>([
+        ...(state.instanceIdsByCode.get(code) ?? []),
+        ...(state.historicalInstanceIdsByCode.get(code) ?? [])
+      ]);
+
+      return Array.from(ids).reduce<Course | null>((best, id) => {
+        const c = state.byInstanceId.get(id) ?? state.historicalByInstanceId.get(id);
+        if (!c) return best;
+
+        const startMs = c.courseDate.start.getTime();
+        if (startMs > cutoffMs) return best;
+
+        if (!best) return c;
+        return startMs > best.courseDate.start.getTime() ? c : best;
+      }, null);
+    },
+
     isEmpty(): boolean {
       const s = get(store);
       return s.byInstanceId.size === 0 && s.historicalByInstanceId.size === 0;
