@@ -22,7 +22,7 @@ A student can:
 
 ## 1. Data Truth & Drift Control (Hard Blockers)
 
-* [ ] Build historical course instance database via SISU historical endpoint ingestion script.
+* [x] Build historical course instance database via SISU historical endpoint ingestion script.
 * [ ] Update data workflow to keep `courses.json` and historical DB in sync.
   - current dataset contains only active/current offerings
   - historical DB contains all past instances + archived instances
@@ -35,7 +35,7 @@ A student can:
 
 * [ ] Import transcript (courses → plan).
 * [ ] Import grades from transcript into timeline model.
-* [ ] Allow **manual grade input and edits** (independent of transcript import).
+* [ ] Allow manual grade input and edits (independent of transcript import).
 
 ## 3. Core Domain Consistency
 
