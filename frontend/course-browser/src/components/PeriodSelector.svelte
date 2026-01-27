@@ -2,6 +2,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import type { AcademicPeriod } from '../domain/models/AcademicPeriod';
+  import { AcademicPeriodVisibility } from '../domain/services/AcademicPeriodVisibility';
   
   export let periods: AcademicPeriod[];
   export let selectedPeriods: string[] = [];
@@ -12,12 +13,12 @@
   let isSelecting = false;
   let firstSelectedIndex = -1;
   
-  // Group periods by academic year
-  $: groupedPeriods = periods.reduce((acc, period) => {
-    if (!acc[period.academicYear]) {
-      acc[period.academicYear] = [];
-    }
-    acc[period.academicYear].push(period);
+  // Filtered list used by UI + selection range
+  $: visiblePeriods = AcademicPeriodVisibility.currentAndFuture(periods);
+
+  // Group periods by academic year (VISIBLE ONLY)
+  $: groupedPeriods = visiblePeriods.reduce((acc, period) => {
+    (acc[period.academicYear] ??= []).push(period);
     return acc;
   }, {} as Record<string, AcademicPeriod[]>);
   
@@ -37,7 +38,7 @@
     const start = Math.min(firstSelectedIndex, index);
     const end = Math.max(firstSelectedIndex, index);
 
-    const allPeriods = periods.map(p => p.id);
+    const allPeriods = visiblePeriods.map(p => p.id);
     selectedPeriods = allPeriods.slice(start, end + 1);
     dispatch('change', selectedPeriods);
   }
@@ -113,7 +114,7 @@
       <div class="year">
         <span id="year">{year}</span>
         {#each yearPeriods as period (period.id)}
-          {@const globalIndex = periods.findIndex(p => p.id === period.id)}
+          {@const globalIndex = visiblePeriods.findIndex(p => p.id === period.id)}
           <div
             class="period"
             class:selected={isPeriodSelected(period.id)}
