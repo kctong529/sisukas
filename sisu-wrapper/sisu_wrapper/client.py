@@ -145,6 +145,28 @@ class SisuClient:
             params={"assessmentItemId": assessment_item_id},
             timeout=timeout
         )
+    
+    def fetch_course_unit_realisations_all(
+        self,
+        assessment_item_id: str,
+        timeout: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieve course unit realisations for an assessment item WITHOUT the
+        "published/upcoming-only" filtering.
+
+        Args:
+            assessment_item_id: The assessment item ID
+            timeout: Request timeout in seconds
+
+        Returns:
+            List of course unit realisation dictionaries.
+        """
+        return self.get_json(
+            "/course-unit-realisations",
+            params={"assessmentItemId": assessment_item_id},
+            timeout=timeout
+        )
 
     def fetch_study_events(
         self,
