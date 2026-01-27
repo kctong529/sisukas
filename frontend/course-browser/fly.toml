@@ -21,6 +21,11 @@ primary_region = 'arn'
   [statics.headers]
     "Cache-Control" = "public, max-age=0, must-revalidate"
 
+[[http_service.redirects]]
+  source = "/sisu-alternative"
+  destination = "/sisu-alternative/"
+  status = 301
+
 [[vm]]
   memory = '256mb'
   cpu_kind = 'shared'

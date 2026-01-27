@@ -367,11 +367,11 @@
   .view.hidden {
     display: none;
   }
-  
+
   footer {
     margin-top: 2rem;
   }
-  
+
   #footer-text {
     font-size: 0.9em;
     color: #777;
