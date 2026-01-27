@@ -70,7 +70,7 @@ CORS_ORIGINS: list[str] = [
     ).split(",")
 ]
 
-API_VERSION = "0.2.1"
+API_VERSION = "0.3.0"
 API_TITLE = "Sisu Wrapper API"
 API_CONTACT = {
     "name": "API Support",
