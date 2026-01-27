@@ -165,28 +165,61 @@ function createCourseIndexStore() {
     },
 
     /**
-     * From active + historical, find the course instance for code whose
-     * courseDate.start is <= beforeOrOn, and as late as possible.
+     * Resolve the most relevant course instance for a given course code that starts
+     * on or before the given date.
+     *
+     * Preference is given to lecture instances whose end date falls within ±2 months
+     * of the provided date. If no such lecture exists, the latest instance of any
+     * format (e.g. exam) that starts on or before the date is returned.
+     *
+     * Returns null if no matching instance exists.
      */
     resolveLatestInstanceByCodeBeforeDate(code: string, beforeOrOn: Date): Course | null {
       const state = get(store);
       const cutoffMs = beforeOrOn.getTime();
 
+      // ± 2 months window around beforeOrOn, used ONLY for the preferred lecture selection
+      const windowStart = new Date(beforeOrOn);
+      windowStart.setMonth(windowStart.getMonth() - 2);
+      const windowEnd = new Date(beforeOrOn);
+      windowEnd.setMonth(windowEnd.getMonth() + 2);
+
+      const windowStartMs = windowStart.getTime();
+      const windowEndMs = windowEnd.getTime();
+
       const ids = new Set<string>([
         ...(state.instanceIdsByCode.get(code) ?? []),
-        ...(state.historicalInstanceIdsByCode.get(code) ?? [])
+        ...(state.historicalInstanceIdsByCode.get(code) ?? []),
       ]);
 
-      return Array.from(ids).reduce<Course | null>((best, id) => {
+      let bestPreferred: Course | null = null; // lecture + end within window + start <= cutoff
+      let bestFallback: Course | null = null;  // any format, original criteria (start <= cutoff)
+
+      for (const id of ids) {
         const c = state.byInstanceId.get(id) ?? state.historicalByInstanceId.get(id);
-        if (!c) return best;
+        if (!c) continue;
 
         const startMs = c.courseDate.start.getTime();
-        if (startMs > cutoffMs) return best;
+        if (startMs > cutoffMs) continue; // keep your original "beforeOrOn" rule
 
-        if (!best) return c;
-        return startMs > best.courseDate.start.getTime() ? c : best;
-      }, null);
+        // Fallback candidate: latest by start date
+        if (!bestFallback || startMs > bestFallback.courseDate.start.getTime()) {
+          bestFallback = c;
+        }
+
+        // Preferred candidate: lecture whose *end* is within ±2 months of beforeOrOn
+        if (c.format === "lecture") {
+          const endMs = c.courseDate.end.getTime();
+          const endInWindow = endMs >= windowStartMs && endMs <= windowEndMs;
+          if (endInWindow) {
+            if (!bestPreferred || startMs > bestPreferred.courseDate.start.getTime()) {
+              bestPreferred = c;
+            }
+          }
+        }
+      }
+
+      return bestPreferred ?? bestFallback;
     },
 
     isEmpty(): boolean {

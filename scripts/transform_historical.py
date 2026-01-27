@@ -70,8 +70,14 @@ def main() -> None:
         print("Error: provide both --from and --to, or neither.")
         sys.exit(1)
 
+    raw = {}
     with open(input_path, "r", encoding="utf-8") as f:
-        raw = json.load(f)
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            obj = json.loads(line)
+            raw.setdefault(obj["courseUnitId"], []).append(obj)
 
     if not isinstance(raw, dict):
         print("Error: expected top-level object mapping courseUnitId -> list of records.")

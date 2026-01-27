@@ -16,7 +16,7 @@
   import type { BaseRuleBlueprint } from './domain/filters/blueprints';
   import { loadCurricula } from './infrastructure/loaders/CurriculumLoader';
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
-  import { loadCoursesWithCache } from './infrastructure/loaders/RemoteCourseLoader';
+  import { loadCoursesWithCache, loadHistoricalCoursesWithCache } from './infrastructure/loaders/RemoteCourseLoader';
   import { loadAcademicPeriods } from './infrastructure/loaders/AcademicPeriodLoader';
   import { FilterService } from './domain/services/FilterService';
   import { FilterSerializer } from './domain/filters/helpers/FilterSerializer';
@@ -36,6 +36,7 @@
 
   let RuleBlueprints: Record<RuleBlueprintKey, BaseRuleBlueprint> | null = null;
   let courses: Course[] = [];
+  let historicalCourses: Course[] = [];
   let filteredCourses: Course[] = [];
   let periods: AcademicPeriod[] = [];
   let filterRules: FilterRuleGroups = [];
@@ -87,9 +88,18 @@
       filteredCourses = [...courses];
       console.log("Courses loaded:", courses.length);
 
+      // Load historical courses with cache
+      historicalCourses = await loadHistoricalCoursesWithCache();
+      console.log("Historical courses loaded:", historicalCourses.length);
+
       // Build course indexes using courseIndexStore
       courseIndexStore.setCourses(courses);
+      courseIndexStore.setHistoricalCourses(historicalCourses);
       console.log("Courses loaded into courseStore");
+
+      // Test that the historical data is working properly
+      console.log(courseIndexStore.resolveLatestInstanceByCodeBeforeDate("CS-E4190", new Date("2025-12-23")));
+      console.log(courseIndexStore.resolveLatestInstanceByCodeBeforeDate("MS-A0111", new Date("2023-10-18")));
 
       // Check for filter hash in URL and load if present
       await loadFiltersFromUrl();
