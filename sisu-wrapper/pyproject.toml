@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sisu-wrapper"
-version = "0.2.1"
+version = "0.3.0"
 authors = [
   { name="Ki Chun Tong", email="kichun.tong@aalto.fi" },
 ]
@@ -44,7 +44,7 @@ Repository = "https://github.com/kctong529/sisukas/tree/main/sisu-wrapper"
 Issues = "https://github.com/kctong529/sisukas/issues"
 
 [tool.bumpver]
-current_version = "0.2.1"
+current_version = "0.3.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 tag_message = "{new_version}"

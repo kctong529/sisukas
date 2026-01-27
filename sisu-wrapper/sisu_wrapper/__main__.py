@@ -36,7 +36,7 @@ def main() -> None:
     p.add_argument("--out", default="historical_realisations.jsonl", help="JSONL output path")
     p.add_argument("--state", default="historical_state.json", help="Checkpoint state path")
     p.add_argument("--from-date", default="2022-09-01")
-    p.add_argument("--to-date", default="2024-12-31")
+    p.add_argument("--to-date", default="2025-12-31")
     p.add_argument("--start-index", type=int, default=None, help="0-based index of courseUnitIds to start from")
     p.add_argument("--resume", action="store_true", help="Resume from --state if present")
     p.add_argument("--flush-every", type=int, default=1, help="Write checkpoint every N course units")
@@ -71,8 +71,10 @@ def main() -> None:
 
     with SisuClient() as sisu:
         course_api = AaltoCourseApiClient()
+        current_index = start_index
         try:
             for i in range(start_index, len(course_unit_ids)):
+                current_index = i
                 cu_id = course_unit_ids[i]
                 logger.info("[%d/%d] courseUnitId=%s", i + 1, len(course_unit_ids), cu_id)
 
@@ -102,7 +104,7 @@ def main() -> None:
                     append_jsonl(args.out, rec)
                     written_records += 1
 
-                processed_units += 1
+                processed_units = i + 1
 
                 # checkpoint
                 if processed_units % args.flush_every == 0:
@@ -117,17 +119,18 @@ def main() -> None:
 
         except KeyboardInterrupt:
             logger.warning("Interrupted. Saving checkpoint...")
-            # best-effort checkpoint: next_index should be current i (not redoing current CU)
-            # If you prefer to redo current CU next time, set next_index to i instead.
+            logger.warning("Interrupted. Saving checkpoint...")
+            i = current_index
             save_state(args.state, {
-                "next_index": i,  # resume from current CU next time (safer)
+                "next_index": i,  # resume from current CU next time
                 "last_course_unit_id": course_unit_ids[i] if i < len(course_unit_ids) else None,
                 "processed_units": processed_units,
                 "written_records": written_records,
                 "from_date": args.from_date,
                 "to_date": args.to_date,
             })
-            raise
+            logger.warning("Checkpoint saved. Exiting cleanly.")
+            return
         finally:
             course_api.close()
 
