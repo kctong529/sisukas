@@ -1,24 +1,109 @@
 <!-- src/components/PeriodTimeline.svelte -->
 <script lang="ts">
   import { periodTimelineStore } from '../lib/stores/periodTimelineStore';
+  import { academicPeriodStore } from '../lib/stores/academicPeriodStore';
+  import { periodTimelineYearStore } from '../lib/stores/periodTimelineYearStore';
+  import { courseGradeStore } from "../lib/stores/courseGradeStore";
+  import { AcademicPeriodVisibility } from '../domain/services/AcademicPeriodVisibility';
   import type { PeriodTimelineChip, PeriodTimelineModel } from '../domain/viewModels/PeriodTimelineModel';
-  import { SvelteMap } from 'svelte/reactivity';
+  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
   import PlanManager from './PlanManager.svelte';
   import { useSession } from '../lib/authClient';
   import { COURSE_PREFIX_RGB } from "../lib/coursePrefixColors";
+  import { tick } from "svelte";
 
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);
   const model = $derived($periodTimelineStore as PeriodTimelineModel | null);
+  const periods = $derived($academicPeriodStore ?? []);
 
-  // Toggle: include spanning courses (split evenly) vs only single-period courses
-  let useSinglePeriodOnly = $state(false);
+  const availableYears = $derived.by(() => {
+    const ys = new SvelteSet<string>();
+    for (const p of periods) ys.add(p.academicYear);
+    return Array.from(ys).sort();
+  });
+
+  $effect(() => {
+    const periods = $academicPeriodStore;
+    const selected = $periodTimelineYearStore;
+
+    // Initialize default ONLY once
+    if (periods && periods.length > 0 && selected === null) {
+      const currentYear =
+        AcademicPeriodVisibility.currentAcademicYear(periods) ??
+        [...new Set(periods.map(p => p.academicYear))].sort().at(-1)!;
+
+      periodTimelineYearStore.set(currentYear);
+    }
+  });
+
+  let editingChipKey: string | null = $state(null);
+  let draftGrade: string = $state("");
+  let gradeInputEl: HTMLInputElement | null = $state(null);
+
+  function startGradeEdit(chip: PeriodTimelineChip, e: Event) {
+    e.preventDefault();
+    e.stopPropagation();
+    editingChipKey = chip.key;
+    draftGrade = chip.grade === undefined ? "" : String(chip.grade);
+    tick().then(() => gradeInputEl?.focus());
+  }
+
+  function cancelGradeEdit(e?: Event) {
+    e?.preventDefault();
+    e?.stopPropagation();
+    editingChipKey = null;
+    draftGrade = "";
+  }
+
+  function commitGradeEdit(chip: PeriodTimelineChip, e?: Event) {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    const raw = draftGrade.trim();
+    courseGradeStore.update((m) => {
+      const next = new SvelteMap(m);
+      if (raw === "") {
+        next.delete(chip.unitId);
+      } else {
+        const n = Number(raw);
+        if (Number.isInteger(n)) {
+          next.set(chip.unitId, n);
+        }
+      }
+      return next;
+    });
+
+    editingChipKey = null;
+  }
+
+  let selectedYear = $derived($periodTimelineYearStore);
+
+  // Fallback to model year if store is still null
+  const activeYear = $derived(
+    selectedYear ?? model?.academicYear ?? null
+  );
+
+  const yearIndex = $derived.by(() => {
+    if (!activeYear) return -1;
+    return availableYears.indexOf(activeYear);
+  });
+
+  function goPrevYear() {
+    if (yearIndex > 0) {
+      periodTimelineYearStore.set(availableYears[yearIndex - 1]);
+    }
+  }
+
+  function goNextYear() {
+    if (yearIndex !== -1 && yearIndex < availableYears.length - 1) {
+      periodTimelineYearStore.set(availableYears[yearIndex + 1]);
+    }
+  }
 
   const creditsByPeriod = $derived.by(() => {
     if (!model) return null;
-    return useSinglePeriodOnly
-      ? model.singlePeriodCreditsPerPeriod
-      : model.creditsPerPeriod;
+    return model.creditsPerPeriod;
   });
 
   function formatCredits(n: number | undefined): string {
@@ -125,9 +210,32 @@
     <div class="header-section">
       <div class="title-group">
         <h2>Year Timeline</h2>
-        {#if model}
-          <span class="period-timeline__year">{model.academicYear}</span>
+        {#if activeYear}
+          <div class="yearSwitcher">
+            <button
+              class="yearArrow"
+              onclick={goPrevYear}
+              disabled={yearIndex <= 0}
+              aria-label="Previous academic year"
+            >
+              ‹
+            </button>
+
+            <span class="period-timeline__year">
+              {activeYear}
+            </span>
+
+            <button
+              class="yearArrow"
+              onclick={goNextYear}
+              disabled={yearIndex === -1 || yearIndex >= availableYears.length - 1}
+              aria-label="Next academic year"
+            >
+              ›
+            </button>
+          </div>
         {/if}
+        Note that the grade input is not persistent yet. I'll work on it tomorrow.
       </div>
 
       <PlanManager compact={true} />
@@ -210,6 +318,41 @@
                 <div class="course-chip__header">
                   <span class="course-chip__credits">{p.item.credits} cr</span>
                   <span class="course-chip__code">{p.item.courseCode}</span>
+
+                  <span class="course-chip__spacer"></span>
+
+                  {#if editingChipKey === p.item.key}
+                    <input
+                      class="gradeInput"
+                      type="text"
+                      inputmode="numeric"
+                      pattern="[0-9]*"
+                      bind:this={gradeInputEl}
+                      bind:value={draftGrade}
+                      onclick={(e) => e.stopPropagation()}
+                      onkeydown={(e) => {
+                        if (e.key === "Enter") commitGradeEdit(p.item, e);
+                        if (e.key === "Escape") cancelGradeEdit(e);
+                      }}
+                      onblur={(e) => commitGradeEdit(p.item, e)}
+                      placeholder="—"
+                      aria-label="Edit grade"
+                    />
+                  {:else}
+                    <span
+                      class="gradePill"
+                      role="button"
+                      tabindex="0"
+                      title="Click to edit grade"
+                      onclick={(e) => startGradeEdit(p.item, e)}
+                      onkeydown={(e) => {
+                        // keyboard activation
+                        if (e.key === "Enter" || e.key === " ") startGradeEdit(p.item, e);
+                      }}
+                    >
+                      {p.item.grade ?? "—"}
+                    </span>
+                  {/if}
                 </div>
                 <span class="course-chip__name">{p.item.name}</span>
               </button>
@@ -308,6 +451,32 @@
     align-items: baseline;
     gap: 0.6rem;
     flex-wrap: wrap;
+  }
+
+  .yearSwitcher {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .yearArrow {
+    border: none;
+    background: transparent;
+    color: #555;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+
+  .yearArrow:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.06);
+    color: #111;
+  }
+
+  .yearArrow:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 
   .period-timeline__year {
@@ -544,6 +713,71 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+  }
+
+  .course-chip__spacer {
+    flex: 1;
+  }
+  
+  .gradePill {
+    width: auto;
+    min-width: 1ch;
+    padding: 0 2px;
+
+    color: rgba(189, 189, 189, 0.75);
+    font-size: 0.9em;
+    line-height: 1;
+
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: 0;
+
+    background: none;
+    border: none;
+    border-radius: 0;
+
+    cursor: pointer;
+    text-align: center;
+
+    /* readability without “badge” feel */
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.8),
+      0 0 1px rgba(0, 0, 0, 0.12);
+
+    transition: color 0.12s ease;
+  }
+
+  .gradePill:hover {
+    color: rgba(17, 24, 39, 0.95);
+  }
+
+  .gradePill:focus {
+    outline: none;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .gradeInput {
+    width: 1.8ch;
+    padding: 0;
+
+    border: none;
+    background: none;
+
+    color: rgba(17, 24, 39, 0.95);
+    font-size: 0.95em;
+    line-height: 1;
+    text-align: center;
+
+    font-variant-numeric: lining-nums tabular-nums;
+
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.9),
+      0 0 1px rgba(0, 0, 0, 0.15);
+  }
+
+  .gradeInput:focus {
+    outline: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
   }
 
   /* =========================
