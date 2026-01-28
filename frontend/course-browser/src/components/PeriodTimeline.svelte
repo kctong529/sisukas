@@ -41,7 +41,7 @@
   let editingChipKey: string | null = $state(null);
   let draftGrade: string = $state("");
   let gradeInputEl: HTMLInputElement | null = $state(null);
-  let commitInFlightByUnitId = new Set<string>();
+  let commitInFlightByUnitId = new SvelteSet<string>();
 
   function startGradeEdit(chip: PeriodTimelineChip, e: Event) {
     e.preventDefault();
