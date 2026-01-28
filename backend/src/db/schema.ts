@@ -1,6 +1,20 @@
 // src/db/schema.ts
 import { relations } from "drizzle-orm";
-import { pgTable, uuid, varchar, text, timestamp, boolean, index, primaryKey } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  timestamp,
+  boolean,
+  index,
+  primaryKey,
+  integer,
+} from "drizzle-orm/pg-core";
+
+/* =========================
+   Auth tables
+   ========================= */
 
 export const users = pgTable("user", {
   id: text("id").primaryKey(),
@@ -31,7 +45,7 @@ export const session = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
   },
-  (table) => [index("session_userId_idx").on(table.userId)],
+  (t) => [index("session_userId_idx").on(t.userId)],
 );
 
 export const account = pgTable(
@@ -55,7 +69,7 @@ export const account = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  (t) => [index("account_userId_idx").on(t.userId)],
 );
 
 export const verification = pgTable(
@@ -71,84 +85,132 @@ export const verification = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("verification_identifier_idx").on(table.identifier)],
+  (t) => [index("verification_identifier_idx").on(t.identifier)],
 );
 
+/* =========================
+   App tables
+   ========================= */
+
+export const favourites = pgTable("favourites", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  courseId: varchar("course_id", { length: 50 }).notNull(),
+  notes: text("notes"),
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+});
+
+export const feedback = pgTable("feedback", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  courseId: varchar("course_id", { length: 50 }).notNull(),
+  rating: varchar("rating", { length: 1 }),
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const plans = pgTable(
+  "plans",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 255 }).notNull(),
+    isActive: boolean("is_active").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    index("plans_userId_idx").on(t.userId),
+    index("plans_userId_isActive_idx").on(t.userId, t.isActive),
+  ],
+);
+
+export const planInstances = pgTable(
+  "plan_instances",
+  {
+    planId: uuid("plan_id")
+      .notNull()
+      .references(() => plans.id, { onDelete: "cascade" }),
+    instanceId: varchar("instance_id", { length: 100 }).notNull(),
+    addedAt: timestamp("added_at").defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.planId, t.instanceId] })],
+);
+
+export const courseGrades = pgTable(
+  "course_grades",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    courseUnitId: text("course_unit_id").notNull(),
+    grade: integer("grade").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.courseUnitId] }),
+    index("course_grades_userId_idx").on(t.userId),
+    index("course_grades_userId_courseUnitId_idx").on(t.userId, t.courseUnitId),
+  ],
+);
+
+/* =========================
+   Relations
+   ========================= */
+
+// User -> many
 export const userRelations = relations(users, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
+
+  favourites: many(favourites),
+  feedback: many(feedback),
+  plans: many(plans),
+  courseGrades: many(courseGrades),
 }));
 
+// Auth children -> user
 export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(users, {
-    fields: [session.userId],
-    references: [users.id],
-  }),
+  user: one(users, { fields: [session.userId], references: [users.id] }),
 }));
 
 export const accountRelations = relations(account, ({ one }) => ({
-  user: one(users, {
-    fields: [account.userId],
-    references: [users.id],
-  }),
+  user: one(users, { fields: [account.userId], references: [users.id] }),
 }));
 
-export const favourites = pgTable('favourites', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id')  // Changed from uuid to text
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  courseId: varchar('course_id', { length: 50 }).notNull(),
-  notes: text('notes'),
-  addedAt: timestamp('added_at').defaultNow().notNull(),
-});
+// App children -> user
+export const favouritesRelations = relations(favourites, ({ one }) => ({
+  user: one(users, { fields: [favourites.userId], references: [users.id] }),
+}));
 
-export const feedback = pgTable('feedback', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  courseId: varchar('course_id', { length: 50 }).notNull(),
-  rating: varchar('rating', { length: 1 }),
-  comment: text('comment'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+export const feedbackRelations = relations(feedback, ({ one }) => ({
+  user: one(users, { fields: [feedback.userId], references: [users.id] }),
+}));
 
-export const plans = pgTable('plans', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: text('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: varchar('name', { length: 255 }).notNull(),
-  isActive: boolean('is_active').default(false).notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at')
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-}, (table) => [
-  index('plans_userId_idx').on(table.userId),
-  index('plans_userId_isActive_idx').on(table.userId, table.isActive),
-]);
+export const courseGradesRelations = relations(courseGrades, ({ one }) => ({
+  user: one(users, { fields: [courseGrades.userId], references: [users.id] }),
+}));
 
-export const planInstances = pgTable('plan_instances', {
-  planId: uuid('plan_id')
-    .notNull()
-    .references(() => plans.id, { onDelete: 'cascade' }),
-  instanceId: varchar('instance_id', { length: 100 }).notNull(),
-  addedAt: timestamp('added_at').defaultNow().notNull(),
-}, (table) => [
-  primaryKey({ columns: [table.planId, table.instanceId] }),
-]);
-
-export const plansRelations = relations(plans, ({ many }) => ({
+// Plans graph
+export const plansRelations = relations(plans, ({ one, many }) => ({
+  user: one(users, { fields: [plans.userId], references: [users.id] }),
   instances: many(planInstances),
 }));
 
 export const planInstancesRelations = relations(planInstances, ({ one }) => ({
-  plan: one(plans, {
-    fields: [planInstances.planId],
-    references: [plans.id],
-  }),
+  plan: one(plans, { fields: [planInstances.planId], references: [plans.id] }),
 }));
