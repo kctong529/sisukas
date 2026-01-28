@@ -2,7 +2,6 @@
 
 import { writable, get } from 'svelte/store';
 import { plansService } from '../../infrastructure/services/PlansService';
-// import { mockPlansService as plansService } from '../../infrastructure/services/PlansService.mock';
 import type { Plan } from '../../domain/models/Plan';
 
 interface PlansStoreState {

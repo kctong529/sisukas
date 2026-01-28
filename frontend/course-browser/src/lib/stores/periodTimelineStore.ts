@@ -58,7 +58,7 @@ export const periodTimelineStore = derived(
       academicYear,
       periods: $periods,
       instances,
-      getGradeByUnitId: (unitId) => $grades.get(unitId),
+      getGradeByUnitId: (unitId) => $grades.grades.get(unitId),
     });
   }
 );

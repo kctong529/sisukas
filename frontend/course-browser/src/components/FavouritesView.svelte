@@ -5,6 +5,7 @@
   import { plansStore } from '../lib/stores/plansStore';
   import { courseIndexStore } from '../lib/stores/courseIndexStore';
   import { studyGroupStore } from '../lib/stores/studyGroupStore';
+  import { courseGradeStore } from '../lib/stores/courseGradeStore';
   import { NotificationService } from '../infrastructure/services/NotificationService';
   import StudyGroupsSection from './StudyGroupsSection.svelte';
   import type { Course } from '../domain/models/Course';
@@ -22,8 +23,8 @@
   let expandedInstanceIds = new SvelteSet<string>();
   let removeMode = false;
 
-  // Plans integration
   let hasInitializedPlans = false;
+  let hasInitializedGrades = false;
 
   // Reload when user signs in (reactive)
   $: if (isSignedIn && !hasLoadedForUser) {
@@ -42,12 +43,26 @@
     }
   }
 
+  // Initialize grades when user signs in
+  $: if (isSignedIn && hasLoadedForUser && !hasInitializedGrades) {
+    try {
+      courseGradeStore.load();
+    } catch (err) {
+      console.error("Failed to initialize grades:", err);
+    } finally {
+      hasInitializedGrades = true;
+    }
+  }
+
   $: if (!isSignedIn) {
     favouritesStore.clear();
     plansStore.clear();
+    courseGradeStore.clear();
+
     expandedInstanceIds = new SvelteSet();
     hasLoadedForUser = false;
     hasInitializedPlans = false;
+    hasInitializedGrades = false;
   }
 
   async function initializePlans() {

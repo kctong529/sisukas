@@ -50,36 +50,28 @@ export class CourseGradesService {
 
   static async upsertGrade(data: { userId: string; courseUnitId: string; grade: number }) {
     try {
-      // If it exists -> update; else -> insert.
-      const existing = await this.getGrade(data.userId, data.courseUnitId);
+      const now = new Date();
 
-      if (!existing) {
-        const [created] = await db
-          .insert(courseGrades)
-          .values({
-            userId: data.userId,
-            courseUnitId: data.courseUnitId,
-            grade: data.grade,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .returning();
-
-        if (!created) throw new Error("Failed to create grade");
-        return created;
-      }
-
-      const [updated] = await db
-        .update(courseGrades)
-        .set({
+      const [row] = await db
+        .insert(courseGrades)
+        .values({
+          userId: data.userId,
+          courseUnitId: data.courseUnitId,
           grade: data.grade,
-          updatedAt: new Date(),
+          createdAt: now,  // only used on insert; conflict path keeps existing createdAt
+          updatedAt: now,
         })
-        .where(and(eq(courseGrades.userId, data.userId), eq(courseGrades.courseUnitId, data.courseUnitId)))
+        .onConflictDoUpdate({
+          target: [courseGrades.userId, courseGrades.courseUnitId],
+          set: {
+            grade: data.grade,
+            updatedAt: now,
+          },
+        })
         .returning();
 
-      if (!updated) throw new Error("Failed to update grade");
-      return updated;
+      if (!row) throw new Error("Failed to upsert grade");
+      return row;
     } catch (error) {
       console.error("Error upserting grade:", error);
       throw error;

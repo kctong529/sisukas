@@ -14,6 +14,7 @@
 
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);
+
   const model = $derived($periodTimelineStore as PeriodTimelineModel | null);
   const periods = $derived($academicPeriodStore ?? []);
 
@@ -40,6 +41,7 @@
   let editingChipKey: string | null = $state(null);
   let draftGrade: string = $state("");
   let gradeInputEl: HTMLInputElement | null = $state(null);
+  let commitInFlightByUnitId = new Set<string>();
 
   function startGradeEdit(chip: PeriodTimelineChip, e: Event) {
     e.preventDefault();
@@ -56,25 +58,29 @@
     draftGrade = "";
   }
 
-  function commitGradeEdit(chip: PeriodTimelineChip, e?: Event) {
+  async function commitGradeEdit(chip: PeriodTimelineChip, e?: Event) {
     e?.preventDefault();
     e?.stopPropagation();
 
-    const raw = draftGrade.trim();
-    courseGradeStore.update((m) => {
-      const next = new SvelteMap(m);
-      if (raw === "") {
-        next.delete(chip.unitId);
-      } else {
-        const n = Number(raw);
-        if (Number.isInteger(n)) {
-          next.set(chip.unitId, n);
-        }
-      }
-      return next;
-    });
+    if (commitInFlightByUnitId.has(chip.unitId)) return;
+    commitInFlightByUnitId.add(chip.unitId);
 
-    editingChipKey = null;
+    try {
+      const raw = draftGrade.trim();
+      editingChipKey = null;
+
+      if (raw === "") {
+        await courseGradeStore.setGrade(chip.unitId, null);
+        return;
+      }
+
+      const n = Number(raw);
+      if (!Number.isInteger(n)) return;
+
+      await courseGradeStore.setGrade(chip.unitId, n);
+    } finally {
+      commitInFlightByUnitId.delete(chip.unitId);
+    }
   }
 
   let selectedYear = $derived($periodTimelineYearStore);
@@ -330,8 +336,13 @@
                       bind:this={gradeInputEl}
                       bind:value={draftGrade}
                       onclick={(e) => e.stopPropagation()}
-                      onkeydown={(e) => {
-                        if (e.key === "Enter") commitGradeEdit(p.item, e);
+                      onkeydown={async (e) => {
+                        if (e.key === "Enter") {
+                          await commitGradeEdit(p.item, e);
+                          gradeInputEl?.blur();
+                          return;
+                        }
+
                         if (e.key === "Escape") cancelGradeEdit(e);
                       }}
                       onblur={(e) => commitGradeEdit(p.item, e)}
