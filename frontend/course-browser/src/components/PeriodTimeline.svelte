@@ -12,6 +12,9 @@
   import { COURSE_PREFIX_RGB } from "../lib/coursePrefixColors";
   import { tick } from "svelte";
   import { computeYearStats, formatAvg } from '../lib/periodTimeline/yearStats';
+  import TranscriptExtractor from "./TranscriptExtractor.svelte"; // your PDF component
+  import { importTranscript } from "../lib/transcript/importTranscript";
+  import type { TranscriptRow, ImportTranscriptResult } from "../lib/transcript/importTranscript";
 
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);
@@ -211,6 +214,51 @@
     window.addEventListener('resize', updateIsMobile);
     return () => window.removeEventListener('resize', updateIsMobile);
   });
+
+  let showImportModal = $state(false);
+  let importing = $state(false);
+  let importError = $state<string | null>(null);
+  let importResult = $state<ImportTranscriptResult | null>(null);
+
+  function openImportModal() {
+    showImportModal = true;
+    importError = null;
+    importResult = null;
+  }
+
+  function closeImportModal() {
+    showImportModal = false;
+    importing = false;
+  }
+
+  async function onTranscriptExtracted(e: CustomEvent<TranscriptRow[]>) {
+    importing = true;
+    importError = null;
+    importResult = null;
+
+    try {
+      importResult = await importTranscript(e.detail);
+    } catch (err) {
+      importError = err instanceof Error ? err.message : String(err);
+    } finally {
+      importing = false;
+    }
+  }
+
+  // Escape to close
+  $effect(() => {
+    if (!showImportModal) return;
+
+    const onKeydown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeImportModal();
+      }
+    };
+
+    window.addEventListener("keydown", onKeydown);
+    return () => window.removeEventListener("keydown", onKeydown);
+  });
 </script>
 
 <section class="period-timeline">
@@ -257,8 +305,92 @@
         {/if}
       </div>
 
+      <button class="btn btn-secondary" type="button" onclick={openImportModal}>
+        Import transcript
+      </button>
+
       <PlanManager compact={true} />
     </div>
+
+
+{#if showImportModal}
+  <div class="modal-backdrop" role="presentation">
+    <button
+      type="button"
+      class="modal-overlay-close"
+      aria-label="Close import modal"
+      onclick={closeImportModal}
+    ></button>
+
+    <div
+      class="modal-content"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Import transcript"
+    >
+      <div class="modal-header">
+        <div class="modal-title">Import transcript PDF</div>
+
+        <button
+          type="button"
+          class="modal-close"
+          aria-label="Close"
+          onclick={closeImportModal}
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <TranscriptExtractor on:extracted={onTranscriptExtracted} />
+
+        {#if importing}
+          <div class="import-status">Importing…</div>
+        {/if}
+
+        {#if importError}
+          <div class="import-error">
+            <strong>Error</strong>
+            <div>{importError}</div>
+          </div>
+        {/if}
+
+        {#if importResult}
+          <div class="import-summary">
+            <div class="import-summary__row">
+              <span>Processed</span><strong>{importResult.processed}</strong>
+            </div>
+            <div class="import-summary__row">
+              <span>Favourites added</span><strong>{importResult.addedFavourites}</strong>
+            </div>
+            <div class="import-summary__row">
+              <span>Instances added</span><strong>{importResult.addedInstances}</strong>
+            </div>
+            <div class="import-summary__row">
+              <span>Instances replaced</span><strong>{importResult.replacedInstances}</strong>
+            </div>
+            <div class="import-summary__row">
+              <span>Grades updated</span><strong>{importResult.updatedGrades}</strong>
+            </div>
+
+            {#if importResult.skipped.length > 0}
+              <details class="import-skipped">
+                <summary>Skipped ({importResult.skipped.length})</summary>
+                <ul>
+                  {#each importResult.skipped as s (s.row.code + s.row.date + s.reason)}
+                    <li class="mono">
+                      {s.row.code} • {s.row.date} • {s.reason}
+                    </li>
+                  {/each}
+                </ul>
+              </details>
+            {/if}
+          </div>
+        {/if}
+      </div>
+    </div>
+  </div>
+{/if}
 
     {#if !model}
       <div class="state-card">
@@ -980,6 +1112,174 @@
   .mobileChip__rotate .gradeInput {
     flex: 0 0 auto;
     margin-left: 6px;
+  }
+
+  .modal-title {
+    font-weight: 700;
+    color: #111827;
+    padding-left: 6px;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
+    display: grid;
+    place-items: center;
+
+    padding: 16px;
+  }
+
+  /* the dim background + click-to-close target */
+  .modal-overlay-close {
+    position: absolute;
+    inset: 0;
+
+    border: none;
+    background: rgba(0, 0, 0, 0.45);
+    cursor: default;
+  }
+
+  /* dialog card */
+  .modal-content {
+    position: relative;
+    z-index: 1;
+
+    width: min(820px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+
+    display: grid;
+    grid-template-rows: auto 1fr;
+
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 14px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+
+    overflow: hidden;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 12px 14px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .modal-close {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+
+    font-size: 18px;
+    line-height: 1;
+    padding: 6px 8px;
+    border-radius: 8px;
+    color: #444;
+  }
+
+  .modal-close:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: #111;
+  }
+
+  .modal-body {
+    padding: 14px;
+    overflow: auto; /* critical: scrolling stays inside the modal */
+  }
+
+  /* Small screens */
+  @media (max-width: 520px) {
+    .modal-header {
+      padding: 10px 12px;
+    }
+    .modal-body {
+      padding: 12px;
+    }
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-secondary {
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--primary);
+    background: #f1f5f9;
+  }
+
+  .btn-secondary:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+
+  .import-status {
+    margin-top: 10px;
+    color: #555;
+  }
+
+  .import-error {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #991b1b;
+  }
+
+  .import-summary {
+    margin-top: 12px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  .import-summary__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 6px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .import-summary__row:last-child {
+    border-bottom: none;
+  }
+
+  .import-skipped {
+    margin-top: 10px;
+  }
+
+  .import-skipped ul {
+    margin: 8px 0 0 0;
+    padding-left: 18px;
+  }
+
+  .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+      "Liberation Mono", "Courier New", monospace;
+    font-size: 0.9rem;
   }
 
   /* Hide mobile matrix on desktop / hide desktop grid on mobile */

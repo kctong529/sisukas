@@ -1,5 +1,20 @@
 // src/infrastructure/services/StudyGroupService.ts
 
+/**
+ * Fetches and normalizes study group data from the SISU wrapper API.
+ *
+ * Endpoints:
+ * - GET  /api/courses/study-groups            (single instance)
+ * - POST /api/courses/batch/study-groups      (many instances; preferred)
+ * - POST /api/courses/batch/offerings         (offerings + embedded study groups)
+ *
+ * Notes:
+ * - Study events inside a group are de-duplicated by identical (start,end) time slot.
+ *   If multiple events share the same time slot, their locations are merged.
+ * - Batch fetch accepts many requests; we de-dupe inputs, chunk, and run with limited
+ *   concurrency to keep the UI responsive.
+ */
+
 import type { StudyGroup } from '../../domain/models/StudyGroup';
 import type { StudyEvent } from '../../domain/models/StudyEvent';
 
@@ -91,6 +106,10 @@ export interface CourseOfferingData {
 export class StudyGroupService {
   private wrapperApiUrl: string;
 
+  private keyOf(r: StudyGroupRequest): string {
+    return `${r.courseUnitId}:${r.courseOfferingId}`;
+  }
+
   constructor(wrapperApiUrl: string) {
     this.wrapperApiUrl = wrapperApiUrl;
   }
@@ -128,58 +147,97 @@ export class StudyGroupService {
 
   // ========== Batch Study Groups Endpoint ==========
 
-  /**
-   * Batch fetch study groups for multiple course instances (POST endpoint)
-   * More efficient than multiple individual requests.
-   * 
-   * @param requests Array of course references (max 100)
-   * @returns Map with key format "unitId:offeringId" -> StudyGroup[]
-   */
-  async fetchStudyGroupsBatch(
+  private async fetchStudyGroupsBatchOnce(
     requests: StudyGroupRequest[]
   ): Promise<Map<string, StudyGroup[]>> {
+    if (requests.length === 0) return new Map();
+
+    const url = new URL(`${this.wrapperApiUrl}/api/courses/batch/study-groups`);
+
+    const payload = {
+      requests: requests.map((req) => ({
+        course_unit_id: req.courseUnitId,
+        course_offering_id: req.courseOfferingId,
+      })),
+    };
+
+    const response = await fetch(url.toString(), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      this.handleErrorResponse(response.status);
+      return new Map();
+    }
+
+    const data: SisuBatchStudyGroupsResponse = await response.json();
+    const results = new Map<string, StudyGroup[]>();
+
+    for (const [key, sisuGroups] of Object.entries(data.results)) {
+      results.set(key, this.transformStudyGroups(sisuGroups));
+    }
+
+    return results;
+  }
+
+  async fetchStudyGroupsBatch(
+    requests: StudyGroupRequest[],
+    opts?: { chunkSize?: number; concurrency?: number; onProgress?: (p: { done: number; total: number }) => void }
+  ): Promise<Map<string, StudyGroup[]>> {
     try {
-      if (requests.length === 0) {
-        return new Map();
+      if (requests.length === 0) return new Map();
+
+      // De-duplicate by (courseUnitId, courseOfferingId) to avoid redundant batch requests
+      const uniq = new Map<string, StudyGroupRequest>();
+      for (const r of requests) uniq.set(this.keyOf(r), r);
+      const deduped = [...uniq.values()];
+
+      // Clamp chunk size to keep each POST within backend limits
+      const chunkSize = Math.min(Math.max(opts?.chunkSize ?? 50, 1), 50);
+
+      // Limit parallel requests to avoid starving the browser or backend
+      const concurrency = Math.min(Math.max(opts?.concurrency ?? 4, 1), 12);
+
+      const chunks: StudyGroupRequest[][] = [];
+      for (let i = 0; i < deduped.length; i += chunkSize) {
+        chunks.push(deduped.slice(i, i + chunkSize));
       }
 
-      if (requests.length > 200) {
-        throw new Error('Batch request exceeds maximum of 200 items');
-      }
+      const total = chunks.length;
+      let done = 0;
 
-      const url = new URL(`${this.wrapperApiUrl}/api/courses/batch/study-groups`);
-      
-      const payload = {
-        requests: requests.map(req => ({
-          course_unit_id: req.courseUnitId,
-          course_offering_id: req.courseOfferingId,
-        })),
+      const merged = new Map<string, StudyGroup[]>();
+      let nextIndex = 0;
+
+      // Worker pulls the next chunk index atomically and processes it
+      const runWorker = async () => {
+        while (true) {
+          const i = nextIndex++;
+          if (i >= total) return;
+
+          const res = await this.fetchStudyGroupsBatchOnce(chunks[i]);
+
+          // Merge results; later chunks overwrite earlier ones for the same key
+          for (const [k, v] of res.entries()) merged.set(k, v);
+
+          done++;
+          opts?.onProgress?.({ done, total });
+
+          // Yield to the event loop so rendering and input are not blocked
+          await new Promise<void>((r) => setTimeout(r, 0));
+        }
       };
 
-      const response = await fetch(url.toString(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        this.handleErrorResponse(response.status);
-        return new Map();
-      }
-
-      const data: SisuBatchStudyGroupsResponse = await response.json();
-      const results = new Map<string, StudyGroup[]>();
-
-      for (const [key, sisuGroups] of Object.entries(data.results)) {
-        results.set(key, this.transformStudyGroups(sisuGroups));
-      }
-
-      return results;
-    } catch (error) {
-      console.error('Error in batch study groups fetch:', error);
+      await Promise.all(Array.from({ length: Math.min(concurrency, total) }, runWorker));
+      return merged;
+    } catch (e) {
+      console.error("Error in batch study groups fetch:", e);
       return new Map();
     }
   }
+
 
   // ========== Batch Offerings Endpoint ==========
 
@@ -288,7 +346,7 @@ export class StudyGroupService {
     const timeSlotMap = new Map<string, SisuStudyEvent[]>();
 
     for (const event of sisuEvents) {
-      // Use start and end as composite key for deduplication
+      // Use (start,end) as a composite key to identify identical time slots
       const key = `${event.start}:${event.end}`;
       if (!timeSlotMap.has(key)) {
         timeSlotMap.set(key, []);
@@ -301,7 +359,7 @@ export class StudyGroupService {
     let eventIndex = 0;
 
     for (const eventsInSlot of timeSlotMap.values()) {
-      // Merge all locations for this time slot
+      // Merge locations for identical time slots into a single string
       const locations = eventsInSlot
         .map(e => e.location?.trim() || '')
         .filter(Boolean); // Remove empty strings
@@ -310,7 +368,7 @@ export class StudyGroupService {
         ? locations.join(', ')
         : undefined;
 
-      // Use first event in slot as the source (they all have same start/end)
+      // Use the first event as the canonical source (all share start/end)
       const sourceEvent = eventsInSlot[0];
 
       dedupedEvents.push({

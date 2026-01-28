@@ -1,8 +1,7 @@
 // src/lib/stores/studyGroupStore.ts
-
-import { writable } from 'svelte/store';
-import { StudyGroupService } from '../../infrastructure/services/StudyGroupService';
-import type { StudyGroup } from '../../domain/models/StudyGroup';
+import { writable, get } from "svelte/store";
+import { StudyGroupService } from "../../infrastructure/services/StudyGroupService";
+import type { StudyGroup } from "../../domain/models/StudyGroup";
 
 interface StudyGroupStoreState {
   cache: { [key: string]: StudyGroup[] };
@@ -10,161 +9,158 @@ interface StudyGroupStoreState {
   error: string | null;
 }
 
-/**
- * Reactive store for managing study group data fetching and caching.
- * 
- * - Fetches study groups on-demand and caches them
- * - Tracks loading state per course instance
- * - Prevents duplicate requests
- * - Used by StudyGroupsSection and future Plan components
- */
 function createStudyGroupStore() {
-  const initialState: StudyGroupStoreState = {
+  const { subscribe, update } = writable<StudyGroupStoreState>({
     cache: {},
     loadingKeys: [],
     error: null,
-  };
+  });
 
-  const { subscribe, update } = writable(initialState);
   const service = new StudyGroupService(import.meta.env.VITE_WRAPPER_API);
+
+  // Two queues: batch gets priority
+  const hiQueue = new Map<string, { courseUnitId: string; courseOfferingId: string }>();
+  const loQueue = new Map<string, { courseUnitId: string; courseOfferingId: string }>();
+
+  let flushScheduled = false;
+
+  const keyOf = (u: string, o: string) => `${u}:${o}`;
+
+  const isCached = (key: string) => Boolean(get({ subscribe }).cache[key]);
+  const isLoading = (key: string) => get({ subscribe }).loadingKeys.includes(key);
+
+  function markLoading(keys: string[]) {
+    if (keys.length === 0) return;
+    update((s) => ({
+      ...s,
+      loadingKeys: Array.from(new Set([...s.loadingKeys, ...keys])),
+    }));
+  }
+
+  function clearLoading(keys: string[]) {
+    if (keys.length === 0) return;
+    update((s) => ({
+      ...s,
+      loadingKeys: s.loadingKeys.filter((k) => !keys.includes(k)),
+    }));
+  }
+
+  function scheduleFlush() {
+    if (flushScheduled) return;
+    flushScheduled = true;
+
+    // next microtask: coalesce repeated calls in the same tick
+    queueMicrotask(() => {
+      flushScheduled = false;
+      void flush();
+    });
+  }
+
+  async function flush() {
+    // Drain high priority first, then low.
+    // Also: if hiQueue has anything, we do NOT do individual GETs at all.
+    const toSend: Array<{ courseUnitId: string; courseOfferingId: string }> = [];
+    const loadingKeys: string[] = [];
+
+    const drainFrom = (q: typeof hiQueue | typeof loQueue) => {
+      for (const [k, v] of q.entries()) {
+        if (isCached(k) || isLoading(k)) {
+          q.delete(k);
+          continue;
+        }
+        toSend.push(v);
+        loadingKeys.push(k);
+        q.delete(k);
+      }
+    };
+
+    drainFrom(hiQueue);
+    // Only drain low queue if there is no high-priority work pending right now.
+    if (toSend.length === 0) {
+      drainFrom(loQueue);
+    }
+
+    if (toSend.length === 0) return;
+
+    markLoading(loadingKeys);
+
+    try {
+      const results = await service.fetchStudyGroupsBatch(toSend, {
+        chunkSize: 50,
+        concurrency: 4,
+      });
+
+      update((s) => {
+        const newCache = { ...s.cache };
+        for (const [k, groups] of results.entries()) {
+          newCache[k] = groups;
+        }
+        return { ...s, cache: newCache, error: null };
+      });
+    } catch (e) {
+      update((s) => ({
+        ...s,
+        error: e instanceof Error ? e.message : "Batch fetch failed",
+      }));
+    } finally {
+      clearLoading(loadingKeys);
+    }
+
+    // If new items were queued during the fetch, flush again.
+    if (hiQueue.size > 0 || loQueue.size > 0) scheduleFlush();
+  }
+
+  function enqueueHigh(reqs: Array<{ courseUnitId: string; courseOfferingId: string }>) {
+    for (const r of reqs) {
+      const k = keyOf(r.courseUnitId, r.courseOfferingId);
+      if (isCached(k) || isLoading(k)) continue;
+      hiQueue.set(k, r);
+    }
+    scheduleFlush();
+  }
+
+  function enqueueLow(courseUnitId: string, courseOfferingId: string) {
+    const k = keyOf(courseUnitId, courseOfferingId);
+    if (isCached(k) || isLoading(k)) return;
+    // Don't enqueue low if high already includes it
+    if (!hiQueue.has(k)) loQueue.set(k, { courseUnitId, courseOfferingId });
+    scheduleFlush();
+  }
 
   return {
     subscribe,
 
-    /**
-     * Fetch and cache study groups for a course instance.
-     * Returns cached data if available, otherwise fetches from API.
-     * 
-     * @param courseUnitId - The unit ID of the course
-     * @param courseOfferingId - The offering ID of the course instance
-     * @returns Promise resolving to array of StudyGroup models
-     */
+    // "single" fetch becomes low-priority enqueue
     async fetch(courseUnitId: string, courseOfferingId: string): Promise<StudyGroup[]> {
-      const key = `${courseUnitId}:${courseOfferingId}`;
+      const key = keyOf(courseUnitId, courseOfferingId);
+      const cached = get({ subscribe }).cache[key];
+      if (cached) return cached;
 
-      // Check cache first
-      let cached: StudyGroup[] | undefined;
-      const unsubscribe = subscribe(state => {
-        cached = state.cache[key];
-      });
-      unsubscribe();
+      enqueueLow(courseUnitId, courseOfferingId);
 
-      if (cached) {
-        return cached;
-      }
-
-      // Mark as loading
-      update(state => ({
-        ...state,
-        loadingKeys: [...state.loadingKeys, key],
-      }));
-
-      try {
-        const studyGroups = await service.fetchStudyGroups(courseUnitId, courseOfferingId);
-
-        update(state => ({
-          ...state,
-          cache: { ...state.cache, [key]: studyGroups },
-          loadingKeys: state.loadingKeys.filter(k => k !== key),
-          error: null,
-        }));
-
-        return studyGroups;
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch study groups';
-
-        update(state => ({
-          ...state,
-          loadingKeys: state.loadingKeys.filter(k => k !== key),
-          error: errorMessage,
-        }));
-
-        return [];
-      }
+      // caller expects a Promise<StudyGroup[]>; return cached if it appears,
+      // otherwise just return [] quickly and let UI react to store update.
+      // (If you prefer: you can implement a "wait until cached" helper.)
+      return get({ subscribe }).cache[key] ?? [];
     },
 
-    /**
-     * Batch fetch study groups for multiple course instances.
-     * More efficient than individual fetches.
-     * 
-     * @param requests Array of course references (max 100)
-     */
-    async fetchBatch(
-      requests: Array<{ courseUnitId: string; courseOfferingId: string }>
-    ): Promise<void> {
-      if (requests.length === 0) return;
-
-      // Mark all as loading
-      const loadingKeys = requests.map(r => `${r.courseUnitId}:${r.courseOfferingId}`);
-      update(state => ({
-        ...state,
-        loadingKeys: [...state.loadingKeys, ...loadingKeys],
-      }));
-
-      try {
-        const results = await service.fetchStudyGroupsBatch(requests);
-
-        update(state => {
-          const newCache = { ...state.cache };
-          const newLoadingKeys = state.loadingKeys.filter(k => !loadingKeys.includes(k));
-
-          for (const [key, groups] of results) {
-            newCache[key] = groups;
-          }
-
-          return {
-            ...state,
-            cache: newCache,
-            loadingKeys: newLoadingKeys,
-            error: null,
-          };
-        });
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Batch fetch failed';
-
-        update(state => ({
-          ...state,
-          loadingKeys: state.loadingKeys.filter(k => !loadingKeys.includes(k)),
-          error: errorMessage,
-        }));
-      }
+    // high-priority enqueue
+    async fetchBatch(requests: Array<{ courseUnitId: string; courseOfferingId: string }>): Promise<void> {
+      enqueueHigh(requests);
     },
 
-    /**
-     * Check if study groups are currently loading for a course instance.
-     */
     isLoading(courseUnitId: string, courseOfferingId: string): boolean {
-      let isLoading = false;
-      const unsubscribe = subscribe(state => {
-        const key = `${courseUnitId}:${courseOfferingId}`;
-        isLoading = state.loadingKeys.includes(key);
-      });
-      unsubscribe();
-      return isLoading;
+      return isLoading(keyOf(courseUnitId, courseOfferingId));
     },
 
-    /**
-     * Get cached study groups for a course instance without fetching.
-     */
     getCached(courseUnitId: string, courseOfferingId: string): StudyGroup[] | null {
-      let groups: StudyGroup[] | null = null;
-      const unsubscribe = subscribe(state => {
-        const key = `${courseUnitId}:${courseOfferingId}`;
-        groups = state.cache[key] || null;
-      });
-      unsubscribe();
-      return groups;
+      return get({ subscribe }).cache[keyOf(courseUnitId, courseOfferingId)] ?? null;
     },
 
-    /**
-     * Clear all cached study groups and error state.
-     */
     clear() {
-      update(() => ({
-        cache: {},
-        loadingKeys: [],
-        error: null,
-      }));
+      hiQueue.clear();
+      loQueue.clear();
+      update(() => ({ cache: {}, loadingKeys: [], error: null }));
     },
   };
 }

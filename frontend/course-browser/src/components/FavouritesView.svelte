@@ -9,7 +9,7 @@
   import { NotificationService } from '../infrastructure/services/NotificationService';
   import StudyGroupsSection from './StudyGroupsSection.svelte';
   import type { Course } from '../domain/models/Course';
-  import { SvelteSet } from 'svelte/reactivity';
+  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
   import PlanManager from './PlanManager.svelte';
 
   const session = useSession();
@@ -93,16 +93,17 @@
 
   // Batch fetch study groups for all favourited courses
   $: if (hasLoadedForUser && $favouritesStore.favourites.length > 0 && showOlder === false) {
-    const coursesToFetch = $favouritesStore.favourites
-      .flatMap(fav => getCoursesForId(fav.courseId, showOlder))
-      .map(course => ({
-        courseUnitId: course.unitId,
-        courseOfferingId: course.id,
-      }));
-    
-    if (coursesToFetch.length > 0) {
-      studyGroupStore.fetchBatch(coursesToFetch);
+    const uniq = new SvelteMap<string, { courseUnitId: string; courseOfferingId: string }>();
+
+    for (const fav of $favouritesStore.favourites) {
+      for (const course of getCoursesForId(fav.courseId, showOlder)) {
+        const key = `${course.unitId}:${course.id}`;
+        uniq.set(key, { courseUnitId: course.unitId, courseOfferingId: course.id });
+      }
     }
+
+    const coursesToFetch = [...uniq.values()];
+    if (coursesToFetch.length > 0) studyGroupStore.fetchBatch(coursesToFetch);
   }
 
   function getCoursesForId(courseId: string, older: boolean): Course[] {

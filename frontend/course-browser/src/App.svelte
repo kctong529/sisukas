@@ -10,7 +10,6 @@
   import FavouritesView from "./components/FavouritesView.svelte";
   import LegoView from './components/LegoView.svelte';
   import PeriodTimeline from './components/PeriodTimeline.svelte';
-  import TranscriptCourseExtractor from "./components/TranscriptCourseExtractor.svelte";
   import { authClient, useSession } from "./lib/authClient";
   import { createRuleBlueprints, type RuleBlueprintKey } from './domain/filters/blueprints';
   import type { BaseRuleBlueprint } from './domain/filters/blueprints';
@@ -313,14 +312,6 @@
     class:hidden={currentView !== 'timeline'}
   >
     <PeriodTimeline />
-  </div>
-
-  <!-- Period Timeline View -->
-  <div 
-    class="view" 
-    class:hidden={currentView !== 'experiment'}
-  >
-    <TranscriptCourseExtractor />
   </div>
 </div>
 

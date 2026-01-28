@@ -411,4 +411,11 @@
     border-radius: 2px;
     width: fit-content;
   }
+
+  .empty {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 0.25rem 0;
+  }
 </style>

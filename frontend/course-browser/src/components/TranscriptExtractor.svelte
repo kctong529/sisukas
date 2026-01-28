@@ -1,3 +1,4 @@
+<!-- src/components/TranscriptExtractor.svelte -->
 <script lang="ts">
   import * as pdfjsLib from "pdfjs-dist";
   import { createEventDispatcher } from "svelte";
@@ -217,9 +218,16 @@
 </script>
 
 <div class="course-extractor">
-  <label class="picker">
-    <span>Upload transcript PDF</span>
-    <input type="file" accept="application/pdf" on:change={onFileChange} />
+  <label class="file-picker">
+    <input
+      class="file-input"
+      type="file"
+      accept="application/pdf"
+      on:change={onFileChange}
+    />
+    <span class="btn btn-secondary">
+      Choose PDF
+    </span>
   </label>
 
   {#if loading}
@@ -265,71 +273,174 @@
 <style>
   .course-extractor {
     display: grid;
-    gap: 0.75rem;
+    gap: 10px;
   }
 
-  .picker {
+  .file-picker {
     display: inline-flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 12px;
+    position: relative;
   }
 
-  .picker input[type="file"] {
-    max-width: 100%;
+  .file-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  /* ensure the button looks clickable when hovering input */
+  .file-picker:hover .btn {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.22);
+  }
+
+  /* ---- Status blocks ---- */
+  .status,
+  .hint,
+  .error {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.35;
   }
 
   .status {
-    margin: 0;
-  }
-
-  .error {
-    margin: 0;
-    color: #b00020;
-    white-space: pre-wrap;
+    color: #4b5563;
   }
 
   .hint {
-    margin: 0;
-    opacity: 0.75;
+    color: #6b7280;
+    background: #f9fafb;
+    border: 1px dashed #e5e7eb;
+    border-radius: 12px;
+    padding: 10px 12px;
   }
 
+  .error {
+    color: #991b1b;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    padding: 10px 12px;
+    white-space: pre-wrap;
+  }
+
+  /* ---- Table ---- */
   .table-wrap {
     overflow: auto;
     border: 1px solid #e6e6e6;
     border-radius: 12px;
+    background: #fff;
   }
 
   table {
     width: 100%;
-    border-collapse: collapse;
-    font-size: 0.95rem;
-  }
-
-  th, td {
-    padding: 0.6rem 0.7rem;
-    border-bottom: 1px solid #eee;
-    text-align: left;
-    vertical-align: top;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.92rem;
   }
 
   thead th {
     position: sticky;
     top: 0;
-    background: white;
-    border-bottom: 1px solid #ddd;
-    z-index: 1;
+    z-index: 2;
+
+    background: #f9fafb;
+    color: #374151;
+    font-weight: 700;
+
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  tbody tr:nth-child(2n) td {
+    background: #fcfcfd;
+  }
+
+  tbody tr:hover td {
+    background: #f7fbff;
+  }
+
+  /* column sizing (keeps modal readable) */
+  thead th:nth-child(1),
+  tbody td:nth-child(1) {
+    width: 120px; /* Code */
+  }
+
+  thead th:nth-child(2),
+  tbody td:nth-child(2) {
+    width: 70px; /* Grade */
+  }
+
+  tbody td:nth-child(3) {
+    white-space: normal;
+  }
+
+  thead th:nth-child(4),
+  tbody td:nth-child(4) {
+    width: 70px; /* Cr */
+  }
+
+  thead th:nth-child(5),
+  tbody td:nth-child(5) {
+    width: 70px; /* Lang */
+  }
+
+  thead th:nth-child(6),
+  tbody td:nth-child(6) {
+    width: 120px; /* Date */
+    white-space: nowrap;
   }
 
   .mono {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-      "Liberation Mono", "Courier New", monospace;
+    font-family: inherit;
+    font-size: inherit;
     white-space: nowrap;
+    color: inherit;
   }
 
   .num {
     text-align: right;
   }
+
+  .btn {
+    display: inline-block;
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-secondary {
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5rem 0.8rem;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--primary);
+    background: #f1f5f9;
+  }
+
+  .btn-secondary:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+
 </style>
