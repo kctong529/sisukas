@@ -13,6 +13,7 @@ import usersRoutes from './routes/users';
 import favouritesRoutes from './routes/favourites';
 import plansRoutes from './routes/plans';
 import analyticsRoutes from './routes/analytics';
+import gradesRoutes from "./routes/grades";
 import { extractSession } from './middleware/auth';
 
 const app = express();
@@ -79,6 +80,7 @@ app.use('/api/users', usersRoutes);
 app.use(extractSession);
 app.use('/api/favourites', favouritesRoutes);
 app.use('/api/plans', plansRoutes);
+app.use("/api/grades", gradesRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on ${process.env.BACKEND_URL}`);
