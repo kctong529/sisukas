@@ -36,7 +36,7 @@
   }
 
   function getCourseForInstance(instanceId: string): Course | undefined {
-    const course = courseIndexStore.getByInstanceId(instanceId);
+    const course = courseIndexStore.getByInstanceId(instanceId) ?? courseIndexStore.getHistoricalByInstanceId(instanceId);
     if (course) return course;
     return undefined;
   }

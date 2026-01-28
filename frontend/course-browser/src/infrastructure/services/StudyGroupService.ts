@@ -143,8 +143,8 @@ export class StudyGroupService {
         return new Map();
       }
 
-      if (requests.length > 100) {
-        throw new Error('Batch request exceeds maximum of 100 items');
+      if (requests.length > 200) {
+        throw new Error('Batch request exceeds maximum of 200 items');
       }
 
       const url = new URL(`${this.wrapperApiUrl}/api/courses/batch/study-groups`);

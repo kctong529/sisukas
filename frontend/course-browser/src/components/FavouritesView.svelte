@@ -26,6 +26,13 @@
   let hasInitializedPlans = false;
   let hasInitializedGrades = false;
 
+  let showOlder = false;
+
+  function toggleOlder() {
+    showOlder = !showOlder;
+    expandedInstanceIds = new SvelteSet($plansStore.activePlan?.instanceIds ?? []);
+  }
+
   // Reload when user signs in (reactive)
   $: if (isSignedIn && !hasLoadedForUser) {
     favouritesStore.load();
@@ -85,9 +92,9 @@
   }
 
   // Batch fetch study groups for all favourited courses
-  $: if (hasLoadedForUser && $favouritesStore.favourites.length > 0) {
+  $: if (hasLoadedForUser && $favouritesStore.favourites.length > 0 && showOlder === false) {
     const coursesToFetch = $favouritesStore.favourites
-      .flatMap(fav => getCoursesForId(fav.courseId))
+      .flatMap(fav => getCoursesForId(fav.courseId, showOlder))
       .map(course => ({
         courseUnitId: course.unitId,
         courseOfferingId: course.id,
@@ -98,8 +105,10 @@
     }
   }
 
-  function getCoursesForId(courseId: string): Course[] {
-    return courseIndexStore.getInstancesByCode(courseId);
+  function getCoursesForId(courseId: string, older: boolean): Course[] {
+    return older
+      ? courseIndexStore.getHistoricalInstancesByCode(courseId)
+      : courseIndexStore.getInstancesByCode(courseId);
   }
 
   $: sortedFavourites = [...$favouritesStore.favourites].sort((a, b) => {
@@ -107,22 +116,22 @@
       case 'courseId':
         return a.courseId.localeCompare(b.courseId) * sortDirection;
       case 'courseName': {
-        const coursesA = getCoursesForId(a.courseId);
-        const coursesB = getCoursesForId(b.courseId);
+        const coursesA = getCoursesForId(a.courseId, showOlder);
+        const coursesB = getCoursesForId(b.courseId, showOlder);
         const nameA = coursesA[0]?.name.en || a.courseId;
         const nameB = coursesB[0]?.name.en || b.courseId;
         return nameA.localeCompare(nameB) * sortDirection;
       }
       case 'credits': {
-        const coursesA = getCoursesForId(a.courseId);
-        const coursesB = getCoursesForId(b.courseId);
+        const coursesA = getCoursesForId(a.courseId, showOlder);
+        const coursesB = getCoursesForId(b.courseId, showOlder);
         const creditsA = coursesA[0]?.credits.min || 0;
         const creditsB = coursesB[0]?.credits.min || 0;
         return (creditsA - creditsB) * sortDirection;
       }
       case 'startDate': {
-        const coursesA = getCoursesForId(a.courseId);
-        const coursesB = getCoursesForId(b.courseId);
+        const coursesA = getCoursesForId(a.courseId, showOlder);
+        const coursesB = getCoursesForId(b.courseId, showOlder);
         const dateA = coursesA[0]?.courseDate.start || new Date(0);
         const dateB = coursesB[0]?.courseDate.start || new Date(0);
         return (new Date(dateA).getTime() - new Date(dateB).getTime()) * sortDirection;
@@ -202,10 +211,15 @@
         removedInstanceFromPlan(instanceId);
       }
     } else {
-      const courses = getCoursesForId(courseId);
+      const courses = getCoursesForId(courseId, showOlder);
       courses.forEach(c => expandedInstanceIds.delete(c.id));
       expandedInstanceIds.add(instanceId);
       expandedInstanceIds = new SvelteSet(expandedInstanceIds);
+
+      if (showOlder) {
+        const selected = courses.find(c => c.id === instanceId);
+        if (selected) studyGroupStore.fetch(selected.unitId, selected.id);
+      }
     }
   }
 
@@ -302,6 +316,18 @@
               {sortDirection === 1 ? '↑' : '↓'}
             </button>
           </div>
+
+          <button
+            type="button"
+            class="btn btn-secondary older-btn"
+            class:active={showOlder}
+            aria-pressed={showOlder}
+            on:click={toggleOlder}
+            title={showOlder ? "Showing historical course instances" : "Showing active course instances"}
+          >
+            {showOlder ? "See Active" : "See Older"}
+          </button>
+
           <button class="btn btn-secondary" on:click={() => { removeMode = true; }}>
             Remove
           </button>
@@ -312,7 +338,7 @@
     <div class="favourites-list">
       {#each sortedFavourites as favourite (favourite.courseId)}
         {@const courses =
-          [...getCoursesForId(favourite.courseId)].sort(
+          [...getCoursesForId(favourite.courseId, showOlder)].sort(
             (a, b) => new Date(a.courseDate.start).getTime() - new Date(b.courseDate.start).getTime()
           )
         }

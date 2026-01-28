@@ -11,6 +11,7 @@
   import { useSession } from '../lib/authClient';
   import { COURSE_PREFIX_RGB } from "../lib/coursePrefixColors";
   import { tick } from "svelte";
+  import { computeYearStats, formatAvg } from '../lib/periodTimeline/yearStats';
 
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);
@@ -141,6 +142,13 @@
     return map;
   });
 
+  const yearStats = $derived.by(() => {
+    if (!courseSpanMap) return null;
+    const uniqueChips = Array.from(courseSpanMap.values()).map(v => v.item);
+
+    return computeYearStats(uniqueChips);
+  });
+
   type Placement = {
     key: string;
     item: PeriodTimelineChip;
@@ -240,8 +248,13 @@
               ›
             </button>
           </div>
+          {#if yearStats}
+            <span class="yearStats" title="Graded credits / total credits and weighted average grade">
+              {formatCredits(yearStats.totalCreditsGraded)}/{formatCredits(yearStats.totalCreditsAll)} Credits
+              • Average {formatAvg(yearStats.weightedAverage)}/5.00
+            </span>
+          {/if}
         {/if}
-        Note that the grade input is not persistent yet. I'll work on it tomorrow.
       </div>
 
       <PlanManager compact={true} />
@@ -418,6 +431,46 @@
                 <div class="course-chip__header">
                   <span class="course-chip__credits">{p.item.credits} cr</span>
                   <span class="course-chip__code">{p.item.courseCode}</span>
+
+                  <span class="course-chip__spacer"></span>
+
+                  {#if editingChipKey === p.item.key}
+                    <input
+                      class="gradeInput"
+                      type="text"
+                      inputmode="numeric"
+                      pattern="[0-9]*"
+                      bind:this={gradeInputEl}
+                      bind:value={draftGrade}
+                      onclick={(e) => e.stopPropagation()}
+                      onkeydown={async (e) => {
+                        if (e.key === "Enter") {
+                          await commitGradeEdit(p.item, e);
+                          gradeInputEl?.blur();
+                          return;
+                        }
+
+                        if (e.key === "Escape") cancelGradeEdit(e);
+                      }}
+                      onblur={(e) => commitGradeEdit(p.item, e)}
+                      placeholder="—"
+                      aria-label="Edit grade"
+                    />
+                  {:else}
+                    <span
+                      class="gradePill"
+                      role="button"
+                      tabindex="0"
+                      title="Click to edit grade"
+                      onclick={(e) => startGradeEdit(p.item, e)}
+                      onkeydown={(e) => {
+                        // keyboard activation
+                        if (e.key === "Enter" || e.key === " ") startGradeEdit(p.item, e);
+                      }}
+                    >
+                      {p.item.grade ?? "—"}
+                    </span>
+                  {/if}
                 </div>
                 <span class="course-chip__name">{p.item.name}</span>
               </div>
@@ -492,6 +545,13 @@
 
   .period-timeline__year {
     font-size: 1rem;
+    color: #888;
+    font-weight: 500;
+  }
+
+  .yearStats {
+    margin-left: 8px;
+    font-size: 0.9rem;
     color: #888;
     font-weight: 500;
   }
@@ -895,6 +955,10 @@
     max-width: calc(var(--chip-h) - 10px);
   }
 
+  .mobileChip__rotate .course-chip__header {
+    min-width: 0; /* critical in flex layouts */
+  }
+
   .mobileChip__rotate .course-chip__name {
     display: block;
     max-width: 100%;
@@ -902,6 +966,20 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+  }
+
+  .mobileChip__rotate .course-chip__code {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobileChip__rotate .gradePill,
+  .mobileChip__rotate .gradeInput {
+    flex: 0 0 auto;
+    margin-left: 6px;
   }
 
   /* Hide mobile matrix on desktop / hide desktop grid on mobile */
