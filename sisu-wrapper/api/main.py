@@ -23,12 +23,18 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from pathlib import Path
+from dotenv import load_dotenv
+ROOT = Path(__file__).resolve().parents[1]  # points to sisu-wrapper root
+load_dotenv(ROOT / ".env")                  # root .env
+
 from core.config import (
     CORS_ORIGINS,
     API_TITLE,
     API_VERSION,
     API_CONTACT,
 )
+
 from routers import courses, root
 
 # Configure logging

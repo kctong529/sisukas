@@ -267,6 +267,33 @@ class SisuClient:
 
         return results
 
+    def search_course_units(
+        self,
+        full_text_query: str,
+        university_org_id: str = "aalto-university-root-id",
+        start: int = 0,
+        limit: int = 20,
+        timeout: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Search course units by a full-text query (typically course code)
+
+        This uses Sisu's /course-unit-search endpoint, which can return
+        course units that are not present in the active course index used
+        by Sisukas.
+        """
+        params = {
+            "universityOrgId": university_org_id,
+            "fullTextQuery": full_text_query,
+            "start": start,
+            "limit": limit,
+        }
+        return self.get_json(
+            "/course-unit-search",
+            params=params,
+            timeout=timeout,
+        )
+
     def close(self) -> None:
         """Close the requests session if it exists"""
         if self._session is not None:

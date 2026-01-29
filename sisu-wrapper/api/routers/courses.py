@@ -8,10 +8,12 @@ This module defines endpoints for accessing course offerings, study groups,
 and related data from the Aalto University Sisu API.
 """
 
+from datetime import date
 import logging
-from typing import List, Dict
+from typing import List, Dict, Any
 from fastapi import APIRouter, Query, HTTPException
 from pydantic import BaseModel, Field
+from sisu_wrapper.historical import DateRange
 
 from sisu_wrapper.service import SisuService
 from sisu_wrapper.client import SisuClient
@@ -19,11 +21,13 @@ from sisu_wrapper.models import StudyGroup, CourseOffering
 from sisu_wrapper.exceptions import (
     SisuAPIError, SisuNotFoundError, SisuTimeoutError
 )
+from sisu_wrapper.aalto_api_client import AaltoCourseApiClient
 from models import ErrorResponse
 from utils.responses import (
     STUDY_GROUPS_RESPONSES,
     BATCH_STUDY_GROUPS_RESPONSES,
-    BATCH_OFFERINGS_RESPONSES
+    BATCH_OFFERINGS_RESPONSES,
+    RESOLVE_COURSE_RESPONSES,
 )
 
 logger = logging.getLogger("uvicorn.error")
@@ -139,6 +143,35 @@ class BatchOfferingsResponse(BaseModel):
     total_requests: int
 
 
+class ResolveSnapshotResponse(BaseModel):
+    """
+    Response for resolving a course code into course unit realisation snapshots
+
+    The "matches" list contains CUR payloads in the same shape used by the
+    historical record generation pipeline.
+    """
+    courseCode: str = Field(
+        ...,
+        description="Original course code query",
+        json_schema_extra={"example": "CS-E4675"}
+    )
+    status: str = Field(
+        ...,
+        description="Resolution status: ok | not_found"
+    )
+    courseUnitIds: List[str] = Field(
+        default_factory=list,
+        description="Resolved course unit ids for the course code"
+    )
+    assessmentItemIds: List[str] = Field(
+        default_factory=list,
+        description="Aggregated assessment item IDs used to enumerate realisations"
+    )
+    matches: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="List of course unit realisation (CUR) payloads"
+    )
+
 # ============ API ENDPOINTS ============
 
 @router.get(
@@ -229,4 +262,62 @@ async def batch_get_course_offerings(body: BatchOfferingsRequest):
         )
     except Exception as e:
         logger.exception("Error in batch course offerings request")
+        raise HTTPException(status_code=500, detail="Internal server error") from e
+    
+
+@router.get(
+    "/api/courses/resolve",
+    response_model=ResolveSnapshotResponse,
+    responses=RESOLVE_COURSE_RESPONSES
+)
+async def resolve_course_by_code(
+    course_code: str = Query(
+        ...,
+        min_length=1,
+        description="Course code to resolve (e.g. CS-E4675)"
+    ),
+    university_org_id: str = Query(
+        "aalto-university-root-id",
+        description="University organisation id"
+    ),
+    from_date: str = Query(
+        "2022-09-01",
+        description="Filter CURs by activity start date (inclusive)"
+    ),
+    to_date: str = Query(
+        "2025-12-31",
+        description="Filter CURs by activity start date (inclusive)"
+    ),
+    limit_realisations: int = Query(
+        50,
+        ge=0,
+        le=500,
+        description="Maximum number of CUR payloads to return (0 disables fetching)"
+    ),
+):
+    """Resolve a course code into course unit realisation snapshots"""
+    try:
+        course_api = AaltoCourseApiClient()
+        try:
+            dr = DateRange(
+                start=date.fromisoformat(from_date),
+                end=date.fromisoformat(to_date),
+            )
+            return _service.resolve_course_snapshots_by_code(
+                course_code=course_code,
+                course_api=course_api,
+                university_org_id=university_org_id,
+                date_range=dr,
+                limit_realisations=(None if limit_realisations == 0 else limit_realisations),
+            )
+        finally:
+            course_api.close()
+    except SisuTimeoutError as e:
+        logger.error("Sisu API timeout: %s", e)
+        raise HTTPException(status_code=504, detail="Sisu API timeout") from e
+    except SisuAPIError as e:
+        logger.error("Sisu API error: %s", e)
+        raise HTTPException(status_code=502, detail="Sisu API unavailable") from e
+    except Exception as e:
+        logger.exception("Unexpected error resolving course code")
         raise HTTPException(status_code=500, detail="Internal server error") from e

@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Set
 
 from .client import SisuClient
 from .aalto_api_client import AaltoCourseApiClient
-from .models_historical import CourseUnitRealisationSummary
 from .historical_parsing import (
     parse_course_unit_assessment_index,
     parse_course_unit_realisation_summary,
@@ -43,22 +42,30 @@ def read_course_unit_ids_from_courses_json(path: str) -> List[str]:
 
     return out
 
-def extract_historical_realisation_ids_for_course_unit(
+def extract_historical_realisation_ids_for_assessment_items(
     sisu: SisuClient,
-    course_unit_id: str,
+    assessment_item_ids: List[str],
     date_range: DateRange,
 ) -> List[str]:
-    course_unit_data = sisu.fetch_course_unit(course_unit_id)
+    """
+    Extract historical course unit realisation IDs for known assessment items
 
-    index = parse_course_unit_assessment_index(
-        course_unit_id,
-        course_unit_data,
-    )
+    This is a lower-level helper used by the on-demand snapshot backfill flow.
+    When assessmentItemIds are already available (e.g. from course-unit-search),
+    we can skip fetching the course unit payload entirely.
 
+    Args:
+        sisu: Sisu client
+        assessment_item_ids: Assessment item IDs for the course unit
+        date_range: Date range filter for realisation activity start dates
+
+    Returns:
+        List of course unit realisation IDs (CUR ids)
+    """
     seen: Set[str] = set()
     out: List[str] = []
 
-    for assessment_id in index.assessment_item_ids:
+    for assessment_id in assessment_item_ids:
         raw_realisations = sisu.fetch_course_unit_realisations_all(assessment_id)
 
         for raw in raw_realisations:
@@ -78,6 +85,38 @@ def extract_historical_realisation_ids_for_course_unit(
                 out.append(summary.id)
 
     return out
+
+def extract_historical_realisation_ids_for_course_unit(
+    sisu: SisuClient,
+    course_unit_id: str,
+    date_range: DateRange,
+) -> List[str]:
+    """
+    Extract historical course unit realisation IDs for a course unit
+
+    This is used by the historical record generation pipeline and remains
+    the canonical extraction path when only course_unit_id is known.
+
+    Args:
+        sisu: Sisu client
+        course_unit_id: Course unit ID
+        date_range: Date range filter for realisation activity start dates
+
+    Returns:
+        List of course unit realisation IDs (CUR ids)
+    """
+    course_unit_data = sisu.fetch_course_unit(course_unit_id)
+
+    index = parse_course_unit_assessment_index(
+        course_unit_id,
+        course_unit_data,
+    )
+
+    return extract_historical_realisation_ids_for_assessment_items(
+        sisu=sisu,
+        assessment_item_ids=index.assessment_item_ids,
+        date_range=date_range,
+    )
 
 def fetch_historical_realisations_for_courses_json(
     courses_json_path: str,

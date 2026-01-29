@@ -61,7 +61,8 @@ setup-sisu-wrapper:
 	if [ -f requirements.in ]; then \
 		uv pip compile requirements.in --universal --output-file requirements.txt; \
 	fi && \
-	uv pip sync requirements.txt
+	uv pip sync requirements.txt && \
+	cp .env.example .env || true
 	@echo "✓ sisu-wrapper setup complete"
 
 # --- Backend / Node ---

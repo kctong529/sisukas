@@ -6,10 +6,15 @@ course data into domain objects.
 """
 
 import logging
-from typing import List, Dict, Any, Tuple
+from datetime import date
+from typing import List, Dict, Any, Tuple, Optional
 from functools import lru_cache
+
 from .models import CourseOffering, StudyGroup, StudyEvent
 from .client import SisuClient
+from .aalto_api_client import AaltoCourseApiClient
+from .historical import DateRange, extract_historical_realisation_ids_for_assessment_items
+from .historical_parsing import parse_course_unit_assessment_index
 
 logger = logging.getLogger(__name__)
 
@@ -221,3 +226,145 @@ class SisuService:
             )
 
         return flattened_groups
+    
+    def resolve_course_snapshots_by_code(
+        self,
+        course_code: str,
+        course_api: AaltoCourseApiClient,
+        university_org_id: str = "aalto-university-root-id",
+        date_range: Optional[DateRange] = None,
+        limit_search_results: int = 20,
+        limit_realisations: Optional[int] = None,
+        timeout: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """
+        Resolve a course code into course unit realisation snapshots (CUR payloads)
+
+        If multiple exact matches exist for the course code, all matches are processed.
+        """
+        q = course_code.strip()
+        if not q:
+            return {
+                "courseCode": course_code,
+                "status": "not_found",
+                "courseUnitIds": [],
+                "assessmentItemIds": [],
+                "matches": [],
+            }
+
+        search = self.client.search_course_units(
+            full_text_query=q,
+            university_org_id=university_org_id,
+            start=0,
+            limit=limit_search_results,
+            timeout=timeout,
+        )
+
+        results = search.get("searchResults") or []
+        if not isinstance(results, list):
+            results = []
+        results = [r for r in results if isinstance(r, dict)]
+
+        # Prefer exact code matches since fullTextQuery is fuzzy.
+        exact = [
+            r for r in results
+            if str(r.get("code", "")).strip().upper() == q.upper()
+        ]
+
+        selected = exact if exact else results
+
+        if not selected:
+            return {
+                "courseCode": q,
+                "status": "not_found",
+                "courseUnitIds": [],
+                "assessmentItemIds": [],
+                "matches": [],
+            }
+
+        if date_range is None:
+            date_range = DateRange(start=date(2022, 9, 1), end=date(2100, 1, 1))
+
+        course_unit_ids: List[str] = []
+        all_assessment_item_ids: List[str] = []
+        seen_assessment: set[str] = set()
+
+        matches: List[Dict[str, Any]] = []
+        seen_cur_ids: set[str] = set()
+
+        for picked in selected:
+            course_unit_id = picked.get("id")
+            if not isinstance(course_unit_id, str) or not course_unit_id:
+                continue
+
+            course_unit_ids.append(course_unit_id)
+
+            assessment_item_ids = picked.get("assessmentItemIds") or []
+            if not isinstance(assessment_item_ids, list):
+                assessment_item_ids = []
+            assessment_item_ids = [x for x in assessment_item_ids if isinstance(x, str)]
+
+            # Fallback: if search result does not provide assessmentItemIds, fetch course unit.
+            if not assessment_item_ids:
+                try:
+                    cu = self.client.fetch_course_unit(course_unit_id, timeout=timeout)
+                    index = parse_course_unit_assessment_index(course_unit_id, cu)
+                    assessment_item_ids = index.assessment_item_ids
+                except Exception as e:
+                    logger.warning("Failed fetching assessmentItemIds for %s: %s", course_unit_id, e)
+                    assessment_item_ids = []
+
+            for aid in assessment_item_ids:
+                if aid not in seen_assessment:
+                    seen_assessment.add(aid)
+                    all_assessment_item_ids.append(aid)
+
+            if not assessment_item_ids:
+                continue
+
+            cur_ids = extract_historical_realisation_ids_for_assessment_items(
+                sisu=self.client,
+                assessment_item_ids=assessment_item_ids,
+                date_range=date_range,
+            )
+
+            if limit_realisations is not None:
+                remaining = limit_realisations - len(matches)
+                if remaining <= 0:
+                    break
+                cur_ids = cur_ids[:remaining]
+
+            for cur_id in cur_ids:
+                if cur_id in seen_cur_ids:
+                    continue
+                seen_cur_ids.add(cur_id)
+
+                try:
+                    rec = course_api.fetch_course_unit_realisation(cur_id)
+                except Exception as e:
+                    logger.warning("Failed fetching CUR %s: %s", cur_id, e)
+                    continue
+
+                # Preserve payload courseUnitId if it exists; only fill if missing.
+                if isinstance(rec, dict) and "courseUnitId" not in rec:
+                    rec["courseUnitId"] = course_unit_id
+
+                matches.append(rec)
+
+        # Deduplicate courseUnitIds while preserving order
+        deduped_course_unit_ids: List[str] = []
+        seen_cu: set[str] = set()
+        for cu in course_unit_ids:
+            if cu not in seen_cu:
+                seen_cu.add(cu)
+                deduped_course_unit_ids.append(cu)
+
+        status = "ok" if deduped_course_unit_ids else "not_found"
+
+        return {
+            "courseCode": q,
+            "status": status,
+            "courseUnitIds": deduped_course_unit_ids,
+            "assessmentItemIds": all_assessment_item_ids,
+            "matches": matches,
+        }

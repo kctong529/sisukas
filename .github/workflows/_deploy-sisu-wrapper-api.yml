@@ -54,6 +54,7 @@ jobs:
           project_id: '${{ inputs.gcp_project_id }}'
           env_vars: |
             SISUKAS_ENV=${{ inputs.environment }}
+            AALTO_COURSE_API_KEY=${{ secrets.AALTO_USER_KEY }}
             CORS_ORIGINS=${{ inputs.cors_origins }}
 
       # If required, use the Cloud Run URL output in later steps

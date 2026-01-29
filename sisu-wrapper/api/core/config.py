@@ -18,7 +18,7 @@ This module provides centralized configuration for:
 Variables
 ---------
 ENV : str
-    Current environment (e.g., "prod", "test", "development").
+    Current environment (e.g. "prod", "test", "development").
     Defaults to "test" if SISUKAS_ENV is not set.
 
 CORS_ORIGINS : list[str]
@@ -44,10 +44,6 @@ Import this module wherever configuration is needed:
 """
 
 import os
-from dotenv import load_dotenv
-
-# Load the .env file
-load_dotenv()
 
 # ========================
 # Environment configuration
@@ -70,7 +66,7 @@ CORS_ORIGINS: list[str] = [
     ).split(",")
 ]
 
-API_VERSION = "0.3.0"
+API_VERSION = "0.4.0"
 API_TITLE = "Sisu Wrapper API"
 API_CONTACT = {
     "name": "API Support",

@@ -99,3 +99,11 @@ BATCH_OFFERINGS_RESPONSES = {
     422: error_response("Invalid request format"),
     500: error_response("Internal server error")
 }
+
+RESOLVE_COURSE_RESPONSES = {
+    200: {"description": "Resolved course code into one or more course unit candidates"},
+    400: {"model": ErrorResponse, "description": "Invalid request"},
+    502: {"model": ErrorResponse, "description": "Sisu API unavailable"},
+    504: {"model": ErrorResponse, "description": "Sisu API timeout"},
+    500: {"model": ErrorResponse, "description": "Internal server error"},
+}
