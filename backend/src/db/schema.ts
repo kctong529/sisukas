@@ -10,6 +10,7 @@ import {
   index,
   primaryKey,
   integer,
+  uniqueIndex
 } from "drizzle-orm/pg-core";
 
 /* =========================
@@ -92,15 +93,22 @@ export const verification = pgTable(
    App tables
    ========================= */
 
-export const favourites = pgTable("favourites", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  courseId: varchar("course_id", { length: 50 }).notNull(),
-  notes: text("notes"),
-  addedAt: timestamp("added_at").defaultNow().notNull(),
-});
+export const favourites = pgTable(
+  "favourites",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    courseId: varchar("course_id", { length: 50 }).notNull(),
+    notes: text("notes"),
+    addedAt: timestamp("added_at").defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("favourites_user_course_uniq").on(t.userId, t.courseId),
+    index("favourites_userId_idx").on(t.userId),
+  ],
+);
 
 export const feedback = pgTable("feedback", {
   id: uuid("id").primaryKey().defaultRandom(),

@@ -1,4 +1,4 @@
-// src/server.js
+// src/server.ts
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -14,6 +14,7 @@ import favouritesRoutes from './routes/favourites';
 import plansRoutes from './routes/plans';
 import analyticsRoutes from './routes/analytics';
 import gradesRoutes from "./routes/grades";
+import transcriptRoutes from "./routes/transcript";
 import { extractSession } from './middleware/auth';
 
 const app = express();
@@ -81,6 +82,7 @@ app.use(extractSession);
 app.use('/api/favourites', favouritesRoutes);
 app.use('/api/plans', plansRoutes);
 app.use("/api/grades", gradesRoutes);
+app.use("/api/transcript", transcriptRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on ${process.env.BACKEND_URL}`);

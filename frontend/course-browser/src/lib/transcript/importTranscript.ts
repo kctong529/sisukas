@@ -4,6 +4,7 @@ import { favouritesStore } from "../stores/favouritesStore";
 import { plansStore } from "../stores/plansStore";
 import { courseIndexStore } from "../stores/courseIndexStore";
 import { courseGradeStore } from "../stores/courseGradeStore";
+import { transcriptService } from "../../infrastructure/services/TranscriptService";
 import type { Course } from "../../domain/models/Course";
 
 export type TranscriptGrade = "Pass" | "Fail" | "0" | "1" | "2" | "3" | "4" | "5" | string;
@@ -14,7 +15,7 @@ export type TranscriptRow = {
   grade: TranscriptGrade;
   credits?: number;
   lang?: string;
-  date: string; // e.g. "2 Dec 2025"
+  date: string;
 };
 
 export type ImportTranscriptResult = {
@@ -27,43 +28,22 @@ export type ImportTranscriptResult = {
 };
 
 function parseTranscriptDate(s: string): Date | null {
-  // transcript uses "2 Dec 2025"
   const d = new Date(s);
   return Number.isFinite(d.getTime()) ? d : null;
 }
 
-/**
- * Default here:
- * - "0".."5" => 0..5
- * - Pass/Fail/anything else => null (do not set a numeric grade)
- */
 function toNumericGrade(g: TranscriptGrade): number | null {
   const raw = String(g).trim();
   if (/^[0-5]$/.test(raw)) return Number(raw);
   return null;
 }
 
-function isCodeFavourited(code: string): boolean {
-  return get(favouritesStore).favourites.some((f) => f.courseId === code);
+function uniqNonEmpty(xs: string[]): string[] {
+  return Array.from(new Set(xs.map((s) => String(s ?? "").trim()).filter(Boolean)));
 }
 
 function courseCodeOf(c: Course): string {
-  return String(c?.code?.value ?? c?.code ?? "").trim();
-}
-
-/**
- * Finds an instanceId inside the active plan whose resolved course has the same course code.
- */
-function findPlanInstanceForCode(code: string): string | null {
-  const plan = get(plansStore).activePlan;
-  if (!plan) return null;
-
-  for (const instanceId of plan.instanceIds) {
-    const c = courseIndexStore.resolveByInstanceId(instanceId);
-    if (!c) continue;
-    if (courseCodeOf(c) === code) return instanceId;
-  }
-  return null;
+  return String((c as Course)?.code?.value ?? (c as Course)?.code ?? "").trim();
 }
 
 async function ensureActivePlan(): Promise<void> {
@@ -85,81 +65,43 @@ async function ensureActivePlan(): Promise<void> {
   await plansStore.setActive(created.id);
 }
 
-async function applyOne(
-  row: TranscriptRow
-): Promise<
-  | {
-      ok: true;
-      addedFavourite: boolean;
-      addedInstance: boolean;
-      replacedInstance: boolean;
-      updatedGrade: boolean;
-    }
-  | { ok: false; reason: string }
-> {
-  const date = parseTranscriptDate(row.date);
-  if (!date) return { ok: false, reason: `Bad date: "${row.date}"` };
+export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTranscriptResult> {
+  await ensureActivePlan();
 
-  const code = row.code.trim();
-  if (!code) return { ok: false, reason: `Missing course code` };
+  // Ensure we have current local state before computing deltas
+  if (get(favouritesStore).favourites.length === 0) {
+    await favouritesStore.load().catch(() => {});
+  }
+  if (!get(courseGradeStore).loadedOnce) {
+    await courseGradeStore.load().catch(() => {});
+  }
+  if (!get(plansStore).activePlan) {
+    await plansStore.load();
+  }
 
-  const course = courseIndexStore.resolveLatestInstanceByCodeBeforeDate(code, date);
-  if (!course) {
+  const plan = get(plansStore).activePlan;
+  if (!plan) {
     return {
-      ok: false,
-      reason: `No matching instance for code "${code}" on/before ${row.date}`,
+      processed: 0,
+      addedFavourites: 0,
+      addedInstances: 0,
+      replacedInstances: 0,
+      updatedGrades: 0,
+      skipped: [{ row: rows[0] as TranscriptRow, reason: "No active plan" }],
     };
   }
 
-  const unitId = course.unitId;  // still used for grades
-  const instanceId = course.id;
-  const numericGrade = toNumericGrade(row.grade);
+  const existingFavouriteCodes = new Set(get(favouritesStore).favourites.map((f) => f.courseId));
+  const existingInstanceIds = new Set(plan.instanceIds);
 
-  // 1) favourites: ensure code is favourited
-  let addedFavourite = false;
-  if (!isCodeFavourited(code)) {
-    await favouritesStore.add(code);
-    addedFavourite = true;
+  // Build mapping code -> current instanceId in plan (if any)
+  const instanceInPlanByCode = new Map<string, string>();
+  for (const instanceId of plan.instanceIds) {
+    const c = courseIndexStore.resolveByInstanceId(instanceId);
+    if (!c) continue;
+    const code = courseCodeOf(c);
+    if (code) instanceInPlanByCode.set(code, instanceId);
   }
-
-  // 2) plans: ensure correct instance for this code is in active plan
-  const plan = get(plansStore).activePlan;
-  if (!plan) return { ok: false, reason: "No active plan" };
-
-  const alreadyInPlan = plan.instanceIds.includes(instanceId);
-
-  let addedInstance = false;
-  let replacedInstance = false;
-
-  if (!alreadyInPlan) {
-    const otherInstanceId = findPlanInstanceForCode(code);
-    if (otherInstanceId && otherInstanceId !== instanceId) {
-      await plansStore.removeInstanceFromActivePlan(otherInstanceId);
-      replacedInstance = true;
-    }
-
-    await plansStore.addInstanceToActivePlan(instanceId);
-    addedInstance = true;
-  }
-
-  // 3) grades: upsert grade (unitId-keyed)
-  let updatedGrade = false;
-  if (numericGrade !== null) {
-    await courseGradeStore.setGrade(unitId, numericGrade);
-    updatedGrade = true;
-  }
-
-  return { ok: true, addedFavourite, addedInstance, replacedInstance, updatedGrade };
-}
-
-/**
- * Import transcript rows into:
- * - favourites (by unitId)
- * - active plan (instanceId; replaces other instance of same unitId)
- * - grade store (by unitId; numeric grades only by default)
- */
-export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTranscriptResult> {
-  await ensureActivePlan();
 
   const result: ImportTranscriptResult = {
     processed: 0,
@@ -170,29 +112,104 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
     skipped: [],
   };
 
-  // If transcript has duplicates, keep the latest row per (code, date) or (code) — your call.
-  // Here: do it in given order (your extractor already de-dupes).
+  // Accumulate bulk ops
+  const favToAdd: string[] = [];
+  const instancesToAdd: string[] = [];
+  const instancesToRemove: string[] = [];
+  const gradesToUpsert: Array<{ courseUnitId: string; grade: number }> = [];
+
   for (const row of rows) {
     result.processed++;
 
-    try {
-      const r = await applyOne(row);
-      if (!r.ok) {
-        result.skipped.push({ row, reason: r.reason });
-        continue;
-      }
+    const date = parseTranscriptDate(row.date);
+    if (!date) {
+      result.skipped.push({ row, reason: `Bad date: "${row.date}"` });
+      continue;
+    }
 
-      if (r.addedFavourite) result.addedFavourites++;
-      if (r.addedInstance) result.addedInstances++;
-      if (r.replacedInstance) result.replacedInstances++;
-      if (r.updatedGrade) result.updatedGrades++;
-    } catch (e) {
+    const code = row.code.trim();
+    if (!code) {
+      result.skipped.push({ row, reason: "Missing course code" });
+      continue;
+    }
+
+    const course = courseIndexStore.resolveLatestInstanceByCodeBeforeDate(code, date);
+    if (!course) {
       result.skipped.push({
         row,
-        reason: e instanceof Error ? e.message : String(e),
+        reason: `No matching instance for code "${code}" on/before ${row.date}`,
       });
+      continue;
+    }
+
+    const unitId = course.unitId;
+    const targetInstanceId = course.id;
+    const numericGrade = toNumericGrade(row.grade);
+
+    // favourites: only add if not already favourited locally
+    if (!existingFavouriteCodes.has(code)) {
+      favToAdd.push(code);
+      existingFavouriteCodes.add(code); // keep local set consistent for duplicates in transcript
+    }
+
+    // plan instances:
+    // If plan already contains target instance, do nothing.
+    // Else if plan contains another instance for same code, replace.
+    if (!existingInstanceIds.has(targetInstanceId)) {
+      const otherInstanceId = instanceInPlanByCode.get(code);
+      if (otherInstanceId && otherInstanceId !== targetInstanceId) {
+        instancesToRemove.push(otherInstanceId);
+        existingInstanceIds.delete(otherInstanceId);
+        result.replacedInstances++;
+      }
+
+      instancesToAdd.push(targetInstanceId);
+      existingInstanceIds.add(targetInstanceId);
+      instanceInPlanByCode.set(code, targetInstanceId);
+    }
+
+    // grades: only send numeric grades
+    if (numericGrade !== null) {
+      gradesToUpsert.push({ courseUnitId: unitId, grade: numericGrade });
     }
   }
+
+  // De-dupe bulk lists (important if transcript contains duplicates)
+  const favouriteCourseIds = uniqNonEmpty(favToAdd);
+  const addInstanceIds = uniqNonEmpty(instancesToAdd);
+  const removeInstanceIds = uniqNonEmpty(instancesToRemove);
+
+  // De-dupe grades: keep last grade per unitId
+  const gradeByUnit = new Map<string, number>();
+  for (const g of gradesToUpsert) gradeByUnit.set(g.courseUnitId, g.grade);
+  const grades = Array.from(gradeByUnit.entries()).map(([courseUnitId, grade]) => ({
+    courseUnitId,
+    grade,
+  }));
+
+  // Single backend call
+  const bulk = await transcriptService.importBulk({
+    planId: plan.id,
+    favouriteCourseIds,
+    addInstanceIds,
+    removeInstanceIds,
+    grades,
+  });
+
+  // Update counts from backend response (authoritative)
+  result.addedFavourites = bulk.addedFavourites;
+  result.addedInstances = bulk.addedInstances;
+  result.updatedGrades = bulk.upsertedGrades;
+
+  // replacedInstances is computed client-side (how many “swap” intentions we had)
+  // backend doesn’t know “code”, only instance ids, so this is fine.
+
+  // Refresh local stores once (avoid 100 tiny optimistic updates)
+  await Promise.allSettled([
+    favouritesStore.load(),
+    plansStore.load(),
+    courseGradeStore.load(),
+  ]);
 
   return result;
 }
