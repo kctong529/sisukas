@@ -15,6 +15,7 @@
   import TranscriptExtractor from "./TranscriptExtractor.svelte"; // your PDF component
   import { importTranscript } from "../lib/transcript/importTranscript";
   import type { TranscriptRow, ImportTranscriptResult } from "../lib/transcript/importTranscript";
+  import { NotificationService } from '../infrastructure/services/NotificationService';
 
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);
@@ -238,8 +239,16 @@
 
     try {
       importResult = await importTranscript(e.detail);
+
+      NotificationService.success(
+        `Transcript imported: +${importResult.addedFavourites} favourites, ` +
+        `+${importResult.addedInstances} classes, ` +
+        `${importResult.updatedGrades} grades updated`
+      );
     } catch (err) {
-      importError = err instanceof Error ? err.message : String(err);
+      const msg = err instanceof Error ? err.message : 'Transcript import failed';
+      importError = msg;
+      NotificationService.error(msg);
     } finally {
       importing = false;
     }
