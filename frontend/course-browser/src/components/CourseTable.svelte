@@ -1,16 +1,24 @@
 <!-- src/components/CourseTable.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { get } from 'svelte/store';
   import { useSession } from '../lib/authClient';
   import { favouritesStore } from '../lib/stores/favouritesStore';
+  import { courseIndexStore } from '../lib/stores/courseIndexStore';
   import type { Course } from '../domain/models/Course';
+  import MissingCourseSubmit from './MissingCourseSubmit.svelte';
+  import { assertCourseCodeIsMissingEverywhere } from '../domain/services/CourseCodeGuard';
+  import { NotificationService } from '../infrastructure/services/NotificationService';
+  import { CourseSnapshotsService } from '../infrastructure/services/CourseSnapshotsService';
 
-  export let courses: Course[] = [];
-  
+  export let filteredInstanceIds: string[] | null = null;
+  export let source: "active" | "historical" = "active";
+
   let sortColumn = 'courseName';
   let sortDirection = 1;
   let windowWidth = 0;
   let isNarrowScreen = false;
+  let showMissingCourseModal = false;
 
   // Pagination state
   let currentPage = 1;
@@ -20,8 +28,35 @@
   $: isSignedIn = !!$session.data?.user;
   $: isNarrowScreen = windowWidth < 380;
 
+  $: state = $courseIndexStore;
+
+  function resolveInstanceIds(ids: string[], s: typeof state): Course[] {
+    const map = source === 'active' ? s.byInstanceId : s.historicalByInstanceId;
+
+    const out: Course[] = [];
+    for (const id of ids) {
+      const c = map.get(id);
+      if (c) out.push(c);
+    }
+    return out;
+  }
+
+  // ----- Data source for the table -----
+  $: tableCourses =
+    filteredInstanceIds
+      ? resolveInstanceIds(filteredInstanceIds, state)
+      : courseIndexStore.getAllCourses(source);
+
+  // Reset page when switching datasets / filters
+  $: {
+    // Touch dependencies explicitly (so Svelte reacts)
+    source;
+    filteredInstanceIds;
+    currentPage = 1;
+  }
+
   // Calculate paginated courses
-  $: sortedCourses = sortCourses(courses, sortColumn, sortDirection);
+  $: sortedCourses = sortCourses(tableCourses, sortColumn, sortDirection);
   $: totalPages = Math.ceil(sortedCourses.length / pageSize);
   $: paginatedCourses = sortedCourses.slice(
     (currentPage - 1) * pageSize,
@@ -186,6 +221,27 @@
       tableEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
+
+  export async function resolveMissingCourseCode(courseCode: string) {
+    const g = assertCourseCodeIsMissingEverywhere(courseCode);
+    if (!g.ok) {
+      NotificationService.error(g.message);
+      return null;
+    }
+    return CourseSnapshotsService.resolveAndStore(g.code);
+  }
+  
+  function openMissingCourseModal() {
+    showMissingCourseModal = true;
+  }
+
+  function closeMissingCourseModal() {
+    showMissingCourseModal = false;
+  }
+
+  function onMissingCourseKeydown(e: KeyboardEvent) {
+    if (e.key === "Escape") closeMissingCourseModal();
+  }
 </script>
 
 <svelte:window bind:innerWidth={windowWidth} />
@@ -199,7 +255,39 @@
       <span>Page {currentPage} of {totalPages}</span>
     {/if}
   </div>
+
+  <a
+    href="#missing-course"
+    class="missing-course-link"
+    on:click|preventDefault={openMissingCourseModal}
+  >
+    couldn't find your course?
+  </a>
 </div>
+
+{#if showMissingCourseModal}
+  <div class="mc-backdrop" role="presentation" on:keydown={onMissingCourseKeydown}>
+    <button
+      type="button"
+      class="mc-overlay-close"
+      aria-label="Close"
+      on:click={closeMissingCourseModal}
+    ></button>
+
+    <div class="mc-modal" role="dialog" aria-modal="true" aria-label="Add missing course">
+      <div class="mc-header">
+        <div class="mc-title">Add missing course</div>
+        <button type="button" class="mc-close" aria-label="Close" on:click={closeMissingCourseModal}>
+          ✕
+        </button>
+      </div>
+
+      <div class="mc-body">
+        <MissingCourseSubmit {resolveMissingCourseCode} />
+      </div>
+    </div>
+  </div>
+{/if}
 
 <!-- Desktop Table View -->
 <div class="desktop-table-wrapper">
@@ -928,6 +1016,97 @@
     font-size: 0.9rem;
     color: #666;
     font-weight: 500;
+  }
+
+  .missing-course-link {
+    color: #666;
+    text-decoration: underline;
+    text-decoration-color: rgba(0, 0, 0, 0.25);
+    text-underline-offset: 2px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .missing-course-link:hover {
+    color: #333;
+    text-decoration-color: rgba(0, 0, 0, 0.45);
+    background: rgba(0, 0, 0, 0.035);
+  }
+
+  .missing-course-link:focus-visible {
+    outline: 2px solid rgba(74, 144, 226, 0.9);
+    outline-offset: 2px;
+    text-decoration: none;
+  }
+
+  /* Modal */
+  .mc-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mc-overlay-close {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .mc-modal {
+    position: relative;
+    z-index: 1;
+    width: min(560px, 92vw);
+    max-height: 90vh;
+    overflow: auto;
+
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  .mc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .mc-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #111;
+  }
+
+  .mc-close {
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 1.2rem;
+    color: #666;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+
+  .mc-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #111;
+  }
+
+  .mc-body {
+    padding: 10px 12px;
   }
   
   /* Tablet breakpoint - abbreviated headers */

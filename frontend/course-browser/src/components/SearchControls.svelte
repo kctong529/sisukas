@@ -3,8 +3,15 @@
   import { createEventDispatcher } from 'svelte';
   
   export let showUnique: boolean = false;
+  export let source: "active" | "historical" = "active";
   
   const dispatch = createEventDispatcher();
+
+  function toggleSource() {
+    const next = source === "active" ? "historical" : "active";
+    source = next;
+    dispatch("sourceChange", { source: next });
+  }
 </script>
 
 <div id="search-container">
@@ -26,6 +33,18 @@
       <span class="slider"></span>
     </label>
     <span class="toggle-label">Unique</span>
+
+    <!-- Single Active / Historical toggle -->
+    <button
+      class="toggle-source"
+      on:click={toggleSource}
+      title="Toggle dataset"
+    >
+      <i class="bi bi-database"></i>
+      <span class="button-text">
+        {source === "active" ? "See Older" : "See Active"}
+      </span>
+    </button>
     
     <button on:click={() => dispatch('save')}>
       <i class="bi bi-floppy"></i>

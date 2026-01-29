@@ -122,4 +122,23 @@ router.post("/resolve", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/course-snapshots/all?liveOnly=1
+ * Retrieve snapshots for backfill/merge jobs.
+ */
+router.get("/all", async (req: Request, res: Response) => {
+  try {
+    const liveOnly = String(req.query.liveOnly ?? "") === "1";
+    const snapshots = await CourseSnapshotsService.listAllSnapshots({ liveOnly });
+
+    res.json({ snapshots });
+  } catch (error) {
+    console.error("List all snapshots error:", error);
+    res.status(500).json({
+      error: "Failed to list snapshots",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
 export default router;

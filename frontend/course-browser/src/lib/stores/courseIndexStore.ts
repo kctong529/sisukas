@@ -2,6 +2,7 @@
 import { writable, get } from 'svelte/store';
 import { loadCoursesWithCache, loadHistoricalCoursesWithCache } from '../../infrastructure/loaders/RemoteCourseLoader';
 import type { Course } from '../../domain/models/Course';
+import { SnapshotHistoricalMerge } from "../../infrastructure/loaders/SnapshotHistoricalMerge";
 
 export interface CourseIndexState {
   // Active (courses.json)
@@ -46,7 +47,11 @@ function createCourseIndexStore() {
   return {
     subscribe: store.subscribe,
 
-    async load() {
+    async bootstrap(): Promise<{
+      activeCount: number;
+      historicalCount: number;
+      mergedSnapshots: { fetched: number; merged: number; skipped: number };
+    }> {
       store.update(s => ({ ...s, loading: true, error: null }));
       try {
         const [activeCourses, historicalCourses] = await Promise.all([
@@ -66,11 +71,12 @@ function createCourseIndexStore() {
           error: null
         });
 
+        const mergedSnapshots = await SnapshotHistoricalMerge.mergeAllLiveSnapshots();
+
         return {
-          byInstanceId: active.byInstanceId,
-          instanceIdsByCode: active.instanceIdsByCode,
-          historicalByInstanceId: historical.byInstanceId,
-          historicalInstanceIdsByCode: historical.instanceIdsByCode
+          activeCount: activeCourses.length,
+          historicalCount: historicalCourses.length,
+          mergedSnapshots,
         };
       } catch (err) {
         store.set({
@@ -79,7 +85,7 @@ function createCourseIndexStore() {
           historicalByInstanceId: new Map(),
           historicalInstanceIdsByCode: new Map(),
           loading: false,
-          error: err instanceof Error ? err.message : 'Failed to load courses'
+          error: err instanceof Error ? err.message : "Failed to load courses",
         });
         throw err;
       }
@@ -164,6 +170,24 @@ function createCourseIndexStore() {
       return ids.map((id) => state.historicalByInstanceId.get(id)).filter(Boolean) as Course[];
     },
 
+    /** Active only: all Course objects */
+    getAllActiveCourses(): Course[] {
+      return Array.from(get(store).byInstanceId.values());
+    },
+
+    /** Historical only: all Course objects */
+    getAllHistoricalCourses(): Course[] {
+      return Array.from(get(store).historicalByInstanceId.values());
+    },
+
+    /** Generic: get all courses by source */
+    getAllCourses(source: "active" | "historical"): Course[] {
+      const s = get(store);
+      return source === "active"
+        ? Array.from(s.byInstanceId.values())
+        : Array.from(s.historicalByInstanceId.values());
+    },
+
     /**
      * Resolve the most relevant course instance for a given course code that starts
      * on or before the given date.
@@ -220,6 +244,45 @@ function createCourseIndexStore() {
       }
 
       return bestPreferred ?? bestFallback;
+    },
+
+    /**
+     * Append extra "historical-like" courses (e.g. snapshots) and rebuild the historical indexes.
+     * This keeps all lookup methods working without special-casing snapshots everywhere.
+     */
+    appendHistoricalCourses(courses: Course[]): { merged: number; skipped: number } {
+      const state = get(store);
+
+      // Copy maps so we keep immutability semantics
+      const byId = new Map(state.historicalByInstanceId);
+      const idsByCode = new Map(state.historicalInstanceIdsByCode);
+
+      let merged = 0;
+      let skipped = 0;
+
+      for (const c of courses) {
+        if (byId.has(c.id)) {
+          skipped++;
+          continue;
+        }
+
+        byId.set(c.id, c);
+
+        const code = c.code.value;
+        const arr = idsByCode.get(code);
+        if (arr) arr.push(c.id);
+        else idsByCode.set(code, [c.id]);
+
+        merged++;
+      }
+
+      store.update((s) => ({
+        ...s,
+        historicalByInstanceId: byId,
+        historicalInstanceIdsByCode: idsByCode,
+      }));
+      
+      return { merged, skipped };
     },
 
     isEmpty(): boolean {

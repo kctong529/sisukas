@@ -22,6 +22,8 @@
 
   let activePlan = $derived.by(() => $plansStore.activePlan);
 
+  let courseIndexState = $derived.by(() => $courseIndexStore);
+
   let analyticsResp = $state<AnalyticsResponse | null>(null);
   let analyticsError = $state<string | null>(null);
   let running = $state(false);
@@ -36,7 +38,7 @@
   }
 
   function getCourseForInstance(instanceId: string): Course | undefined {
-    const course = courseIndexStore.getByInstanceId(instanceId) ?? courseIndexStore.getHistoricalByInstanceId(instanceId);
+    const course = courseIndexState.byInstanceId.get(instanceId) ?? courseIndexState.historicalByInstanceId.get(instanceId);
     if (course) return course;
     return undefined;
   }
@@ -157,7 +159,7 @@
               <div class="instance-header">
                 <div class="instance-info">
                   {#if course}
-                    <h3 class="instance-id">{course.code || instanceId}</h3>
+                    <h3 class="instance-id">{course.code?.value ?? instanceId}</h3>
                     <p class="instance-name">{course.name?.en}</p>
                   {:else}
                     <h3 class="instance-id">{instanceId}</h3>

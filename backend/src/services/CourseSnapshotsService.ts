@@ -204,4 +204,20 @@ export class CourseSnapshotsService {
       newestCreatedAt: total[0]?.newestCreatedAt ?? null,
     };
   }
+
+  static async listAllSnapshots(opts?: { liveOnly?: boolean }): Promise<CourseSnapshot[]> {
+    const now = new Date();
+
+    const where = opts?.liveOnly
+      ? and(
+          or(isNull(courseSnapshots.expiresAt), gt(courseSnapshots.expiresAt, now))
+        )
+      : undefined;
+
+    const rows = where
+      ? await db.select().from(courseSnapshots).where(where)
+      : await db.select().from(courseSnapshots);
+
+    return rows as unknown as CourseSnapshot[];
+  }
 }

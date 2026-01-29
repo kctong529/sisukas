@@ -14,6 +14,8 @@
 
   const session = useSession();
   $: isSignedIn = !!$session.data?.user;
+
+  $: courseIndexState = $courseIndexStore;
   
   let sortBy = 'addedAt';
   let sortDirection = -1;
@@ -93,6 +95,7 @@
 
   // Batch fetch study groups for all favourited courses
   $: if (hasLoadedForUser && $favouritesStore.favourites.length > 0 && showOlder === false) {
+    courseIndexState;
     const uniq = new SvelteMap<string, { courseUnitId: string; courseOfferingId: string }>();
 
     for (const fav of $favouritesStore.favourites) {
@@ -107,9 +110,29 @@
   }
 
   function getCoursesForId(courseId: string, older: boolean): Course[] {
-    return older
-      ? courseIndexStore.getHistoricalInstancesByCode(courseId)
-      : courseIndexStore.getInstancesByCode(courseId);
+    const s = courseIndexState;
+
+    // older mode: only historical
+    if (older) {
+      const histIds = s.historicalInstanceIdsByCode.get(courseId) ?? [];
+      return histIds
+        .map(id => s.historicalByInstanceId.get(id))
+        .filter(Boolean) as Course[];
+    }
+
+    // active mode: active first
+    const activeIds = s.instanceIdsByCode.get(courseId) ?? [];
+    const active = activeIds
+      .map(id => s.byInstanceId.get(id))
+      .filter(Boolean) as Course[];
+
+    if (active.length > 0) return active;
+
+    // fallback: if not in active index, show snapshots/historical so name etc still appears
+    const histIds = s.historicalInstanceIdsByCode.get(courseId) ?? [];
+    return histIds
+      .map(id => s.historicalByInstanceId.get(id))
+      .filter(Boolean) as Course[];
   }
 
   $: sortedFavourites = [...$favouritesStore.favourites].sort((a, b) => {

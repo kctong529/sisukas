@@ -21,27 +21,34 @@
   import { FilterSerializer } from './domain/filters/helpers/FilterSerializer';
   import { FiltersApiService } from './infrastructure/services/FiltersApiService';
   import { NotificationService } from './infrastructure/services/NotificationService';
-  import type { Course } from './domain/models/Course';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { FilterRuleGroups } from './domain/filters/FilterTypes';
   import { courseIndexStore } from './lib/stores/courseIndexStore';
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
   import DebugPanels from './components/DebugPanels.svelte';
+  import { assertCourseCodeIsMissingEverywhere } from './domain/services/CourseCodeGuard';
+  import { CourseSnapshotsService } from './infrastructure/services/CourseSnapshotsService';
+  import MissingCourseSubmit from './components/MissingCourseSubmit.svelte';
   
-  // let currentView = 'experiment';
   let currentView = 'courses';
   let isSignedIn = false;
   let userName = '';
+  let filteredInstanceIds: string[] | null = null;
+  let courseBrowserSource: "active" | "historical" = "active";
 
   let RuleBlueprints: Record<RuleBlueprintKey, BaseRuleBlueprint> | null = null;
-  let courses: Course[] = [];
-  let historicalCourses: Course[] = [];
-  let filteredCourses: Course[] = [];
   let periods: AcademicPeriod[] = [];
   let filterRules: FilterRuleGroups = [];
+  let appliedFilterRules: FilterRuleGroups = [];
   let showUnique = false;
   let filterContainerRef: FilterContainer | undefined;
   let pendingFilterLoad: string | null = null;
+
+  $: indexState = $courseIndexStore;
+
+  $: baseCourses = courseBrowserSource === "active"
+    ? Array.from(indexState.byInstanceId.values())
+    : Array.from(indexState.historicalByInstanceId.values());
   
   // Loading states
   let loading = true;
@@ -82,23 +89,10 @@
       RuleBlueprints = createRuleBlueprints({ curriculaMap, organizations, periods });
       console.log("Rule blueprints initialized");
       
-      // Load courses with cache
-      courses = await loadCoursesWithCache();
-      filteredCourses = [...courses];
-      console.log("Courses loaded:", courses.length);
-
-      // Load historical courses with cache
-      historicalCourses = await loadHistoricalCoursesWithCache();
-      console.log("Historical courses loaded:", historicalCourses.length);
-
-      // Build course indexes using courseIndexStore
-      courseIndexStore.setCourses(courses);
-      courseIndexStore.setHistoricalCourses(historicalCourses);
-      console.log("Courses loaded into courseStore");
-
-      // Test that the historical data is working properly
-      console.log(courseIndexStore.resolveLatestInstanceByCodeBeforeDate("CS-E4190", new Date("2025-12-23")));
-      console.log(courseIndexStore.resolveLatestInstanceByCodeBeforeDate("MS-A0111", new Date("2023-10-18")));
+      const { activeCount, historicalCount, mergedSnapshots } = await courseIndexStore.bootstrap();
+      console.log("Active loaded:", activeCount);
+      console.log("Historical loaded:", historicalCount);
+      console.log("Snapshots merged:", mergedSnapshots);
 
       // Check for filter hash in URL and load if present
       await loadFiltersFromUrl();
@@ -139,20 +133,39 @@
   $: if (filterContainerRef && pendingFilterLoad) {
     loadFiltersFromUrl();
   }
-  
-  function handleSearch() {
-    if (!RuleBlueprints || filterRules.length === 0) {
-      filteredCourses = showUnique 
-        ? FilterService.getUniqueCourses(courses) 
-        : [...courses];
+
+  function rerunAppliedSearch() {
+    if (!RuleBlueprints) return;
+
+    if (appliedFilterRules.length === 0) {
+      const final = showUnique ? FilterService.getUniqueCourses(baseCourses) : baseCourses;
+      filteredInstanceIds = final.map(c => c.id);
       return;
     }
-    
-    // Apply filters using the FilterService
-    const results = FilterService.applyFilters(courses, filterRules);
-    filteredCourses = showUnique 
-      ? FilterService.getUniqueCourses(results) 
-      : results;
+
+    const results = FilterService.applyFilters(baseCourses, appliedFilterRules);
+    const final = showUnique ? FilterService.getUniqueCourses(results) : results;
+    filteredInstanceIds = final.map(c => c.id);
+  }
+
+  $: if (!loading && RuleBlueprints) {
+    courseBrowserSource;
+    indexState;
+    rerunAppliedSearch();
+  }
+  
+  function handleSearch() {
+    appliedFilterRules = filterRules;
+
+    if (!RuleBlueprints || filterRules.length === 0) {
+      const final = showUnique ? FilterService.getUniqueCourses(baseCourses) : baseCourses;
+      filteredInstanceIds = final.map(c => c.id);
+      return;
+    }
+
+    const results = FilterService.applyFilters(baseCourses, filterRules);
+    const final = showUnique ? FilterService.getUniqueCourses(results) : results;
+    filteredInstanceIds = final.map(c => c.id);
   }
   
   async function handleSaveFilters() {
@@ -275,14 +288,19 @@
       />
       
       <SearchControls 
-        bind:showUnique 
+        bind:showUnique
+        bind:source={courseBrowserSource}
         on:addRule={handleAddRule}
         on:search={handleSearch}
+        on:sourceChange={() => rerunAppliedSearch()}
         on:save={handleSaveFilters}
         on:load={handleLoadFilters}
       />
       
-      <CourseTable courses={filteredCourses} />
+      <CourseTable
+        source={courseBrowserSource}
+        {filteredInstanceIds}
+      />
     {:else}
       <div style="text-align: center; padding: 2rem;">
         <p>Failed to load filter blueprints. Please refresh the page.</p>
