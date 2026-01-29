@@ -15,17 +15,41 @@ const NOTIFICATION_DURATION = {
   error: 5000
 };
 
+const MAX_NOTIFICATIONS = 3;
+
 export const notifications = writable<Notification[]>([]);
 
 export class NotificationService {
+  private static timeouts = new Map<string, ReturnType<typeof setTimeout>>();
+
+  private static remove(id: string) {
+    const t = this.timeouts.get(id);
+    if (t) {
+      clearTimeout(t);
+      this.timeouts.delete(id);
+    }
+
+    notifications.update(n => n.filter(x => x.id !== id));
+  }
+
   private static push(type: NotificationType, message: string) {
     const id = crypto.randomUUID();
 
-    notifications.update(n => [...n, { id, type, message }]);
+    notifications.update(n => {
+      if (n.length >= MAX_NOTIFICATIONS) {
+        const oldest = n[0];
+        if (oldest) this.remove(oldest.id);
+        n = n.slice(1);
+      }
 
-    setTimeout(() => {
-      notifications.update(n => n.filter(x => x.id !== id));
+      return [...n, { id, type, message }];
+    });
+
+    const timeout = setTimeout(() => {
+      this.remove(id);
     }, NOTIFICATION_DURATION[type]);
+
+    this.timeouts.set(id, timeout);
   }
 
   static success(message: string) {

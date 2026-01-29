@@ -17,7 +17,7 @@
     position: fixed;
     top: 48px;
     left: 15px;
-    z-index: 1000;
+    z-index: 2000;
     pointer-events: none;
     max-width: calc(100vw - 40px);
   }

@@ -1132,7 +1132,7 @@
   .modal-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 1000;
+    z-index: 1000; /* below notifications */
 
     display: grid;
     place-items: center;
