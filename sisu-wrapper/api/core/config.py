@@ -61,8 +61,10 @@ CORS_ORIGINS: list[str] = [
         "http://localhost:5173,http://127.0.0.1:5173"
         ",https://sisukas.fly.dev,https://sisukas.eu"
         ",https://sisukas-test.fly.dev"
+        ",https://test.api.sisukas.eu,https://api.sisukas.eu"
         ",https://fuzzy-test.sisukas.eu"
         ",https://localhost:5173"
+        ",http://localhost:3000"
     ).split(",")
 ]
 

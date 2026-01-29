@@ -10,7 +10,9 @@ import {
   index,
   primaryKey,
   integer,
-  uniqueIndex
+  uniqueIndex,
+  jsonb,
+  date,
 } from "drizzle-orm/pg-core";
 
 /* =========================
@@ -173,6 +175,43 @@ export const courseGrades = pgTable(
     primaryKey({ columns: [t.userId, t.courseUnitId] }),
     index("course_grades_userId_idx").on(t.userId),
     index("course_grades_userId_courseUnitId_idx").on(t.userId, t.courseUnitId),
+  ],
+);
+
+/* =========================
+   Snapshots
+   ========================= */
+
+export const courseSnapshots = pgTable(
+  "course_snapshots",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    courseCode: varchar("course_code", { length: 50 }).notNull(),
+    courseId: varchar("course_id", { length: 50 }).notNull(),
+    courseUnitId: varchar("course_unit_id", { length: 50 }),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    payload: jsonb("payload").notNull(),
+    snapshotHash: varchar("snapshot_hash", { length: 80 }).notNull(),
+    resolverStatus: varchar("resolver_status", { length: 32 })
+      .notNull()
+      .default("ok"),
+    source: varchar("source", { length: 32 }).notNull().default("user_request"),
+    requestedCount: integer("requested_count").notNull().default(1),
+    firstRequestedAt: timestamp("first_requested_at").defaultNow().notNull(),
+    lastRequestedAt: timestamp("last_requested_at").defaultNow().notNull(),
+
+    expiresAt: timestamp("expires_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("course_snapshots_code_cur_uniq").on(t.courseCode, t.courseId),
+    index("course_snapshots_courseCode_idx").on(t.courseCode),
+    index("course_snapshots_expiresAt_idx").on(t.expiresAt),
   ],
 );
 
