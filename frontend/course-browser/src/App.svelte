@@ -22,181 +22,194 @@
   import { NotificationService } from './infrastructure/services/NotificationService';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { FilterRuleGroups } from './domain/filters/FilterTypes';
-  import { courseIndexStore } from './lib/stores/courseIndexStore';
+  import { courseIndexStore } from './lib/stores/courseIndexStore.svelte';
+  import type { CourseIndexMode } from './lib/stores/courseIndexStore.svelte';
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
   import DebugPanels from './components/DebugPanels.svelte';
-  
-  let currentView = 'courses';
-  let isSignedIn = false;
-  let userName = '';
-  let filteredInstanceIds: string[] | null = null;
-  let courseBrowserSource: "active" | "historical" = "active";
 
-  let RuleBlueprints: Record<RuleBlueprintKey, BaseRuleBlueprint> | null = null;
-  let periods: AcademicPeriod[] = [];
-  let filterRules: FilterRuleGroups = [];
-  let appliedFilterRules: FilterRuleGroups = [];
-  let showUnique = false;
-  let filterContainerRef: FilterContainer | undefined;
-  let pendingFilterLoad: string | null = null;
+  // -----------------------------
+  // Local state (Svelte 5 runes)
+  // -----------------------------
 
-  $: indexState = $courseIndexStore;
+  const ui = $state({
+    currentView: 'courses' as 'courses' | 'favourites' | 'lego' | 'timeline',
+    showAuthModal: false,
 
-  $: baseCourses = courseBrowserSource === "active"
-    ? Array.from(indexState.byInstanceId.values())
-    : Array.from(indexState.historicalByInstanceId.values());
-  
-  // Loading states
-  let loadingActive = true;
-  let loadingHistorical = false;
+    filteredInstanceIds: null as string[] | null,
+
+    RuleBlueprints: null as Record<RuleBlueprintKey, BaseRuleBlueprint> | null,
+    periods: [] as AcademicPeriod[],
+    filterRules: [] as FilterRuleGroups,
+    appliedFilterRules: [] as FilterRuleGroups,
+    showUnique: false,
+
+    pendingFilterLoad: null as string | null,
+
+    // UI-level toggle (kept for compatibility with existing SearchControls/CourseTable props)
+    courseBrowserSource: 'active' as 'active' | 'all',
+
+    lastSearchKey: null as string | null,
+  });
+
+  let filterContainerRef = $state<FilterContainer | undefined>(undefined);
+    let lastApplied: CourseIndexMode | null = null;
+
+  // -----------------------------
+  // External stores
+  // -----------------------------
 
   const session = useSession();
-  let showAuthModal = false;
+
+  // -----------------------------
+  // Derived values
+  // -----------------------------
+
+  const baseCourses = $derived.by(() => courseIndexStore.read.getAllCurrentCourses());
+
+  const loadingActive = $derived.by(() => courseIndexStore.state.loading);
+  const loadingHistorical = $derived.by(() => courseIndexStore.state.historicalLoading);
+
+  const user = $derived.by(() => $session.data?.user);
+  const isSignedIn = $derived.by(() => !!user);
+  const userName = $derived.by(() => user?.email ?? "");
+
+  // -----------------------------
+  // Helpers
+  // -----------------------------
+
+  function toIndexMode(source: typeof ui.courseBrowserSource): CourseIndexMode {
+    return source === 'active' ? 'active' : 'all';
+  }
 
   function handleNavigation(event: CustomEvent<string>) {
-    currentView = event.detail;
-    // Add routing logic here
+    ui.currentView = event.detail as typeof ui.currentView;
   }
-  
+
   function handleSignIn() {
-    showAuthModal = true;
+    ui.showAuthModal = true;
   }
-  
+
   function handleSignOut() {
     authClient.signOut();
   }
-  
-  // Initialize data on mount
-  onMount(async () => {
-    try {
-      // Load academic periods (synchronous)
-      periods = loadAcademicPeriods();
-      academicPeriodStore.setPeriods(periods);
-      console.log("Academic Periods loaded:", periods);
-      
-      // Load organizations (synchronous)
-      const organizations = loadOrganizations();
-      console.log("Organizations loaded:", organizations.length);
 
-      // Load curricula data
-      const curriculaMap = await loadCurricula();
-      console.log("Curricula loaded:", curriculaMap);
-      
-      // Initialize blueprints with all required data
-      RuleBlueprints = createRuleBlueprints({ curriculaMap, organizations, periods });
-      console.log("Rule blueprints initialized");
-      
-      const { activeCount } = await courseIndexStore.bootstrapActive();
-      console.log("Active loaded:", activeCount);
-
-      // Now the app is usable
-      loadingActive = false;
-
-      // Check for filter hash in URL and load if present
-      await loadFiltersFromUrl();
-      
-      // Historical in the background
-      loadingHistorical = true;
-      void (async () => {
-        try {
-          const { historicalCount, mergedSnapshots } = await courseIndexStore.bootstrapHistorical();
-          console.log("Historical loaded:", historicalCount);
-          console.log("Snapshots merged:", mergedSnapshots);
-        } catch (e) {
-          console.error("Historical bootstrap failed:", e);
-        } finally {
-          loadingHistorical = false;
-
-          // If user is currently viewing historical, refresh results
-          if (courseBrowserSource === "historical") rerunAppliedSearch();
-        }
-      })();
-    } catch (error) {
-      console.error("Error loading data:", error);
-    }
-  });
+  // -----------------------------
+  // Filters
+  // -----------------------------
 
   async function loadFiltersFromUrl() {
     const hashId = FiltersApiService.getHashFromUrl();
-    if (!hashId || !RuleBlueprints) return;
-    
-    // If filterContainerRef isn't ready yet, store the hash for later
+    if (!hashId || !ui.RuleBlueprints) return;
+
     if (!filterContainerRef) {
-      pendingFilterLoad = hashId;
+      ui.pendingFilterLoad = hashId;
       return;
     }
 
     const data = await FiltersApiService.loadFilters(hashId);
-    if (!data || !RuleBlueprints) {
-      return;
-    }
+    if (!data || !ui.RuleBlueprints) return;
 
-    const configs = FilterSerializer.fromJSON(data, RuleBlueprints);
-      
+    const configs = FilterSerializer.fromJSON(data, ui.RuleBlueprints);
     filterContainerRef.loadFilterConfigs(configs);
+
     // Trigger search after loading
     setTimeout(() => handleSearch(), 100);
-      
+
     NotificationService.success('Loaded filters from shared link');
-    pendingFilterLoad = null;
+    ui.pendingFilterLoad = null;
   }
 
-  // Handle pending filter load once filterContainerRef is bound
-  $: if (filterContainerRef && pendingFilterLoad) {
-    loadFiltersFromUrl();
-  }
+  // Pending filter load once FilterContainer ref is ready
+  $effect(() => {
+    if (!filterContainerRef) return;
+    if (!ui.pendingFilterLoad) return;
+
+    const hash = ui.pendingFilterLoad;
+    ui.pendingFilterLoad = null;
+
+    void loadFiltersFromUrl().catch((e) => {
+      console.error('Failed to load filters from URL:', e);
+      ui.pendingFilterLoad = hash;
+    });
+  });
+
+  // -----------------------------
+  // Search / Results
+  // -----------------------------
 
   function rerunAppliedSearch() {
-    if (!RuleBlueprints) return;
+    if (!ui.RuleBlueprints) return;
 
-    if (appliedFilterRules.length === 0) {
-      const final = showUnique ? FilterService.getUniqueCourses(baseCourses) : baseCourses;
-      filteredInstanceIds = final.map(c => c.id);
+    if (ui.appliedFilterRules.length === 0) {
+      const final = ui.showUnique
+        ? FilterService.getUniqueCourses(baseCourses)
+        : baseCourses;
+
+      ui.filteredInstanceIds = final.map((c) => c.id);
       return;
     }
 
-    const results = FilterService.applyFilters(baseCourses, appliedFilterRules);
-    const final = showUnique ? FilterService.getUniqueCourses(results) : results;
-    filteredInstanceIds = final.map(c => c.id);
+    const results = FilterService.applyFilters(baseCourses, ui.appliedFilterRules);
+    const final = ui.showUnique
+      ? FilterService.getUniqueCourses(results)
+      : results;
+
+    ui.filteredInstanceIds = final.map((c) => c.id);
   }
 
-  let lastSearchKey: string | null = null;
+  // Auto-rerun when relevant inputs change
+  $effect(() => {
+    if (loadingActive) return;
+    if (!ui.RuleBlueprints) return;
 
-  $: if (!loadingActive && RuleBlueprints) {
     const key = [
-      courseBrowserSource,
-      showUnique ? "u1" : "u0",
-      appliedFilterRules.length, // rerun when filters are applied/cleared
-      courseBrowserSource === "active"
-        ? indexState.byInstanceId.size
-        : indexState.historicalByInstanceId.size,
-    ].join("|");
+      courseIndexStore.state.mode,
+      courseIndexStore.state.byInstanceId.size,
+      courseIndexStore.state.historicalByInstanceId.size,
+      courseIndexStore.state.historicalReady ? 'h1' : 'h0',
+      ui.showUnique ? 'u1' : 'u0',
+      JSON.stringify(ui.appliedFilterRules), // simplest correct version
+    ].join('|');
 
-    if (key !== lastSearchKey) {
-      lastSearchKey = key;
-      rerunAppliedSearch();
-    }
-  }
-  
+    if (key === ui.lastSearchKey) return;
+    ui.lastSearchKey = key;
+
+    rerunAppliedSearch();
+  });
+
   function handleSearch() {
-    appliedFilterRules = filterRules;
+    ui.appliedFilterRules = ui.filterRules;
 
-    if (!RuleBlueprints || filterRules.length === 0) {
-      const final = showUnique ? FilterService.getUniqueCourses(baseCourses) : baseCourses;
-      filteredInstanceIds = final.map(c => c.id);
+    if (!ui.RuleBlueprints || ui.filterRules.length === 0) {
+      const final = ui.showUnique
+        ? FilterService.getUniqueCourses(baseCourses)
+        : baseCourses;
+
+      ui.filteredInstanceIds = final.map((c) => c.id);
       return;
     }
 
-    const results = FilterService.applyFilters(baseCourses, filterRules);
-    const final = showUnique ? FilterService.getUniqueCourses(results) : results;
-    filteredInstanceIds = final.map(c => c.id);
+    const results = FilterService.applyFilters(baseCourses, ui.filterRules);
+    const final = ui.showUnique
+      ? FilterService.getUniqueCourses(results)
+      : results;
+
+    ui.filteredInstanceIds = final.map((c) => c.id);
   }
-  
+
+  async function handleSourceChange() {
+    await courseIndexStore.actions.setMode(toIndexMode(ui.courseBrowserSource));
+    rerunAppliedSearch();
+  }
+
+  // -----------------------------
+  // Save / Load filters
+  // -----------------------------
+
   async function handleSaveFilters() {
     if (!filterContainerRef) return;
-    
-    const configs = filterContainerRef.getFilterConfigs();
 
+    const configs = filterContainerRef.getFilterConfigs();
     if (configs.length === 0) {
       NotificationService.error('No filters to save');
       return;
@@ -205,14 +218,10 @@
     try {
       const serialized = FilterSerializer.toJSON(configs);
       const hashId = await FiltersApiService.saveFilters(serialized);
-
-      if (!hashId) {
-        throw new Error('Failed to get hash ID');
-      }
+      if (!hashId) throw new Error('Failed to get hash ID');
 
       const shareableUrl = FiltersApiService.createShareableUrl(hashId);
-      
-      // Copy to clipboard
+
       try {
         await navigator.clipboard.writeText(shareableUrl);
         NotificationService.success('Filter link copied to clipboard!');
@@ -220,7 +229,6 @@
         NotificationService.success('Filters saved successfully!');
       }
 
-      // Navigate to the shareable URL
       setTimeout(() => {
         window.location.href = shareableUrl;
       }, 1000);
@@ -229,53 +237,105 @@
       NotificationService.error(message);
     }
   }
-  
+
   function handleLoadFilters() {
-    // Create file input for JSON import
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'application/json';
-    
+
     input.onchange = async (event: Event) => {
       const target = event.target as HTMLInputElement;
       const file = target.files?.[0];
-      if (!file || !RuleBlueprints) return;
+      if (!file || !ui.RuleBlueprints) return;
 
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        const configs = FilterSerializer.fromJSON(data, RuleBlueprints);
-        
+        const configs = FilterSerializer.fromJSON(data, ui.RuleBlueprints);
+
         if (filterContainerRef) {
           filterContainerRef.loadFilterConfigs(configs);
           setTimeout(() => handleSearch(), 100);
         }
-        
+
         NotificationService.success('Filters loaded from file');
       } catch {
         NotificationService.error('Failed to parse filter file');
       }
     };
-    
+
     input.click();
   }
-  
+
   function handleAddRule() {
-    if (filterContainerRef) {
-      filterContainerRef.addFilterRule();
-    }
+    filterContainerRef?.addFilterRule();
   }
 
-  $: isSignedIn = !!$session.data?.user;
-  $: userName = $session.data?.user?.email ?? "";
+  $effect(() => {
+    const want = toIndexMode(ui.courseBrowserSource);
+    if (want === lastApplied) return;
+
+    lastApplied = want;
+    void courseIndexStore.actions.setMode(want);
+  });
+
+  // -----------------------------
+  // Bootstrapping
+  // -----------------------------
+
+  onMount(async () => {
+    try {
+      // Academic periods (sync)
+      ui.periods = loadAcademicPeriods();
+      academicPeriodStore.setPeriods(ui.periods);
+
+      // Organizations (sync)
+      const organizations = loadOrganizations();
+
+      // Curricula (async)
+      const curriculaMap = await loadCurricula();
+
+      // Blueprints
+      ui.RuleBlueprints = createRuleBlueprints({
+        curriculaMap,
+        organizations,
+        periods: ui.periods,
+      });
+
+      // Align course index mode with UI selection (loads historical if needed)
+      await courseIndexStore.actions.setMode(toIndexMode(ui.courseBrowserSource));
+
+      // Active required
+      const { activeCount } = await courseIndexStore.actions.bootstrapActive();
+      console.log('Active loaded:', activeCount);
+
+      // Load shared filters (if any)
+      await loadFiltersFromUrl();
+
+      // Optional warm-up: preload historical even when starting in active
+      void (async () => {
+        try {
+          const { historicalCount, mergedSnapshots } =
+            await courseIndexStore.actions.ensureHistoricalLoaded();
+          console.log('Historical loaded:', historicalCount, 'snapshots:', mergedSnapshots);
+        } catch (e) {
+          console.error('Historical ensure failed:', e);
+        } finally {
+          if (courseIndexStore.state.mode === 'all') rerunAppliedSearch();
+        }
+      })();
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  });
 </script>
 
 <svelte:head>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" />
 </svelte:head>
 
-<Navigation 
-  {currentView}
+<Navigation
+  currentView={ui.currentView}
   {isSignedIn}
   {userName}
   on:navigate={handleNavigation}
@@ -285,48 +345,47 @@
 
 <DebugPanels />
 
-{#if showAuthModal}
-  <AuthModal on:close={() => (showAuthModal = false)} />
+{#if ui.showAuthModal}
+  <AuthModal on:close={() => (ui.showAuthModal = false)} />
 {/if}
 
 <NotificationContainer />
 
 <div id="main-content">
   <!-- Courses View -->
-  <div 
-    class="view" 
-    class:hidden={currentView !== 'courses'}
-  >
+  <div class="view" class:hidden={ui.currentView !== 'courses'}>
     <h2 class="sr-only">Browse Courses</h2>
-    {#if loadingHistorical}
-      <p class="hint">Loading historical courses in background...</p>
+
+    {#if loadingHistorical && courseIndexStore.state.mode === 'all'}
+      <p class="hint">Loading older courses...</p>
     {/if}
+
     {#if loadingActive}
       <div style="text-align: center; padding: 2rem;">
         <p>Loading course data...</p>
       </div>
-    {:else if RuleBlueprints}
-      <FilterContainer 
+    {:else if ui.RuleBlueprints}
+      <FilterContainer
         bind:this={filterContainerRef}
-        blueprints={RuleBlueprints as Record<string, BaseRuleBlueprint>} 
-        bind:filterRules 
-        {periods}
+        blueprints={ui.RuleBlueprints as Record<string, BaseRuleBlueprint>}
+        bind:filterRules={ui.filterRules}
+        periods={ui.periods}
         on:search={handleSearch}
       />
-      
-      <SearchControls 
-        bind:showUnique
-        bind:source={courseBrowserSource}
+
+      <SearchControls
+        bind:showUnique={ui.showUnique}
+        bind:source={ui.courseBrowserSource}
         on:addRule={handleAddRule}
         on:search={handleSearch}
-        on:sourceChange={() => rerunAppliedSearch()}
+        on:sourceChange={handleSourceChange}
         on:save={handleSaveFilters}
         on:load={handleLoadFilters}
       />
-      
+
       <CourseTable
-        source={courseBrowserSource}
-        {filteredInstanceIds}
+        source={ui.courseBrowserSource}
+        filteredInstanceIds={ui.filteredInstanceIds}
       />
     {:else}
       <div style="text-align: center; padding: 2rem;">
@@ -336,26 +395,19 @@
   </div>
 
   <!-- Favourites View -->
-  <div 
-    class="view" 
-    class:hidden={currentView !== 'favourites'}
-  >
-    <FavouritesView />
+  <div class="view" class:hidden={ui.currentView !== 'favourites'}>
+    <FavouritesView
+      bind:source={ui.courseBrowserSource}
+    />
   </div>
 
   <!-- LEGO View -->
-  <div 
-    class="view" 
-    class:hidden={currentView !== 'lego'}
-  >
+  <div class="view" class:hidden={ui.currentView !== 'lego'}>
     <LegoView />
   </div>
 
   <!-- Period Timeline View -->
-  <div 
-    class="view" 
-    class:hidden={currentView !== 'timeline'}
-  >
+  <div class="view" class:hidden={ui.currentView !== 'timeline'}>
     <PeriodTimeline />
   </div>
 </div>
@@ -374,36 +426,36 @@
     color: #333;
     -ms-overflow-style: none;
   }
-  
+
   :global(html) {
     scrollbar-width: none;
   }
-  
+
   :global(body::-webkit-scrollbar) {
     display: none;
   }
-  
+
   :global(h1) {
     font-size: clamp(20px, 4vw, 48px);
   }
-  
+
   :global(h2) {
     font-size: clamp(10px, 2vw, 24px);
     font-weight: normal;
     margin-top: clamp(-36px, -3vw, -12px);
   }
-  
+
   :global(h2 a) {
     color: #888;
     text-decoration: none;
   }
-  
+
   :global(h2 a:hover) {
     color: #d9534f;
   }
 
   #main-content {
-    min-height: 80vh; /* Keeps the page long enough so scroll context stays stable */
+    min-height: 80vh;
   }
 
   .view {

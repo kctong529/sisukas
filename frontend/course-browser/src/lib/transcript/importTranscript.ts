@@ -2,7 +2,7 @@
 import { get } from "svelte/store";
 import { favouritesStore } from "../stores/favouritesStore";
 import { plansStore } from "../stores/plansStore";
-import { courseIndexStore } from "../stores/courseIndexStore";
+import { courseIndexStore } from "../stores/courseIndexStore.svelte";
 import { courseGradeStore } from "../stores/courseGradeStore";
 import { transcriptService } from "../../infrastructure/services/TranscriptService";
 import type { Course } from "../../domain/models/Course";
@@ -70,6 +70,9 @@ async function ensureActivePlan(): Promise<void> {
 export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTranscriptResult> {
   await ensureActivePlan();
 
+  // Ensure course index has historical loaded (needed for date-based resolution)
+  await courseIndexStore.actions.ensureHistoricalLoaded().catch(() => {});
+
   // Ensure we have current local state before computing deltas
   if (get(favouritesStore).favourites.length === 0) {
     await favouritesStore.load().catch(() => {});
@@ -99,7 +102,7 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
   // Build mapping code -> current instanceId in plan (if any)
   const instanceInPlanByCode = new Map<string, string>();
   for (const instanceId of plan.instanceIds) {
-    const c = courseIndexStore.resolveByInstanceId(instanceId);
+    const c = courseIndexStore.read.resolveByInstanceId(instanceId);
     if (!c) continue;
     const code = courseCodeOf(c);
     if (code) instanceInPlanByCode.set(code, instanceId);
@@ -114,7 +117,6 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
     skipped: [],
   };
 
-  // Accumulate bulk ops
   const favToAdd: string[] = [];
   const instancesToAdd: string[] = [];
   const instancesToRemove: string[] = [];
@@ -136,26 +138,27 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
       continue;
     }
 
-    let course = courseIndexStore.resolveLatestInstanceByCodeBeforeDate(code, date);
+    let course = courseIndexStore.read.resolveLatestInstanceByCodeBeforeDate(code, date);
 
     if (!course && !attemptedResolveCodes.has(code)) {
       attemptedResolveCodes.add(code);
 
-      // Best-effort: resolve/store snapshots for this code, then merge into memory
       try {
         await CourseSnapshotsService.resolveAndStore(code);
       } catch {
-        // ignore: we still try merge + re-resolve (maybe snapshots already existed)
+        // ignore
       }
+
+      // Ensure historical base is present before merging snapshots into it
+      await courseIndexStore.actions.ensureHistoricalLoaded().catch(() => {});
 
       try {
         await SnapshotHistoricalMerge.mergeAllLiveSnapshots();
       } catch {
-        // ignore: merge failure just means we won't see snapshots in memory
+        // ignore
       }
 
-      // Try again after merge
-      course = courseIndexStore.resolveLatestInstanceByCodeBeforeDate(code, date);
+      course = courseIndexStore.read.resolveLatestInstanceByCodeBeforeDate(code, date);
     }
 
     if (!course) {
@@ -166,20 +169,15 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
       continue;
     }
 
-
     const unitId = course.unitId;
     const targetInstanceId = course.id;
     const numericGrade = toNumericGrade(row.grade);
 
-    // favourites: only add if not already favourited locally
     if (!existingFavouriteCodes.has(code)) {
       favToAdd.push(code);
-      existingFavouriteCodes.add(code); // keep local set consistent for duplicates in transcript
+      existingFavouriteCodes.add(code);
     }
 
-    // plan instances:
-    // If plan already contains target instance, do nothing.
-    // Else if plan contains another instance for same code, replace.
     if (!existingInstanceIds.has(targetInstanceId)) {
       const otherInstanceId = instanceInPlanByCode.get(code);
       if (otherInstanceId && otherInstanceId !== targetInstanceId) {
@@ -193,18 +191,15 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
       instanceInPlanByCode.set(code, targetInstanceId);
     }
 
-    // grades: only send numeric grades
     if (numericGrade !== null) {
       gradesToUpsert.push({ courseUnitId: unitId, grade: numericGrade });
     }
   }
 
-  // De-dupe bulk lists (important if transcript contains duplicates)
   const favouriteCourseIds = uniqNonEmpty(favToAdd);
   const addInstanceIds = uniqNonEmpty(instancesToAdd);
   const removeInstanceIds = uniqNonEmpty(instancesToRemove);
 
-  // De-dupe grades: keep last grade per unitId
   const gradeByUnit = new Map<string, number>();
   for (const g of gradesToUpsert) gradeByUnit.set(g.courseUnitId, g.grade);
   const grades = Array.from(gradeByUnit.entries()).map(([courseUnitId, grade]) => ({
@@ -212,7 +207,6 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
     grade,
   }));
 
-  // Single backend call
   const bulk = await transcriptService.importBulk({
     planId: plan.id,
     favouriteCourseIds,
@@ -221,15 +215,10 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
     grades,
   });
 
-  // Update counts from backend response (authoritative)
   result.addedFavourites = bulk.addedFavourites;
   result.addedInstances = bulk.addedInstances;
   result.updatedGrades = bulk.upsertedGrades;
 
-  // replacedInstances is computed client-side (how many “swap” intentions we had)
-  // backend doesn’t know “code”, only instance ids, so this is fine.
-
-  // Refresh local stores once (avoid 100 tiny optimistic updates)
   await Promise.allSettled([
     favouritesStore.load(),
     plansStore.load(),

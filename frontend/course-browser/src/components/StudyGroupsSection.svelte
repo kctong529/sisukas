@@ -1,7 +1,6 @@
 <!-- src/components/StudyGroupsSection.svelte -->
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { SvelteMap } from 'svelte/reactivity';
   import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import type { Course } from '../domain/models/Course';
   import type { StudyGroup } from '../domain/models/StudyGroup';
@@ -40,7 +39,7 @@
   function aggregateStudyEvents(events: StudyEvent[]): string {
     if (events.length === 0) return 'No events';
 
-    const timeSlotMap = new SvelteMap<string, Set<string>>();
+    const timeSlotMap = new Map<string, Set<string>>();
 
     events.forEach(event => {
       const startDate = new Date(event.start);

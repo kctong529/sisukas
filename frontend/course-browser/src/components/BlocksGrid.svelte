@@ -5,7 +5,6 @@
   import type { Block } from '../domain/models/Block';
   import type { Course } from '../domain/models/Course';
   import type { StudyGroup } from '../domain/models/StudyGroup';
-  import { SvelteSet } from 'svelte/reactivity';
 
   export let course: Course;
 
@@ -28,8 +27,8 @@
   // Hold "dragging" styling during async delete+create to avoid 1-frame fallback
   let isCommitPreviewActive = false;
 
-  const fetchedFor = new SvelteSet<string>();
-  const autoPartitionDoneFor = new SvelteSet<string>();
+  const fetchedFor = new Set<string>();
+  const autoPartitionDoneFor = new Set<string>();
 
   // Fetch once
   $: if (course && !fetchedFor.has(course.id)) {

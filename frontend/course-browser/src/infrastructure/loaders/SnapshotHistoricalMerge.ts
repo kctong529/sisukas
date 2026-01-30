@@ -6,7 +6,7 @@ import type { NumericRange } from "../../domain/valueObjects/NumericRange";
 import type { Language, RawCourseFormat } from "../../domain/valueObjects/CourseTypes";
 
 import { CourseSnapshotsService } from "../services/CourseSnapshotsService";
-import { courseIndexStore } from "../../lib/stores/courseIndexStore";
+import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
 
 function isRecord(x: unknown): x is Record<string, unknown> {
   return !!x && typeof x === "object" && !Array.isArray(x);
@@ -165,7 +165,7 @@ export class SnapshotHistoricalMerge {
       }
     }
 
-    const { merged, skipped } = courseIndexStore.appendHistoricalCourses(parsed);
+    const { merged, skipped } = courseIndexStore.actions.appendHistoricalCourses(parsed);
     return { fetched: snaps.length, merged, skipped };
   }
 }

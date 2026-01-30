@@ -1,220 +1,339 @@
-<!-- src/components/FavouritesView.svelte (updated) -->
+<!-- src/components/FavouritesView.svelte (runes, no $:, no on:click) -->
 <script lang="ts">
   import { useSession } from '../lib/authClient';
   import { favouritesStore } from '../lib/stores/favouritesStore';
   import { plansStore } from '../lib/stores/plansStore';
-  import { courseIndexStore, type CourseIndexState } from '../lib/stores/courseIndexStore';
+  import { courseIndexStore } from '../lib/stores/courseIndexStore.svelte';
   import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import { courseGradeStore } from '../lib/stores/courseGradeStore';
   import { NotificationService } from '../infrastructure/services/NotificationService';
   import StudyGroupsSection from './StudyGroupsSection.svelte';
   import type { Course } from '../domain/models/Course';
-  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
   import PlanManager from './PlanManager.svelte';
   import type { Favourite } from '../infrastructure/services/FavouritesService';
 
+  let { source = $bindable("active") } = $props<{ source?: "active" | "all" }>();
+
   const session = useSession();
-  $: isSignedIn = !!$session.data?.user;
-  
-  let sortBy = 'addedAt';
-  let sortDirection = -1;
-  let editingCourseId: string | null = null;
-  let editingNotes: string = '';
-  let hasLoadedForUser = false;
-  let expandedInstanceIds = new SvelteSet<string>();
-  let removeMode = false;
+  const user = $derived.by(() => $session.data?.user);
+  const isSignedIn = $derived.by(() => !!user);
 
-  let hasInitializedPlans = false;
-  let hasInitializedGrades = false;
-  let sortedFavourites: Favourite[] = [];
+  type Unsubscriber = () => void;
+  type Subscribable<T> = { subscribe(run: (value: T) => void): Unsubscriber };
 
-  let showOlder = false;
-
-  function toggleOlder() {
-    showOlder = !showOlder;
-    expandedInstanceIds = new SvelteSet($plansStore.activePlan?.instanceIds ?? []);
+  function isSubscribable<T>(x: unknown): x is Subscribable<T> {
+    return !!x && typeof (x as { subscribe?: unknown }).subscribe === "function";
   }
 
-  // Reload when user signs in (reactive)
-  $: if (isSignedIn && !hasLoadedForUser) {
-    favouritesStore.load();
-    hasLoadedForUser = true;
-  }
+  type FavouritesStoreValue = {
+    favourites?: Favourite[];
+    loading?: boolean;
+    error?: string | null;
+  };
 
-  // Initialize plans when user signs in
-  $: if (isSignedIn && hasLoadedForUser && !hasInitializedPlans) {
-    try {
-      initializePlans();
-    } catch (err) {
-      console.error('Failed to initialize plans:', err);
-    } finally {
-      hasInitializedPlans = true;
+  type PlanLike = { id: string; name: string; instanceIds: string[] };
+  type PlansStoreValue = {
+    plans?: PlanLike[];
+    activePlan?: PlanLike | null;
+    loading?: boolean;
+    error?: string | null;
+  };
+
+  const favState = $state<{
+    favourites: Favourite[];
+    loading: boolean;
+    error: string | null
+  }>({
+    favourites: [],
+    loading: false,
+    error: null
+  });
+
+  const planState = $state<{ plans: PlanLike[]; activePlan: PlanLike | null }>({
+    plans: [],
+    activePlan: null
+  });
+
+  $effect(() => {
+    const unsubs: Unsubscriber[] = [];
+
+    if (isSubscribable<FavouritesStoreValue>(favouritesStore)) {
+      unsubs.push(
+        favouritesStore.subscribe((v) => {
+          favState.favourites = v?.favourites ?? [];
+          favState.loading = !!v?.loading;
+          favState.error = v?.error ?? null;
+        })
+      );
     }
-  }
 
-  // Initialize grades when user signs in
-  $: if (isSignedIn && hasLoadedForUser && !hasInitializedGrades) {
-    try {
-      courseGradeStore.load();
-    } catch (err) {
-      console.error("Failed to initialize grades:", err);
-    } finally {
-      hasInitializedGrades = true;
+    if (isSubscribable<PlansStoreValue>(plansStore)) {
+      unsubs.push(
+        plansStore.subscribe((v) => {
+          planState.plans = v?.plans ?? [];
+          planState.activePlan = v?.activePlan ?? null;
+        })
+      );
     }
+
+    return () => unsubs.forEach((u) => u());
+  });
+
+  // (Optional) if grades/plans need state for template conditions later, add bridges similarly.
+
+  // Subscribe once on mount
+  $effect(() => {
+    const unsubs: Unsubscriber[] = [];
+
+    if (isSubscribable<FavouritesStoreValue>(favouritesStore)) {
+      unsubs.push(
+        favouritesStore.subscribe((v) => {
+          favState.favourites = v?.favourites ?? [];
+          favState.loading = !!v?.loading;
+          favState.error = v?.error ?? null;
+        })
+      );
+    }
+
+    if (isSubscribable<PlansStoreValue>(plansStore)) {
+      unsubs.push(
+        plansStore.subscribe((v) => {
+          planState.plans = v?.plans ?? [];
+          planState.activePlan = v?.activePlan ?? null;
+        })
+      );
+    }
+
+    return () => unsubs.forEach((u) => u());
+  });
+
+  const ui = $state({
+    sortBy: 'addedAt' as 'addedAt' | 'courseId' | 'courseName' | 'credits' | 'startDate',
+    sortDirection: -1 as 1 | -1,
+
+    editingCourseId: null as string | null,
+    editingNotes: '',
+
+    hasLoadedForUser: false,
+    hasInitializedPlans: false,
+    hasInitializedGrades: false,
+
+    removeMode: false,
+
+    sortedFavourites: [] as Favourite[]
+  });
+
+  let expandedInstanceIds = $state(new Set<string>());
+
+  async function toggleAll() {
+    source = source === "active" ? "all" : "active";
   }
 
-  $: if (!isSignedIn) {
-    favouritesStore.clear();
-    plansStore.clear();
-    courseGradeStore.clear();
+  // ---- Sign-in driven init/cleanup ----
 
-    expandedInstanceIds = new SvelteSet();
-    hasLoadedForUser = false;
-    hasInitializedPlans = false;
-    hasInitializedGrades = false;
-  }
+  $effect(() => {
+    if (!isSignedIn) {
+      favouritesStore.clear?.();
+      plansStore.clear?.();
+      courseGradeStore.clear?.();
+
+      expandedInstanceIds = new Set();
+      ui.hasLoadedForUser = false;
+      ui.hasInitializedPlans = false;
+      ui.hasInitializedGrades = false;
+      ui.editingCourseId = null;
+      ui.editingNotes = '';
+      ui.removeMode = false;
+      ui.sortedFavourites = [];
+      return;
+    }
+
+    if (isSignedIn && !ui.hasLoadedForUser) {
+      void favouritesStore.load?.();
+      ui.hasLoadedForUser = true;
+    }
+  });
+
+  $effect(() => {
+    if (!isSignedIn) return;
+    if (!ui.hasLoadedForUser) return;
+    if (source !== "active") return;
+    if (favState.favourites.length === 0) return;
+
+    // If any favourite has no current hit, we likely need historical to render metadata.
+    const needsHistorical = favState.favourites.some(f =>
+      courseIndexStore.read.getCurrentInstancesByCode(f.courseId).length === 0
+    );
+
+    if (needsHistorical) {
+      void courseIndexStore.actions.ensureHistoricalLoaded?.();
+    }
+  });
+
+  $effect(() => {
+    if (!isSignedIn) return;
+    if (!ui.hasLoadedForUser) return;
+    if (ui.hasInitializedPlans) return;
+
+    void (async () => {
+      try {
+        await initializePlans();
+      } catch (err) {
+        console.error('Failed to initialize plans:', err);
+      } finally {
+        ui.hasInitializedPlans = true;
+      }
+    })();
+  });
+
+  $effect(() => {
+    if (!isSignedIn) return;
+    if (!ui.hasLoadedForUser) return;
+    if (ui.hasInitializedGrades) return;
+
+    try {
+      void courseGradeStore.load?.();
+    } catch (err) {
+      console.error('Failed to initialize grades:', err);
+    } finally {
+      ui.hasInitializedGrades = true;
+    }
+  });
 
   async function initializePlans() {
-    // Load existing plans
-    await plansStore.load();
-    
-    // If no plans exist, create a default one
-    if ($plansStore.plans.length === 0) {
+    await plansStore.load?.();
+
+    if (planState.plans.length === 0) {
       const defaultPlan = await plansStore.create('Default');
       await plansStore.setActive(defaultPlan.id);
-    } else if (!$plansStore.activePlan) {
-      // If plans exist but none are active, activate the first one
-      await plansStore.setActive($plansStore.plans[0].id);
+    } else if (!planState.activePlan) {
+      await plansStore.setActive(planState.plans[0].id);
     }
   }
+
+  const planInstanceIdByCode = $derived.by(() => {
+    const m = new Map<string, string>();
+    const ids = planState.activePlan?.instanceIds ?? [];
+
+    for (const id of ids) {
+      const c = courseIndexStore.read.resolveByInstanceId(id);
+      if (c) m.set(c.code.value, id);
+    }
+
+    return m;
+  });
 
   // Sync expanded instances with active plan
-  $: if ($plansStore.activePlan) {
-    expandedInstanceIds = new SvelteSet($plansStore.activePlan.instanceIds);
-  }
+  $effect(() => {
+    if (!planState.activePlan) return;
+    expandedInstanceIds = new Set(planState.activePlan.instanceIds ?? []);
+  });
 
-  // Batch fetch study groups for all favourited courses
-  $: if (hasLoadedForUser && $favouritesStore.favourites.length > 0 && showOlder === false) {
-    const courseIndex = $courseIndexStore;
-    const uniq = new SvelteMap<string, { courseUnitId: string; courseOfferingId: string }>();
+  let lastSig = "";
 
-    for (const fav of $favouritesStore.favourites) {
-      for (const course of getCoursesForId(fav.courseId, showOlder, courseIndex)) {
-        const key = `${course.unitId}:${course.id}`;
-        uniq.set(key, { courseUnitId: course.unitId, courseOfferingId: course.id });
+  // ---- Study group batch fetch (active view only) ----
+  $effect(() => {
+    if (!ui.hasLoadedForUser) return;
+    if (ui.sortedFavourites.length === 0) return;
+    if (source !== "active") return;
+
+  // Build requests in the UI order (addedAt desc by default)
+    const reqs: Array<{ courseUnitId: string; courseOfferingId: string }> = [];
+    const seen = new Set<string>();
+
+    for (const fav of ui.sortedFavourites) {
+      for (const course of getCoursesForId(fav.courseId)) {
+        const k = `${course.unitId}:${course.id}`;
+        if (seen.has(k)) continue;
+        seen.add(k);
+        reqs.push({ courseUnitId: course.unitId, courseOfferingId: course.id });
       }
     }
 
-    const coursesToFetch = [...uniq.values()];
-    if (coursesToFetch.length > 0) studyGroupStore.fetchBatch(coursesToFetch);
-  }
+    // Stable signature (order matters; this makes "UI order" the priority)
+    const sig = reqs.slice(0, 200).map(r => `${r.courseUnitId}:${r.courseOfferingId}`).join("|");
+    if (sig === lastSig) return;
+    lastSig = sig;
 
-  function getCoursesForId(
-    code: string,
-    showOlder: boolean,
-    index: CourseIndexState
-  ): Course[] {
-    const s = index;
+    if (reqs.length > 0) studyGroupStore.fetchBatch(reqs);
+  });
 
-    // older mode: only historical
-    if (showOlder) {
-      const histIds = s.historicalInstanceIdsByCode.get(code) ?? [];
-      return histIds
-        .map((id: string) => s.historicalByInstanceId.get(id))
-        .filter((c): c is Course => Boolean(c));
+  // ---- Course resolution helpers ----
+
+  function getCoursesForId(code: string): Course[] {
+    let courses = courseIndexStore.read.getCurrentInstancesByCode(code);
+
+    // If nothing in current view (active mode), fall back to historical so we can render metadata
+    if (courses.length === 0) {
+      courses = courseIndexStore.read.getHistoricalInstancesByCode?.(code) ?? courses;
     }
 
-    // active mode: active first
-    const activeIds = s.instanceIdsByCode.get(code) ?? [];
-    const active = activeIds
-      .map((id: string) => s.byInstanceId.get(id))
-      .filter((c): c is Course => Boolean(c));
+    const selectedId = planInstanceIdByCode.get(code);
+      if (!selectedId) return courses;
+    
+    // If the plan-selected instance isn't in this view, pin it into the list
+    if (!courses.some((c) => c.id === selectedId)) {
+      const selected = courseIndexStore.read.resolveByInstanceId(selectedId);
+      if (selected) courses = [selected, ...courses];
+    }
 
-    if (active.length > 0) return active;
-
-    // fallback: show historical if not active
-    const histIds = s.historicalInstanceIdsByCode.get(code) ?? [];
-    return histIds
-      .map((id: string) => s.historicalByInstanceId.get(id))
-      .filter((c): c is Course => Boolean(c));
+    return courses;
   }
 
-  const coursesCache = new SvelteMap<string, Course[]>();
+  // Build sorted favourites whenever deps change
+  $effect(() => {
+    // Helper: get the “primary” course for a favourite (first relevant instance),
+    // used only for sorting by name/credits/startDate.
+    const primary = (courseId: string) => getCoursesForId(courseId)[0];
 
-  function getCoursesCached(code: string, showOlder: boolean, index: CourseIndexState): Course[] {
-    const key = `${showOlder ? "H" : "A"}:${code}`;
-    const hit = coursesCache.get(key);
-    if (hit) return hit;
+    ui.sortedFavourites = [...favState.favourites].sort((a, b) => {
+      switch (ui.sortBy) {
+        case 'courseId':
+          return a.courseId.localeCompare(b.courseId) * ui.sortDirection;
 
-    const res = getCoursesForId(code, showOlder, index);
-    coursesCache.set(key, res);
-    return res;
-  }
+        case 'courseName': {
+          const nameA = primary(a.courseId)?.name?.en ?? a.courseId;
+          const nameB = primary(b.courseId)?.name?.en ?? b.courseId;
+          return nameA.localeCompare(nameB) * ui.sortDirection;
+        }
 
-  $: {
-    const index = $courseIndexStore;
+        case 'credits': {
+          const creditsA = primary(a.courseId)?.credits?.min ?? 0;
+          const creditsB = primary(b.courseId)?.credits?.min ?? 0;
+          return (creditsA - creditsB) * ui.sortDirection;
+        }
 
-    // reset cache each time deps change
-    coursesCache.clear();
+        case 'startDate': {
+          const tA = primary(a.courseId)?.courseDate?.start?.getTime?.() ?? 0;
+          const tB = primary(b.courseId)?.courseDate?.start?.getTime?.() ?? 0;
+          return (tA - tB) * ui.sortDirection;
+        }
 
-    sortedFavourites = [...$favouritesStore.favourites].sort(
-      (a: { courseId: string; addedAt: string }, b: { courseId: string; addedAt: string }) => {
-        switch (sortBy) {
-          case "courseId":
-            return a.courseId.localeCompare(b.courseId) * sortDirection;
-
-          case "courseName": {
-            const nameA = getCoursesCached(a.courseId, showOlder, index)[0]?.name?.en ?? a.courseId;
-            const nameB = getCoursesCached(b.courseId, showOlder, index)[0]?.name?.en ?? b.courseId;
-            return nameA.localeCompare(nameB) * sortDirection;
-          }
-
-          case "credits": {
-            const creditsA = getCoursesCached(a.courseId, showOlder, index)[0]?.credits?.min ?? 0;
-            const creditsB = getCoursesCached(b.courseId, showOlder, index)[0]?.credits?.min ?? 0;
-            return (creditsA - creditsB) * sortDirection;
-          }
-
-          case "startDate": {
-            const tA =
-              getCoursesCached(a.courseId, showOlder, index)[0]?.courseDate?.start?.getTime?.() ??
-              new Date(0).getTime();
-            const tB =
-              getCoursesCached(b.courseId, showOlder, index)[0]?.courseDate?.start?.getTime?.() ??
-              new Date(0).getTime();
-            return (tA - tB) * sortDirection;
-          }
-
-          case "addedAt":
-          default: {
-            const tA = new Date(a.addedAt).getTime();
-            const tB = new Date(b.addedAt).getTime();
-            return (tA - tB) * sortDirection;
-          }
+        case 'addedAt':
+        default: {
+          const tA = new Date(a.addedAt).getTime();
+          const tB = new Date(b.addedAt).getTime();
+          return (tA - tB) * ui.sortDirection;
         }
       }
-    );
-  }
-
-  function handleSort(column: string) {
-    sortBy = column;
-  }
+    });
+  });
 
   function startEditingNotes(courseId: string, notes: string | null) {
-    editingCourseId = courseId;
-    editingNotes = notes || '';
+    ui.editingCourseId = courseId;
+    ui.editingNotes = notes || '';
   }
 
   function cancelEditingNotes() {
-    editingCourseId = null;
-    editingNotes = '';
+    ui.editingCourseId = null;
+    ui.editingNotes = '';
   }
 
   async function saveNotes(courseId: string) {
     try {
-      await favouritesStore.updateNotes(courseId, editingNotes || null);
-      editingCourseId = null;
-      editingNotes = '';
+      await favouritesStore.updateNotes(courseId, ui.editingNotes || null);
+      ui.editingCourseId = null;
+      ui.editingNotes = '';
     } catch (err) {
       console.error('Failed to save notes:', err);
     }
@@ -229,61 +348,54 @@
   }
 
   function exitRemoveMode() {
-    removeMode = false;
+    ui.removeMode = false;
   }
 
   function formatDate(date: Date | string): string {
     const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('fi-FI', {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit'
-    });
+    return d.toLocaleDateString('fi-FI', { day: '2-digit', month: '2-digit', year: '2-digit' });
   }
 
   function formatDateTime(dateString: string): string {
     const date = new Date(dateString);
-    return date.toLocaleDateString('fi-FI', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }) + ` at ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+    return (
+      date.toLocaleDateString('fi-FI', { day: '2-digit', month: '2-digit', year: 'numeric' }) +
+      ` at ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
+    );
   }
 
   function toggleInstance(courseCode: string, instanceId: string) {
-    const plan = $plansStore.activePlan;
+    const plan = planState.activePlan;
 
     if (expandedInstanceIds.has(instanceId)) {
-      // Removing instance
-      const wasInPlan = plan?.instanceIds.includes(instanceId) ?? false;
+      const wasInPlan = plan?.instanceIds?.includes(instanceId) ?? false;
 
       expandedInstanceIds.delete(instanceId);
-      expandedInstanceIds = new SvelteSet(expandedInstanceIds);
+      expandedInstanceIds = new Set(expandedInstanceIds);
 
       if (wasInPlan) {
-        NotificationService.error(`Instance removed from ${plan?.name ?? "plan"}`);
-        removedInstanceFromPlan(instanceId);
+        NotificationService.error(`Instance removed from ${plan?.name ?? 'plan'}`);
+        void removedInstanceFromPlan(instanceId);
       }
 
       return;
     }
 
-    // Adding / switching instance
-    const index = $courseIndexStore;
-    const courses = getCoursesForId(courseCode, showOlder, index);
+    const courses = getCoursesForId(courseCode);
 
     // Collapse other instances of same course code
-    courses.forEach((c: Course) => expandedInstanceIds.delete(c.id));
+    courses.forEach((c) => expandedInstanceIds.delete(c.id));
 
     expandedInstanceIds.add(instanceId);
-    expandedInstanceIds = new SvelteSet(expandedInstanceIds);
+    expandedInstanceIds = new Set(expandedInstanceIds);
 
-    // Older mode: fetch study groups for selected historical instance
-    if (showOlder) {
-      const selected = courses.find((c: Course) => c.id === instanceId);
-      if (selected) studyGroupStore.fetch(selected.unitId, selected.id);
+    // Only fetch study groups if this instance is in the ACTIVE index
+    const activeHit = courseIndexStore.state.byInstanceId.get(instanceId);
+    if (activeHit) {
+      studyGroupStore.fetch(activeHit.unitId, activeHit.id);
     }
   }
+
 
   async function removedInstanceFromPlan(instanceId: string) {
     try {
@@ -295,13 +407,13 @@
 
   async function addInstanceToActivePlan(instanceId: string) {
     try {
-      if (!$plansStore.activePlan) {
+      if (!planState.activePlan) {
         NotificationService.error('No active plan');
         return;
       }
 
       await plansStore.addInstanceToActivePlan(instanceId);
-      NotificationService.success(`Instance added to ${$plansStore.activePlan.name}`);
+      NotificationService.success(`Instance added to ${planState.activePlan.name}`);
     } catch (err) {
       console.error('Failed to add instance to plan:', err);
       NotificationService.error('Failed to add instance to plan');
@@ -309,11 +421,22 @@
   }
 
   function isInstanceInActivePlan(instanceId: string): boolean {
-    return $plansStore.activePlan?.instanceIds.includes(instanceId) ?? false;
+    return planState.activePlan?.instanceIds?.includes(instanceId) ?? false;
   }
 
   function isInstanceExpanded(instanceId: string): boolean {
     return expandedInstanceIds.has(instanceId);
+  }
+
+  function visibleInstancesFor(courses: Course[]): Course[] {
+    const active = courses.find((c) => expandedInstanceIds.has(c.id));
+    return active ? [active] : courses;
+  }
+
+  function instanceToAddFor(courses: Course[]): Course | null {
+    if (!planState.activePlan) return null;
+    const expanded = courses.find((c) => expandedInstanceIds.has(c.id) && !isInstanceInActivePlan(c.id));
+    return expanded ?? null;
   }
 </script>
 
@@ -325,72 +448,91 @@
       <p>Create an account to keep track of your courses across devices.</p>
     </div>
 
-  {:else if $favouritesStore.loading}
+  {:else if favState.loading}
     <div class="loading-state">
       <div class="spinner"></div>
       <p>Fetching your collection...</p>
     </div>
 
-  {:else if $favouritesStore.error}
+  {:else if favState.error}
     <div class="state-card error">
       <h2>Something went wrong</h2>
-      <p>{$favouritesStore.error}</p>
-      <button on:click={() => favouritesStore.load()} class="btn btn-secondary">Try Again</button>
+      <p>{favState.error}</p>
+      <button class="btn btn-secondary" onclick={() => favouritesStore.load()}>
+        Try Again
+      </button>
     </div>
 
-  {:else if $favouritesStore.favourites.length === 0}
+  {:else if favState.favourites.length === 0}
     <div class="header-section">
       <div class="title-group">
         <h2>Your Favourites</h2>
       </div>
       <PlanManager compact={true} />
     </div>
+
     <div class="state-card">
       <div class="icon-circle">♥</div>
       <h2>Your list is empty</h2>
       <p>Start exploring courses and click the heart icon to add them here.</p>
       <a href="/" class="btn btn-primary">Browse Courses</a>
     </div>
+
   {:else}
     <div class="header-section">
       <div class="title-group">
         <h2>Your Favourites</h2>
       </div>
-      
+
       <PlanManager compact={true} />
 
       <div class="controls">
-        {#if removeMode}
-          <button class="btn btn-secondary" on:click={exitRemoveMode}>
+        {#if ui.removeMode}
+          <button class="btn btn-secondary" onclick={exitRemoveMode}>
             Done
           </button>
         {:else}
           <div class="sort-box">
             <label for="sort">Sort by:</label>
-            <select id="sort" bind:value={sortBy} on:change={() => handleSort(sortBy)}>
+            <select
+              id="sort"
+              bind:value={ui.sortBy}
+            >
               <option value="addedAt">Recently Added</option>
               <option value="courseId">Course Code</option>
               <option value="courseName">Course Name</option>
               <option value="credits">Credits</option>
               <option value="startDate">Start Date</option>
             </select>
-            <button class="sort-dir" on:click={() => { sortDirection *= -1; }}>
-              {sortDirection === 1 ? '↑' : '↓'}
+
+            <button
+              type="button"
+              class="sort-dir"
+              onclick={() => {
+                ui.sortDirection = (ui.sortDirection * -1) as 1 | -1;
+              }}
+              aria-label="Toggle sort direction"
+            >
+              {ui.sortDirection === 1 ? '↑' : '↓'}
             </button>
           </div>
 
           <button
             type="button"
             class="btn btn-secondary older-btn"
-            class:active={showOlder}
-            aria-pressed={showOlder}
-            on:click={toggleOlder}
-            title={showOlder ? "Showing historical course instances" : "Showing active course instances"}
+            class:active={source === "all"}
+            aria-pressed={source === "all"}
+            onclick={toggleAll}
+            title={source === "all" ? 'Showing historical course instances' : 'Showing active course instances'}
           >
-            {showOlder ? "See Active" : "See Older"}
+            {source === "all" ? 'See Active' : 'See Older'}
           </button>
 
-          <button class="btn btn-secondary" on:click={() => { removeMode = true; }}>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick={() => { ui.removeMode = true; }}
+          >
             Remove
           </button>
         {/if}
@@ -398,98 +540,91 @@
     </div>
 
     <div class="favourites-list">
-      {#each sortedFavourites as favourite (favourite.courseId)}
-        {@const index = $courseIndexStore}
+      {#each ui.sortedFavourites as favourite (favourite.courseId)}
+        {@const courses = [...getCoursesForId(favourite.courseId)].sort(
+          (a, b) => a.courseDate.start.getTime() - b.courseDate.start.getTime()
+        )}
 
-        {@const courses =
-          [...getCoursesForId(favourite.courseId, showOlder, index)].sort(
-            (a: Course, b: Course) =>
-              a.courseDate.start.getTime() - b.courseDate.start.getTime()
-          )
-        }
+        {@const instanceToAdd = instanceToAddFor(courses)}
+        {@const visibleInstances = visibleInstancesFor(courses)}
 
-        {@const instanceToAdd = (() => {
-          if (!$plansStore.activePlan) return null;
-          const expanded = courses.find(c => expandedInstanceIds.has(c.id) && !isInstanceInActivePlan(c.id));
-          if (expanded && !isInstanceInActivePlan(expanded.id)) return expanded;
-          return null;
-        })()}
-        
-        {@const visibleInstances = (() => {
-          const active = courses.find(c => expandedInstanceIds.has(c.id));
-          return active ? [active] : courses;
-        })()}
-
-        <div class="favourite-item" class:remove-mode={removeMode}>
+        <div class="favourite-item" class:remove-mode={ui.removeMode}>
           <div class="item-header">
-              <div class="code-and-info">
-                <a 
-                  href="https://sisu.aalto.fi/student/courseunit/{courses[0]?.unitId}/brochure" 
-                  target="_blank"
-                  class="course-code-link"
-                >
-                  <h3 class="course-code">{favourite.courseId}</h3>
-                </a>
-                {#if courses.length > 0}
-                  <p class="course-name">{courses[0].name.en.split(",").slice(0, -1).join(",")}</p>
-                {/if}
-                <div class="metadata">
-                  <span class="added-date">Added {formatDateTime(favourite.addedAt)}</span>
-                </div>
-              </div>
-              {#if removeMode}
-                <button 
-                  class="remove-btn" 
-                  on:click={() => removeFavourite(favourite.courseId)}
-                  aria-label="Remove from favourites"
-                  title="Remove from favourites"
-                >
-                  ✕
-                </button>
-              {:else}
-                {#if instanceToAdd}
-                  <button 
-                    class="add-btn" 
-                    aria-label="Add to active plan"
-                    on:click={async () => {
-                      await addInstanceToActivePlan(instanceToAdd.id);
-                    }}
-                    title="Add to {$plansStore.activePlan?.name || 'plan'}"
-                  >
-                    +
-                  </button>
-                {/if}
+            <div class="code-and-info">
+              <a
+                href="https://sisu.aalto.fi/student/courseunit/{courses[0]?.unitId}/brochure"
+                target="_blank"
+                rel="noreferrer"
+                class="course-code-link"
+              >
+                <h3 class="course-code">{favourite.courseId}</h3>
+              </a>
+
+              {#if courses.length > 0}
+                <p class="course-name">{courses[0].name.en.split(',').slice(0, -1).join(',')}</p>
               {/if}
+
+              <div class="metadata">
+                <span class="added-date">Added {formatDateTime(favourite.addedAt)}</span>
+              </div>
             </div>
 
-          {#if !removeMode}
+            {#if ui.removeMode}
+              <button
+                type="button"
+                class="remove-btn"
+                onclick={() => removeFavourite(favourite.courseId)}
+                aria-label="Remove from favourites"
+                title="Remove from favourites"
+              >
+                ✕
+              </button>
+            {:else}
+              {#if instanceToAdd}
+                <button
+                  type="button"
+                  class="add-btn"
+                  aria-label="Add to active plan"
+                  title="Add to {planState.activePlan?.name || 'plan'}"
+                  onclick={async () => {
+                    await addInstanceToActivePlan(instanceToAdd.id);
+                  }}
+                >
+                  +
+                </button>
+              {/if}
+            {/if}
+          </div>
+
+          {#if !ui.removeMode}
             <div class="instances-container">
               {#each visibleInstances as course (course.id)}
                 <div
                   class="instance {isInstanceExpanded(course.id) ? 'selected' : ''} {isInstanceInActivePlan(course.id) ? 'in-plan' : ''}"
                   role="button"
                   tabindex="0"
-                  on:click={(e) => { 
-                    if ((e.target as HTMLElement).closest('.study-group-button') == null) {
+                  onclick={(e) => {
+                    const t = e.target as HTMLElement;
+                    if (t.closest('.study-group-button') == null) {
                       toggleInstance(favourite.courseId, course.id);
                     }
                   }}
-                  on:keydown={(e) => e.key === 'Enter' && toggleInstance(favourite.courseId, course.id)}
+                  onkeydown={(e) => e.key === 'Enter' && toggleInstance(favourite.courseId, course.id)}
                 >
                   <div class="instance-top">
                     <div class="instance-dates">
                       <span class="date-range">
-                        {formatDate(course.courseDate.start)}
-                        –
-                        {formatDate(course.courseDate.end)}
+                        {formatDate(course.courseDate.start)} – {formatDate(course.courseDate.end)}
                       </span>
                     </div>
+
                     <div class="format-badge" data-format={course.format}>
                       {course.format}
                     </div>
                   </div>
+
                   {#if isInstanceExpanded(course.id)}
-                    <div role="presentation" on:click|stopPropagation>
+                    <div role="presentation" onclick={(e) => e.stopPropagation()}>
                       <StudyGroupsSection {course} isExpanded={isInstanceExpanded(course.id)} />
                     </div>
                   {/if}
@@ -498,23 +633,26 @@
             </div>
 
             <div class="notes-section">
-              {#if editingCourseId === favourite.courseId}
+              {#if ui.editingCourseId === favourite.courseId}
                 <div class="editor">
-                  <textarea 
-                    bind:value={editingNotes} 
+                  <textarea
+                    bind:value={ui.editingNotes}
                     placeholder="Add your notes here..."
                     aria-label="Edit notes"
                   ></textarea>
+
                   <div class="editor-actions">
-                    <button 
-                      on:click={() => saveNotes(favourite.courseId)} 
+                    <button
+                      type="button"
                       class="btn-text save"
+                      onclick={() => saveNotes(favourite.courseId)}
                     >
                       Save
                     </button>
-                    <button 
-                      on:click={cancelEditingNotes} 
+                    <button
+                      type="button"
                       class="btn-text cancel"
+                      onclick={cancelEditingNotes}
                     >
                       Cancel
                     </button>
@@ -525,17 +663,20 @@
                   <p class:placeholder={!favourite.notes}>
                     {favourite.notes || ''}
                   </p>
+
                   {#if favourite.notes}
-                    <button 
-                      class="edit-trigger" 
-                      on:click={() => startEditingNotes(favourite.courseId, favourite.notes)}
+                    <button
+                      type="button"
+                      class="edit-trigger"
+                      onclick={() => startEditingNotes(favourite.courseId, favourite.notes)}
                     >
                       Edit note
                     </button>
                   {:else}
-                    <button 
-                      class="edit-trigger" 
-                      on:click={() => startEditingNotes(favourite.courseId, null)}
+                    <button
+                      type="button"
+                      class="edit-trigger"
+                      onclick={() => startEditingNotes(favourite.courseId, null)}
                     >
                       + Add note
                     </button>

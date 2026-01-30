@@ -49,11 +49,11 @@ function createStudyGroupStore() {
     if (flushScheduled) return;
     flushScheduled = true;
 
-    // next microtask: coalesce repeated calls in the same tick
-    queueMicrotask(() => {
+    // One flush per frame-ish
+    window.setTimeout(() => {
       flushScheduled = false;
       void flush();
-    });
+    }, 16);
   }
 
   async function flush() {
@@ -85,17 +85,20 @@ function createStudyGroupStore() {
     markLoading(loadingKeys);
 
     try {
-      const results = await service.fetchStudyGroupsBatch(toSend, {
-        chunkSize: 50,
+      await service.fetchStudyGroupsBatch(toSend, {
+        chunkSize: 20,
         concurrency: 4,
-      });
+        onChunk: (partial) => {
+          // update cache immediately for this chunk
+          update((s) => {
+            const newCache = { ...s.cache };
+            for (const [k, groups] of partial.entries()) newCache[k] = groups;
+            return { ...s, cache: newCache, error: null };
+          });
 
-      update((s) => {
-        const newCache = { ...s.cache };
-        for (const [k, groups] of results.entries()) {
-          newCache[k] = groups;
-        }
-        return { ...s, cache: newCache, error: null };
+          // clear loading immediately for keys in this chunk
+          clearLoading([...partial.keys()]);
+        },
       });
     } catch (e) {
       update((s) => ({
@@ -103,6 +106,7 @@ function createStudyGroupStore() {
         error: e instanceof Error ? e.message : "Batch fetch failed",
       }));
     } finally {
+      // in case some keys never returned due to error handling, clear remaining:
       clearLoading(loadingKeys);
     }
 

@@ -3,103 +3,155 @@
   import { onMount } from 'svelte';
   import { useSession } from '../lib/authClient';
   import { favouritesStore } from '../lib/stores/favouritesStore';
-  import { courseIndexStore } from '../lib/stores/courseIndexStore';
+  import { courseIndexStore } from '../lib/stores/courseIndexStore.svelte';
   import type { Course } from '../domain/models/Course';
   import MissingCourseSubmit from './MissingCourseSubmit.svelte';
   import { assertCourseCodeIsMissingEverywhere } from '../domain/services/CourseCodeGuard';
   import { NotificationService } from '../infrastructure/services/NotificationService';
   import { CourseSnapshotsService } from '../infrastructure/services/CourseSnapshotsService';
 
-  export let filteredInstanceIds: string[] | null = null;
-  export let source: "active" | "historical" = "active";
+  // -----------------------------
+  // Props (runes mode)
+  // -----------------------------
+  const props = $props<{
+    filteredInstanceIds?: string[] | null;
+    source?: 'active' | 'all';
+  }>();
 
-  let sortColumn = 'courseName';
-  let sortDirection = 1;
-  let windowWidth = 0;
-  let isNarrowScreen = false;
-  let showMissingCourseModal = false;
+  const filteredInstanceIds = $derived.by(() => props.filteredInstanceIds ?? null);
+  const source = $derived.by(() => props.source ?? 'active');
 
-  // Pagination state
-  let currentPage = 1;
-  const pageSize = 50;
-  
+  // -----------------------------
+  // Local state (runes)
+  // -----------------------------
+  const ui = $state({
+    sortColumn: 'courseName',
+    sortDirection: 1 as 1 | -1,
+
+    windowWidth: 0,
+    showMissingCourseModal: false,
+
+    currentPage: 1,
+    pageSize: 50,
+
+    lastResetKey: null as string | null,
+  });
+
+  // -----------------------------
+  // Session / auth derived
+  // -----------------------------
   const session = useSession();
-  $: isSignedIn = !!$session.data?.user;
-  $: isNarrowScreen = windowWidth < 380;
+  const user = $derived.by(() => $session.data?.user);
+  const isSignedIn = $derived.by(() => !!user);
 
-  $: state = $courseIndexStore;
+  const isNarrowScreen = $derived.by(() => ui.windowWidth < 380);
 
-  function resolveInstanceIds(ids: string[], s: typeof state): Course[] {
-    const map = source === 'active' ? s.byInstanceId : s.historicalByInstanceId;
+  // -----------------------------
+  // Favourites: support BOTH patterns
+  //   A) runes store: favouritesStore.state
+  //   B) legacy writable: favouritesStore.subscribe / $favouritesStore (not allowed here)
+  // -----------------------------
+  const fav = $state<{ favourites: { courseId: string }[] }>({ favourites: [] });
 
+  onMount(() => {
+    // If favouritesStore is a runes store, it will likely have .state
+    // (In that case you can remove this subscription and just use favouritesStore.state directly.)
+    if ('subscribe' in favouritesStore) {
+      const unsub = favouritesStore.subscribe(v => {
+        // expect { favourites: [...] }
+        fav.favourites = v?.favourites ?? [];
+      });
+      return unsub;
+    }
+  });
+
+  const favouriteSet = $derived.by(() => {
+    const set = new Set<string>();
+    for (const f of fav.favourites) set.add(f.courseId);
+    return set;
+  });
+
+  // -----------------------------
+  // Data resolution (use current index view)
+  // -----------------------------
+  function resolveIds(ids: string[]): Course[] {
     const out: Course[] = [];
     for (const id of ids) {
-      const c = map.get(id);
+      const c = courseIndexStore.read.resolveCurrentByInstanceId(id);
       if (c) out.push(c);
     }
     return out;
   }
 
-  // ----- Data source for the table -----
-  $: tableCourses =
-    filteredInstanceIds
-      ? resolveInstanceIds(filteredInstanceIds, state)
-      : courseIndexStore.getAllCourses(source);
-
-  // Reset page when switching datasets / filters
-  let lastSource: "active" | "historical" | null = null;
-  let lastFilterKey: string | null = null;
-
-  function filterKey(ids: string[] | null): string {
-    return ids ? ids.join("|") : "all";
-  }
-
-  $: {
-    const key = filterKey(filteredInstanceIds);
-
-    if (lastSource !== null && (source !== lastSource || key !== lastFilterKey)) {
-      currentPage = 1;
+  const tableCourses = $derived.by(() => {
+    if (filteredInstanceIds && filteredInstanceIds.length > 0) {
+      return resolveIds(filteredInstanceIds);
     }
+    return courseIndexStore.read.getAllCurrentCourses();
+  });
 
-    lastSource = source;
-    lastFilterKey = key;
-  }
-
-  // Calculate paginated courses
-  $: sortedCourses = sortCourses(tableCourses, sortColumn, sortDirection);
-  $: totalPages = Math.ceil(sortedCourses.length / pageSize);
-  $: paginatedCourses = sortedCourses.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+  // -----------------------------
+  // Sorting / paging derived
+  // -----------------------------
+  const sortedCourses = $derived.by(() =>
+    sortCourses(tableCourses, ui.sortColumn, ui.sortDirection)
   );
-  
-  // Validate page number
-  $: if (currentPage > totalPages) {
-    currentPage = Math.max(1, totalPages);
+
+  const totalPages = $derived.by(() =>
+    Math.max(1, Math.ceil(sortedCourses.length / ui.pageSize))
+  );
+
+  const paginatedCourses = $derived.by(() =>
+    sortedCourses.slice(
+      (ui.currentPage - 1) * ui.pageSize,
+      ui.currentPage * ui.pageSize
+    )
+  );
+
+  // Reset page on relevant changes
+  function filterKey(ids: string[] | null): string {
+    return ids ? ids.join('|') : 'all';
   }
 
-  onMount(() => {
-    // Load favourites when user signs in
+  $effect(() => {
+    const key = [
+      courseIndexStore.state.mode,
+      source,
+      filterKey(filteredInstanceIds),
+      ui.sortColumn,
+      ui.sortDirection,
+    ].join('|');
+
+    if (ui.lastResetKey && key !== ui.lastResetKey) {
+      ui.currentPage = 1;
+    }
+    ui.lastResetKey = key;
+  });
+
+  // Clamp page when data changes
+  $effect(() => {
+    if (ui.currentPage > totalPages) ui.currentPage = totalPages;
+    if (ui.currentPage < 1) ui.currentPage = 1;
+  });
+
+  // Load / clear favourites based on auth
+  $effect(() => {
     if (isSignedIn) {
-      favouritesStore.load();
+      void favouritesStore.load?.();
+    } else {
+      favouritesStore.clear?.();
+      fav.favourites = [];
     }
   });
 
-  // Clear when signing out
-  $: if (!isSignedIn) {
-    favouritesStore.clear();
-  }
-
+  // -----------------------------
+  // Actions
+  // -----------------------------
   async function toggleFavourite(courseId: string) {
-    if (!isSignedIn) {
-      console.warn('User must be signed in to favourite');
-      return;
-    }
-
-    const isFavourited = $favouritesStore.favourites.some(f => f.courseId === courseId);
+    if (!isSignedIn) return;
 
     try {
-      if (isFavourited) {
+      if (favouriteSet.has(courseId)) {
         await favouritesStore.remove(courseId);
       } else {
         await favouritesStore.add(courseId);
@@ -108,23 +160,22 @@
       console.error('Failed to toggle favourite:', error);
     }
   }
-  
+
   function handleSort(column: string) {
-    if (sortColumn === column) {
-      sortDirection *= -1;
+    if (ui.sortColumn === column) {
+      ui.sortDirection = (ui.sortDirection * -1) as 1 | -1;
     } else {
-      sortColumn = column;
-      sortDirection = 1;
+      ui.sortColumn = column;
+      ui.sortDirection = 1;
     }
-    // Reset to page 1 when sorting changes
-    currentPage = 1;
+    ui.currentPage = 1;
   }
 
-  function sortCourses(coursesToSort: Course[], column: string, direction: number): Course[] {
+  function sortCourses(coursesToSort: Course[], column: string, direction: 1 | -1): Course[] {
     return [...coursesToSort].sort((a, b) => {
       const valueA = getSortableValue(a, column);
       const valueB = getSortableValue(b, column);
-      
+
       if (typeof valueA === 'string' && typeof valueB === 'string') {
         return valueA.localeCompare(valueB) * direction;
       } else if (valueA instanceof Date && valueB instanceof Date) {
@@ -136,7 +187,7 @@
       }
     });
   }
-  
+
   function getSortableValue(course: Course, column: string): string | number | Date {
     switch (column) {
       case 'courseCode':
@@ -165,70 +216,50 @@
   }
 
   function formatPrerequisites(course: Course): string {
-    if (!course.prerequisites) {
-      return 'None';
-    }
-    
+    if (!course.prerequisites) return 'None';
+
     if (course.prerequisites.hasTextOnly) {
       const text = course.prerequisites.raw.en;
-      if (text.length == 0) {
-        return 'None';
-      }
+      if (text.length === 0) return 'None';
       return text.length > 100 ? text.substring(0, 97) + '...' : text;
     }
-    
+
     return course.prerequisites.codePatterns.join(', ');
   }
-  
+
   function formatDate(date: Date, withYear: boolean = false): string {
     if (withYear) {
-      return date.toLocaleDateString('fi-FI', { 
-        day: '2-digit', 
-        month: '2-digit',
-        year: '2-digit'
-      });
+      return date.toLocaleDateString('fi-FI', { day: '2-digit', month: '2-digit', year: '2-digit' });
     }
-    return date.toLocaleDateString('fi-FI', { 
-      day: '2-digit', 
-      month: '2-digit'
-    });
+    return date.toLocaleDateString('fi-FI', { day: '2-digit', month: '2-digit' });
   }
 
   function formatTeacher(teacher: string, narrow: boolean): string {
-    if (!narrow) {
-      return teacher;
-    }
-    
-    // Trim to first name and last initial
+    if (!narrow) return teacher;
+
     const parts = teacher.trim().split(/\s+/);
-    if (parts.length === 1) {
-      return parts[0];
-    }
-    
+    if (parts.length === 1) return parts[0];
+
     const firstName = parts[0];
     const lastInitial = parts[parts.length - 1][0];
     return `${firstName} ${lastInitial}.`;
   }
 
   function goToPage(page: number) {
-    currentPage = Math.max(1, Math.min(page, totalPages));
+    ui.currentPage = Math.max(1, Math.min(page, totalPages));
   }
 
   function nextPage() {
-    if (currentPage < totalPages) {
-      currentPage++;
-      // Scroll to top of table
-      const tableEl = document.querySelector('.desktop-table');
-      tableEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (ui.currentPage < totalPages) {
+      ui.currentPage++;
+      document.querySelector('.desktop-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
   function prevPage() {
-    if (currentPage > 1) {
-      currentPage--;
-      // Scroll to top of table
-      const tableEl = document.querySelector('.desktop-table');
-      tableEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (ui.currentPage > 1) {
+      ui.currentPage--;
+      document.querySelector('.desktop-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }
 
@@ -240,54 +271,53 @@
     }
     return CourseSnapshotsService.resolveAndStore(g.code);
   }
-  
+
   function openMissingCourseModal() {
-    showMissingCourseModal = true;
+    ui.showMissingCourseModal = true;
   }
 
   function closeMissingCourseModal() {
-    showMissingCourseModal = false;
+    ui.showMissingCourseModal = false;
   }
 
   function onMissingCourseKeydown(e: KeyboardEvent) {
-    if (e.key === "Escape") closeMissingCourseModal();
+    if (e.key === 'Escape') closeMissingCourseModal();
   }
 </script>
 
-<svelte:window bind:innerWidth={windowWidth} />
+<svelte:window bind:innerWidth={ui.windowWidth} />
 
 <div class="table-header">
-  <div id="course-count">
-    Total courses: {sortedCourses.length}
-  </div>
+  <div id="course-count">Total courses: {sortedCourses.length}</div>
+
   <div class="pagination-info">
     {#if totalPages > 1}
-      <span>Page {currentPage} of {totalPages}</span>
+      <span>Page {ui.currentPage} of {totalPages}</span>
     {/if}
   </div>
 
   <a
     href="#missing-course"
     class="missing-course-link"
-    on:click|preventDefault={openMissingCourseModal}
+    onclick={openMissingCourseModal}
   >
     couldn't find your course?
   </a>
 </div>
 
-{#if showMissingCourseModal}
-  <div class="mc-backdrop" role="presentation" on:keydown={onMissingCourseKeydown}>
+{#if ui.showMissingCourseModal}
+  <div class="mc-backdrop" role="presentation" onkeydown={onMissingCourseKeydown}>
     <button
       type="button"
       class="mc-overlay-close"
       aria-label="Close"
-      on:click={closeMissingCourseModal}
+      onclick={closeMissingCourseModal}
     ></button>
 
     <div class="mc-modal" role="dialog" aria-modal="true" aria-label="Add missing course">
       <div class="mc-header">
         <div class="mc-title">Add missing course</div>
-        <button type="button" class="mc-close" aria-label="Close" on:click={closeMissingCourseModal}>
+        <button type="button" class="mc-close" aria-label="Close" onclick={closeMissingCourseModal}>
           ✕
         </button>
       </div>
@@ -307,88 +337,99 @@
         {#if isSignedIn}
           <th class="favourite-col" style="width: 3%;"></th>
         {/if}
-        <th 
-          class:sort-asc={sortColumn === 'courseCode' && sortDirection === 1}
-          class:sort-desc={sortColumn === 'courseCode' && sortDirection === -1}
-          on:click={() => handleSort('courseCode')}
+
+        <th
+          class:sort-asc={ui.sortColumn === 'courseCode' && ui.sortDirection === 1}
+          class:sort-desc={ui.sortColumn === 'courseCode' && ui.sortDirection === -1}
+          onclick={() => handleSort('courseCode')}
         >
           <span class="full-text">Course Code</span>
           <span class="abbreviated-text">code</span>
         </th>
-        <th 
-          class:sort-asc={sortColumn === 'courseName' && sortDirection === 1}
-          class:sort-desc={sortColumn === 'courseName' && sortDirection === -1}
-          on:click={() => handleSort('courseName')}
+
+        <th
+          class:sort-asc={ui.sortColumn === 'courseName' && ui.sortDirection === 1}
+          class:sort-desc={ui.sortColumn === 'courseName' && ui.sortDirection === -1}
+          onclick={() => handleSort('courseName')}
         >
           <span class="full-text">Course Name</span>
           <span class="abbreviated-text">name</span>
         </th>
-        <th 
-          class:sort-asc={sortColumn === 'teachers' && sortDirection === 1}
-          class:sort-desc={sortColumn === 'teachers' && sortDirection === -1}
-          on:click={() => handleSort('teachers')}
+
+        <th
+          class:sort-asc={ui.sortColumn === 'teachers' && ui.sortDirection === 1}
+          class:sort-desc={ui.sortColumn === 'teachers' && ui.sortDirection === -1}
+          onclick={() => handleSort('teachers')}
         >
           <span class="full-text">Teacher(s)</span>
           <span class="abbreviated-text">teachr</span>
         </th>
-        <th 
-          class:sort-asc={sortColumn === 'credits' && sortDirection === 1}
-          class:sort-desc={sortColumn === 'credits' && sortDirection === -1}
-          on:click={() => handleSort('credits')}
+
+        <th
+          class:sort-asc={ui.sortColumn === 'credits' && ui.sortDirection === 1}
+          class:sort-desc={ui.sortColumn === 'credits' && ui.sortDirection === -1}
+          onclick={() => handleSort('credits')}
         >
           <span class="full-text">Credits</span>
           <span class="abbreviated-text">cr</span>
         </th>
-        <th 
-          class:sort-asc={sortColumn === 'language' && sortDirection === 1}
-          class:sort-desc={sortColumn === 'language' && sortDirection === -1}
-          on:click={() => handleSort('language')}
+
+        <th
+          class:sort-asc={ui.sortColumn === 'language' && ui.sortDirection === 1}
+          class:sort-desc={ui.sortColumn === 'language' && ui.sortDirection === -1}
+          onclick={() => handleSort('language')}
         >
           <span class="full-text">Language</span>
           <span class="abbreviated-text">lang</span>
         </th>
-        <th 
-          class:sort-asc={sortColumn === 'startDate' && sortDirection === 1}
-          class:sort-desc={sortColumn === 'startDate' && sortDirection === -1}
-          on:click={() => handleSort('startDate')}
+
+        <th
+          class:sort-asc={ui.sortColumn === 'startDate' && ui.sortDirection === 1}
+          class:sort-desc={ui.sortColumn === 'startDate' && ui.sortDirection === -1}
+          onclick={() => handleSort('startDate')}
         >
           <span class="full-text">Start Date</span>
           <span class="abbreviated-text">start</span>
         </th>
-        <th 
-          class:sort-asc={sortColumn === 'endDate' && sortDirection === 1}
-          class:sort-desc={sortColumn === 'endDate' && sortDirection === -1}
-          on:click={() => handleSort('endDate')}
+
+        <th
+          class:sort-asc={ui.sortColumn === 'endDate' && ui.sortDirection === 1}
+          class:sort-desc={ui.sortColumn === 'endDate' && ui.sortDirection === -1}
+          onclick={() => handleSort('endDate')}
         >
           <span class="full-text">End Date</span>
           <span class="abbreviated-text">end</span>
         </th>
-        <th 
-          class:sort-asc={sortColumn === 'enrollFrom' && sortDirection === 1}
-          class:sort-desc={sortColumn === 'enrollFrom' && sortDirection === -1}
-          on:click={() => handleSort('enrollFrom')}
+
+        <th
+          class:sort-asc={ui.sortColumn === 'enrollFrom' && ui.sortDirection === 1}
+          class:sort-desc={ui.sortColumn === 'enrollFrom' && ui.sortDirection === -1}
+          onclick={() => handleSort('enrollFrom')}
         >
           <span class="full-text">Enroll From</span>
           <span class="abbreviated-text">frm</span>
         </th>
-        <th 
-          class:sort-asc={sortColumn === 'enrollTo' && sortDirection === 1}
-          class:sort-desc={sortColumn === 'enrollTo' && sortDirection === -1}
-          on:click={() => handleSort('enrollTo')}
+
+        <th
+          class:sort-asc={ui.sortColumn === 'enrollTo' && ui.sortDirection === 1}
+          class:sort-desc={ui.sortColumn === 'enrollTo' && ui.sortDirection === -1}
+          onclick={() => handleSort('enrollTo')}
         >
           <span class="full-text">Enroll To</span>
           <span class="abbreviated-text">to</span>
         </th>
-        <th 
-          class:sort-asc={sortColumn === 'prerequisites' && sortDirection === 1}
-          class:sort-desc={sortColumn === 'prerequisites' && sortDirection === -1}
-          on:click={() => handleSort('prerequisites')}
+
+        <th
+          class:sort-asc={ui.sortColumn === 'prerequisites' && ui.sortDirection === 1}
+          class:sort-desc={ui.sortColumn === 'prerequisites' && ui.sortDirection === -1}
+          onclick={() => handleSort('prerequisites')}
         >
           <span class="full-text">Prerequisites</span>
           <span class="abbreviated-text">preq</span>
         </th>
       </tr>
     </thead>
+
     <tbody>
       {#each paginatedCourses as course (course.id)}
         <tr>
@@ -396,17 +437,18 @@
             <td class="favourite-col">
               <button
                 class="favourite-btn"
-                class:favourited={$favouritesStore.favourites.some(f => f.courseId === course.code.value)}
-                on:click={() => toggleFavourite(course.code.value)}
-                title={$favouritesStore.favourites.some(f => f.courseId === course.code.value) ? 'Remove from favourites' : 'Add to favourites'}
+                class:favourited={favouriteSet.has(course.code.value)}
+                onclick={() => toggleFavourite(course.code.value)}
+                title={favouriteSet.has(course.code.value) ? 'Remove from favourites' : 'Add to favourites'}
               >
-                {$favouritesStore.favourites.some(f => f.courseId === course.code.value) ? '♥' : '♡'}
+                {favouriteSet.has(course.code.value) ? '♥' : '♡'}
               </button>
             </td>
           {/if}
+
           <td>{course.code.value}</td>
           <td>
-            <a href="https://sisu.aalto.fi/student/courseunit/{course.unitId}/brochure" target="_blank">
+            <a href="https://sisu.aalto.fi/student/courseunit/{course.unitId}/brochure" target="_blank" rel="noreferrer">
               {course.name.en}
             </a>
           </td>
@@ -417,9 +459,7 @@
           <td>{formatDate(course.courseDate.end, true)}</td>
           <td>{formatDate(course.enrollmentDate.start, true)}</td>
           <td>{formatDate(course.enrollmentDate.end, true)}</td>
-          <td class="prerequisites-cell">
-            {formatPrerequisites(course)}
-          </td>
+          <td class="prerequisites-cell">{formatPrerequisites(course)}</td>
         </tr>
       {/each}
     </tbody>
@@ -429,65 +469,46 @@
 <!-- Desktop Pagination Controls -->
 {#if totalPages > 1}
   <div class="pagination-controls">
-    <button
-      class="pagination-btn"
-      on:click={prevPage}
-      disabled={currentPage === 1}
-      aria-label="Previous page"
-    >
+    <button class="pagination-btn" onclick={prevPage} disabled={ui.currentPage === 1}>
       ← Previous
     </button>
 
     <div class="page-numbers">
       {#each Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
         let page;
-        if (totalPages <= 5) {
-          page = i + 1;
-        } else if (currentPage <= 3) {
-          page = i + 1;
-        } else if (currentPage >= totalPages - 2) {
-          page = totalPages - 4 + i;
-        } else {
-          page = currentPage - 2 + i;
-        }
+        if (totalPages <= 5) page = i + 1;
+        else if (ui.currentPage <= 3) page = i + 1;
+        else if (ui.currentPage >= totalPages - 2) page = totalPages - 4 + i;
+        else page = ui.currentPage - 2 + i;
         return page;
       }) as page (page)}
-        <button
-          class="page-btn"
-          class:active={page === currentPage}
-          on:click={() => goToPage(page)}
-        >
+        <button class="page-btn" class:active={page === ui.currentPage} onclick={() => goToPage(page)}>
           {page}
         </button>
       {/each}
 
-      {#if totalPages > 5 && currentPage < totalPages - 2}
+      {#if totalPages > 5 && ui.currentPage < totalPages - 2}
         <span class="page-ellipsis">...</span>
       {/if}
     </div>
 
-    <button
-      class="pagination-btn"
-      on:click={nextPage}
-      disabled={currentPage === totalPages}
-      aria-label="Next page"
-    >
+    <button class="pagination-btn" onclick={nextPage} disabled={ui.currentPage === totalPages}>
       Next →
     </button>
   </div>
 {/if}
 
-<!-- Mobile Card View (Infinite Scroll) -->
+<!-- Mobile Card View -->
 <div class="mobile-cards">
   <div class="mobile-sort-controls">
     <label for="mobile-sort">Sort by:</label>
-    <select 
-      id="mobile-sort" 
+    <select
+      id="mobile-sort"
       class="mobile-sort-select"
-      bind:value={sortColumn} 
-      on:change={() => {
-        sortDirection = 1;
-        currentPage = 1;
+      bind:value={ui.sortColumn}
+      onchange={() => {
+        ui.sortDirection = 1;
+        ui.currentPage = 1;
       }}
     >
       <option value="courseName">Course Name</option>
@@ -500,15 +521,16 @@
       <option value="enrollFrom">Enroll From</option>
       <option value="enrollTo">Enroll To</option>
     </select>
-    <button 
+
+    <button
       class="sort-direction-btn"
-      on:click={() => {
-        sortDirection *= -1;
-        currentPage = 1;
+      onclick={() => {
+        ui.sortDirection = (ui.sortDirection * -1) as 1 | -1;
+        ui.currentPage = 1;
       }}
       aria-label="Toggle sort direction"
     >
-      {sortDirection === 1 ? '↑' : '↓'}
+      {ui.sortDirection === 1 ? '↑' : '↓'}
     </button>
   </div>
 
@@ -518,22 +540,32 @@
         {#if isSignedIn}
           <button
             class="favourite-btn-mobile"
-            class:favourited={$favouritesStore.favourites.some(f => f.courseId === course.code.value)}
-            on:click={() => toggleFavourite(course.code.value)}
-            title={$favouritesStore.favourites.some(f => f.courseId === course.code.value) ? 'Remove from favourites' : 'Add to favourites'}
-            aria-label={$favouritesStore.favourites.some(f => f.courseId === course.code.value) ? `Remove ${course.name.en} from favourites` : `Add ${course.name.en} to favourites`}
+            class:favourited={favouriteSet.has(course.code.value)}
+            onclick={() => toggleFavourite(course.code.value)}
+            title={favouriteSet.has(course.code.value) ? 'Remove from favourites' : 'Add to favourites'}
+            aria-label={favouriteSet.has(course.code.value)
+              ? `Remove ${course.name.en} from favourites`
+              : `Add ${course.name.en} to favourites`}
           >
-            {$favouritesStore.favourites.some(f => f.courseId === course.code.value) ? '♥' : '♡'}
+            {favouriteSet.has(course.code.value) ? '♥' : '♡'}
           </button>
         {/if}
+
         <span class="card-code">{course.code.value}</span>
-        <span class="card-period">{formatDate(course.courseDate.start)} – {formatDate(course.courseDate.end)}</span>
+        <span class="card-period">
+          {formatDate(course.courseDate.start)} – {formatDate(course.courseDate.end)}
+        </span>
       </div>
-      
-      <a href="https://sisu.aalto.fi/student/courseunit/{course.unitId}/brochure" target="_blank" class="card-title">
+
+      <a
+        href="https://sisu.aalto.fi/student/courseunit/{course.unitId}/brochure"
+        target="_blank"
+        rel="noreferrer"
+        class="card-title"
+      >
         {course.name.en}
       </a>
-      
+
       <div class="card-details">
         <span class="detail-item">{formatTeacher(course.teachers[0] || 'TBA', isNarrowScreen)}</span>
         <span class="detail-separator">•</span>
@@ -541,27 +573,20 @@
         <span class="detail-separator">•</span>
         <span class="detail-item">{course.credits.min}cr</span>
         <span class="detail-label">Enroll:</span>
-        <span class="detail-value">{formatDate(course.enrollmentDate.start)} – {formatDate(course.enrollmentDate.end)}</span>
+        <span class="detail-value">
+          {formatDate(course.enrollmentDate.start)} – {formatDate(course.enrollmentDate.end)}
+        </span>
       </div>
     </div>
   {/each}
 
-  <!-- Mobile Pagination Info -->
   {#if totalPages > 1}
     <div class="mobile-pagination">
-      <button
-        class="mobile-pagination-btn"
-        on:click={prevPage}
-        disabled={currentPage === 1}
-      >
+      <button class="mobile-pagination-btn" onclick={prevPage} disabled={ui.currentPage === 1}>
         ← Previous
       </button>
-      <span class="mobile-page-info">Page {currentPage} of {totalPages}</span>
-      <button
-        class="mobile-pagination-btn"
-        on:click={nextPage}
-        disabled={currentPage === totalPages}
-      >
+      <span class="mobile-page-info">Page {ui.currentPage} of {totalPages}</span>
+      <button class="mobile-pagination-btn" onclick={nextPage} disabled={ui.currentPage === totalPages}>
         Next →
       </button>
     </div>

@@ -44,7 +44,9 @@
   async function handleCreatePlan() {
     if (!newPlanName.trim()) return;
     try {
-      await plansStore.create(newPlanName);
+      const created = await plansStore.create(newPlanName);
+      await plansStore.setActive(created.id);
+      onPlanSelect(created);
       newPlanName = '';
       isCreating = false;
     } catch (err) {

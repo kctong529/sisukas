@@ -33,9 +33,10 @@ A student can:
 
 ## 2. Transcript Import & Grades
 
-* [ ] Import transcript (courses → plan).
-* [ ] Import grades from transcript into timeline model.
-* [ ] Allow manual grade input and edits (independent of transcript import).
+* [x] Import transcript (courses → plan).
+* [x] Import grades from transcript into timeline model.
+* [x] Allow manual grade input and edits (independent of transcript import).
+* [x] Resolve old course codes which are not found in existing databases.
 
 ## 3. Core Domain Consistency
 
@@ -48,10 +49,10 @@ A student can:
 
 ## 4. Timeline (Release-Critical UI)
 
-* [ ] Generate timeline from schedules (prefer historical instances when available).
-* [ ] Support multiple academic years.
-* [ ] Compact, readable, color-coded layout.
-* [ ] Display grades correctly across years.
+* [x] Generate timeline from schedules.
+* [x] Support multiple academic years.
+* [x] Compact, readable, color-coded layout.
+* [x] Display grades correctly across years.
 
 ## 5. Plan Management
 
@@ -62,7 +63,7 @@ A student can:
 
 ## 6. Authentication Enforcement
 
-* [ ] Ensure all plan- and schedule-mutating endpoints require authentication.
+* [x] Ensure all plan- and schedule-mutating endpoints require authentication.
 * [ ] Verify no unauthenticated writes are possible.
 
 ## 7. Infrastructure & Safety

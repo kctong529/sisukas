@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { useSession } from "../lib/authClient";
-  import { courseIndexStore } from "../lib/stores/courseIndexStore";
+  import { courseIndexStore } from "../lib/stores/courseIndexStore.svelte";
   import { plansStore } from "../lib/stores/plansStore";
   import { blockStore } from "../lib/stores/blockStore";
   import { studyGroupStore } from "../lib/stores/studyGroupStore";
@@ -17,75 +17,120 @@
   import type { AnalyticsResponse } from "../lib/types/analytics";
   import { normalizeComputeSchedulePairsResponse } from "../lib/analytics/normalizeComputeSchedulePairs";
 
+  // ---- Session (runes) ----
   const session = useSession();
-  let isSignedIn = $derived(!!$session.data?.user);
+  const user = $derived.by(() => $session.data?.user);
+  const isSignedIn = $derived.by(() => !!user);
 
-  let activePlan = $derived.by(() => $plansStore.activePlan);
-  let courseIndexState = $derived.by(() => $courseIndexStore);
+  // ---- Bridge plansStore (if it's still a legacy store) ----
+  type PlanLike = { id: string; name: string; instanceIds: string[] };
 
-  let analyticsResp = $state<AnalyticsResponse | null>(null);
-  let analyticsError = $state<string | null>(null);
-  let running = $state(false);
-  let showAnalyticsModal = $state(false);
+  const planState = $state<{
+    plans: PlanLike[];
+    activePlan: PlanLike | null;
+    loading: boolean;
+    error: string | null;
+  }>({
+    plans: [],
+    activePlan: null,
+    loading: false,
+    error: null
+  });
+
+  type Unsubscriber = () => void;
+  type Subscribable<T> = { subscribe(run: (value: T) => void): Unsubscriber };
+
+  type PlansStoreValue = {
+    plans?: PlanLike[];
+    activePlan?: PlanLike | null;
+    loading?: boolean;
+    error?: string | null;
+  };
+
+  function isSubscribable<T>(x: unknown): x is Subscribable<T> {
+    return !!x && typeof (x as { subscribe?: unknown }).subscribe === "function";
+  }
+
+  $effect(() => {
+    const unsubs: Unsubscriber[] = [];
+
+    if (isSubscribable<PlansStoreValue>(plansStore)) {
+      unsubs.push(
+        plansStore.subscribe((v) => {
+          planState.plans = v?.plans ?? [];
+          planState.activePlan = v?.activePlan ?? null;
+          planState.loading = !!v?.loading;
+          planState.error = v?.error ?? null;
+        })
+      );
+    }
+
+    return () => unsubs.forEach((u) => u());
+  });
+
+  const activePlan = $derived.by(() => planState.activePlan);
+
+  // ---- Local UI state ----
+  const ui = $state({
+    analyticsResp: null as AnalyticsResponse | null,
+    analyticsError: null as string | null,
+    running: false,
+    showAnalyticsModal: false
+  });
+
+  const resolveCourse = (instanceId: string): Course | undefined =>
+    courseIndexStore.read.resolveByInstanceId(instanceId);
 
   async function loadPlans() {
     try {
-      await plansStore.load();
+      await plansStore.load?.();
     } catch (err) {
       console.error("Failed to load plans:", err);
     }
   }
 
-  function getCourseForInstance(instanceId: string): Course | undefined {
-    return (
-      courseIndexState.byInstanceId.get(instanceId) ??
-      courseIndexState.historicalByInstanceId.get(instanceId) ??
-      undefined
-    );
-  }
-
   function closeAnalyticsModal() {
-    showAnalyticsModal = false;
-    analyticsResp = null;
-    analyticsError = null;
+    ui.showAnalyticsModal = false;
+    ui.analyticsResp = null;
+    ui.analyticsError = null;
   }
 
   async function showAnalysis() {
-    if (!activePlan) return;
-    if (running) return;
+    const plan = activePlan;
+    if (!plan) return;
+    if (ui.running) return;
 
-    running = true;
-    analyticsError = null;
-    showAnalyticsModal = true;
+    ui.running = true;
+    ui.analyticsError = null;
+    ui.showAnalyticsModal = true;
 
     try {
       const payload = buildAnalyticsPayload({
-        instanceIds: activePlan.instanceIds,
-        getCourseForInstance,
+        instanceIds: plan.instanceIds,
+        getCourseForInstance: resolveCourse,
         getBlocksForInstance: (id) => blockStore.getCachedForInstance(id) ?? [],
-        getStudyGroupsForInstance: (unitId, offeringId) =>
-          studyGroupStore.getCached(unitId, offeringId),
+        getStudyGroupsForInstance: (unitId, offeringId) => studyGroupStore.getCached(unitId, offeringId),
         topK: 20,
-        scoreMode: "minMaxConcurrentThenOverlap",
+        scoreMode: "minMaxConcurrentThenOverlap"
       });
 
       const raw = await fetchTopKSchedulePairs(payload);
-      analyticsResp = normalizeComputeSchedulePairsResponse(raw);
+      ui.analyticsResp = normalizeComputeSchedulePairsResponse(raw);
     } catch (e) {
-      analyticsError = e instanceof Error ? e.message : String(e);
+      ui.analyticsError = e instanceof Error ? e.message : String(e);
     } finally {
-      running = false;
+      ui.running = false;
     }
   }
 
   onMount(() => {
     // Kick historical load early so BlocksGrid can render for historical instances.
     if (isSignedIn) {
-      void courseIndexStore.ensureHistoricalLoaded();
+      void courseIndexStore.actions.ensureHistoricalLoaded();
     }
 
     const onKeydown = (e: KeyboardEvent) => {
-      if (!showAnalyticsModal) return;
+      if (!ui.showAnalyticsModal) return;
       if (e.key === "Escape") {
         e.preventDefault();
         closeAnalyticsModal();
@@ -105,20 +150,20 @@
       <p>You need to be logged in to see your course plans.</p>
     </div>
 
-  {:else if $plansStore.loading}
+  {:else if planState.loading}
     <div class="loading-state">
       <div class="spinner"></div>
       <p>Loading plans...</p>
     </div>
 
-  {:else if $plansStore.error}
+  {:else if planState.error}
     <div class="state-card error">
       <h2>Something went wrong</h2>
-      <p>{$plansStore.error}</p>
+      <p>{planState.error}</p>
       <button onclick={loadPlans} class="btn btn-secondary">Try Again</button>
     </div>
 
-  {:else if $plansStore.plans.length === 0}
+  {:else if planState.plans.length === 0}
     <div class="state-card">
       <div class="icon-circle">📋</div>
       <h2>No plans yet</h2>
@@ -137,19 +182,19 @@
     <div class="header-section">
       <div class="title-group">
         <h2>LEGO Composition</h2>
-        {#if courseIndexState.historicalLoading}
+        {#if courseIndexStore.state.historicalLoading}
           <p class="muted">Loading historical courses...</p>
         {/if}
       </div>
 
-      <button class="btn btn-analytics" onclick={showAnalysis} disabled={running}>
-        {running ? "Running..." : "Compute best schedules"}
+      <button class="btn btn-analytics" onclick={showAnalysis} disabled={ui.running}>
+        {ui.running ? "Running..." : "Compute best schedules"}
       </button>
 
       <PlanManager compact={true} />
 
-      {#if analyticsError && !showAnalyticsModal}
-        <div class="alert alert-error mt-2">{analyticsError}</div>
+      {#if ui.analyticsError && !ui.showAnalyticsModal}
+        <div class="alert alert-error mt-2">{ui.analyticsError}</div>
       {/if}
     </div>
 
@@ -163,7 +208,7 @@
       {:else}
         <div class="instances-list">
           {#each activePlan.instanceIds as instanceId (instanceId)}
-            {@const course = getCourseForInstance(instanceId)}
+            {@const course = resolveCourse(instanceId)}
             <div class="instance-card">
               <div class="instance-header">
                 <div class="instance-info">
@@ -172,7 +217,7 @@
                     <p class="instance-name">{course.name?.en}</p>
                   {:else}
                     <h3 class="instance-id">{instanceId}</h3>
-                    {#if courseIndexState.historicalLoading}
+                    {#if courseIndexStore.state.historicalLoading}
                       <p class="instance-name muted">Loading course...</p>
                     {/if}
                   {/if}
@@ -183,7 +228,7 @@
                 <div class="instance-content">
                   <BlocksGrid {course} />
                 </div>
-              {:else if courseIndexState.historicalLoading}
+              {:else if courseIndexStore.state.historicalLoading}
                 <div class="instance-content">
                   <p class="muted">Waiting for historical data...</p>
                 </div>
@@ -200,7 +245,7 @@
   {/if}
 </div>
 
-{#if showAnalyticsModal}
+{#if ui.showAnalyticsModal}
   <div class="modal-backdrop" role="presentation">
     <button
       type="button"
@@ -217,18 +262,18 @@
       </div>
 
       <div class="modal-body">
-        {#if running}
+        {#if ui.running}
           <div class="loading-state">
             <div class="spinner"></div>
             <p>Computing best schedules...</p>
           </div>
-        {:else if analyticsError}
+        {:else if ui.analyticsError}
           <div class="alert alert-error">
             <h3>Error</h3>
-            <p>{analyticsError}</p>
+            <p>{ui.analyticsError}</p>
           </div>
         {:else}
-          <AnalyticsResults data={analyticsResp} />
+          <AnalyticsResults data={ui.analyticsResp} />
         {/if}
       </div>
     </div>

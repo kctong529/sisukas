@@ -3,12 +3,12 @@
   import { createEventDispatcher } from 'svelte';
   
   export let showUnique: boolean = false;
-  export let source: "active" | "historical" = "active";
+  export let source: "active" | "all" = "active";
   
   const dispatch = createEventDispatcher();
 
   function toggleSource() {
-    const next = source === "active" ? "historical" : "active";
+    const next = source === "active" ? "all" : "active";
     source = next;
     dispatch("sourceChange", { source: next });
   }

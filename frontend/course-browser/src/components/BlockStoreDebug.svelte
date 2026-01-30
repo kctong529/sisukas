@@ -4,8 +4,7 @@
   import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import type { Block } from '../domain/models/Block';
   import type { StudyGroup } from '../domain/models/StudyGroup';
-  import { SvelteSet } from 'svelte/reactivity';
-
+  
   interface BlockStoreState {
     blocksByCourseInstance: Record<string, Block[]>;
     loadingInstances: Set<string>;
@@ -47,7 +46,7 @@
   function toggleInstanceExpanded(instanceId: string) {
     if (expandedInstances.has(instanceId)) expandedInstances.delete(instanceId);
     else expandedInstances.add(instanceId);
-    expandedInstances = new SvelteSet(expandedInstances);
+    expandedInstances = new Set(expandedInstances);
   }
 
   function clearStore() {
@@ -89,14 +88,14 @@
   }
 
   function uniqueGroupsInInstance(blocks: Block[]): Set<string> {
-    const set = new SvelteSet<string>();
+    const set = new Set<string>();
     for (const b of blocks) for (const gid of b.studyGroupIds) set.add(gid);
     return set;
   }
 
   function findDuplicateGroupIds(blocks: Block[]): string[] {
-    const seen = new SvelteSet<string>();
-    const dup = new SvelteSet<string>();
+    const seen = new Set<string>();
+    const dup = new Set<string>();
     for (const b of blocks) {
       for (const gid of b.studyGroupIds) {
         if (seen.has(gid)) dup.add(gid);

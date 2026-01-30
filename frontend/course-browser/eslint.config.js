@@ -19,6 +19,9 @@ export default [
       },
       globals: globals.browser,
     },
+    rules: {
+      "svelte/prefer-svelte-reactivity": "off",
+    },
   },
 
   // Node.js scripts (CLI / tooling)
@@ -26,6 +29,20 @@ export default [
     files: ['**/*.js'],
     languageOptions: {
       globals: globals.node,
+    },
+  },
+
+  {
+    files: ["**/*.svelte.ts"],
+    languageOptions: {
+      parser: ts.parser,
+      parserOptions: {
+        sourceType: "module",
+        ecmaVersion: "latest",
+      },
+    },
+    rules: {
+      "svelte/prefer-svelte-reactivity": "off",
     },
   },
 

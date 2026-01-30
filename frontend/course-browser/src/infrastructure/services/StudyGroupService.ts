@@ -184,7 +184,12 @@ export class StudyGroupService {
 
   async fetchStudyGroupsBatch(
     requests: StudyGroupRequest[],
-    opts?: { chunkSize?: number; concurrency?: number; onProgress?: (p: { done: number; total: number }) => void }
+    opts?: {
+      chunkSize?: number;
+      concurrency?: number;
+      onProgress?: (p: { done: number; total: number }) => void;
+      onChunk?: (res: Map<string, StudyGroup[]>) => void;
+    }
   ): Promise<Map<string, StudyGroup[]>> {
     try {
       if (requests.length === 0) return new Map();
@@ -218,8 +223,11 @@ export class StudyGroupService {
           if (i >= total) return;
 
           const res = await this.fetchStudyGroupsBatchOnce(chunks[i]);
+          
+          // emit partial results immediately
+          opts?.onChunk?.(res);
 
-          // Merge results; later chunks overwrite earlier ones for the same key
+          // still keep merged final map for callers who want it
           for (const [k, v] of res.entries()) merged.set(k, v);
 
           done++;

@@ -3,12 +3,11 @@
   import { periodTimelineStore } from '../lib/stores/periodTimelineStore';
   import { plansStore } from '../lib/stores/plansStore';
   import { academicPeriodStore } from '../lib/stores/academicPeriodStore';
-  import { courseIndexStore } from '../lib/stores/courseIndexStore';
+  import { courseIndexStore } from '../lib/stores/courseIndexStore.svelte';
 
   import type { Plan } from '../domain/models/Plan';
   import type { AcademicPeriod } from '../domain/models/AcademicPeriod';
   import type { PeriodTimelineModel } from '../domain/viewModels/PeriodTimelineModel';
-  import { SvelteSet } from 'svelte/reactivity';
   import type { Course } from '../domain/models/Course';
 
   interface PlansStoreState {
@@ -18,34 +17,42 @@
     error: string | null;
   }
 
-  interface CourseIndexState {
-    byInstanceId: Map<string, Course>;
-    instanceIdsByCode?: Map<string, string[]>;
-    loading?: boolean;
-    error?: string | null;
-  }
+  let timeline = $state<PeriodTimelineModel | null>(null);
+  let plansState = $state<PlansStoreState | null>(null);
+  let periods = $state<AcademicPeriod[] | null>(null);
 
-  let timeline: PeriodTimelineModel | null = $state(null);
-  let plansState: PlansStoreState | null = $state(null);
-  let periods: AcademicPeriod[] | null = $state(null);
-  let courseIndex: CourseIndexState | null = $state(null);
+  const courseIndexState = $derived.by(() => courseIndexStore.state);
 
   let isOpen = $state(false);
   let showMissing = $state(true);
-  let expandedCols: Set<string> = $state(new Set());
+  let expandedCols = $state(new Set<string>());
 
-  const unsubTimeline = periodTimelineStore.subscribe((m) => (timeline = m));
-  const unsubPlans = plansStore.subscribe((s: PlansStoreState) => (plansState = s));
-  const unsubPeriods = academicPeriodStore.subscribe((p) => (periods = p));
-  const unsubCourseIndex = courseIndexStore.subscribe((s: CourseIndexState) => (courseIndex = s));
+  type Unsubscriber = () => void;
+  type Subscribable<T> = { subscribe(run: (value: T) => void): Unsubscriber };
+
+  type PeriodTimelineStoreValue = PeriodTimelineModel | null;
+  type AcademicPeriodStoreValue = AcademicPeriod[] | null;
+
+  function isSubscribable<T>(x: unknown): x is Subscribable<T> {
+    return !!x && typeof (x as { subscribe?: unknown }).subscribe === "function";
+  }
 
   $effect(() => {
-    return () => {
-      unsubTimeline();
-      unsubPlans();
-      unsubPeriods();
-      unsubCourseIndex();
-    };
+    const unsubs: Unsubscriber[] = [];
+
+    if (isSubscribable<PeriodTimelineStoreValue>(periodTimelineStore)) {
+      unsubs.push(periodTimelineStore.subscribe((m) => (timeline = m)));
+    }
+
+    if (isSubscribable<PlansStoreState>(plansStore)) {
+      unsubs.push(plansStore.subscribe((s) => (plansState = s)));
+    }
+
+    if (isSubscribable<AcademicPeriodStoreValue>(academicPeriodStore)) {
+      unsubs.push(academicPeriodStore.subscribe((p) => (periods = p)));
+    }
+
+    return () => unsubs.forEach((u) => u());
   });
 
   function togglePanel() {
@@ -55,15 +62,26 @@
   function toggleCol(id: string) {
     if (expandedCols.has(id)) expandedCols.delete(id);
     else expandedCols.add(id);
-    expandedCols = new SvelteSet(expandedCols);
+
+    // reassign so the template updates
+    expandedCols = new Set(expandedCols);
   }
 
   function activeInstanceIds(): string[] {
     return plansState?.activePlan?.instanceIds ?? [];
   }
 
+  function resolveCourseFromIndex(instanceId: string): Course | undefined {
+    const s = courseIndexState;
+    return (
+      s.byInstanceId.get(instanceId) ??
+      s.historicalByInstanceId.get(instanceId) ??
+      undefined
+    );
+  }
+
   function courseIndexHas(id: string): boolean {
-    return !!courseIndex?.byInstanceId?.get(id);
+    return !!resolveCourseFromIndex(id);
   }
 
   function missingInstanceIds(): string[] {
@@ -72,7 +90,8 @@
   }
 
   function resolvedInstanceCount(): number {
-    return activeInstanceIds().length - missingInstanceIds().length;
+    const ids = activeInstanceIds();
+    return ids.length - missingInstanceIds().length;
   }
 
   function totalChipsInTimeline(): number {
@@ -80,8 +99,8 @@
     return timeline.columns.reduce((sum, c) => sum + (c.items?.length ?? 0), 0);
   }
 
-  function uniqueInstanceIdsInTimeline(): SvelteSet<string> {
-    const set = new SvelteSet<string>();
+  function uniqueInstanceIdsInTimeline(): Set<string> {
+    const set = new Set<string>();
     if (!timeline) return set;
     for (const col of timeline.columns) for (const it of col.items) set.add(it.instanceId);
     return set;
@@ -90,14 +109,16 @@
   // NOTE: This flags cross-period repeats too; that's expected for spanning courses.
   function duplicateInstanceIdsInTimeline(): string[] {
     if (!timeline) return [];
-    const seen = new SvelteSet<string>();
-    const dup = new SvelteSet<string>();
+    const seen = new Set<string>();
+    const dup = new Set<string>();
+
     for (const col of timeline.columns) {
       for (const it of col.items) {
         if (seen.has(it.instanceId)) dup.add(it.instanceId);
         else seen.add(it.instanceId);
       }
     }
+
     return Array.from(dup);
   }
 
@@ -109,26 +130,28 @@
   }
 
   function courseLabelFromIndex(instanceId: string): string {
-    const c = courseIndex?.byInstanceId?.get(instanceId);
+    const c = resolveCourseFromIndex(instanceId);
     if (!c) return instanceId;
-    const code = c?.code?.value ?? 'UNKNOWN';
-    const nameObj = c?.name;
+
+    const code = c.code?.value ?? 'UNKNOWN';
+    const nameObj = c.name;
     const name =
       typeof nameObj === 'string'
         ? nameObj
         : nameObj?.en ?? nameObj?.fi ?? nameObj?.sv ?? 'Untitled';
+
     return `${code} — ${name}`;
   }
 
   // -------------------
   // Runes-mode deriveds
   // -------------------
-  const missingIds = $derived(missingInstanceIds());
-  const dups = $derived(duplicateInstanceIdsInTimeline());
-  const planIds = $derived(activeInstanceIds());
-  const uniqueInTimeline = $derived(uniqueInstanceIdsInTimeline());
-  const chipsTotal = $derived(totalChipsInTimeline());
-  const resolvedCount = $derived(resolvedInstanceCount());
+  const planIds = $derived.by(() => activeInstanceIds());
+  const missingIds = $derived.by(() => missingInstanceIds());
+  const resolvedCount = $derived.by(() => resolvedInstanceCount());
+  const chipsTotal = $derived.by(() => totalChipsInTimeline());
+  const uniqueInTimeline = $derived.by(() => uniqueInstanceIdsInTimeline());
+  const dups = $derived.by(() => duplicateInstanceIdsInTimeline());
 </script>
 
 <div class="debug-panel" data-index="3">
@@ -335,10 +358,10 @@
           <div class="error-message">{plansState.error}</div>
         </div>
       {/if}
-      {#if courseIndex?.error}
+      {#if courseIndexState?.error}
         <div class="section error">
           <h4>⚠️ Course index error</h4>
-          <div class="error-message">{courseIndex.error}</div>
+          <div class="error-message">{courseIndexState.error}</div>
         </div>
       {/if}
     </div>
