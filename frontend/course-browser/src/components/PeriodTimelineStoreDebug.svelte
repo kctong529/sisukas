@@ -1,7 +1,7 @@
 <!-- src/components/PeriodTimelineStoreDebug.svelte -->
 <script lang="ts">
-  import { periodTimelineStore } from '../lib/stores/periodTimelineStore';
-  import { plansStore } from '../lib/stores/plansStore';
+  import { periodTimelineStore } from '../lib/stores/periodTimelineStore.svelte';
+  import { plansStore } from '../lib/stores/plansStore.svelte';
   import { academicPeriodStore } from '../lib/stores/academicPeriodStore';
   import { courseIndexStore } from '../lib/stores/courseIndexStore.svelte';
 

@@ -70,6 +70,8 @@ app.get('/health', async (req: Request, res: Response) => {
   }
 });
 
+app.use("/api/course-snapshots", courseSnapshotsRoutes);
+
 // Admin routes (login is public, logout requires admin token)
 app.use('/api/admin', adminRoutes);
 app.use('/api/analytics', analyticsRoutes);
@@ -84,7 +86,6 @@ app.use('/api/favourites', favouritesRoutes);
 app.use('/api/plans', plansRoutes);
 app.use("/api/grades", gradesRoutes);
 app.use("/api/transcript", transcriptRoutes);
-app.use("/api/course-snapshots", courseSnapshotsRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on ${process.env.BACKEND_URL}`);

@@ -13,7 +13,7 @@ router.use(requireAuth);
  * Get all plans for the current user
  * 
  * Protected: Requires authentication
- * Response: { plans: Plan[] }
+ * Response: { Plan[] }
  */
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -173,6 +173,84 @@ router.delete('/:planId/instances/:instanceId', async (req: Request, res: Respon
     console.error('Remove instance error:', error);
     res.status(500).json({
       error: 'Failed to remove instance',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * PATCH /api/plans/:planId
+ * Update a plan (name)
+ * 
+ * Protected: Requires authentication
+ * Ownership: User can only update their own plans
+ * Body: { name: string }
+ * Response: { id: string, userId: string, name: string, isActive: boolean, instanceIds: string[], createdAt: Date, updatedAt: Date }
+ */
+router.patch('/:planId', async (req: Request, res: Response) => {
+  try {
+    const userId = res.locals.user.id;
+    const { planId } = req.params;
+    const { name } = req.body;
+
+    // Validate required field
+    if (!name || typeof name !== 'string') {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: { name: 'Name is required and must be a string' },
+      });
+    }
+
+    // Verify ownership before updating
+    const exists = await PlansService.verifyOwnership(userId, planId);
+    if (!exists) {
+      return res.status(404).json({
+        error: 'Plan not found',
+        message: 'Either this plan does not exist or you do not have permission to modify it',
+      });
+    }
+
+    const plan = await PlansService.updatePlanName(planId, name.trim());
+
+    res.json(plan);
+  } catch (error) {
+    console.error('Update plan error:', error);
+    res.status(500).json({
+      error: 'Failed to update plan',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * DELETE /api/plans/:planId
+ * Delete a plan
+ * 
+ * Protected: Requires authentication
+ * Ownership: User can only delete their own plans
+ * Response: 204 No Content
+ */
+router.delete('/:planId', async (req: Request, res: Response) => {
+  try {
+    const userId = res.locals.user.id;
+    const { planId } = req.params;
+
+    // Verify ownership before deleting
+    const exists = await PlansService.verifyOwnership(userId, planId);
+    if (!exists) {
+      return res.status(404).json({
+        error: 'Plan not found',
+        message: 'Either this plan does not exist or you do not have permission to delete it',
+      });
+    }
+
+    await PlansService.deletePlan(planId);
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('Delete plan error:', error);
+    res.status(500).json({
+      error: 'Failed to delete plan',
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }

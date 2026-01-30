@@ -109,117 +109,126 @@
 </script>
 
 {#if visible}
-  <div id="periods-container">
+  <div class="periods-container">
     {#each yearEntries as [year, yearPeriods] (year)}
-      <div class="year">
-        <span id="year">{year}</span>
-        {#each yearPeriods as period (period.id)}
-          {@const globalIndex = visiblePeriods.findIndex(p => p.id === period.id)}
-          <div
-            class="period"
-            class:selected={isPeriodSelected(period.id)}
-            data-period={period.id}
-            data-index={globalIndex}
-            role="button"
-            tabindex="0"
+      <div class="year-group">
+        <span class="year-label">{year}</span>
+        <div class="periods-row">
+          {#each yearPeriods as period (period.id)}
+            {@const globalIndex = visiblePeriods.findIndex(p => p.id === period.id)}
+            <div
+              class="period"
+              class:selected={isPeriodSelected(period.id)}
+              data-period={period.id}
+              data-index={globalIndex}
+              role="button"
+              tabindex="0"
 
-            on:mousedown={(e) => handleMouseDown(globalIndex, period.id, e)}
-            on:mouseover={(e) => handleMouseOver(globalIndex, e)}
-            on:mouseup={handleMouseUp}
-            
-            on:focus={handleFocus}
-            on:blur={handleBlur}
-            on:keydown={(e) => handleKeyDown(e, globalIndex, period.id)}
+              on:mousedown={(e) => handleMouseDown(globalIndex, period.id, e)}
+              on:mouseover={(e) => handleMouseOver(globalIndex, e)}
+              on:mouseup={handleMouseUp}
+              
+              on:focus={handleFocus}
+              on:blur={handleBlur}
+              on:keydown={(e) => handleKeyDown(e, globalIndex, period.id)}
 
-            on:touchstart={(e) => handleTouchStart(globalIndex, period.id, e)}
-            on:touchmove={handleTouchMove}
-            on:touchend={handleTouchEnd}
-          >
-            <span class="full-text">Period {period.name}</span>
-            <span class="abbreviated-text">{period.name}</span>
-          </div>
-        {/each}
+              on:touchstart={(e) => handleTouchStart(globalIndex, period.id, e)}
+              on:touchmove={handleTouchMove}
+              on:touchend={handleTouchEnd}
+            >
+              <span class="full-text">Period {period.name}</span>
+              <span class="abbreviated-text">{period.name}</span>
+            </div>
+          {/each}
+        </div>
       </div>
     {/each}
   </div>
 {/if}
 
 <style>
-  /* Basic styling for the container */
-  #periods-container {
-    position: relative;
-    width: 98%;
+  :root {
+    --primary: #4a90e2;
+    --primary-hover: #2980f1;
+    --text-main: #1e293b;
+    --border: #e2e8f0;
+  }
+
+  .periods-container {
     display: flex;
-    margin-top: 14px;
-    left: 2%;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #ffffff;
+  }
+
+  .year-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     flex-wrap: wrap;
-    gap: 2px;
-    max-width: 700px;
   }
 
-  /* Styling for the year div */
-  .year {
-    width: 86%;
+  .year-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    white-space: nowrap;
+    min-width: 60px;
+  }
+
+  .periods-row {
     display: flex;
-    align-items: center;
-    margin-bottom: 5px;
-    max-width: 600px;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    flex: 1;
   }
 
-  #year {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    vertical-align: middle;
-    margin-right: 4px;
-  }
-
-  /* Styling for each period */
+  /* Period button styling */
   .period {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
-    box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-left: 4px;
-    padding-left: 3.6%;
-    padding-right: 3.6%;
-    font-size: 1em;
+    padding: 0.4rem 0.6rem;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
     cursor: pointer;
-    height: 2.7em;
-    text-align: center;
-    background-color: #f0f0f0;
+    font-size: 0.8rem;
     font-weight: 500;
+    height: 32.5px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    transition: all 0.2s;
     user-select: none;
   }
 
-  /* Hover effect */
-  .period:hover {
-    background-color: #eee;
-    border-color: #888;
-    box-shadow: 0 4px 6px rgb(0 0 0 / 10%);
+  .period:hover:not(.selected) {
+    border-color: var(--primary);
+    background: #f8fafc;
+  }
+
+  .period:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
   /* Selected state */
   .period.selected {
-    background-color: #4a90e2;
+    background: var(--primary);
     color: white;
-    border-color: #08D;
-    box-shadow: 0 4px 8px rgb(0 0 0 / 20%);
+    border-color: var(--primary);
   }
 
-  /* Active state during dragging */
-  .period:active {
-    background-color: #4a90e2;
-    border-color: #08D;
+  .period.selected:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
   }
 
-  /* Focus outline for accessibility */
-  .period:focus {
-    outline: 2px solid #008CBA;
-    outline-offset: 2px;
+  .period.selected:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
   }
 
   .abbreviated-text {
@@ -230,19 +239,53 @@
     display: inline;
   }
 
-  /* Custom Responsive Styling for .period */
-  @media (width <= 484px) {
-    .period {
-      padding-left: 7%;
-      padding-right: 7%;
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .periods-container {
+      padding: 0.5rem 0.75rem;
+      gap: 0.5rem;
     }
 
+    .year-label {
+      font-size: 0.8rem;
+      min-width: 50px;
+    }
+
+    .period {
+      padding: 0.3rem 0.5rem;
+      font-size: 0.75rem;
+      height: 30px;
+    }
+  }
+
+  @media (max-width: 484px) {
     .period .full-text {
       display: none;
     }
 
     .period .abbreviated-text {
       display: inline;
+    }
+
+    .period {
+      padding: 0.3rem 0.4rem;
+      min-width: 32px;
+    }
+  }
+
+  @media (max-width: 372px) {
+    .year-group {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.3rem;
+    }
+
+    .year-label {
+      min-width: auto;
+    }
+
+    .periods-row {
+      width: 100%;
     }
   }
 </style>

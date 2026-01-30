@@ -1,8 +1,8 @@
-<!-- src/components/FavouritesView.svelte (runes, no $:, no on:click) -->
+<!-- src/components/FavouritesView.svelte -->
 <script lang="ts">
   import { useSession } from '../lib/authClient';
   import { favouritesStore } from '../lib/stores/favouritesStore';
-  import { plansStore } from '../lib/stores/plansStore';
+  import { plansStore } from '../lib/stores/plansStore.svelte';
   import { courseIndexStore } from '../lib/stores/courseIndexStore.svelte';
   import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import { courseGradeStore } from '../lib/stores/courseGradeStore';
@@ -11,6 +11,7 @@
   import type { Course } from '../domain/models/Course';
   import PlanManager from './PlanManager.svelte';
   import type { Favourite } from '../infrastructure/services/FavouritesService';
+  import PlanEditor from './PlanEditor.svelte';
 
   let { source = $bindable("active") } = $props<{ source?: "active" | "all" }>();
 
@@ -31,14 +32,6 @@
     error?: string | null;
   };
 
-  type PlanLike = { id: string; name: string; instanceIds: string[] };
-  type PlansStoreValue = {
-    plans?: PlanLike[];
-    activePlan?: PlanLike | null;
-    loading?: boolean;
-    error?: string | null;
-  };
-
   const favState = $state<{
     favourites: Favourite[];
     loading: boolean;
@@ -49,11 +42,6 @@
     error: null
   });
 
-  const planState = $state<{ plans: PlanLike[]; activePlan: PlanLike | null }>({
-    plans: [],
-    activePlan: null
-  });
-
   $effect(() => {
     const unsubs: Unsubscriber[] = [];
 
@@ -63,43 +51,6 @@
           favState.favourites = v?.favourites ?? [];
           favState.loading = !!v?.loading;
           favState.error = v?.error ?? null;
-        })
-      );
-    }
-
-    if (isSubscribable<PlansStoreValue>(plansStore)) {
-      unsubs.push(
-        plansStore.subscribe((v) => {
-          planState.plans = v?.plans ?? [];
-          planState.activePlan = v?.activePlan ?? null;
-        })
-      );
-    }
-
-    return () => unsubs.forEach((u) => u());
-  });
-
-  // (Optional) if grades/plans need state for template conditions later, add bridges similarly.
-
-  // Subscribe once on mount
-  $effect(() => {
-    const unsubs: Unsubscriber[] = [];
-
-    if (isSubscribable<FavouritesStoreValue>(favouritesStore)) {
-      unsubs.push(
-        favouritesStore.subscribe((v) => {
-          favState.favourites = v?.favourites ?? [];
-          favState.loading = !!v?.loading;
-          favState.error = v?.error ?? null;
-        })
-      );
-    }
-
-    if (isSubscribable<PlansStoreValue>(plansStore)) {
-      unsubs.push(
-        plansStore.subscribe((v) => {
-          planState.plans = v?.plans ?? [];
-          planState.activePlan = v?.activePlan ?? null;
         })
       );
     }
@@ -134,7 +85,7 @@
   $effect(() => {
     if (!isSignedIn) {
       favouritesStore.clear?.();
-      plansStore.clear?.();
+      plansStore.actions.clear();
       courseGradeStore.clear?.();
 
       expandedInstanceIds = new Set();
@@ -175,15 +126,7 @@
     if (!ui.hasLoadedForUser) return;
     if (ui.hasInitializedPlans) return;
 
-    void (async () => {
-      try {
-        await initializePlans();
-      } catch (err) {
-        console.error('Failed to initialize plans:', err);
-      } finally {
-        ui.hasInitializedPlans = true;
-      }
-    })();
+    void initializePlans();
   });
 
   $effect(() => {
@@ -201,19 +144,31 @@
   });
 
   async function initializePlans() {
-    await plansStore.load?.();
+    try {
+      await plansStore.actions.ensureLoaded();
 
-    if (planState.plans.length === 0) {
-      const defaultPlan = await plansStore.create('Default');
-      await plansStore.setActive(defaultPlan.id);
-    } else if (!planState.activePlan) {
-      await plansStore.setActive(planState.plans[0].id);
+      const plans = plansStore.read.getAll();
+      const activePlan = plansStore.read.getActive();
+
+      if (plans.length === 0) {
+        // Create and activate default plan
+        const defaultPlan = await plansStore.actions.create('Default');
+        await plansStore.actions.setActive(defaultPlan.id);  // ← Use the returned plan's ID
+      } else if (!activePlan && plans.length > 0) {
+        // Activate first plan if none is active
+        await plansStore.actions.setActive(plans[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to initialize plans:', err);
+    } finally {
+      ui.hasInitializedPlans = true;
     }
   }
 
   const planInstanceIdByCode = $derived.by(() => {
     const m = new Map<string, string>();
-    const ids = planState.activePlan?.instanceIds ?? [];
+    const activePlan = plansStore.read.getActive();
+    const ids = activePlan?.instanceIds ?? [];
 
     for (const id of ids) {
       const c = courseIndexStore.read.resolveByInstanceId(id);
@@ -221,12 +176,6 @@
     }
 
     return m;
-  });
-
-  // Sync expanded instances with active plan
-  $effect(() => {
-    if (!planState.activePlan) return;
-    expandedInstanceIds = new Set(planState.activePlan.instanceIds ?? []);
   });
 
   let lastSig = "";
@@ -237,7 +186,7 @@
     if (ui.sortedFavourites.length === 0) return;
     if (source !== "active") return;
 
-  // Build requests in the UI order (addedAt desc by default)
+    // Build requests in the UI order (addedAt desc by default)
     const reqs: Array<{ courseUnitId: string; courseOfferingId: string }> = [];
     const seen = new Set<string>();
 
@@ -269,8 +218,8 @@
     }
 
     const selectedId = planInstanceIdByCode.get(code);
-      if (!selectedId) return courses;
-    
+    if (!selectedId) return courses;
+
     // If the plan-selected instance isn't in this view, pin it into the list
     if (!courses.some((c) => c.id === selectedId)) {
       const selected = courseIndexStore.read.resolveByInstanceId(selectedId);
@@ -282,7 +231,7 @@
 
   // Build sorted favourites whenever deps change
   $effect(() => {
-    // Helper: get the “primary” course for a favourite (first relevant instance),
+    // Helper: get the "primary" course for a favourite (first relevant instance),
     // used only for sorting by name/credits/startDate.
     const primary = (courseId: string) => getCoursesForId(courseId)[0];
 
@@ -365,16 +314,16 @@
   }
 
   function toggleInstance(courseCode: string, instanceId: string) {
-    const plan = planState.activePlan;
+    const activePlan = plansStore.read.getActive();
 
     if (expandedInstanceIds.has(instanceId)) {
-      const wasInPlan = plan?.instanceIds?.includes(instanceId) ?? false;
+      const wasInPlan = activePlan?.instanceIds?.includes(instanceId) ?? false;
 
       expandedInstanceIds.delete(instanceId);
       expandedInstanceIds = new Set(expandedInstanceIds);
 
       if (wasInPlan) {
-        NotificationService.error(`Instance removed from ${plan?.name ?? 'plan'}`);
+        NotificationService.error(`Instance removed from ${activePlan?.name ?? 'plan'}`);
         void removedInstanceFromPlan(instanceId);
       }
 
@@ -396,10 +345,9 @@
     }
   }
 
-
   async function removedInstanceFromPlan(instanceId: string) {
     try {
-      await plansStore.removeInstanceFromActivePlan(instanceId);
+      await plansStore.actions.removeInstanceFromActivePlan(instanceId);
     } catch (err) {
       console.error('Failed to remove instance from plan:', err);
     }
@@ -407,13 +355,14 @@
 
   async function addInstanceToActivePlan(instanceId: string) {
     try {
-      if (!planState.activePlan) {
+      const activePlan = plansStore.read.getActive();
+      if (!activePlan) {
         NotificationService.error('No active plan');
         return;
       }
 
-      await plansStore.addInstanceToActivePlan(instanceId);
-      NotificationService.success(`Instance added to ${planState.activePlan.name}`);
+      await plansStore.actions.addInstanceToActivePlan(instanceId);
+      NotificationService.success(`Instance added to ${activePlan.name}`);
     } catch (err) {
       console.error('Failed to add instance to plan:', err);
       NotificationService.error('Failed to add instance to plan');
@@ -421,11 +370,12 @@
   }
 
   function isInstanceInActivePlan(instanceId: string): boolean {
-    return planState.activePlan?.instanceIds?.includes(instanceId) ?? false;
+    const activePlan = plansStore.read.getActive();
+    return activePlan?.instanceIds?.includes(instanceId) ?? false;
   }
 
   function isInstanceExpanded(instanceId: string): boolean {
-    return expandedInstanceIds.has(instanceId);
+    return expandedInstanceIds.has(instanceId) || isInstanceInActivePlan(instanceId);
   }
 
   function visibleInstancesFor(courses: Course[]): Course[] {
@@ -434,7 +384,8 @@
   }
 
   function instanceToAddFor(courses: Course[]): Course | null {
-    if (!planState.activePlan) return null;
+    const activePlan = plansStore.read.getActive();
+    if (!activePlan) return null;
     const expanded = courses.find((c) => expandedInstanceIds.has(c.id) && !isInstanceInActivePlan(c.id));
     return expanded ?? null;
   }
@@ -484,7 +435,10 @@
         <h2>Your Favourites</h2>
       </div>
 
-      <PlanManager compact={true} />
+      <div class="plan-controls">
+        <PlanManager compact={true} />
+        <PlanEditor plan={plansStore.read.getActive()} />
+      </div>
 
       <div class="controls">
         {#if ui.removeMode}
@@ -585,7 +539,7 @@
                   type="button"
                   class="add-btn"
                   aria-label="Add to active plan"
-                  title="Add to {planState.activePlan?.name || 'plan'}"
+                  title="Add to {plansStore.read.getActive()?.name || 'plan'}"
                   onclick={async () => {
                     await addInstanceToActivePlan(instanceToAdd.id);
                   }}
@@ -725,6 +679,14 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .plan-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    min-width: 0;
   }
 
   h2 {
@@ -1242,6 +1204,11 @@
     .header-section {
       flex-direction: column;
       align-items: flex-start;
+    }
+
+    .plan-controls {
+      flex-direction: column;
+      width: 100%;
     }
   }
 </style>

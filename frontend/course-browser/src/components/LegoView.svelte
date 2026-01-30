@@ -3,7 +3,7 @@
   import { onMount } from "svelte";
   import { useSession } from "../lib/authClient";
   import { courseIndexStore } from "../lib/stores/courseIndexStore.svelte";
-  import { plansStore } from "../lib/stores/plansStore";
+  import { plansStore } from "../lib/stores/plansStore.svelte";
   import { blockStore } from "../lib/stores/blockStore";
   import { studyGroupStore } from "../lib/stores/studyGroupStore";
 
@@ -22,70 +22,32 @@
   const user = $derived.by(() => $session.data?.user);
   const isSignedIn = $derived.by(() => !!user);
 
-  // ---- Bridge plansStore (if it's still a legacy store) ----
-  type PlanLike = { id: string; name: string; instanceIds: string[] };
-
-  const planState = $state<{
-    plans: PlanLike[];
-    activePlan: PlanLike | null;
-    loading: boolean;
-    error: string | null;
-  }>({
-    plans: [],
-    activePlan: null,
-    loading: false,
-    error: null
-  });
-
-  type Unsubscriber = () => void;
-  type Subscribable<T> = { subscribe(run: (value: T) => void): Unsubscriber };
-
-  type PlansStoreValue = {
-    plans?: PlanLike[];
-    activePlan?: PlanLike | null;
-    loading?: boolean;
-    error?: string | null;
-  };
-
-  function isSubscribable<T>(x: unknown): x is Subscribable<T> {
-    return !!x && typeof (x as { subscribe?: unknown }).subscribe === "function";
-  }
-
-  $effect(() => {
-    const unsubs: Unsubscriber[] = [];
-
-    if (isSubscribable<PlansStoreValue>(plansStore)) {
-      unsubs.push(
-        plansStore.subscribe((v) => {
-          planState.plans = v?.plans ?? [];
-          planState.activePlan = v?.activePlan ?? null;
-          planState.loading = !!v?.loading;
-          planState.error = v?.error ?? null;
-        })
-      );
-    }
-
-    return () => unsubs.forEach((u) => u());
-  });
-
-  const activePlan = $derived.by(() => planState.activePlan);
-
   // ---- Local UI state ----
   const ui = $state({
     analyticsResp: null as AnalyticsResponse | null,
     analyticsError: null as string | null,
     running: false,
-    showAnalyticsModal: false
+    showAnalyticsModal: false,
+    plansLoading: false,
+    plansError: null as string | null,
   });
+
+  const activePlan = $derived.by(() => plansStore.read.getActive());
+  const plans = $derived.by(() => plansStore.read.getAll());
 
   const resolveCourse = (instanceId: string): Course | undefined =>
     courseIndexStore.read.resolveByInstanceId(instanceId);
 
   async function loadPlans() {
     try {
-      await plansStore.load?.();
+      ui.plansLoading = true;
+      ui.plansError = null;
+      await plansStore.actions.ensureLoaded();
     } catch (err) {
+      ui.plansError = err instanceof Error ? err.message : "Failed to load plans";
       console.error("Failed to load plans:", err);
+    } finally {
+      ui.plansLoading = false;
     }
   }
 
@@ -124,8 +86,9 @@
   }
 
   onMount(() => {
-    // Kick historical load early so BlocksGrid can render for historical instances.
+    // Load plans on mount
     if (isSignedIn) {
+      void loadPlans();
       void courseIndexStore.actions.ensureHistoricalLoaded();
     }
 
@@ -150,20 +113,20 @@
       <p>You need to be logged in to see your course plans.</p>
     </div>
 
-  {:else if planState.loading}
+  {:else if ui.plansLoading || plansStore.state.loading}
     <div class="loading-state">
       <div class="spinner"></div>
       <p>Loading plans...</p>
     </div>
 
-  {:else if planState.error}
+  {:else if ui.plansError || plansStore.state.error}
     <div class="state-card error">
       <h2>Something went wrong</h2>
-      <p>{planState.error}</p>
+      <p>{ui.plansError || plansStore.state.error}</p>
       <button onclick={loadPlans} class="btn btn-secondary">Try Again</button>
     </div>
 
-  {:else if planState.plans.length === 0}
+  {:else if plans.length === 0}
     <div class="state-card">
       <div class="icon-circle">📋</div>
       <h2>No plans yet</h2>

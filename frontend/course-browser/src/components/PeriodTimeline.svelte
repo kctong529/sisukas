@@ -1,18 +1,17 @@
 <!-- src/components/PeriodTimeline.svelte -->
 <script lang="ts">
-  import { periodTimelineStore } from '../lib/stores/periodTimelineStore';
+  import { periodTimelineStore } from '../lib/stores/periodTimelineStore.svelte';
   import { academicPeriodStore } from '../lib/stores/academicPeriodStore';
   import { periodTimelineYearStore } from '../lib/stores/periodTimelineYearStore';
   import { courseGradeStore } from "../lib/stores/courseGradeStore";
   import { AcademicPeriodVisibility } from '../domain/services/AcademicPeriodVisibility';
-  import type { PeriodTimelineChip, PeriodTimelineModel } from '../domain/viewModels/PeriodTimelineModel';
-  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
+  import type { PeriodTimelineChip } from '../domain/viewModels/PeriodTimelineModel';
   import PlanManager from './PlanManager.svelte';
   import { useSession } from '../lib/authClient';
   import { COURSE_PREFIX_RGB } from "../lib/coursePrefixColors";
   import { tick } from "svelte";
   import { computeYearStats, formatAvg } from '../lib/periodTimeline/yearStats';
-  import TranscriptExtractor from "./TranscriptExtractor.svelte"; // your PDF component
+  import TranscriptExtractor from "./TranscriptExtractor.svelte";
   import { importTranscript } from "../lib/transcript/importTranscript";
   import type { TranscriptRow, ImportTranscriptResult } from "../lib/transcript/importTranscript";
   import { NotificationService } from '../infrastructure/services/NotificationService';
@@ -20,11 +19,11 @@
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);
 
-  const model = $derived($periodTimelineStore as PeriodTimelineModel | null);
+  const model = $derived.by(() => periodTimelineStore.timeline);
   const periods = $derived($academicPeriodStore ?? []);
 
   const availableYears = $derived.by(() => {
-    const ys = new SvelteSet<string>();
+    const ys = new Set<string>();
     for (const p of periods) ys.add(p.academicYear);
     return Array.from(ys).sort();
   });
@@ -46,7 +45,7 @@
   let editingChipKey: string | null = $state(null);
   let draftGrade: string = $state("");
   let gradeInputEl: HTMLInputElement | null = $state(null);
-  let commitInFlightByUnitId = new SvelteSet<string>();
+  let commitInFlightByUnitId = new Set<string>();
 
   function startGradeEdit(chip: PeriodTimelineChip, e: Event) {
     e.preventDefault();
@@ -126,7 +125,7 @@
   const courseSpanMap = $derived.by(() => {
     if (!model) return null;
 
-    const map = new SvelteMap<
+    const map = new Map<
       string,
       { item: PeriodTimelineChip; colStart: number; colEnd: number }
     >();
@@ -207,7 +206,7 @@
 
   function updateIsMobile() {
     if (typeof window === 'undefined') return;
-    isMobile = window.matchMedia('(max-width: 923px)').matches;
+    isMobile = window.matchMedia('(max-width: 520px)').matches;
   }
 
   $effect(() => {
@@ -418,110 +417,112 @@
         <!-- =========================
             DESKTOP VIEW (original)
             ========================= -->
-        <div
-          class="timelineGrid"
-          style="
-            --col-count: {model.columns.length};
-            --lane-count: {laneCount};
-            --lane-count-safe: {Math.max(laneCount, 1)};
-          "
-        >
-          <!-- Row 1: headers -->
-          {#each model.columns as col, colIndex (col.period.id)}
-            <div class="periodCard periodCard--header" style="grid-column: {colIndex + 1};">
-              <div class="periodCard__top">
-                <div class="periodCard__title">Period {col.period.name}</div>
-                <div class="periodCard__credits" title="Total credits in this period">
-                  {formatCredits(creditsByPeriod?.[colIndex] ?? 0)} cr
+        <div class="timelineScroll">
+          <div
+            class="timelineGrid"
+            style="
+              --col-count: {model.columns.length};
+              --lane-count: {laneCount};
+              --lane-count-safe: {Math.max(laneCount, 1)};
+            "
+          >
+            <!-- Row 1: headers -->
+            {#each model.columns as col, colIndex (col.period.id)}
+              <div class="periodCard periodCard--header" style="grid-column: {colIndex + 1};">
+                <div class="periodCard__top">
+                  <div class="periodCard__title">Period {col.period.name}</div>
+                  <div class="periodCard__credits" title="Total credits in this period">
+                    {formatCredits(creditsByPeriod?.[colIndex] ?? 0)} cr
+                  </div>
+                </div>
+
+                <div class="periodCard__dates">
+                  {col.period.dateRange.start.toLocaleDateString()}
+                  –
+                  {col.period.dateRange.end.toLocaleDateString()}
                 </div>
               </div>
+            {/each}
 
-              <div class="periodCard__dates">
-                {col.period.dateRange.start.toLocaleDateString()}
-                –
-                {col.period.dateRange.end.toLocaleDateString()}
-              </div>
-            </div>
-          {/each}
-
-          <!-- Row 2: period bodies -->
-          {#each model.columns as col, colIndex (col.period.id)}
-            <div class="periodCard periodCard--body" style="grid-column: {colIndex + 1};">
-              <div class="periodBody__inner">
-                {#if laneCount === 0}
-                  <div class="periodBody__empty">No courses</div>
-                {:else}
-                  {#each Array.from({ length: laneCount }, (_, idx) => idx) as i (i)}
-                    <div class="laneSlot"></div>
-                  {/each}
-                {/if}
-              </div>
-            </div>
-          {/each}
-
-          <!-- Chips overlay -->
-          <div class="chipLayer">
-            {#each placements as p (p.key)}
-              <button
-                class="course-chip"
-                class:course-chip--spanning={p.spanCount > 1}
-                type="button"
-                title={p.item.name}
-                style="
-                  --p-start: {p.colStart + 1};
-                  --p-end: {p.colEnd + 2};
-                  --lane: {p.lane + 1};
-                  --chip-rgb: {COURSE_PREFIX_RGB[String(p.item.courseCode).split('-', 1)[0]] ?? COURSE_PREFIX_RGB.__OTHER__};
-                "
-                onclick={() => console.log('Clicked', p.item.courseCode)}
-              >
-                <div class="course-chip__header">
-                  <span class="course-chip__credits">{p.item.credits} cr</span>
-                  <span class="course-chip__code">{p.item.courseCode}</span>
-
-                  <span class="course-chip__spacer"></span>
-
-                  {#if editingChipKey === p.item.key}
-                    <input
-                      class="gradeInput"
-                      type="text"
-                      inputmode="numeric"
-                      pattern="[0-9]*"
-                      bind:this={gradeInputEl}
-                      bind:value={draftGrade}
-                      onclick={(e) => e.stopPropagation()}
-                      onkeydown={async (e) => {
-                        if (e.key === "Enter") {
-                          await commitGradeEdit(p.item, e);
-                          gradeInputEl?.blur();
-                          return;
-                        }
-
-                        if (e.key === "Escape") cancelGradeEdit(e);
-                      }}
-                      onblur={(e) => commitGradeEdit(p.item, e)}
-                      placeholder="—"
-                      aria-label="Edit grade"
-                    />
+            <!-- Row 2: period bodies -->
+            {#each model.columns as col, colIndex (col.period.id)}
+              <div class="periodCard periodCard--body" style="grid-column: {colIndex + 1};">
+                <div class="periodBody__inner">
+                  {#if laneCount === 0}
+                    <div class="periodBody__empty">No courses</div>
                   {:else}
-                    <span
-                      class="gradePill"
-                      role="button"
-                      tabindex="0"
-                      title="Click to edit grade"
-                      onclick={(e) => startGradeEdit(p.item, e)}
-                      onkeydown={(e) => {
-                        // keyboard activation
-                        if (e.key === "Enter" || e.key === " ") startGradeEdit(p.item, e);
-                      }}
-                    >
-                      {p.item.grade ?? "—"}
-                    </span>
+                    {#each Array.from({ length: laneCount }, (_, idx) => idx) as i (i)}
+                      <div class="laneSlot"></div>
+                    {/each}
                   {/if}
                 </div>
-                <span class="course-chip__name">{p.item.name}</span>
-              </button>
+              </div>
             {/each}
+
+            <!-- Chips overlay -->
+            <div class="chipLayer">
+              {#each placements as p (p.key)}
+                <button
+                  class="course-chip"
+                  class:course-chip--spanning={p.spanCount > 1}
+                  type="button"
+                  title={p.item.name}
+                  style="
+                    --p-start: {p.colStart + 1};
+                    --p-end: {p.colEnd + 2};
+                    --lane: {p.lane + 1};
+                    --chip-rgb: {COURSE_PREFIX_RGB[String(p.item.courseCode).split('-', 1)[0]] ?? COURSE_PREFIX_RGB.__OTHER__};
+                  "
+                  onclick={() => console.log('Clicked', p.item.courseCode)}
+                >
+                  <div class="course-chip__header">
+                    <span class="course-chip__credits">{p.item.credits} cr</span>
+                    <span class="course-chip__code">{p.item.courseCode}</span>
+
+                    <span class="course-chip__spacer"></span>
+
+                    {#if editingChipKey === p.item.key}
+                      <input
+                        class="gradeInput"
+                        type="text"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        bind:this={gradeInputEl}
+                        bind:value={draftGrade}
+                        onclick={(e) => e.stopPropagation()}
+                        onkeydown={async (e) => {
+                          if (e.key === "Enter") {
+                            await commitGradeEdit(p.item, e);
+                            gradeInputEl?.blur();
+                            return;
+                          }
+
+                          if (e.key === "Escape") cancelGradeEdit(e);
+                        }}
+                        onblur={(e) => commitGradeEdit(p.item, e)}
+                        placeholder="—"
+                        aria-label="Edit grade"
+                      />
+                    {:else}
+                      <span
+                        class="gradePill"
+                        role="button"
+                        tabindex="0"
+                        title="Click to edit grade"
+                        onclick={(e) => startGradeEdit(p.item, e)}
+                        onkeydown={(e) => {
+                          // keyboard activation
+                          if (e.key === "Enter" || e.key === " ") startGradeEdit(p.item, e);
+                        }}
+                      >
+                        {p.item.grade ?? "—"}
+                      </span>
+                    {/if}
+                  </div>
+                  <span class="course-chip__name">{p.item.name}</span>
+                </button>
+              {/each}
+            </div>
           </div>
         </div>
 
@@ -992,6 +993,16 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.25);
   }
 
+  .timelineScroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+
+    /* optional: looks nicer */
+    border-radius: 12px;
+    padding-bottom: 6px; /* space for scrollbar */
+  }
+
   /* =========================
      MOBILE ROTATED MATRIX
      ========================= */
@@ -1292,13 +1303,13 @@
   }
 
   /* Hide mobile matrix on desktop / hide desktop grid on mobile */
-  @media (max-width: 923px) {
+  @media (max-width: 520) {
     .timelineGrid {
       display: none;
     }
   }
 
-  @media (min-width: 924px) {
+  @media (min-width: 521) {
     .mobileMatrix {
       display: none;
     }

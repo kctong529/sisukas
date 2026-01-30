@@ -152,6 +152,14 @@
 </div>
 
 <style>
+  :root {
+    --primary: #4a90e2;
+    --primary-hover: #2980f1;
+    --text-main: #1e293b;
+    --border: #e2e8f0;
+    --danger: #ef4444;
+  }
+
   .filter-rule {
     margin-bottom: 0.3em;
     position: relative;
@@ -169,7 +177,7 @@
     display: inline-block;
     background-color: #fff;
     appearance: none;
-    font-size: 1em;
+    font-size: 0.75rem;
     cursor: pointer;
     height: 2.7em;
     vertical-align: middle;
@@ -182,7 +190,7 @@
 
   button, select, input {
     box-sizing: border-box;
-    box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
+    /* box-shadow: 0 2px 5px rgb(0 0 0 / 10%); */
     border: 1px solid #ddd;
     border-radius: 4px;
     padding-left: 0.7em;
@@ -217,14 +225,57 @@
     width: 100%;
     box-sizing: border-box;
   }
-  
-  .delete-btn {
-    color: #d9534f;
+
+  /* Focus and hover states */
+  .filter-boolean:hover,
+  .filter-field:hover,
+  .filter-relation:hover,
+  .filter-input input:hover,
+  .filter-input select:hover {
+    border-color: var(--primary);
+  }
+
+  .filter-boolean:focus,
+  .filter-field:focus,
+  .filter-relation:focus,
+  .filter-input input:focus,
+  .filter-input select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
   
+  /* Delete button */
+  .delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32.5px;
+    height: 32.5px;
+    padding: 0;
+    border: 1px solid var(--border);
+    background: #ffffff;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--danger);
+    flex-shrink: 0;
+  }
+
   .delete-btn:hover {
-    background-color: #d9534f;
+    background-color: var(--danger);
     color: white;
+    border-color: var(--danger);
+  }
+
+  .delete-btn:focus {
+    outline: none;
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+
+  .delete-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   /* Adjust widths for smaller screens */

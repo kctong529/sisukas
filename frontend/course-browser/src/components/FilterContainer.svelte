@@ -207,7 +207,7 @@
   on:close={handlePeriodSelectorClose}
 />
 
-<div id="filter-container">
+<div class="filter-container">
   {#if blueprints}
     {#each filterConfigs as config, index (config.id)}
       <FilterRule
@@ -235,20 +235,38 @@
 </div>
 
 <style>
-  #filter-container {
+  :root {
+    --primary: #4a90e2;
+    --primary-hover: #2980f1;
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+  }
+
+  .filter-container {
     position: relative;
     display: flex;
     flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.75rem 1rem;
+    background: var(--card-bg);
     min-height: 100px;
-    padding: 1.7%;
-    padding-bottom: 12px;
   }
   
   .empty-state {
     text-align: center;
     padding: 2rem;
-    color: #666;
-    border: 2px dashed #ddd;
+    background: var(--bg);
+    border: 2px dashed var(--border);
     border-radius: 8px;
+    color: var(--text-muted);
+  }
+
+  .empty-state p {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
   }
 </style>

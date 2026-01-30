@@ -1,10 +1,8 @@
 // src/routes/courseSnapshots.ts
 import { Router, Request, Response } from "express";
-import { requireAuth } from "../middleware/auth";
 import { CourseSnapshotsService } from "../services/CourseSnapshotsService";
 
 const router = Router();
-router.use(requireAuth);
 
 function readCourseCode(req: Request): string | null {
   const courseCode = String(req.query.courseCode ?? "").trim();

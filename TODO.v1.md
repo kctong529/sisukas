@@ -41,10 +41,11 @@ A student can:
 ## 3. Core Domain Consistency
 
 * [ ] Clean up and centralize the core data model.
-  - plans
-  - study groups
-  - schedule pairs
-  - blocks (minimal representation)
+  - [x] plans
+  - [ ] study groups
+  - [ ] schedule pairs
+  - [ ] blocks
+  - [x] course index (active, historical, and snapshots)
 * [ ] Define a single, explicit source of truth for the active plan.
 
 ## 4. Timeline (Release-Critical UI)
@@ -56,8 +57,8 @@ A student can:
 
 ## 5. Plan Management
 
-* [ ] Edit plan name.
-* [ ] Remove plan.
+* [x] Edit plan name.
+* [x] Remove plan.
 * [ ] Fix favourites ↔ plan inconsistency (removal propagates correctly).
 * [ ] Deterministic sorting rule for favourites (clearly defined).
 

@@ -411,7 +411,36 @@
   }
   
   /* Responsive */
-  @media (max-width: 768px) {
+  @media (max-width: 870px) {
+    .nav-links span,
+    .nav-user span {
+      display: none;
+    }
+
+    .nav-link {
+      padding: 0.5rem;
+      justify-content: center;
+    }
+
+    .nav-link i {
+      font-size: 1.2rem;
+    }
+
+    .sign-in-btn,
+    .sign-out-btn {
+      padding: 0.6rem;
+    }
+
+    .user-menu {
+      gap: 0.15rem;
+    }
+
+    .brand-tagline {
+      display: none;
+    }
+  }
+
+  @media (max-width: 460px) {
     .nav-links,
     .nav-user {
       display: none;
@@ -423,10 +452,6 @@
     
     .mobile-menu {
       display: flex;
-    }
-    
-    .brand-tagline {
-      display: none;
     }
   }
 </style>

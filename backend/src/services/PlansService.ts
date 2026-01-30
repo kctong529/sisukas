@@ -209,4 +209,31 @@ export class PlansService {
       updatedAt: plan[0].updatedAt,
     };
   }
+
+  /**
+   * Update a plan's name
+   */
+  static async updatePlanName(planId: string, newName: string): Promise<Plan> {
+    await db
+      .update(plans)
+      .set({ name: newName, updatedAt: new Date() })
+      .where(eq(plans.id, planId));
+
+    return this.getPlanById(planId);
+  }
+
+  /**
+   * Delete a plan and all its instances
+   */
+  static async deletePlan(planId: string): Promise<void> {
+    // Delete all instances for this plan
+    await db
+      .delete(planInstances)
+      .where(eq(planInstances.planId, planId));
+
+    // Delete the plan itself
+    await db
+      .delete(plans)
+      .where(eq(plans.id, planId));
+  }
 }

@@ -1,39 +1,25 @@
 <!-- src/components/PlansStoreDebug.svelte -->
 <script lang="ts">
-  import { plansStore } from '../lib/stores/plansStore';
-  import type { Plan } from '../domain/models/Plan';
+  import { plansStore } from '../lib/stores/plansStore.svelte';
 
-  interface PlansStoreState {
-    plans: Plan[];
-    activePlan: Plan | null;
-    loading: boolean;
-    error: string | null;
-  }
-
-  let storeState: PlansStoreState | null = $state(null);
   let isOpen = $state(false);
 
-  // Subscribe to store
-  const unsubscribe = plansStore.subscribe((state: PlansStoreState) => {
-    storeState = state;
-  });
-
-  // Cleanup on destroy
-  $effect(() => {
-    return () => unsubscribe();
-  });
+  const plans = $derived.by(() => plansStore.read.getAll());
+  const activePlan = $derived.by(() => plansStore.read.getActive());
+  const loading = $derived.by(() => plansStore.state.loading);
+  const error = $derived.by(() => plansStore.state.error);
 
   function togglePanel() {
     isOpen = !isOpen;
   }
 
   function clearStore() {
-    plansStore.clear();
+    plansStore.actions.clear();
   }
 
   async function loadPlans() {
     try {
-      await plansStore.load();
+      await plansStore.actions.ensureLoaded();
     } catch (err) {
       console.error('Failed to load plans:', err);
     }
@@ -43,7 +29,7 @@
     const name = prompt('Enter plan name:');
     if (!name) return;
     try {
-      await plansStore.create(name);
+      await plansStore.actions.create(name);
     } catch (err) {
       console.error('Failed to create plan:', err);
     }
@@ -51,7 +37,7 @@
 
   async function setActivePlan(planId: string) {
     try {
-      await plansStore.setActive(planId);
+      await plansStore.actions.setActive(planId);
     } catch (err) {
       console.error('Failed to set active plan:', err);
     }
@@ -62,11 +48,11 @@
     if (!instanceId) return;
     try {
       // Temporarily activate the plan to add instance
-      const originalActive = storeState?.activePlan?.id;
-      await plansStore.setActive(planId);
-      await plansStore.addInstanceToActivePlan(instanceId);
-      if (originalActive && originalActive !== planId) {
-        await plansStore.setActive(originalActive);
+      const originalActiveId = activePlan?.id;
+      await plansStore.actions.setActive(planId);
+      await plansStore.actions.addInstanceToActivePlan(instanceId);
+      if (originalActiveId && originalActiveId !== planId) {
+        await plansStore.actions.setActive(originalActiveId);
       }
     } catch (err) {
       console.error('Failed to add instance:', err);
@@ -79,7 +65,7 @@
     📋 Plans Store {isOpen ? '▼' : '▶'}
   </button>
 
-  {#if isOpen && storeState}
+  {#if isOpen}
     <div class="debug-content">
       <!-- Loading State -->
       <div class="section">
@@ -87,43 +73,43 @@
         <div class="status-grid">
           <div class="status-item">
             <span class="label">Loading:</span>
-            <span class="value" class:true={storeState.loading}>
-              {storeState.loading ? '⏳ Yes' : '✓ No'}
+            <span class="value" class:true={loading}>
+              {loading ? '⏳ Yes' : '✓ No'}
             </span>
           </div>
           <div class="status-item">
             <span class="label">Plans:</span>
-            <span class="value">{storeState.plans.length}</span>
+            <span class="value">{plans.length}</span>
           </div>
           <div class="status-item">
             <span class="label">Active:</span>
-            <span class="value" class:set={storeState.activePlan}>
-              {storeState.activePlan ? storeState.activePlan.name : '—'}
+            <span class="value" class:set={activePlan}>
+              {activePlan ? activePlan.name : '—'}
             </span>
           </div>
         </div>
       </div>
 
       <!-- Active Plan Details -->
-      {#if storeState.activePlan}
+      {#if activePlan}
         <div class="section active-plan">
           <h4>📌 Active Plan</h4>
           <div class="plan-details">
             <div class="detail-row">
               <span class="label">Name:</span>
-              <span class="value">{storeState.activePlan.name}</span>
+              <span class="value">{activePlan.name}</span>
             </div>
             <div class="detail-row">
               <span class="label">ID:</span>
-              <span class="value mono">{storeState.activePlan.id}</span>
+              <span class="value mono">{activePlan.id}</span>
             </div>
             <div class="detail-row">
               <span class="label">Instances:</span>
-              <span class="value">{storeState.activePlan.instanceIds.length}</span>
+              <span class="value">{activePlan.instanceIds.length}</span>
             </div>
-            {#if storeState.activePlan.instanceIds.length > 0}
+            {#if activePlan.instanceIds.length > 0}
               <div class="instances-list">
-                {#each storeState.activePlan.instanceIds as instId (instId)}
+                {#each activePlan.instanceIds as instId (instId)}
                   <div class="instance-tag">{instId}</div>
                 {/each}
               </div>
@@ -134,9 +120,9 @@
 
       <!-- All Plans List -->
       <div class="section">
-        <h4>All Plans ({storeState.plans.length})</h4>
+        <h4>All Plans ({plans.length})</h4>
         <div class="list">
-          {#each storeState.plans as plan (plan.id)}
+          {#each plans as plan (plan.id)}
             <div class="plan-item" class:active={plan.isActive}>
               <div class="plan-item-header">
                 <span class="plan-name">{plan.name}</span>
@@ -167,17 +153,17 @@
               </div>
             </div>
           {/each}
-          {#if storeState.plans.length === 0}
+          {#if plans.length === 0}
             <div class="empty">No plans loaded</div>
           {/if}
         </div>
       </div>
 
       <!-- Error State -->
-      {#if storeState.error}
+      {#if error}
         <div class="section error">
           <h4>⚠️ Error</h4>
-          <div class="error-message">{storeState.error}</div>
+          <div class="error-message">{error}</div>
         </div>
       {/if}
 

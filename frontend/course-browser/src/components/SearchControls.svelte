@@ -14,31 +14,31 @@
   }
 </script>
 
-<div id="search-container">
+<div class="search-controls">
   <div class="button-group">
-    <button on:click={() => dispatch('addRule')}>
+    <button class="btn btn-secondary" on:click={() => dispatch('addRule')} title="Add a new search rule">
       <i class="bi bi-plus-circle"></i>
       <span class="button-text">Add Rule</span>
     </button>
     
-    <button on:click={() => dispatch('search')} class="primary">
+    <button class="btn btn-primary" on:click={() => dispatch('search')} title="Execute search">
       <i class="bi bi-search"></i>
       <span class="button-text">Search</span>
     </button>
   </div>
 
   <div class="options-group">
-    <label class="switch">
+    <label class="checkbox-wrapper">
       <input type="checkbox" id="uniqueToggle" bind:checked={showUnique} on:change={() => dispatch('search')} />
-      <span class="slider"></span>
+      <span class="checkbox-label">Unique</span>
     </label>
-    <span class="toggle-label">Unique</span>
 
-    <!-- Single Active / Historical toggle -->
     <button
-      class="toggle-source"
+      class="btn btn-secondary"
       on:click={toggleSource}
-      title="Toggle dataset"
+      class:active={source === "all"}
+      aria-pressed={source === "all"}
+      title={source === "all" ? 'Showing historical course instances' : 'Showing active course instances'}
     >
       <i class="bi bi-database"></i>
       <span class="button-text">
@@ -46,12 +46,12 @@
       </span>
     </button>
     
-    <button on:click={() => dispatch('save')}>
+    <button class="btn btn-secondary" on:click={() => dispatch('save')} title="Save current search">
       <i class="bi bi-floppy"></i>
       <span class="button-text">Save</span>
     </button>
     
-    <button on:click={() => dispatch('load')}>
+    <button class="btn btn-secondary" on:click={() => dispatch('load')} title="Load a saved search">
       <i class="bi bi-folder"></i>
       <span class="button-text">Load</span>
     </button>
@@ -59,132 +59,160 @@
 </div>
 
 <style>
-  #search-container {
+  :root {
+    --primary: #4a90e2;
+    --primary-hover: #2980f1;
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+  }
+
+  .search-controls {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5em;
-    padding-left: 1.7%;
-    padding-bottom: 12px;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--card-bg);
   }
 
   .button-group,
   .options-group {
     display: flex;
     align-items: center;
-    gap: 0.3em;
+    gap: 0.3rem;
     flex-wrap: wrap;
   }
-  
-  button {
+
+  /* Base button styles */
+  .btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.3em;
-    background-color: #fff;
-    font-size: 1em;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.6rem;
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
-    height: 2.7em;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    height: 32.5px;
     box-sizing: border-box;
-    box-shadow: 0 2px 5px rgb(0 0 0 / 10%);
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 0 0.7em;
-  }
-  
-  button:active, button:focus {
-    border-color: #4a90e2;
-    box-shadow: 0 0 5px rgb(74 144 226 / 50%);
-    outline: none;
-  }
-  
-  button:hover {
-    background: #f0f0f0;
-  }
-  
-  button.primary {
-    background: #4a90e2;
-    color: white;
-    border-color: #08D;
-  }
-  
-  button.primary:hover {
-    background: #357abd;
-  }
-
-  button.primary:active, button.primary:focus {
-    border-color: #357abd;
-    box-shadow: 0 0 5px rgb(53 122 189 / 50%);
-  }
-  
-  .switch {
-    position: relative;
-    display: inline-block;
-    width: 40px;
-    height: 20px;
-    vertical-align: middle;
-    flex-shrink: 0;
-  }
-  
-  .switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  .slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background-color: #ccc;
-    transition: .4s;
-    border-radius: 20px;
-  }
-  
-  .slider::before {
-    position: absolute;
-    content: "";
-    height: 14px;
-    width: 14px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-  }
-  
-  input:checked + .slider {
-    background-color: #4caf50;
-  }
-  
-  input:checked + .slider::before {
-    transform: translateX(20px);
-  }
-  
-  .toggle-label {
-    font-size: 0.9em;
-    cursor: pointer;
     white-space: nowrap;
   }
 
-  /* Mobile responsive - hide button text on narrow screens */
-  @media (max-width: 330px) {
-    #search-container {
-      padding-left: 2%;
-      padding-right: 2%;
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--primary-hover);
+  }
+
+  .btn-primary:focus:not(:disabled) {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    background: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--primary);
+    background: #f8fafc;
+  }
+
+  .btn-secondary:focus:not(:disabled) {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  }
+
+  .btn-secondary.active {
+    background: #e3f2fd;
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  /* Icon styling */
+  .btn i {
+    font-size: 0.9rem;
+  }
+
+  .button-text {
+    display: inline;
+  }
+
+  /* Checkbox wrapper */
+  .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary);
+  }
+
+  .checkbox-wrapper input[type="checkbox"]:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .checkbox-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-main);
+  }
+
+  /* Responsive behavior */
+  @media (max-width: 600px) {
+    .search-controls {
+      gap: 0.3rem;
+      padding: 0.5rem 0.75rem;
     }
 
+    .btn {
+      padding: 0.4rem 0.5rem;
+    }
+  }
+
+  @media (max-width: 600px) {
     .button-text {
       display: none;
     }
 
-    button {
-      min-width: 2.7em;
+    .btn {
+      min-width: 32.5px;
+      padding: 0;
       justify-content: center;
-      padding: 0 0.5em;
     }
 
-    .toggle-label {
-      font-size: 0.85em;
+    .checkbox-label {
+      display: none;
+    }
+
+    .checkbox-wrapper {
+      gap: 0;
     }
   }
 </style>

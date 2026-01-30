@@ -1,10 +1,10 @@
 <!-- src/components/PlanManager.svelte -->
 <script lang="ts">
-  import { plansStore } from '../lib/stores/plansStore';
-  import type { Plan } from '../domain/models/Plan';
+  import { plansStore } from '../lib/stores/plansStore.svelte';
+  import { NotificationService } from '../infrastructure/services/NotificationService';
 
   interface PlanManagerProps {
-    onPlanSelect?: (plan: Plan) => void;
+    onPlanSelect?: (planId: string) => void;
     showCreateButton?: boolean;
     compact?: boolean;
   }
@@ -15,50 +15,56 @@
     compact = false,
   }: PlanManagerProps = $props();
 
-  let plans = $state<Plan[]>([]);
-  let activePlan = $state<Plan | null>(null);
-  let loading = $state(false);
   let isCreating = $state(false);
   let newPlanName = $state('');
 
-  // Subscribe to store
-  const unsubscribe = plansStore.subscribe((state) => {
-    plans = state.plans;
-    activePlan = state.activePlan;
-    loading = state.loading;
-  });
+  const plans = $derived.by(() => plansStore.read.getAll());
+  const activePlan = $derived.by(() => plansStore.read.getActive());
+  const loading = $derived.by(() => plansStore.state.loading);
+
+  let compactInput = $state<HTMLInputElement | null>(null);
+  let fullInput = $state<HTMLInputElement | null>(null);
 
   $effect(() => {
-    return () => unsubscribe();
+    if (!isCreating) return;
+
+    const el = compact ? compactInput : fullInput;
+    el?.focus();
+    el?.select();
   });
 
-  async function handleSelectPlan(plan: Plan) {
-    try {
-      await plansStore.setActive(plan.id);
-      onPlanSelect(plan);
-    } catch (err) {
-      console.error('Failed to select plan:', err);
-    }
+  function closeCreate() {
+    isCreating = false;
+    newPlanName = '';
+  }
+
+  function handleKeydown(e: KeyboardEvent) {
+    if (e.key === 'Enter') handleCreatePlan();
+    if (e.key === 'Escape') closeCreate();
   }
 
   async function handleCreatePlan() {
     if (!newPlanName.trim()) return;
     try {
-      const created = await plansStore.create(newPlanName);
-      await plansStore.setActive(created.id);
-      onPlanSelect(created);
-      newPlanName = '';
-      isCreating = false;
+      const created = await plansStore.actions.create(newPlanName);
+      await plansStore.actions.setActive(created.id);
+      onPlanSelect(created.id);
+      NotificationService.success(`Plan "${newPlanName}" created`);
+      closeCreate();
     } catch (err) {
-      console.error('Failed to create plan:', err);
+      NotificationService.error(
+        err instanceof Error ? err.message : 'Failed to create plan'
+      );
     }
   }
 
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') handleCreatePlan();
-    if (e.key === 'Escape') {
-      isCreating = false;
-      newPlanName = '';
+  async function handleSelectPlan(planId: string) {
+    try {
+      await plansStore.actions.setActive(planId);
+      onPlanSelect(planId);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to select plan';
+      NotificationService.error(message);
     }
   }
 </script>
@@ -71,8 +77,8 @@
       <select
         value={activePlan?.id || ''}
         onchange={(e) => {
-          const plan = plans.find((p) => p.id === e.currentTarget.value);
-          if (plan) handleSelectPlan(plan);
+          const planId = e.currentTarget.value;
+          if (planId) handleSelectPlan(planId);
         }}
         disabled={loading}
         class="plan-select"
@@ -85,16 +91,17 @@
       {#if showCreateButton}
         {#if isCreating}
           <input
+            bind:this={compactInput}
             type="text"
             placeholder="Plan name..."
             bind:value={newPlanName}
             onkeydown={handleKeydown}
-            class="plan-input compact-input"
+            class="plan-input"
           />
           <button class="btn btn-primary btn-small" onclick={handleCreatePlan} disabled={!newPlanName.trim()}>
             ◯
           </button>
-          <button class="btn btn-primary-cancel btn-small" onclick={() => (isCreating = false)}>
+          <button class="btn btn-secondary btn-small" onclick={() => (isCreating = false)}>
             ✕
           </button>
         {:else}
@@ -116,7 +123,7 @@
         <button
           class="plan-item"
           class:active={plan.id === activePlan?.id}
-          onclick={() => handleSelectPlan(plan)}
+          onclick={() => handleSelectPlan(plan.id)}
           disabled={loading}
         >
           <span class="plan-item-name">{plan.name}</span>
@@ -133,6 +140,7 @@
         {#if isCreating}
           <div class="create-form">
             <input
+              bind:this={fullInput}
               type="text"
               placeholder="Plan name..."
               bind:value={newPlanName}
@@ -140,12 +148,14 @@
               class="plan-input"
             />
             <button class="btn btn-primary" onclick={handleCreatePlan} disabled={!newPlanName.trim()}>
-              Create
+              ◯
             </button>
-            <button class="btn btn-secondary" onclick={() => (isCreating = false)}> Cancel </button>
+            <button class="btn btn-secondary" onclick={() => (isCreating = false)}>
+              ✕
+            </button>
           </div>
         {:else}
-          <button class="btn btn-secondary" onclick={() => (isCreating = true)}> + New Plan </button>
+          <button class="btn btn-secondary btn-expand" onclick={() => (isCreating = true)}> + New Plan </button>
         {/if}
       </div>
     {/if}
@@ -163,6 +173,7 @@
     flex-direction: row;
     align-items: center;
     gap: 0.3rem;
+    height: 32.5px;
   }
 
   /* Full mode */
@@ -234,23 +245,38 @@
 
   .create-form {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.3rem;
+    height: 32.5px;
   }
 
+  /* Standardized input field */
   .plan-input {
     flex: 1;
     padding: 0.5rem 0.8rem;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
-    font-size: 0.9rem;
-    background: #ffffff;
+    font-size: 0.8rem;
     color: #1e293b;
+    background: #ffffff;
+    box-sizing: border-box;
+    height: 32.5px;
+  }
+
+  @media (max-width: 480px) {
+    .plan-input {
+      flex: 0 0 auto;
+    }
   }
 
   .plan-input:focus {
     outline: none;
     border-color: #4a90e2;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  }
+
+  .plan-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   /* Compact mode */
@@ -267,22 +293,6 @@
     font-weight: 500;
   }
 
-  .compact-input {
-    flex: 1;
-    padding: 0.5rem 0.8rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    background: #ffffff;
-    color: #1e293b;
-  }
-
-  .compact-input:focus {
-    outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-  }
-
   .plan-select {
     flex: 1;
     padding: 0.5rem 0.8rem;
@@ -294,6 +304,13 @@
     color: #1e293b;
     appearance: none;
     height: 32.5px;
+    box-sizing: border-box;
+  }
+
+  @media (max-width: 480px) {
+    .plan-select {
+      flex: 0 0 auto;
+    }
   }
 
   .plan-select:hover {
@@ -306,15 +323,25 @@
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
+  .plan-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   /* Buttons */
   .btn {
-    padding: 0.5rem 0.8rem;
+    padding: 0.4rem 0.6rem;
     border: none;
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 500;
     transition: all 0.2s;
+    height: 32.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
   }
 
   .btn:disabled {
@@ -322,10 +349,20 @@
     cursor: not-allowed;
   }
 
+  .btn-small {
+    width: 32.5px;
+    height: 32.5px;
+    padding: 0;
+    min-width: 32.5px;
+  }
+
+  .btn-expand {
+    width: 100%;
+  }
+
   .btn-primary {
     background: #4a90e2;
     color: white;
-    height: 32.5px;
   }
 
   .btn-primary:hover:not(:disabled) {
@@ -337,29 +374,10 @@
     outline-offset: 2px;
   }
 
-  .btn-primary-cancel {
-    background: #ffffff;
-    color: #1e293b;
-    border: 1px solid #e2e8f0;
-    height: 32.5px;
-  }
-
-  .btn-primary-cancel:hover:not(:disabled) {
-    border-color: #4a90e2;
-    background: #f8fafc;
-  }
-
-  .btn-primary-cancel:focus:not(:disabled) {
-    outline: none;
-    border-color: #4a90e2;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-  }
-
   .btn-secondary {
     background: #ffffff;
     color: #1e293b;
     border: 1px solid #e2e8f0;
-    margin-bottom: 12px;
   }
 
   .btn-secondary:hover:not(:disabled) {
@@ -373,13 +391,10 @@
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
-  .btn-small {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.8rem;
-  }
-
   .icon-button {
-    padding: 0.2rem 0;
+    width: 32.5px;
+    height: 32.5px;
+    padding: 0;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     background: #ffffff;
@@ -387,9 +402,9 @@
     cursor: pointer;
     font-size: 0.8rem;
     transition: all 0.2s;
-    min-width: 30px;
-    height: 32.5px;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .icon-button:hover:not(:disabled) {
@@ -406,5 +421,32 @@
   .icon-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  /* Responsive input field for narrow screens */
+  @media (max-width: 600px) {
+    .plan-input {
+      min-width: 100px;
+    }
+
+    .plan-select {
+      min-width: 80px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .compact-header {
+      width: 96%;
+    }
+
+    .plan-input {
+      width: auto;
+      flex: 0 1 auto;
+    }
+
+    .plan-select {
+      width: auto;
+      flex: 0 1 auto;
+    }
   }
 </style>

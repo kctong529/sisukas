@@ -1,7 +1,6 @@
 // src/lib/transcript/importTranscript.ts
-import { get } from "svelte/store";
 import { favouritesStore } from "../stores/favouritesStore";
-import { plansStore } from "../stores/plansStore";
+import { plansStore } from "../stores/plansStore.svelte";
 import { courseIndexStore } from "../stores/courseIndexStore.svelte";
 import { courseGradeStore } from "../stores/courseGradeStore";
 import { transcriptService } from "../../infrastructure/services/TranscriptService";
@@ -49,22 +48,22 @@ function courseCodeOf(c: Course): string {
 }
 
 async function ensureActivePlan(): Promise<void> {
-  const plan = get(plansStore).activePlan;
-  if (plan) return;
+  const activePlan = plansStore.read.getActive();
+  if (activePlan) return;
 
-  await plansStore.load();
+  await plansStore.actions.ensureLoaded();
 
-  const afterLoad = get(plansStore).activePlan;
+  const afterLoad = plansStore.read.getActive();
   if (afterLoad) return;
 
-  const plans = get(plansStore).plans;
+  const plans = plansStore.read.getAll();
   if (plans.length > 0) {
-    await plansStore.setActive(plans[0].id);
+    await plansStore.actions.setActive(plans[0].id);
     return;
   }
 
-  const created = await plansStore.create("Default");
-  await plansStore.setActive(created.id);
+  const created = await plansStore.actions.create("Default");
+  await plansStore.actions.setActive(created.id);
 }
 
 export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTranscriptResult> {
@@ -74,17 +73,11 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
   await courseIndexStore.actions.ensureHistoricalLoaded().catch(() => {});
 
   // Ensure we have current local state before computing deltas
-  if (get(favouritesStore).favourites.length === 0) {
-    await favouritesStore.load().catch(() => {});
-  }
-  if (!get(courseGradeStore).loadedOnce) {
-    await courseGradeStore.load().catch(() => {});
-  }
-  if (!get(plansStore).activePlan) {
-    await plansStore.load();
+  if (plansStore.read.getAll().length === 0) {
+    await plansStore.actions.ensureLoaded().catch(() => {});
   }
 
-  const plan = get(plansStore).activePlan;
+  const plan = plansStore.read.getActive();
   if (!plan) {
     return {
       processed: 0,
@@ -96,7 +89,7 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
     };
   }
 
-  const existingFavouriteCodes = new Set(get(favouritesStore).favourites.map((f) => f.courseId));
+  const existingFavouriteCodes = new Set<string>();
   const existingInstanceIds = new Set(plan.instanceIds);
 
   // Build mapping code -> current instanceId in plan (if any)
@@ -220,9 +213,9 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
   result.updatedGrades = bulk.upsertedGrades;
 
   await Promise.allSettled([
-    favouritesStore.load(),
-    plansStore.load(),
-    courseGradeStore.load(),
+    favouritesStore.load?.(),
+    plansStore.actions.ensureLoaded(),
+    courseGradeStore.load?.(),
   ]);
 
   return result;

@@ -422,7 +422,7 @@
     overflow-x: hidden;
     font-family: sans-serif;
     font-size: clamp(10px, 1.3vw, 15px);
-    background-color: #f4f7f6;
+    background-color: #f8fafc;
     color: #333;
     -ms-overflow-style: none;
   }
