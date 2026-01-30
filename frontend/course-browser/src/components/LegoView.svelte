@@ -21,7 +21,6 @@
   let isSignedIn = $derived(!!$session.data?.user);
 
   let activePlan = $derived.by(() => $plansStore.activePlan);
-
   let courseIndexState = $derived.by(() => $courseIndexStore);
 
   let analyticsResp = $state<AnalyticsResponse | null>(null);
@@ -38,9 +37,11 @@
   }
 
   function getCourseForInstance(instanceId: string): Course | undefined {
-    const course = courseIndexState.byInstanceId.get(instanceId) ?? courseIndexState.historicalByInstanceId.get(instanceId);
-    if (course) return course;
-    return undefined;
+    return (
+      courseIndexState.byInstanceId.get(instanceId) ??
+      courseIndexState.historicalByInstanceId.get(instanceId) ??
+      undefined
+    );
   }
 
   function closeAnalyticsModal() {
@@ -78,6 +79,11 @@
   }
 
   onMount(() => {
+    // Kick historical load early so BlocksGrid can render for historical instances.
+    if (isSignedIn) {
+      void courseIndexStore.ensureHistoricalLoaded();
+    }
+
     const onKeydown = (e: KeyboardEvent) => {
       if (!showAnalyticsModal) return;
       if (e.key === "Escape") {
@@ -131,6 +137,9 @@
     <div class="header-section">
       <div class="title-group">
         <h2>LEGO Composition</h2>
+        {#if courseIndexState.historicalLoading}
+          <p class="muted">Loading historical courses...</p>
+        {/if}
       </div>
 
       <button class="btn btn-analytics" onclick={showAnalysis} disabled={running}>
@@ -163,6 +172,9 @@
                     <p class="instance-name">{course.name?.en}</p>
                   {:else}
                     <h3 class="instance-id">{instanceId}</h3>
+                    {#if courseIndexState.historicalLoading}
+                      <p class="instance-name muted">Loading course...</p>
+                    {/if}
                   {/if}
                 </div>
               </div>
@@ -170,6 +182,14 @@
               {#if course}
                 <div class="instance-content">
                   <BlocksGrid {course} />
+                </div>
+              {:else if courseIndexState.historicalLoading}
+                <div class="instance-content">
+                  <p class="muted">Waiting for historical data...</p>
+                </div>
+              {:else}
+                <div class="instance-content">
+                  <p class="muted">Course data not found for this instance.</p>
                 </div>
               {/if}
             </div>
@@ -227,6 +247,11 @@
     --success: #10b981;
   }
 
+  .muted {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
   .lego-view {
     max-width: 1400px;
     margin: 1.5rem auto;
@@ -247,7 +272,7 @@
   .title-group {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.25rem;
   }
 
   h2 {
@@ -470,9 +495,8 @@
   }
   .modal-overlay-close:focus-visible {
     outline: 2px solid rgba(74, 144, 226, 0.9);
-    outline-offset: -2px; /* keeps it inside viewport */
+    outline-offset: -2px;
   }
-
 
   /* Make sure modal is above the overlay button */
   .modal-content {
@@ -491,23 +515,13 @@
   }
 
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes slideUp {
-    from {
-      transform: translateY(20px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
 
   .modal-header {
@@ -546,7 +560,6 @@
     padding: 0.5rem;
   }
 
-  /* Alert in modal */
   .alert {
     padding: 1rem;
     border-radius: 8px;
@@ -573,11 +586,6 @@
     .instances-list {
       grid-template-columns: 1fr;
     }
-
-    /* .modal-content {
-      width: 95vw;
-      max-height: 95vh;
-    } */
 
     .modal-header {
       padding: 1rem;

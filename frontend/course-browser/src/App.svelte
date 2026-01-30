@@ -15,7 +15,6 @@
   import type { BaseRuleBlueprint } from './domain/filters/blueprints';
   import { loadCurricula } from './infrastructure/loaders/CurriculumLoader';
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
-  import { loadCoursesWithCache, loadHistoricalCoursesWithCache } from './infrastructure/loaders/RemoteCourseLoader';
   import { loadAcademicPeriods } from './infrastructure/loaders/AcademicPeriodLoader';
   import { FilterService } from './domain/services/FilterService';
   import { FilterSerializer } from './domain/filters/helpers/FilterSerializer';
@@ -26,9 +25,6 @@
   import { courseIndexStore } from './lib/stores/courseIndexStore';
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
   import DebugPanels from './components/DebugPanels.svelte';
-  import { assertCourseCodeIsMissingEverywhere } from './domain/services/CourseCodeGuard';
-  import { CourseSnapshotsService } from './infrastructure/services/CourseSnapshotsService';
-  import MissingCourseSubmit from './components/MissingCourseSubmit.svelte';
   
   let currentView = 'courses';
   let isSignedIn = false;
@@ -51,7 +47,8 @@
     : Array.from(indexState.historicalByInstanceId.values());
   
   // Loading states
-  let loading = true;
+  let loadingActive = true;
+  let loadingHistorical = false;
 
   const session = useSession();
   let showAuthModal = false;
@@ -89,18 +86,33 @@
       RuleBlueprints = createRuleBlueprints({ curriculaMap, organizations, periods });
       console.log("Rule blueprints initialized");
       
-      const { activeCount, historicalCount, mergedSnapshots } = await courseIndexStore.bootstrap();
+      const { activeCount } = await courseIndexStore.bootstrapActive();
       console.log("Active loaded:", activeCount);
-      console.log("Historical loaded:", historicalCount);
-      console.log("Snapshots merged:", mergedSnapshots);
+
+      // Now the app is usable
+      loadingActive = false;
 
       // Check for filter hash in URL and load if present
       await loadFiltersFromUrl();
       
+      // Historical in the background
+      loadingHistorical = true;
+      void (async () => {
+        try {
+          const { historicalCount, mergedSnapshots } = await courseIndexStore.bootstrapHistorical();
+          console.log("Historical loaded:", historicalCount);
+          console.log("Snapshots merged:", mergedSnapshots);
+        } catch (e) {
+          console.error("Historical bootstrap failed:", e);
+        } finally {
+          loadingHistorical = false;
+
+          // If user is currently viewing historical, refresh results
+          if (courseBrowserSource === "historical") rerunAppliedSearch();
+        }
+      })();
     } catch (error) {
       console.error("Error loading data:", error);
-    } finally {
-      loading = false;
     }
   });
 
@@ -148,10 +160,22 @@
     filteredInstanceIds = final.map(c => c.id);
   }
 
-  $: if (!loading && RuleBlueprints) {
-    courseBrowserSource;
-    indexState;
-    rerunAppliedSearch();
+  let lastSearchKey: string | null = null;
+
+  $: if (!loadingActive && RuleBlueprints) {
+    const key = [
+      courseBrowserSource,
+      showUnique ? "u1" : "u0",
+      appliedFilterRules.length, // rerun when filters are applied/cleared
+      courseBrowserSource === "active"
+        ? indexState.byInstanceId.size
+        : indexState.historicalByInstanceId.size,
+    ].join("|");
+
+    if (key !== lastSearchKey) {
+      lastSearchKey = key;
+      rerunAppliedSearch();
+    }
   }
   
   function handleSearch() {
@@ -274,7 +298,10 @@
     class:hidden={currentView !== 'courses'}
   >
     <h2 class="sr-only">Browse Courses</h2>
-    {#if loading}
+    {#if loadingHistorical}
+      <p class="hint">Loading historical courses in background...</p>
+    {/if}
+    {#if loadingActive}
       <div style="text-align: center; padding: 2rem;">
         <p>Loading course data...</p>
       </div>

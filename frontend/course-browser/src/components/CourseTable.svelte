@@ -1,7 +1,6 @@
 <!-- src/components/CourseTable.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { get } from 'svelte/store';
   import { useSession } from '../lib/authClient';
   import { favouritesStore } from '../lib/stores/favouritesStore';
   import { courseIndexStore } from '../lib/stores/courseIndexStore';
@@ -48,11 +47,22 @@
       : courseIndexStore.getAllCourses(source);
 
   // Reset page when switching datasets / filters
+  let lastSource: "active" | "historical" | null = null;
+  let lastFilterKey: string | null = null;
+
+  function filterKey(ids: string[] | null): string {
+    return ids ? ids.join("|") : "all";
+  }
+
   $: {
-    // Touch dependencies explicitly (so Svelte reacts)
-    source;
-    filteredInstanceIds;
-    currentPage = 1;
+    const key = filterKey(filteredInstanceIds);
+
+    if (lastSource !== null && (source !== lastSource || key !== lastFilterKey)) {
+      currentPage = 1;
+    }
+
+    lastSource = source;
+    lastFilterKey = key;
   }
 
   // Calculate paginated courses

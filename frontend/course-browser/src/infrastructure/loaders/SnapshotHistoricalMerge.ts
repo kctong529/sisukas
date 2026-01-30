@@ -37,12 +37,27 @@ function pickLocalizedString(x: unknown): LocalizedString | null {
 
 function pickNumericRange(x: unknown): NumericRange | null {
   if (!isRecord(x)) return null;
-  const min = (x as any).min;
-  const max = (x as any).max;
-  const minNum = typeof min === "number" ? min : Number(min);
-  const maxNum = typeof max === "number" ? max : Number(max);
+
+  const minVal = x["min"];
+  const maxVal = x["max"];
+
+  const minNum =
+    typeof minVal === "number"
+      ? minVal
+      : typeof minVal === "string"
+        ? Number(minVal)
+        : NaN;
+
+  const maxNum =
+    typeof maxVal === "number"
+      ? maxVal
+      : typeof maxVal === "string"
+        ? Number(maxVal)
+        : NaN;
+
   if (!Number.isFinite(minNum) || !Number.isFinite(maxNum)) return null;
-  return { min: minNum, max: maxNum } as unknown as NumericRange;
+
+  return { min: minNum, max: maxNum } as NumericRange;
 }
 
 function pickIsoDate(x: unknown): string | null {
@@ -93,7 +108,7 @@ function snapshotPayloadToRawCourse(payload: Record<string, unknown>): RawCourse
   // prerequisites can be string OR LocalizedString in RawCourse
   let prerequisites: string | LocalizedString | undefined = undefined;
   if (summaryObj && "prerequisites" in summaryObj) {
-    const p = (summaryObj as any).prerequisites;
+    const p = summaryObj.prerequisites;
     prerequisites = typeof p === "string" ? p : (pickLocalizedString(p) ?? undefined);
   }
 

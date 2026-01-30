@@ -6,6 +6,8 @@ import { courseIndexStore } from "../stores/courseIndexStore";
 import { courseGradeStore } from "../stores/courseGradeStore";
 import { transcriptService } from "../../infrastructure/services/TranscriptService";
 import type { Course } from "../../domain/models/Course";
+import { CourseSnapshotsService } from "../../infrastructure/services/CourseSnapshotsService";
+import { SnapshotHistoricalMerge } from "../../infrastructure/loaders/SnapshotHistoricalMerge";
 
 export type TranscriptGrade = "Pass" | "Fail" | "0" | "1" | "2" | "3" | "4" | "5" | string;
 
@@ -117,6 +119,7 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
   const instancesToAdd: string[] = [];
   const instancesToRemove: string[] = [];
   const gradesToUpsert: Array<{ courseUnitId: string; grade: number }> = [];
+  const attemptedResolveCodes = new Set<string>();
 
   for (const row of rows) {
     result.processed++;
@@ -133,7 +136,28 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
       continue;
     }
 
-    const course = courseIndexStore.resolveLatestInstanceByCodeBeforeDate(code, date);
+    let course = courseIndexStore.resolveLatestInstanceByCodeBeforeDate(code, date);
+
+    if (!course && !attemptedResolveCodes.has(code)) {
+      attemptedResolveCodes.add(code);
+
+      // Best-effort: resolve/store snapshots for this code, then merge into memory
+      try {
+        await CourseSnapshotsService.resolveAndStore(code);
+      } catch {
+        // ignore: we still try merge + re-resolve (maybe snapshots already existed)
+      }
+
+      try {
+        await SnapshotHistoricalMerge.mergeAllLiveSnapshots();
+      } catch {
+        // ignore: merge failure just means we won't see snapshots in memory
+      }
+
+      // Try again after merge
+      course = courseIndexStore.resolveLatestInstanceByCodeBeforeDate(code, date);
+    }
+
     if (!course) {
       result.skipped.push({
         row,
@@ -141,6 +165,7 @@ export async function importTranscript(rows: TranscriptRow[]): Promise<ImportTra
       });
       continue;
     }
+
 
     const unitId = course.unitId;
     const targetInstanceId = course.id;

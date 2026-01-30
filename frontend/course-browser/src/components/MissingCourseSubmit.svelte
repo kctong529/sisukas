@@ -6,12 +6,19 @@
   import { CourseSnapshotsService } from "../infrastructure/services/CourseSnapshotsService";
   import { SnapshotHistoricalMerge } from "../infrastructure/loaders/SnapshotHistoricalMerge";
 
+  type ResolveMissingCourseResponse = {
+    courseCode: string;
+    snapshots: unknown[];
+  };
+
   /**
    * Props:
    * - resolveMissingCourseCode: the App-level function you already export
    *   (so this component stays dumb and doesn't duplicate logic)
    */
-  export let resolveMissingCourseCode: (courseCode: string) => Promise<unknown | null>;
+  export let resolveMissingCourseCode: (
+    courseCode: string
+  ) => Promise<ResolveMissingCourseResponse | null>;
 
   const dispatch = createEventDispatcher<{
     resolved: { courseCode: string; storedCount: number };
@@ -44,24 +51,15 @@
     lastMerge = null;
 
     try {
-      // 1) Resolve + store snapshots
       const res = await resolveMissingCourseCode(courseCode);
-      if (!res) {
-        // resolveMissingCourseCode already notified user
-        return;
-      }
+      if (!res) return;
 
-      // Your backend returns: { courseCode, snapshots }
-      const storedCount =
-        typeof (res as any)?.snapshots?.length === "number"
-          ? (res as any).snapshots.length
-          : 0;
+      const storedCount = res.snapshots.length;
 
       lastStoredCount = storedCount;
       dispatch("resolved", { courseCode, storedCount });
       NotificationService.success(`Stored ${storedCount} snapshot(s) for ${courseCode}`);
 
-      // 2) Merge live snapshots into the in-memory historical index
       const merge = await SnapshotHistoricalMerge.mergeAllLiveSnapshots();
       lastMerge = merge;
       dispatch("merged", merge);
@@ -70,7 +68,6 @@
         `Merged ${merge.merged} snapshot course(s) into historical index`
       );
 
-      // Optional: clear input on success
       input = "";
     } catch (err) {
       console.error("Missing course submit error:", err);
@@ -150,7 +147,6 @@
       type="button"
       disabled={busy || !input.trim()}
       on:click={async () => {
-        // Optional: quick presence check without storing
         const code = normalizeCourseCode(input);
         try {
           const status = await CourseSnapshotsService.getStatus(code);

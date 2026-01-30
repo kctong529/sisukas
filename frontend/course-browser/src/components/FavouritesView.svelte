@@ -3,7 +3,7 @@
   import { useSession } from '../lib/authClient';
   import { favouritesStore } from '../lib/stores/favouritesStore';
   import { plansStore } from '../lib/stores/plansStore';
-  import { courseIndexStore } from '../lib/stores/courseIndexStore';
+  import { courseIndexStore, type CourseIndexState } from '../lib/stores/courseIndexStore';
   import { studyGroupStore } from '../lib/stores/studyGroupStore';
   import { courseGradeStore } from '../lib/stores/courseGradeStore';
   import { NotificationService } from '../infrastructure/services/NotificationService';
@@ -11,11 +11,10 @@
   import type { Course } from '../domain/models/Course';
   import { SvelteMap, SvelteSet } from 'svelte/reactivity';
   import PlanManager from './PlanManager.svelte';
+  import type { Favourite } from '../infrastructure/services/FavouritesService';
 
   const session = useSession();
   $: isSignedIn = !!$session.data?.user;
-
-  $: courseIndexState = $courseIndexStore;
   
   let sortBy = 'addedAt';
   let sortDirection = -1;
@@ -27,6 +26,7 @@
 
   let hasInitializedPlans = false;
   let hasInitializedGrades = false;
+  let sortedFavourites: Favourite[] = [];
 
   let showOlder = false;
 
@@ -95,11 +95,11 @@
 
   // Batch fetch study groups for all favourited courses
   $: if (hasLoadedForUser && $favouritesStore.favourites.length > 0 && showOlder === false) {
-    courseIndexState;
+    const courseIndex = $courseIndexStore;
     const uniq = new SvelteMap<string, { courseUnitId: string; courseOfferingId: string }>();
 
     for (const fav of $favouritesStore.favourites) {
-      for (const course of getCoursesForId(fav.courseId, showOlder)) {
+      for (const course of getCoursesForId(fav.courseId, showOlder, courseIndex)) {
         const key = `${course.unitId}:${course.id}`;
         uniq.set(key, { courseUnitId: course.unitId, courseOfferingId: course.id });
       }
@@ -109,62 +109,92 @@
     if (coursesToFetch.length > 0) studyGroupStore.fetchBatch(coursesToFetch);
   }
 
-  function getCoursesForId(courseId: string, older: boolean): Course[] {
-    const s = courseIndexState;
+  function getCoursesForId(
+    code: string,
+    showOlder: boolean,
+    index: CourseIndexState
+  ): Course[] {
+    const s = index;
 
     // older mode: only historical
-    if (older) {
-      const histIds = s.historicalInstanceIdsByCode.get(courseId) ?? [];
+    if (showOlder) {
+      const histIds = s.historicalInstanceIdsByCode.get(code) ?? [];
       return histIds
-        .map(id => s.historicalByInstanceId.get(id))
-        .filter(Boolean) as Course[];
+        .map((id: string) => s.historicalByInstanceId.get(id))
+        .filter((c): c is Course => Boolean(c));
     }
 
     // active mode: active first
-    const activeIds = s.instanceIdsByCode.get(courseId) ?? [];
+    const activeIds = s.instanceIdsByCode.get(code) ?? [];
     const active = activeIds
-      .map(id => s.byInstanceId.get(id))
-      .filter(Boolean) as Course[];
+      .map((id: string) => s.byInstanceId.get(id))
+      .filter((c): c is Course => Boolean(c));
 
     if (active.length > 0) return active;
 
-    // fallback: if not in active index, show snapshots/historical so name etc still appears
-    const histIds = s.historicalInstanceIdsByCode.get(courseId) ?? [];
+    // fallback: show historical if not active
+    const histIds = s.historicalInstanceIdsByCode.get(code) ?? [];
     return histIds
-      .map(id => s.historicalByInstanceId.get(id))
-      .filter(Boolean) as Course[];
+      .map((id: string) => s.historicalByInstanceId.get(id))
+      .filter((c): c is Course => Boolean(c));
   }
 
-  $: sortedFavourites = [...$favouritesStore.favourites].sort((a, b) => {
-    switch (sortBy) {
-      case 'courseId':
-        return a.courseId.localeCompare(b.courseId) * sortDirection;
-      case 'courseName': {
-        const coursesA = getCoursesForId(a.courseId, showOlder);
-        const coursesB = getCoursesForId(b.courseId, showOlder);
-        const nameA = coursesA[0]?.name.en || a.courseId;
-        const nameB = coursesB[0]?.name.en || b.courseId;
-        return nameA.localeCompare(nameB) * sortDirection;
+  const coursesCache = new SvelteMap<string, Course[]>();
+
+  function getCoursesCached(code: string, showOlder: boolean, index: CourseIndexState): Course[] {
+    const key = `${showOlder ? "H" : "A"}:${code}`;
+    const hit = coursesCache.get(key);
+    if (hit) return hit;
+
+    const res = getCoursesForId(code, showOlder, index);
+    coursesCache.set(key, res);
+    return res;
+  }
+
+  $: {
+    const index = $courseIndexStore;
+
+    // reset cache each time deps change
+    coursesCache.clear();
+
+    sortedFavourites = [...$favouritesStore.favourites].sort(
+      (a: { courseId: string; addedAt: string }, b: { courseId: string; addedAt: string }) => {
+        switch (sortBy) {
+          case "courseId":
+            return a.courseId.localeCompare(b.courseId) * sortDirection;
+
+          case "courseName": {
+            const nameA = getCoursesCached(a.courseId, showOlder, index)[0]?.name?.en ?? a.courseId;
+            const nameB = getCoursesCached(b.courseId, showOlder, index)[0]?.name?.en ?? b.courseId;
+            return nameA.localeCompare(nameB) * sortDirection;
+          }
+
+          case "credits": {
+            const creditsA = getCoursesCached(a.courseId, showOlder, index)[0]?.credits?.min ?? 0;
+            const creditsB = getCoursesCached(b.courseId, showOlder, index)[0]?.credits?.min ?? 0;
+            return (creditsA - creditsB) * sortDirection;
+          }
+
+          case "startDate": {
+            const tA =
+              getCoursesCached(a.courseId, showOlder, index)[0]?.courseDate?.start?.getTime?.() ??
+              new Date(0).getTime();
+            const tB =
+              getCoursesCached(b.courseId, showOlder, index)[0]?.courseDate?.start?.getTime?.() ??
+              new Date(0).getTime();
+            return (tA - tB) * sortDirection;
+          }
+
+          case "addedAt":
+          default: {
+            const tA = new Date(a.addedAt).getTime();
+            const tB = new Date(b.addedAt).getTime();
+            return (tA - tB) * sortDirection;
+          }
+        }
       }
-      case 'credits': {
-        const coursesA = getCoursesForId(a.courseId, showOlder);
-        const coursesB = getCoursesForId(b.courseId, showOlder);
-        const creditsA = coursesA[0]?.credits.min || 0;
-        const creditsB = coursesB[0]?.credits.min || 0;
-        return (creditsA - creditsB) * sortDirection;
-      }
-      case 'startDate': {
-        const coursesA = getCoursesForId(a.courseId, showOlder);
-        const coursesB = getCoursesForId(b.courseId, showOlder);
-        const dateA = coursesA[0]?.courseDate.start || new Date(0);
-        const dateB = coursesB[0]?.courseDate.start || new Date(0);
-        return (new Date(dateA).getTime() - new Date(dateB).getTime()) * sortDirection;
-      }
-      case 'addedAt':
-      default:
-        return (new Date(a.addedAt).getTime() - new Date(b.addedAt).getTime()) * sortDirection;
-    }
-  });
+    );
+  }
 
   function handleSort(column: string) {
     sortBy = column;
@@ -220,30 +250,38 @@
     }) + ` at ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
   }
 
-  function toggleInstance(courseId: string, instanceId: string) {
+  function toggleInstance(courseCode: string, instanceId: string) {
+    const plan = $plansStore.activePlan;
+
     if (expandedInstanceIds.has(instanceId)) {
       // Removing instance
-      const wasInPlan = $plansStore.activePlan?.instanceIds.includes(instanceId) ?? false;
-      
+      const wasInPlan = plan?.instanceIds.includes(instanceId) ?? false;
+
       expandedInstanceIds.delete(instanceId);
       expandedInstanceIds = new SvelteSet(expandedInstanceIds);
 
-      // Show notification if it was in the plan
       if (wasInPlan) {
-        NotificationService.error(`Instance removed from ${$plansStore.activePlan?.name || 'plan'}`);
-        // Optionally remove from plan
+        NotificationService.error(`Instance removed from ${plan?.name ?? "plan"}`);
         removedInstanceFromPlan(instanceId);
       }
-    } else {
-      const courses = getCoursesForId(courseId, showOlder);
-      courses.forEach(c => expandedInstanceIds.delete(c.id));
-      expandedInstanceIds.add(instanceId);
-      expandedInstanceIds = new SvelteSet(expandedInstanceIds);
 
-      if (showOlder) {
-        const selected = courses.find(c => c.id === instanceId);
-        if (selected) studyGroupStore.fetch(selected.unitId, selected.id);
-      }
+      return;
+    }
+
+    // Adding / switching instance
+    const index = $courseIndexStore;
+    const courses = getCoursesForId(courseCode, showOlder, index);
+
+    // Collapse other instances of same course code
+    courses.forEach((c: Course) => expandedInstanceIds.delete(c.id));
+
+    expandedInstanceIds.add(instanceId);
+    expandedInstanceIds = new SvelteSet(expandedInstanceIds);
+
+    // Older mode: fetch study groups for selected historical instance
+    if (showOlder) {
+      const selected = courses.find((c: Course) => c.id === instanceId);
+      if (selected) studyGroupStore.fetch(selected.unitId, selected.id);
     }
   }
 
@@ -361,9 +399,12 @@
 
     <div class="favourites-list">
       {#each sortedFavourites as favourite (favourite.courseId)}
+        {@const index = $courseIndexStore}
+
         {@const courses =
-          [...getCoursesForId(favourite.courseId, showOlder)].sort(
-            (a, b) => new Date(a.courseDate.start).getTime() - new Date(b.courseDate.start).getTime()
+          [...getCoursesForId(favourite.courseId, showOlder, index)].sort(
+            (a: Course, b: Course) =>
+              a.courseDate.start.getTime() - b.courseDate.start.getTime()
           )
         }
 
