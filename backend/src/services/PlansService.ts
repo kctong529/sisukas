@@ -68,38 +68,39 @@ export class PlansService {
    * Set a plan as active (deactivates all other plans for this user)
    */
   static async setActivePlan(userId: string, planId: string): Promise<Plan> {
-    // Deactivate all other plans for this user
-    await db
-      .update(plans)
-      .set({ isActive: false })
-      .where(eq(plans.userId, userId));
+    return await db.transaction(async (tx) => {
+      // deactivate all
+      await tx
+        .update(plans)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(plans.userId, userId));
 
-    // Activate this plan
-    const updatedPlan = await db
-      .update(plans)
-      .set({ isActive: true, updatedAt: new Date() })
-      .where(and(eq(plans.id, planId), eq(plans.userId, userId)))
-      .returning();
+      // activate target
+      const updated = await tx
+        .update(plans)
+        .set({ isActive: true, updatedAt: new Date() })
+        .where(and(eq(plans.id, planId), eq(plans.userId, userId)))
+        .returning();
 
-    if (!updatedPlan.length) {
-      throw new Error('Plan not found');
-    }
+      if (!updated.length) {
+        throw new Error("Plan not found");
+      }
 
-    // Fetch instances
-    const instances = await db
-      .select({ instanceId: planInstances.instanceId })
-      .from(planInstances)
-      .where(eq(planInstances.planId, planId));
+      const instances = await tx
+        .select({ instanceId: planInstances.instanceId })
+        .from(planInstances)
+        .where(eq(planInstances.planId, planId));
 
-    return {
-      id: updatedPlan[0].id,
-      userId: updatedPlan[0].userId,
-      name: updatedPlan[0].name,
-      isActive: updatedPlan[0].isActive,
-      instanceIds: instances.map(i => i.instanceId),
-      createdAt: updatedPlan[0].createdAt,
-      updatedAt: updatedPlan[0].updatedAt,
-    };
+      return {
+        id: updated[0].id,
+        userId: updated[0].userId,
+        name: updated[0].name,
+        isActive: updated[0].isActive,
+        instanceIds: instances.map((i) => i.instanceId),
+        createdAt: updated[0].createdAt,
+        updatedAt: updated[0].updatedAt,
+      };
+    });
   }
 
   /**

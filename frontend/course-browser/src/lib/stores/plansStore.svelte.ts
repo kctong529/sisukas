@@ -15,7 +15,7 @@ const state = $state({
 
 const read = {
   getAll() {
-    return state.ids.map(id => state.byId.get(id)!);
+    return state.ids.map(id => state.byId.get(id)).filter(Boolean) as Plan[];
   },
 
   getActive() {
@@ -33,6 +33,26 @@ const read = {
 };
 
 let loadPromise: Promise<void> | null = null;
+let ensureDefaultPromise: Promise<void> | null = null;
+
+function normalizeActive(activeId: string | null) {
+  // Pick a fallback if activeId is null but we have plans
+  const finalActiveId = activeId ?? state.ids[0] ?? null;
+
+  state.activePlanId = finalActiveId;
+
+  // Rewrite ALL plans to enforce at most one isActive
+  const next = new Map(state.byId);
+  for (const id of state.ids) {
+    const p = next.get(id);
+    if (!p) continue;
+    const shouldBeActive = id === finalActiveId;
+    if (p.isActive !== shouldBeActive) {
+      next.set(id, { ...p, isActive: shouldBeActive });
+    }
+  }
+  state.byId = next;
+}
 
 const actions = {
   async ensureLoaded(): Promise<void> {
@@ -45,7 +65,11 @@ const actions = {
         const plans = await plansService.loadAll();
         state.byId = new Map(plans.map(p => [p.id, p]));
         state.ids = plans.map(p => p.id);
-        state.activePlanId = plans.find(p => p.isActive)?.id ?? null;
+
+        // if backend sends multiple actives, choose one deterministically
+        const serverActiveIds = plans.filter(p => p.isActive).map(p => p.id);
+        normalizeActive(serverActiveIds[0] ?? null);
+
         state.loaded = true;
       } catch (err) {
         state.error = err instanceof Error ? err.message : 'Failed to load plans';
@@ -57,6 +81,39 @@ const actions = {
     })();
 
     return loadPromise;
+  },
+
+  /**
+   * Ensure the user has at least one plan, and that some plan is active.
+   * Concurrency-safe: multiple callers share the same in-flight promise.
+   */
+  async ensureDefaultPlan(): Promise<void> {
+    // Fast-path: already has at least one plan and active plan
+    if (state.ids.length > 0 && state.activePlanId) return;
+
+    if (ensureDefaultPromise) return ensureDefaultPromise;
+
+    ensureDefaultPromise = (async () => {
+      await actions.ensureLoaded();
+
+      // Re-check after load (important)
+      const plans = read.getAll();
+      const active = read.getActive();
+
+      if (plans.length === 0) {
+        const p = await actions.create("Default");
+        await actions.setActive(p.id);
+        return;
+      }
+
+      if (!active) {
+        await actions.setActive(plans[0].id);
+      }
+    })().finally(() => {
+      ensureDefaultPromise = null;
+    });
+
+    return ensureDefaultPromise;
   },
 
   async create(name: string): Promise<Plan> {
@@ -74,25 +131,13 @@ const actions = {
 
   async setActive(planId: string): Promise<void> {
     state.error = null;
-    try {
-      const updatedPlan = await plansService.setActive(planId);
-      // Deactivate old active plan
-      if (state.activePlanId) {
-        const oldPlan = state.byId.get(state.activePlanId);
-        if (oldPlan) {
-          state.byId = new Map(state.byId).set(state.activePlanId, {
-            ...oldPlan,
-            isActive: false,
-          });
-        }
-      }
-      // Activate new plan
-      state.byId = new Map(state.byId).set(planId, updatedPlan);
-      state.activePlanId = planId;
-    } catch (err) {
-      state.error = err instanceof Error ? err.message : 'Failed to set active plan';
-      throw err;
-    }
+    const updatedPlan = await plansService.setActive(planId);
+    
+    // Update the server-returned plan
+    state.byId = new Map(state.byId).set(planId, updatedPlan);
+
+    // Enforce invariant locally regardless of what else is in memory
+    normalizeActive(planId);
   },
 
   async addInstanceToActivePlan(instanceId: string): Promise<void> {
@@ -137,21 +182,49 @@ const actions = {
       throw err;
     }
   },
-
+  
   async removePlan(planId: string): Promise<void> {
     state.error = null;
+
     try {
+      // Make sure we have a consistent baseline
+      await actions.ensureLoaded();
+
+      const isLastPlan = state.ids.length === 1 && state.ids[0] === planId;
+      const wasActive = state.activePlanId === planId;
+
+      // If the user is removing the last remaining plan,
+      // create a replacement FIRST (server + local), activate it,
+      // then delete the old plan.
+      if (isLastPlan) {
+        const replacement = await actions.create("Empty");
+        await actions.setActive(replacement.id);
+        // now we are guaranteed to have at least one plan besides `planId`
+      } else if (wasActive) {
+        // If deleting the active plan and it's not the last one,
+        // switch active to a fallback BEFORE deleting to keep UI stable.
+        const fallbackId = state.ids.find((id) => id !== planId) ?? null;
+        if (fallbackId) await actions.setActive(fallbackId);
+        else normalizeActive(null); // defensive, should not happen since !isLastPlan
+      }
+
+      // Now delete on server
       await plansService.removePlan(planId);
-      state.byId = new Map(state.byId);
-      state.byId.delete(planId);
-      state.ids = state.ids.filter(id => id !== planId);
-      
-      // Clear active plan if it was removed
-      if (state.activePlanId === planId) {
-        state.activePlanId = state.ids[0] ?? null;
+
+      // Remove locally
+      const nextById = new Map(state.byId);
+      nextById.delete(planId);
+      state.byId = nextById;
+      state.ids = state.ids.filter((id) => id !== planId);
+
+      // Final safety: ensure active points to an existing plan and flags are consistent
+      if (state.activePlanId && !state.byId.has(state.activePlanId)) {
+        normalizeActive(state.ids[0] ?? null);
+      } else {
+        normalizeActive(state.activePlanId);
       }
     } catch (err) {
-      state.error = err instanceof Error ? err.message : 'Failed to remove plan';
+      state.error = err instanceof Error ? err.message : "Failed to remove plan";
       throw err;
     }
   },
@@ -164,6 +237,7 @@ const actions = {
     state.loaded = false;
     state.error = null;
     loadPromise = null;
+    ensureDefaultPromise = null;
   },
 };
 

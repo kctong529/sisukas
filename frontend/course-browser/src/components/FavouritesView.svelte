@@ -19,6 +19,9 @@
   const user = $derived.by(() => $session.data?.user);
   const isSignedIn = $derived.by(() => !!user);
 
+  const activePlan = $derived.by(() => plansStore.read.getActive());
+  const activePlanId = $derived.by(() => activePlan?.id ?? null);
+
   type Unsubscriber = () => void;
   type Subscribable<T> = { subscribe(run: (value: T) => void): Unsubscriber };
 
@@ -35,11 +38,11 @@
   const favState = $state<{
     favourites: Favourite[];
     loading: boolean;
-    error: string | null
+    error: string | null;
   }>({
     favourites: [],
     loading: false,
-    error: null
+    error: null,
   });
 
   $effect(() => {
@@ -71,7 +74,7 @@
 
     removeMode: false,
 
-    sortedFavourites: [] as Favourite[]
+    sortedFavourites: [] as Favourite[],
   });
 
   let expandedInstanceIds = $state(new Set<string>());
@@ -81,7 +84,6 @@
   }
 
   // ---- Sign-in driven init/cleanup ----
-
   $effect(() => {
     if (!isSignedIn) {
       favouritesStore.clear?.();
@@ -99,7 +101,7 @@
       return;
     }
 
-    if (isSignedIn && !ui.hasLoadedForUser) {
+    if (!ui.hasLoadedForUser) {
       void favouritesStore.load?.();
       ui.hasLoadedForUser = true;
     }
@@ -111,9 +113,8 @@
     if (source !== "active") return;
     if (favState.favourites.length === 0) return;
 
-    // If any favourite has no current hit, we likely need historical to render metadata.
-    const needsHistorical = favState.favourites.some(f =>
-      courseIndexStore.read.getCurrentInstancesByCode(f.courseId).length === 0
+    const needsHistorical = favState.favourites.some(
+      (f) => courseIndexStore.read.getCurrentInstancesByCode(f.courseId).length === 0
     );
 
     if (needsHistorical) {
@@ -145,19 +146,7 @@
 
   async function initializePlans() {
     try {
-      await plansStore.actions.ensureLoaded();
-
-      const plans = plansStore.read.getAll();
-      const activePlan = plansStore.read.getActive();
-
-      if (plans.length === 0) {
-        // Create and activate default plan
-        const defaultPlan = await plansStore.actions.create('Default');
-        await plansStore.actions.setActive(defaultPlan.id);  // ← Use the returned plan's ID
-      } else if (!activePlan && plans.length > 0) {
-        // Activate first plan if none is active
-        await plansStore.actions.setActive(plans[0].id);
-      }
+      await plansStore.actions.ensureDefaultPlan();
     } catch (err) {
       console.error('Failed to initialize plans:', err);
     } finally {
@@ -167,7 +156,6 @@
 
   const planInstanceIdByCode = $derived.by(() => {
     const m = new Map<string, string>();
-    const activePlan = plansStore.read.getActive();
     const ids = activePlan?.instanceIds ?? [];
 
     for (const id of ids) {
@@ -179,6 +167,19 @@
   });
 
   let lastSig = "";
+  let prevPlanId: string | null = null;
+
+  $effect(() => {
+    const id = activePlanId;
+
+    if (id !== prevPlanId) {
+      expandedInstanceIds = new Set();
+      lastSig = "";
+    }
+
+    prevPlanId = id;
+  });
+
 
   // ---- Study group batch fetch (active view only) ----
   $effect(() => {
@@ -186,7 +187,6 @@
     if (ui.sortedFavourites.length === 0) return;
     if (source !== "active") return;
 
-    // Build requests in the UI order (addedAt desc by default)
     const reqs: Array<{ courseUnitId: string; courseOfferingId: string }> = [];
     const seen = new Set<string>();
 
@@ -199,8 +199,7 @@
       }
     }
 
-    // Stable signature (order matters; this makes "UI order" the priority)
-    const sig = reqs.slice(0, 200).map(r => `${r.courseUnitId}:${r.courseOfferingId}`).join("|");
+    const sig = reqs.slice(0, 200).map((r) => `${r.courseUnitId}:${r.courseOfferingId}`).join("|");
     if (sig === lastSig) return;
     lastSig = sig;
 
@@ -208,11 +207,9 @@
   });
 
   // ---- Course resolution helpers ----
-
   function getCoursesForId(code: string): Course[] {
     let courses = courseIndexStore.read.getCurrentInstancesByCode(code);
 
-    // If nothing in current view (active mode), fall back to historical so we can render metadata
     if (courses.length === 0) {
       courses = courseIndexStore.read.getHistoricalInstancesByCode?.(code) ?? courses;
     }
@@ -220,7 +217,6 @@
     const selectedId = planInstanceIdByCode.get(code);
     if (!selectedId) return courses;
 
-    // If the plan-selected instance isn't in this view, pin it into the list
     if (!courses.some((c) => c.id === selectedId)) {
       const selected = courseIndexStore.read.resolveByInstanceId(selectedId);
       if (selected) courses = [selected, ...courses];
@@ -231,8 +227,6 @@
 
   // Build sorted favourites whenever deps change
   $effect(() => {
-    // Helper: get the "primary" course for a favourite (first relevant instance),
-    // used only for sorting by name/credits/startDate.
     const primary = (courseId: string) => getCoursesForId(courseId)[0];
 
     ui.sortedFavourites = [...favState.favourites].sort((a, b) => {
@@ -314,8 +308,6 @@
   }
 
   function toggleInstance(courseCode: string, instanceId: string) {
-    const activePlan = plansStore.read.getActive();
-
     if (expandedInstanceIds.has(instanceId)) {
       const wasInPlan = activePlan?.instanceIds?.includes(instanceId) ?? false;
 
@@ -332,13 +324,11 @@
 
     const courses = getCoursesForId(courseCode);
 
-    // Collapse other instances of same course code
     courses.forEach((c) => expandedInstanceIds.delete(c.id));
 
     expandedInstanceIds.add(instanceId);
     expandedInstanceIds = new Set(expandedInstanceIds);
 
-    // Only fetch study groups if this instance is in the ACTIVE index
     const activeHit = courseIndexStore.state.byInstanceId.get(instanceId);
     if (activeHit) {
       studyGroupStore.fetch(activeHit.unitId, activeHit.id);
@@ -355,7 +345,6 @@
 
   async function addInstanceToActivePlan(instanceId: string) {
     try {
-      const activePlan = plansStore.read.getActive();
       if (!activePlan) {
         NotificationService.error('No active plan');
         return;
@@ -370,7 +359,6 @@
   }
 
   function isInstanceInActivePlan(instanceId: string): boolean {
-    const activePlan = plansStore.read.getActive();
     return activePlan?.instanceIds?.includes(instanceId) ?? false;
   }
 
@@ -384,7 +372,6 @@
   }
 
   function instanceToAddFor(courses: Course[]): Course | null {
-    const activePlan = plansStore.read.getActive();
     if (!activePlan) return null;
     const expanded = courses.find((c) => expandedInstanceIds.has(c.id) && !isInstanceInActivePlan(c.id));
     return expanded ?? null;
@@ -419,7 +406,11 @@
       <div class="title-group">
         <h2>Your Favourites</h2>
       </div>
-      <PlanManager compact={true} />
+
+      <div class="plan-controls">
+        <PlanManager compact={true} />
+        <PlanEditor plan={activePlan} />
+      </div>
     </div>
 
     <div class="state-card">
@@ -437,7 +428,7 @@
 
       <div class="plan-controls">
         <PlanManager compact={true} />
-        <PlanEditor plan={plansStore.read.getActive()} />
+        <PlanEditor plan={activePlan} />
       </div>
 
       <div class="controls">
@@ -539,7 +530,7 @@
                   type="button"
                   class="add-btn"
                   aria-label="Add to active plan"
-                  title="Add to {plansStore.read.getActive()?.name || 'plan'}"
+                  title="Add to {activePlan?.name || 'plan'}"
                   onclick={async () => {
                     await addInstanceToActivePlan(instanceToAdd.id);
                   }}
