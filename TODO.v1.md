@@ -25,11 +25,20 @@ A student can:
 * [x] Build historical course instance database via SISU historical endpoint ingestion script.
 * [ ] Update data workflow to keep `courses.json` and historical DB in sync.
   - current dataset contains only active/current offerings
-  - historical DB contains all past instances + archived instances
-  - disappearing instance → archive to historical DB
-  - reappearing instance → mark active, do not delete history
-* [ ] Verify that compiled metadata is actually used at runtime.
-* [ ] Ensure existing plans are immune to upstream data drift.
+  - historical DB contains all past + archived instances
+  - disappearing instance -> archived to historical DB
+  - reappearing instance -> marked active (history preserved)
+* [ ] Verify that compiled metadata is used at runtime.
+* [ ] Ensure existing plans are immune to upstream SISU data drift.
+
+**Data invariants (runtime):**
+
+* [ ] Active and historical datasets are disjoint by `instanceId` (after pruning overlaps).
+  - historical may contain archived versions, but must not duplicate active `instanceId`s
+* [ ] Unified course schema across all sources.
+  - active, historical, and snapshots resolve into the exact same `Course` shape
+  - runtime code does not rely on source-specific fields
+* [ ] Runtime does not branch on data source to access core course fields
 
 ## 2. Transcript Import & Grades
 
@@ -46,7 +55,10 @@ A student can:
   - [ ] schedule pairs
   - [ ] blocks
   - [x] course index (active, historical, and snapshots)
-* [ ] Define a single, explicit source of truth for the active plan.
+* [x] Enforce active-plan invariant:
+  - [x] exactly one active plan exists per user when at least one plan exists
+  - [x] active plan selection is deterministic and stable across reloads
+  - [x] frontend state always reflects backend active plan
 
 ## 4. Timeline (Release-Critical UI)
 
@@ -59,7 +71,10 @@ A student can:
 
 * [x] Edit plan name.
 * [x] Remove plan.
-* [ ] Fix favourites ↔ plan inconsistency (removal propagates correctly).
+* [x] Fix favourites instance selection state stays consistent when switching plans (expanded/selected instance updates correctly).
+* [x] Fix favourites: removing an instance from plan updates favourites UI immediately (no stale expanded/selected state).
+* [x] Fix favourites: switching active plan resets/syncs expanded instance state deterministically.
+* [x] Fix favourites: removing a planned instance propagates correctly (plan + favourites UI stay in sync).
 * [ ] Deterministic sorting rule for favourites (clearly defined).
 
 ## 6. Authentication Enforcement
@@ -71,6 +86,13 @@ A student can:
 
 * [ ] Add health check endpoint.
 * [ ] Ensure prod and dev environments do not share test data.
+
+## 8. UX Clarity
+
+* [x] Key features have inline explanation
+  - [x] Transcript Import modal includes: what input is expected + what is uploaded
+  - [x] Schedule Optimizer modal includes: “How it works” section
+  - [x] Missing course resolution explains: what happens when course not found
 
 ---
 
