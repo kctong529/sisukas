@@ -484,7 +484,7 @@
 
           <button
             type="button"
-            class="btn btn-secondary"
+            class="btn btn-secondary remove-btn-sec"
             onclick={() => { ui.removeMode = true; }}
           >
             Remove
@@ -758,7 +758,7 @@
     transition: all 0.2s;
     font-size: 0.8rem;
     color: var(--text-main);
-    min-width: 32px;
+    min-width: 32.5px;
     text-align: center;
   }
 
@@ -1088,6 +1088,12 @@
     outline-offset: 2px;
   }
 
+  .remove-btn-sec:hover:not(:disabled) {
+    background-color: #d9534f;
+    color: white;
+    border-color: white;
+  }
+
   .state-card {
     text-align: center;
     padding: 5rem 2rem;
@@ -1200,7 +1206,7 @@
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
   }
 
-  @media (max-width: 440px) {
+  @media (max-width: 410px) {
     .header-section {
       flex-direction: column;
       align-items: flex-start;

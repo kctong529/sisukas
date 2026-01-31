@@ -78,7 +78,13 @@
   }
 </script>
 
-<div class="header">
+<div class="missing-course-info">
+  <p><strong>How it works</strong></p>
+  <p>
+    Enter a course code that's missing from Sisukas. We'll search Aalto's official course 
+    catalogue and import all available snapshots of that course. Once imported, the course 
+    becomes available immediately for you and other users.
+  </p>
   <p class="hint">
     Only accepts codes that do not exist in current courses or historical data.
   </p>
@@ -234,5 +240,33 @@
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+  }
+
+  .missing-course-info {
+    background: #f9fafb;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #1e293b;
+  }
+
+  .missing-course-info p {
+    margin: 0 0 0.5rem 0;
+  }
+
+  .missing-course-info p:first-child {
+    font-weight: 600;
+    color: #4a90e2;
+    margin-bottom: 0.75rem;
+  }
+
+  .missing-course-info .hint {
+    margin: 0.75rem 0 0 0;
+    color: #64748b;
+    font-size: 0.85rem;
+    font-style: italic;
   }
 </style>

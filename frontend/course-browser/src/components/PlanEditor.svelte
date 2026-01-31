@@ -192,7 +192,7 @@
         onclick={startEditing}
         aria-label="Edit plan"
       >
-        ✎
+        <i class="bi bi-pencil" aria-hidden="true"></i>
       </button>
 
       <button
@@ -285,17 +285,18 @@
 
   .plan-count {
     color: #1e293b;
-    padding: 0.2rem 0.4rem;
-    border-radius: 3px;
+    margin-left: 10px;
+    padding-right: 0.3rem;
     white-space: nowrap;
     flex-shrink: 0;
+    width: 73px;
   }
 
   .icon-btn {
     padding: 0.35rem 0.4rem;
     border: 1px solid #e2e8f0;
     background: #ffffff;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
@@ -322,8 +323,14 @@
     cursor: not-allowed;
   }
 
-  .edit-btn:hover:not(:disabled) {
+  .edit-btn {
     color: #4a90e2;
+  }
+
+  .edit-btn:hover:not(:disabled) {
+    background-color: #4a90e2;
+    color: white;
+    border-color: white;
   }
 
   .remove-btn {

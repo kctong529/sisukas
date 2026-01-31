@@ -151,7 +151,7 @@
       </div>
 
       <button class="btn btn-analytics" onclick={showAnalysis} disabled={ui.running}>
-        {ui.running ? "Running..." : "Compute best schedules"}
+        {ui.running ? "Running..." : "Compute Schedules"}
       </button>
 
       <PlanManager compact={true} />
@@ -219,6 +219,8 @@
 
     <div class="modal-content" role="dialog" aria-modal="true" aria-label="Analytics results">
       <div class="modal-header">
+        <div class="modal-title">Compute Schedules</div>
+
         <button type="button" class="modal-close" aria-label="Close" onclick={closeAnalyticsModal}>
           ✕
         </button>
@@ -236,6 +238,23 @@
             <p>{ui.analyticsError}</p>
           </div>
         {:else}
+          <div class="analytics-intro">
+            <p><strong>Schedule Optimizer</strong></p>
+            <p>
+              This tool explores all possible combinations of study groups across your selected courses 
+              and ranks them by conflict density, longest day, and lunch availability.
+            </p>
+            <details class="tech-details">
+              <summary>How it works</summary>
+              <ul>
+                <li>Enumerates all valid study group combinations (capped at 100,000 to avoid exponential explosion)</li>
+                <li>Scores each candidate based on hard constraints: minimizes overlapping events and long consecutive days</li>
+                <li>Returns the top 20 least-conflicted schedules ranked by your preferred metric</li>
+                <li>Shows a timeline heatmap for each candidate so you can visualize conflicts visually</li>
+              </ul>
+              <p><strong>Note:</strong> This feature is under active development and will be significantly redesigned with more granular constraints and personal configuration options.</p>
+            </details>
+          </div>
           <AnalyticsResults data={ui.analyticsResp} />
         {/if}
       </div>
@@ -444,17 +463,15 @@
   }
 
   .btn-analytics {
-    padding: 0.5rem 0.7rem;
+    background: var(--card-bg);
+    color: var(--text-main);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
     border: 1px solid var(--border);
     border-radius: 6px;
-    background: var(--card-bg);
-    cursor: pointer;
+    padding: 0.5rem 0.8rem;
     transition: all 0.2s;
-    font-size: 0.8rem;
-    color: var(--text-main);
-    min-width: 32px;
-    text-align: center;
-    font-weight: 100;
   }
 
   .btn-analytics:hover {
@@ -532,6 +549,13 @@
     to { transform: translateY(0); opacity: 1; }
   }
 
+  .modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    padding-left: 6px;
+  }
+
   .modal-header {
     display: flex;
     align-items: center;
@@ -566,6 +590,78 @@
     overflow-y: auto;
     flex: 1;
     padding: 0.5rem;
+  }
+
+  .analytics-intro {
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-main);
+  }
+
+  .analytics-intro p {
+    margin: 0 0 0.5rem 0;
+  }
+
+  .analytics-intro p:first-child {
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  .analytics-intro p:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .tech-details {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .tech-details summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--primary);
+    user-select: none;
+  }
+
+  .tech-details summary:hover {
+    text-decoration: underline;
+  }
+
+  .tech-details ul {
+    margin: 0.5rem 0 0.75rem 1.25rem;
+    padding: 0;
+  }
+
+  .tech-details li {
+    margin: 0.25rem 0;
+    color: #555;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .tech-details p {
+    font-size: 0.85rem;
+    color: #777;
+    font-style: italic;
+    margin: 0.5rem 0 0 0;
+  }
+
+  @media (max-width: 484px) {
+    .analytics-intro {
+      padding: 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .tech-details ul {
+      margin-left: 1rem;
+      font-size: 0.8rem;
+    }
   }
 
   .alert {

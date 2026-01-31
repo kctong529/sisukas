@@ -314,7 +314,7 @@
       </div>
 
       <button class="btn btn-secondary" type="button" onclick={openImportModal}>
-        Import transcript
+        Import Transcript
       </button>
 
       <PlanManager compact={true} />
@@ -337,7 +337,7 @@
       aria-label="Import transcript"
     >
       <div class="modal-header">
-        <div class="modal-title">Import transcript PDF</div>
+        <div class="modal-title">Import Transcript PDF</div>
 
         <button
           type="button"
@@ -350,6 +350,26 @@
       </div>
 
       <div class="modal-body">
+        <div class="import-info">
+          <p><strong>What this does:</strong></p>
+          <ul>
+            <li>Extracts course records from your Aalto University transcript PDF</li>
+            <li>Adds all extracted courses to your Favourites</li>
+            <li>Adds course instances to your active plan (replacing older instances of the same course if needed)</li>
+            <li>Imports your grades and updates them in the timeline</li>
+          </ul>
+          <p><strong>What we expect:</strong></p>
+          <ul>
+            <li>An official Aalto University transcript PDF in English, generated on SISU</li>
+            <li>The PDF should contain course records with code, name, credits, grade, and date</li>
+          </ul>
+          <p><strong>What gets sent:</strong></p>
+          <ul>
+            <li>Only the extracted course codes, grades, and dates from your PDF</li>
+            <li>Your active plan ID to organize the imported courses</li>
+            <li>No other personal information or the original PDF file is sent to the server</li>
+          </ul>
+        </div>
         <TranscriptExtractor on:extracted={onTranscriptExtracted} />
 
         {#if importing}
@@ -1135,6 +1155,7 @@
   }
 
   .modal-title {
+    font-size: 1rem;
     font-weight: 700;
     color: #111827;
     padding-left: 6px;
@@ -1300,6 +1321,41 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
       "Liberation Mono", "Courier New", monospace;
     font-size: 0.9rem;
+  }
+
+  .import-info {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: #374151;
+  }
+
+  .import-info p {
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .import-info p:first-child {
+    margin-top: 0;
+  }
+
+  .import-info ul {
+    margin: 6px 0 12px 20px;
+    padding: 0;
+  }
+
+  .import-info li {
+    margin: 4px 0;
+    color: #4b5563;
+  }
+
+  .import-info li:last-child {
+    margin-bottom: 0;
   }
 
   /* Hide mobile matrix on desktop / hide desktop grid on mobile */

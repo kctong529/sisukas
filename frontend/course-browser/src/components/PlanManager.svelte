@@ -72,7 +72,7 @@
 <div class="plan-manager" class:compact>
   {#if compact}
     <!-- Compact mode: dropdown-like selector -->
-    <div class="compact-header">
+    <div class="compact-header" class:creating={isCreating}>
       <label for="plan">Active plan:</label>
       <select
         value={activePlan?.id || ''}
@@ -167,6 +167,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    min-width: 0;
   }
 
   .plan-manager.compact {
@@ -174,6 +175,8 @@
     align-items: center;
     gap: 0.3rem;
     height: 32.5px;
+    min-width: 0;
+    overflow: hidden;
   }
 
   /* Full mode */
@@ -304,6 +307,7 @@
     color: #1e293b;
     appearance: none;
     height: 32.5px;
+    width: 95px;
     box-sizing: border-box;
   }
 
@@ -395,6 +399,7 @@
     width: 32.5px;
     height: 32.5px;
     padding: 0;
+    min-width: 32.5px;
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     background: #ffffff;
@@ -423,30 +428,26 @@
     cursor: not-allowed;
   }
 
-  /* Responsive input field for narrow screens */
-  @media (max-width: 600px) {
-    .plan-input {
-      min-width: 100px;
+  @media (max-width: 460px) {
+    .compact-header.creating .plan-select,
+    .compact-header.creating label {
+      display: none;
     }
 
-    .plan-select {
-      min-width: 80px;
+    .compact-header.creating .plan-input {
+      flex: 1;
+      min-width: 60px;
+    }
+
+    .compact-header.creating .btn-small {
+      flex-shrink: 0;
     }
   }
 
-  @media (max-width: 480px) {
-    .compact-header {
-      width: 96%;
-    }
-
+  @media (max-width: 420px) {
     .plan-input {
-      width: auto;
-      flex: 0 1 auto;
-    }
-
-    .plan-select {
-      width: auto;
-      flex: 0 1 auto;
+      flex: 1 1 60px;
+      min-width: 60px;
     }
   }
 </style>

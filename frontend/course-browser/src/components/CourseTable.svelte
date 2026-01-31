@@ -1146,9 +1146,10 @@
   }
 
   .mc-title {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: #111;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    padding-left: 6px;
   }
 
   .mc-close {
