@@ -93,7 +93,7 @@
     background: #ccc;
   }
   .error-banner {
-    color: #dc3545;
+    color: #d9534f;
     background: #fff5f5;
     padding: 0.75rem;
     border-radius: 6px;

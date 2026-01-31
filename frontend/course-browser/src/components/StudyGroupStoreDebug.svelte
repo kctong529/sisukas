@@ -179,7 +179,7 @@
   }
 
   .error-message {
-    color: #dc3545;
+    color: #d9534f;
     padding: 0.5rem;
     word-break: break-word;
   }
@@ -187,7 +187,7 @@
   .clear-btn {
     width: 100%;
     padding: 0.5rem;
-    background: #dc3545;
+    background: #d9534f;
     color: white;
     border: none;
     border-radius: 4px;

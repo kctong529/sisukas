@@ -30,6 +30,7 @@
     showAnalyticsModal: false,
     plansLoading: false,
     plansError: null as string | null,
+    showOlder: false, // default: active-only
   });
 
   const activePlan = $derived.by(() => plansStore.read.getActive());
@@ -67,8 +68,12 @@
     ui.showAnalyticsModal = true;
 
     try {
+      const instanceIds = ui.showOlder
+        ? plan.instanceIds
+        : plan.instanceIds.filter((id) => !!courseIndexStore.read.getByInstanceId(id));
+
       const payload = buildAnalyticsPayload({
-        instanceIds: plan.instanceIds,
+        instanceIds,
         getCourseForInstance: resolveCourse,
         getBlocksForInstance: (id) => blockStore.getCachedForInstance(id) ?? [],
         getStudyGroupsForInstance: (unitId, offeringId) => studyGroupStore.getCached(unitId, offeringId),
@@ -154,6 +159,17 @@
         {ui.running ? "Running..." : "Compute Schedules"}
       </button>
 
+      <button
+        type="button"
+        class="btn btn-analytics"
+        class:active={ui.showOlder}
+        aria-pressed={ui.showOlder}
+        onclick={() => (ui.showOlder = !ui.showOlder)}
+        title={ui.showOlder ? "Showing active + historical" : "Showing active only"}
+      >
+        {ui.showOlder ? "See Active" : "See Older"}
+      </button>
+
       <PlanManager compact={true} />
 
       {#if ui.analyticsError && !ui.showAnalyticsModal}
@@ -171,36 +187,24 @@
       {:else}
         <div class="instances-list">
           {#each activePlan.instanceIds as instanceId (instanceId)}
-            {@const course = resolveCourse(instanceId)}
-            <div class="instance-card">
-              <div class="instance-header">
-                <div class="instance-info">
-                  {#if course}
+            {@const course = ui.showOlder
+              ? courseIndexStore.read.resolveByInstanceId(instanceId)   // active OR historical
+              : courseIndexStore.read.getByInstanceId(instanceId)       // active only
+            }
+            {#if course}
+              <div class="instance-card">
+                <div class="instance-header">
+                  <div class="instance-info">
                     <h3 class="instance-id">{course.code?.value ?? instanceId}</h3>
                     <p class="instance-name">{course.name?.en}</p>
-                  {:else}
-                    <h3 class="instance-id">{instanceId}</h3>
-                    {#if courseIndexStore.state.historicalLoading}
-                      <p class="instance-name muted">Loading course...</p>
-                    {/if}
-                  {/if}
+                  </div>
                 </div>
-              </div>
 
-              {#if course}
                 <div class="instance-content">
                   <BlocksGrid {course} />
                 </div>
-              {:else if courseIndexStore.state.historicalLoading}
-                <div class="instance-content">
-                  <p class="muted">Waiting for historical data...</p>
-                </div>
-              {:else}
-                <div class="instance-content">
-                  <p class="muted">Course data not found for this instance.</p>
-                </div>
-              {/if}
-            </div>
+              </div>
+            {/if}
           {/each}
         </div>
       {/if}

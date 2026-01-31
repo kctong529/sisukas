@@ -157,7 +157,7 @@
     --primary-hover: #2980f1;
     --text-main: #1e293b;
     --border: #e2e8f0;
-    --danger: #ef4444;
+    --danger: #d9534f;
   }
 
   .filter-rule {
@@ -257,19 +257,19 @@
     background: #ffffff;
     border-radius: 6px;
     cursor: pointer;
-    color: var(--danger);
+    color: #d9534f;
     flex-shrink: 0;
   }
 
   .delete-btn:hover {
-    background-color: var(--danger);
+    background-color: #d9534f;
     color: white;
-    border-color: var(--danger);
+    border-color: #d9534f;
   }
 
   .delete-btn:focus {
     outline: none;
-    border-color: var(--danger);
+    border-color: #d9534f;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
   }
 

@@ -30,7 +30,7 @@ router.get('/login', (req: Request, res: Response) => {
         button { width: 100%; padding: 0.75rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: transform 0.2s; }
         button:hover { transform: translateY(-2px); }
         button:active { transform: translateY(0); }
-        .error { color: #dc3545; font-size: 0.9rem; margin-top: 1rem; text-align: center; display: none; }
+        .error { color: #d9534f; font-size: 0.9rem; margin-top: 1rem; text-align: center; display: none; }
         .loading { display: none; text-align: center; color: #667eea; }
       </style>
     </head>

@@ -409,7 +409,7 @@
   }
 
   .error-message {
-    color: #dc3545;
+    color: #d9534f;
     padding: 0.5rem;
     word-break: break-word;
     background: white;
@@ -447,7 +447,7 @@
   }
 
   .action-btn.danger {
-    background: #dc3545;
+    background: #d9534f;
     color: white;
     grid-column: span 2;
   }

@@ -169,7 +169,7 @@
   }
 
   .status-item.error {
-    border-left-color: #dc3545;
+    border-left-color: #d9534f;
     background: #fdf8f8;
     color: #842029;
   }
@@ -222,7 +222,7 @@
   }
 
   .action-btn.danger {
-    background: #dc3545;
+    background: #d9534f;
   }
 
   .action-btn.danger:hover {

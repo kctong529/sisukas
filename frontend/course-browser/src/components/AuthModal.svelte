@@ -225,7 +225,7 @@
     padding: 0.8rem;
     border-radius: 6px;
     background: #fff5f5;
-    color: #dc3545;
+    color: #d9534f;
     font-size: 0.9rem;
     display: flex;
     align-items: center;

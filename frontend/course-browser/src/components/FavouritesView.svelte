@@ -77,7 +77,13 @@
     sortedFavourites: [] as Favourite[],
   });
 
-  let expandedInstanceIds = $state(new Set<string>());
+  let expandedInstanceIds = $state<Set<string>>(new Set());
+  let isPlanningSwitching = $state(false);
+  let lastSig = "";
+  let prevPlanId: string | null = null;
+
+  const planInstanceIds = $derived.by(() => new Set(activePlan?.instanceIds ?? []));
+  const expandedIds = $derived.by(() => expandedInstanceIds);
 
   async function toggleAll() {
     source = source === "active" ? "all" : "active";
@@ -147,6 +153,11 @@
   async function initializePlans() {
     try {
       await plansStore.actions.ensureDefaultPlan();
+      
+      // Initialize expanded state with plan instances
+      if (activePlan?.instanceIds && activePlan.instanceIds.length > 0) {
+        expandedInstanceIds = new Set(activePlan.instanceIds);
+      }
     } catch (err) {
       console.error('Failed to initialize plans:', err);
     } finally {
@@ -166,20 +177,20 @@
     return m;
   });
 
-  let lastSig = "";
-  let prevPlanId: string | null = null;
-
+  // ---- Plan switch detection and state sync ----
   $effect(() => {
-    const id = activePlanId;
-
-    if (id !== prevPlanId) {
+    if (activePlanId !== prevPlanId) {
+      // Clear old expanded state
       expandedInstanceIds = new Set();
       lastSig = "";
+      prevPlanId = activePlanId;
+      
+      // If plans are initialized and we have a plan, sync with new plan instances
+      if (ui.hasInitializedPlans && activePlan && activePlan.instanceIds && activePlan.instanceIds.length > 0) {
+        expandedInstanceIds = new Set(activePlan.instanceIds);
+      }
     }
-
-    prevPlanId = id;
   });
-
 
   // ---- Study group batch fetch (active view only) ----
   $effect(() => {
@@ -308,36 +319,58 @@
   }
 
   function toggleInstance(courseCode: string, instanceId: string) {
-    if (expandedInstanceIds.has(instanceId)) {
-      const wasInPlan = activePlan?.instanceIds?.includes(instanceId) ?? false;
+    if (isPlanningSwitching) return;
 
-      expandedInstanceIds.delete(instanceId);
-      expandedInstanceIds = new Set(expandedInstanceIds);
+    const inPlan = activePlan?.instanceIds?.includes(instanceId) ?? false;
+    const isCurrentlyExpanded = expandedInstanceIds.has(instanceId);
+    const courses = getCoursesForId(courseCode);
 
-      if (wasInPlan) {
-        NotificationService.error(`Instance removed from ${activePlan?.name ?? 'plan'}`);
-        void removedInstanceFromPlan(instanceId);
-      }
-
+    // If this instance is in the plan, clicking it removes it from the plan
+    if (inPlan) {
+      NotificationService.error(`Instance removed from ${activePlan?.name ?? 'plan'}`);
+      
+      // Remove from expanded
+      const newExpanded = new Set(expandedInstanceIds);
+      newExpanded.delete(instanceId);
+      expandedInstanceIds = newExpanded;
+      
+      // Then remove from plan
+      void removedInstanceFromPlan(instanceId);
       return;
     }
 
-    const courses = getCoursesForId(courseCode);
-
-    courses.forEach((c) => expandedInstanceIds.delete(c.id));
-
-    expandedInstanceIds.add(instanceId);
-    expandedInstanceIds = new Set(expandedInstanceIds);
-
-    const activeHit = courseIndexStore.state.byInstanceId.get(instanceId);
-    if (activeHit) {
-      studyGroupStore.fetch(activeHit.unitId, activeHit.id);
+    // For non-plan instances: normal expand/collapse toggle
+    // Remove all siblings of THIS course
+    const newExpanded = new Set(expandedInstanceIds);
+    for (const id of expandedInstanceIds) {
+      if (courses.some(c => c.id === id)) {
+        newExpanded.delete(id);
+      }
     }
+
+    if (isCurrentlyExpanded) {
+      // Collapsing - already removed by loop above
+    } else {
+      // Expanding: add this instance
+      newExpanded.add(instanceId);
+
+      const activeHit = courseIndexStore.read.resolveByInstanceId(instanceId);
+      if (activeHit) {
+        studyGroupStore.fetch(activeHit.unitId, activeHit.id);
+      }
+    }
+    
+    expandedInstanceIds = newExpanded;
   }
 
   async function removedInstanceFromPlan(instanceId: string) {
     try {
       await plansStore.actions.removeInstanceFromActivePlan(instanceId);
+      
+      // After the plan update completes, ensure it's removed from expanded too
+      const newExpanded = new Set(expandedInstanceIds);
+      newExpanded.delete(instanceId);
+      expandedInstanceIds = newExpanded;
     } catch (err) {
       console.error('Failed to remove instance from plan:', err);
     }
@@ -352,29 +385,17 @@
 
       await plansStore.actions.addInstanceToActivePlan(instanceId);
       NotificationService.success(`Instance added to ${activePlan.name}`);
+      
+      // Ensure it's in expanded state
+      if (!expandedInstanceIds.has(instanceId)) {
+        const newExpanded = new Set(expandedInstanceIds);
+        newExpanded.add(instanceId);
+        expandedInstanceIds = newExpanded;
+      }
     } catch (err) {
       console.error('Failed to add instance to plan:', err);
       NotificationService.error('Failed to add instance to plan');
     }
-  }
-
-  function isInstanceInActivePlan(instanceId: string): boolean {
-    return activePlan?.instanceIds?.includes(instanceId) ?? false;
-  }
-
-  function isInstanceExpanded(instanceId: string): boolean {
-    return expandedInstanceIds.has(instanceId) || isInstanceInActivePlan(instanceId);
-  }
-
-  function visibleInstancesFor(courses: Course[]): Course[] {
-    const active = courses.find((c) => expandedInstanceIds.has(c.id));
-    return active ? [active] : courses;
-  }
-
-  function instanceToAddFor(courses: Course[]): Course | null {
-    if (!activePlan) return null;
-    const expanded = courses.find((c) => expandedInstanceIds.has(c.id) && !isInstanceInActivePlan(c.id));
-    return expanded ?? null;
   }
 </script>
 
@@ -490,8 +511,16 @@
           (a, b) => a.courseDate.start.getTime() - b.courseDate.start.getTime()
         )}
 
-        {@const instanceToAdd = instanceToAddFor(courses)}
-        {@const visibleInstances = visibleInstancesFor(courses)}
+        <!-- show only the expanded instance (if any), otherwise show all -->
+        {@const expandedHit = courses.find((c) => expandedIds.has(c.id))}
+        {@const visibleInstances = expandedHit ? [expandedHit] : courses}
+
+        <!-- add button: only when an expanded instance exists and isn't in plan -->
+        {@const instanceToAdd =
+          activePlan
+            ? courses.find((c) => expandedIds.has(c.id) && !planInstanceIds.has(c.id)) ?? null
+            : null
+        }
 
         <div class="favourite-item" class:remove-mode={ui.removeMode}>
           <div class="item-header">
@@ -544,8 +573,11 @@
           {#if !ui.removeMode}
             <div class="instances-container">
               {#each visibleInstances as course (course.id)}
+                {@const inPlan = planInstanceIds.has(course.id)}
+                {@const isExpanded = expandedIds.has(course.id) || inPlan}
+
                 <div
-                  class="instance {isInstanceExpanded(course.id) ? 'selected' : ''} {isInstanceInActivePlan(course.id) ? 'in-plan' : ''}"
+                  class="instance {isExpanded ? 'selected' : ''} {inPlan ? 'in-plan' : ''}"
                   role="button"
                   tabindex="0"
                   onclick={(e) => {
@@ -568,68 +600,68 @@
                     </div>
                   </div>
 
-                  {#if isInstanceExpanded(course.id)}
+                  {#if isExpanded}
                     <div role="presentation" onclick={(e) => e.stopPropagation()}>
-                      <StudyGroupsSection {course} isExpanded={isInstanceExpanded(course.id)} />
+                      <StudyGroupsSection {course} isExpanded={isExpanded} />
                     </div>
                   {/if}
                 </div>
               {/each}
             </div>
-
-            <div class="notes-section">
-              {#if ui.editingCourseId === favourite.courseId}
-                <div class="editor">
-                  <textarea
-                    bind:value={ui.editingNotes}
-                    placeholder="Add your notes here..."
-                    aria-label="Edit notes"
-                  ></textarea>
-
-                  <div class="editor-actions">
-                    <button
-                      type="button"
-                      class="btn-text save"
-                      onclick={() => saveNotes(favourite.courseId)}
-                    >
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      class="btn-text cancel"
-                      onclick={cancelEditingNotes}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              {:else}
-                <div class="display">
-                  <p class:placeholder={!favourite.notes}>
-                    {favourite.notes || ''}
-                  </p>
-
-                  {#if favourite.notes}
-                    <button
-                      type="button"
-                      class="edit-trigger"
-                      onclick={() => startEditingNotes(favourite.courseId, favourite.notes)}
-                    >
-                      Edit note
-                    </button>
-                  {:else}
-                    <button
-                      type="button"
-                      class="edit-trigger"
-                      onclick={() => startEditingNotes(favourite.courseId, null)}
-                    >
-                      + Add note
-                    </button>
-                  {/if}
-                </div>
-              {/if}
-            </div>
           {/if}
+
+          <div class="notes-section">
+            {#if ui.editingCourseId === favourite.courseId}
+              <div class="editor">
+                <textarea
+                  bind:value={ui.editingNotes}
+                  placeholder="Add your notes here..."
+                  aria-label="Edit notes"
+                ></textarea>
+
+                <div class="editor-actions">
+                  <button
+                    type="button"
+                    class="btn-text save"
+                    onclick={() => saveNotes(favourite.courseId)}
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-text cancel"
+                    onclick={cancelEditingNotes}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            {:else}
+              <div class="display">
+                <p class:placeholder={!favourite.notes}>
+                  {favourite.notes || ''}
+                </p>
+
+                {#if favourite.notes}
+                  <button
+                    type="button"
+                    class="edit-trigger"
+                    onclick={() => startEditingNotes(favourite.courseId, favourite.notes)}
+                  >
+                    Edit note
+                  </button>
+                {:else}
+                  <button
+                    type="button"
+                    class="edit-trigger"
+                    onclick={() => startEditingNotes(favourite.courseId, null)}
+                  >
+                    + Add note
+                  </button>
+                {/if}
+              </div>
+            {/if}
+          </div>
         </div>
       {/each}
     </div>

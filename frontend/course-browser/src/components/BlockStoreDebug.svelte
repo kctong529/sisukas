@@ -672,7 +672,7 @@
   }
 
   .action-btn.danger {
-    background: #dc3545;
+    background: #d9534f;
     color: white;
     flex: 1;
     padding: 0.4rem 0.5rem;
@@ -683,7 +683,7 @@
   }
 
   .error-message {
-    color: #dc3545;
+    color: #d9534f;
     padding: 0.5rem;
     word-break: break-word;
     background: white;

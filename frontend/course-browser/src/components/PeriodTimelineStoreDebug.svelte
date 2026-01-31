@@ -454,7 +454,7 @@
   }
 
   .value.warn {
-    color: #dc3545;
+    color: #d9534f;
   }
 
   .meta-line {
@@ -485,7 +485,7 @@
   }
   .check-label { color: #495057; font-weight: 600; }
   .check-value { color: #0d6efd; font-weight: 700; }
-  .check-value.warn { color: #dc3545; }
+  .check-value.warn { color: #d9534f; }
 
   .warn-box {
     margin-top: 0.4rem;
@@ -553,7 +553,7 @@
 
   .right { font-weight: 700; }
   .right.ok { color: #198754; }
-  .right.warn { color: #dc3545; }
+  .right.warn { color: #d9534f; }
 
   .empty {
     color: #adb5bd;
@@ -648,7 +648,7 @@
   }
 
   .error-message {
-    color: #dc3545;
+    color: #d9534f;
     padding: 0.5rem;
     word-break: break-word;
     background: white;

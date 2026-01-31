@@ -324,7 +324,7 @@
   }
   
   .sign-out-btn {
-    background: #dc3545;
+    background: #d9534f;
   }
   
   .sign-out-btn:hover {
@@ -406,7 +406,7 @@
   }
   
   .mobile-nav-link.sign-out {
-    background: #dc3545;
+    background: #d9534f;
     color: white;
   }
   
