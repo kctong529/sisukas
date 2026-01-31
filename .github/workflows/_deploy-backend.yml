@@ -27,9 +27,14 @@ on:
         type: string
 
 jobs:
-  deploy_backend:
-    name: Deploy Backend
+  deploy_backend_dev:
+    name: Deploy Backend (Dev)
+    if: ${{ inputs.environment == 'test' }}
     runs-on: ubuntu-latest
+
+    environment: 
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.backend_url }}
 
     permissions:
       contents: read
@@ -54,6 +59,56 @@ jobs:
           project_id: ${{ inputs.gcp_project_id }}
           source: './backend/'
           allow-unauthenticated: true
+          env_vars: |
+            SISUKAS_ENV=${{ inputs.environment }}
+            FRONTEND_URL=${{ inputs.frontend_url }}
+            BACKEND_URL=${{ inputs.backend_url }}
+            BETTER_AUTH_URL=${{ inputs.frontend_url }}
+            CORS_ORIGINS=${{ inputs.cors_origins }}
+            BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
+            ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+
+      - name: Check Deployment Health
+        run: |
+          sleep 10
+          curl -f ${{ inputs.backend_url }} || exit 1
+
+  deploy_backend_prod:
+    name: Deploy Backend (Prod)
+    if: ${{ inputs.environment == 'production' }}
+    runs-on: ubuntu-latest
+
+    environment: 
+      name: ${{ inputs.environment }}
+      url: ${{ inputs.backend_url }}
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - id: auth
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/969370446235/locations/global/workloadIdentityPools/github/providers/my-repo'
+          service_account: 'github-actions-deployer@sisukas-fastapi.iam.gserviceaccount.com'
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ inputs.backend_cloud_run_service }}
+          region: ${{ inputs.region }}
+          project_id: ${{ inputs.gcp_project_id }}
+          source: './backend/'
+          allow-unauthenticated: true
+          flags: '--min-instances=1'
           env_vars: |
             SISUKAS_ENV=${{ inputs.environment }}
             FRONTEND_URL=${{ inputs.frontend_url }}
