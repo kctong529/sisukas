@@ -12,7 +12,7 @@ jobs:
       environment: production
       vite_filters_api: https://filters-api.sisukas.eu
       vite_wrapper_api: https://sisu-wrapper-api.sisukas.eu
-      vite_gcs_bucket: https://storage.googleapis.com/sisukas-core-test
+      vite_gcs_bucket: https://storage.googleapis.com/sisukas-core
       fly_io_url: https://sisukas.fly.dev
       frontend_url: https://sisukas.eu
       backend_url: https://api.sisukas.eu
