@@ -1,40 +1,59 @@
-<!-- src/components/StudyGroupsSection.svelte -->
 <script lang="ts">
-  import { onDestroy } from 'svelte';
-  import { studyGroupStore } from '../lib/stores/studyGroupStore';
-  import type { Course } from '../domain/models/Course';
-  import type { StudyGroup } from '../domain/models/StudyGroup';
-  import type { StudyEvent } from '../domain/models/StudyEvent';
+  import { onDestroy } from "svelte";
+  import { get } from "svelte/store";
+  import { studyGroupStore, type StudyGroupSummary } from "../lib/stores/studyGroupStore";
+  import type { Course } from "../domain/models/Course";
+  import type { StudyGroup } from "../domain/models/StudyGroup";
+  import type { StudyEvent } from "../domain/models/StudyEvent";
 
-  export let course: Course;           // The full, rich Course domain model
-  export let isExpanded: boolean;      // Whether this instance is currently expanded
+  export let course: Course;
+  export let isExpanded: boolean;
 
-  // Reactive load trigger: fetch when expanded
-  $: if (isExpanded && course) {
-    studyGroupStore.fetch(course.unitId, course.id);
-  }
+  const keyOf = (c: Course) => `${c.unitId}:${c.id}`;
 
-  // Subscribe to store for reactive updates
-  let studyGroups: StudyGroup[] = [];
+  let groups: StudyGroup[] = [];
+  let summaries: StudyGroupSummary[] = [];
   let isLoading = false;
-  let unsubscribe: (() => void) | null = null;
 
-  $: if (course) {
-    // Clean up previous subscription
+  let unsubscribe: (() => void) | null = null;
+  let currentKey: string | null = null;
+
+  function subscribeForKey(k: string) {
     if (unsubscribe) unsubscribe();
-    
-    // Subscribe to store changes
-    unsubscribe = studyGroupStore.subscribe(state => {
-      const key = `${course.unitId}:${course.id}`;
-      studyGroups = state.cache[key] || [];
-      isLoading = state.loadingKeys.includes(key);
+
+    unsubscribe = studyGroupStore.subscribe((state) => {
+      groups = state.cache[k] || [];
+      summaries = state.summaryCache[k] || [];
+
+      const loadingKey = state.loadingKeys.includes(k);
+      isLoading = loadingKey && groups.length === 0 && summaries.length === 0;
     });
   }
 
-  // Clean up subscription on component destroy
+  // Subscribe only when the course key changes
+  $: if (course) {
+    const k = keyOf(course);
+    if (k !== currentKey) {
+      currentKey = k;
+      subscribeForKey(k);
+    }
+  }
+
+  // Fetch when expanded, but only if we don't already have full data AND we're not already loading
+  $: if (isExpanded && course && currentKey) {
+    const state = get(studyGroupStore);
+    const hasFull = (state.cache[currentKey]?.length ?? 0) > 0;
+    const isAlreadyLoading = state.loadingKeys.includes(currentKey);
+
+    if (!hasFull && !isAlreadyLoading) {
+      // low-priority enqueue in your store
+      void studyGroupStore.fetch(course.unitId, course.id);
+    }
+  }
+
   onDestroy(() => {
     if (unsubscribe) unsubscribe();
-  })
+  });
 
   function aggregateStudyEvents(events: StudyEvent[]): string {
     if (events.length === 0) return 'No events';
@@ -103,25 +122,28 @@
 
 <div class="study-groups-container">
   <div class="study-groups-content">
-    {#if isLoading}
-      <div class="loading">Loading study groups...</div>
-    {:else if studyGroups.length === 0}
-      <div class="empty">No study groups available</div>
-    {:else}
+    {#if groups.length > 0}
+      <!-- Full data wins -->
       <div class="study-groups-list">
-        {#each studyGroups as group (group.groupId)}
+        {#each groups as group (group.groupId)}
           <div class="study-group-item">
             <div class="group-header">
               <h4 class="group-name">{group.name}</h4>
               <span class="group-type">{group.type}</span>
             </div>
-            <div class="group-schedule">{aggregateStudyEvents(group.studyEvents)}</div>
+
+            <div class="group-schedule">
+              {aggregateStudyEvents(group.studyEvents)}
+            </div>
+
             {#if group.studyEvents.length > 3}
               <details class="group-events">
                 <summary>Show all {group.studyEvents.length} events</summary>
                 <div class="events-list">
                   {#each group.studyEvents as event (event.id)}
-                    <div class="event-item">{formatEventTime(event.startIso ?? event.start, event.endIso ?? event.end)}</div>
+                    <div class="event-item">
+                      {formatEventTime(event.startIso ?? event.start, event.endIso ?? event.end)}
+                    </div>
                   {/each}
                 </div>
               </details>
@@ -129,14 +151,39 @@
           </div>
         {/each}
       </div>
+
+    {:else if summaries.length > 0}
+      <!-- Cached summary shows instantly -->
+      <div class="study-groups-list">
+        {#each summaries as s (s.groupId)}
+          <div class="study-group-item">
+            <div class="group-header">
+              <h4 class="group-name">{s.name}</h4>
+              <span class="group-type">{s.type}</span>
+            </div>
+
+            <div class="group-schedule">{s.schedule}</div>
+            <div class="group-meta">
+              {s.eventCount} events
+              {#if isExpanded && isLoading}
+                <span class="updating"> · updating…</span>
+              {/if}
+            </div>
+          </div>
+        {/each}
+      </div>
+
+    {:else if isLoading}
+      <div class="loading">Loading study groups...</div>
+
+    {:else}
+      <div class="empty">No study groups available</div>
     {/if}
   </div>
 </div>
 
 <style>
-  .study-groups-container {
-    margin-top: 0;
-  }
+  .study-groups-container { margin-top: 0; }
 
   .loading,
   .empty {
@@ -188,9 +235,17 @@
     margin-bottom: 0.25rem;
   }
 
-  .group-events {
-    margin-top: 0.25rem;
+  .group-meta {
+    font-size: 0.7rem;
+    color: var(--text-muted);
   }
+
+  .updating {
+    font-style: italic;
+    opacity: 0.9;
+  }
+
+  .group-events { margin-top: 0.25rem; }
 
   .group-events summary {
     font-size: 0.7rem;
@@ -199,9 +254,7 @@
     padding-top: 0.15rem;
   }
 
-  .group-events summary:hover {
-    color: #d9534f;
-  }
+  .group-events summary:hover { color: #d9534f; }
 
   .events-list {
     display: flex;

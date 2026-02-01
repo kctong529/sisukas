@@ -3,15 +3,98 @@ import { writable, get } from "svelte/store";
 import { StudyGroupService } from "../../infrastructure/services/StudyGroupService";
 import type { StudyGroup } from "../../domain/models/StudyGroup";
 
+const LS_PREFIX = "sisukas:studyGroups:v1";
+const TTL_MS = 1000 * 60 * 60 * 24 * 7;
+
+export type StudyGroupSummary = {
+  groupId: string;
+  name: string;
+  type: string;
+  schedule: string;
+  eventCount: number;
+};
+
 interface StudyGroupStoreState {
   cache: { [key: string]: StudyGroup[] };
+  summaryCache: { [key: string]: StudyGroupSummary[] };
   loadingKeys: string[];
   error: string | null;
+}
+
+type CachedEntry = { fetchedAt: number; groups: StudyGroupSummary[] };
+
+function lsKey(k: string) {
+  return `${LS_PREFIX}:${k}`;
+}
+
+function saveToLocalStorage(k: string, groups: StudyGroupSummary[]) {
+  try {
+    const entry: CachedEntry = { fetchedAt: Date.now(), groups };
+    localStorage.setItem(lsKey(k), JSON.stringify(entry));
+  } catch {
+    // ignore quota / private mode errors
+  }
+}
+
+function loadFromLocalStorage(k: string): StudyGroupSummary[] | null {
+  try {
+    const raw = localStorage.getItem(lsKey(k));
+    if (!raw) return null;
+
+    const entry = JSON.parse(raw) as CachedEntry;
+    if (!entry?.groups || typeof entry.fetchedAt !== "number") return null;
+
+    if (Date.now() - entry.fetchedAt > TTL_MS) {
+      localStorage.removeItem(lsKey(k));
+      return null;
+    }
+
+    return entry.groups;
+  } catch {
+    return null;
+  }
+}
+
+function aggregateSchedule(events: { startIso?: string; start: string; endIso?: string; end: string }[]): string {
+  if (!events?.length) return "No events";
+
+  const timeSlotMap = new Map<string, Set<string>>();
+
+  for (const e of events) {
+    const start = new Date(e.startIso ?? e.start);
+    const end = new Date(e.endIso ?? e.end);
+
+    const day = start.toLocaleDateString("en-US", { weekday: "short" });
+    const startTime = start.toLocaleTimeString("en-FI", { hour: "2-digit", minute: "2-digit", hour12: false });
+    const endTime = end.toLocaleTimeString("en-FI", { hour: "2-digit", minute: "2-digit", hour12: false });
+
+    const slot = `${startTime} - ${endTime}`;
+    if (!timeSlotMap.has(slot)) timeSlotMap.set(slot, new Set());
+    timeSlotMap.get(slot)!.add(day);
+  }
+
+  const patterns: string[] = [];
+  for (const [slot, days] of timeSlotMap.entries()) {
+    patterns.push(`${Array.from(days).join(", ")} ${slot}`);
+  }
+
+  return patterns.join(" | ");
+}
+
+function toSummaries(groups: StudyGroup[]): StudyGroupSummary[] {
+  return groups.map((g) => ({
+    groupId: g.groupId,
+    name: g.name,
+    type: g.type,
+    schedule: aggregateSchedule(g.studyEvents ?? []),
+    eventCount: g.studyEvents?.length ?? 0,
+  }));
 }
 
 function createStudyGroupStore() {
   const { subscribe, update } = writable<StudyGroupStoreState>({
     cache: {},
+    summaryCache: {},
     loadingKeys: [],
     error: null,
   });
@@ -26,7 +109,11 @@ function createStudyGroupStore() {
 
   const keyOf = (u: string, o: string) => `${u}:${o}`;
 
-  const isCached = (key: string) => Boolean(get({ subscribe }).cache[key]);
+  const hasFull = (key: string) => {
+    const s = get({ subscribe });
+    return Boolean(s.cache[key]);
+  };
+
   const isLoading = (key: string) => get({ subscribe }).loadingKeys.includes(key);
 
   function markLoading(keys: string[]) {
@@ -57,14 +144,15 @@ function createStudyGroupStore() {
   }
 
   async function flush() {
-    // Drain high priority first, then low.
-    // Also: if hiQueue has anything, we do NOT do individual GETs at all.
     const toSend: Array<{ courseUnitId: string; courseOfferingId: string }> = [];
     const loadingKeys: string[] = [];
+    const state = get({ subscribe });
+    const isCachedNow = (k: string) => Boolean(state.cache[k]);
+    const isLoadingNow = (k: string) => state.loadingKeys.includes(k);
 
     const drainFrom = (q: typeof hiQueue | typeof loQueue) => {
       for (const [k, v] of q.entries()) {
-        if (isCached(k) || isLoading(k)) {
+        if (isCachedNow(k) || isLoadingNow(k)) {
           q.delete(k);
           continue;
         }
@@ -89,14 +177,22 @@ function createStudyGroupStore() {
         chunkSize: 20,
         concurrency: 4,
         onChunk: (partial) => {
-          // update cache immediately for this chunk
           update((s) => {
             const newCache = { ...s.cache };
-            for (const [k, groups] of partial.entries()) newCache[k] = groups;
-            return { ...s, cache: newCache, error: null };
+            const newSummary = { ...s.summaryCache };
+
+            for (const [k, groups] of partial.entries()) {
+              newCache[k] = groups;
+
+              const summaries = toSummaries(groups);
+              newSummary[k] = summaries;
+
+              saveToLocalStorage(k, summaries);
+            }
+
+            return { ...s, cache: newCache, summaryCache: newSummary, error: null };
           });
 
-          // clear loading immediately for keys in this chunk
           clearLoading([...partial.keys()]);
         },
       });
@@ -117,7 +213,7 @@ function createStudyGroupStore() {
   function enqueueHigh(reqs: Array<{ courseUnitId: string; courseOfferingId: string }>) {
     for (const r of reqs) {
       const k = keyOf(r.courseUnitId, r.courseOfferingId);
-      if (isCached(k) || isLoading(k)) continue;
+      if (hasFull(k) || isLoading(k)) continue;
       hiQueue.set(k, r);
     }
     scheduleFlush();
@@ -125,7 +221,7 @@ function createStudyGroupStore() {
 
   function enqueueLow(courseUnitId: string, courseOfferingId: string) {
     const k = keyOf(courseUnitId, courseOfferingId);
-    if (isCached(k) || isLoading(k)) return;
+    if (hasFull(k) || isLoading(k)) return;
     // Don't enqueue low if high already includes it
     if (!hiQueue.has(k)) loQueue.set(k, { courseUnitId, courseOfferingId });
     scheduleFlush();
@@ -164,9 +260,29 @@ function createStudyGroupStore() {
     clear() {
       hiQueue.clear();
       loQueue.clear();
-      update(() => ({ cache: {}, loadingKeys: [], error: null }));
+      update(() => ({ cache: {}, summaryCache: {}, loadingKeys: [], error: null }));
     },
-  };
+
+    preloadFromCache(requests: Array<{ courseUnitId: string; courseOfferingId: string }>) {
+      const keys = requests.map((r) => keyOf(r.courseUnitId, r.courseOfferingId));
+
+      update((s) => {
+        const newSummary = { ...s.summaryCache };
+
+        for (const k of keys) {
+          if (newSummary[k]) continue;
+          const hit = loadFromLocalStorage(k);
+          if (hit) newSummary[k] = hit;
+        }
+
+        return { ...s, summaryCache: newSummary };
+      });
+    },
+
+    getSummaryCached(courseUnitId: string, courseOfferingId: string): StudyGroupSummary[] | null {
+      return get({ subscribe }).summaryCache[keyOf(courseUnitId, courseOfferingId)] ?? null;
+    },
+  }
 }
 
 export const studyGroupStore = createStudyGroupStore();

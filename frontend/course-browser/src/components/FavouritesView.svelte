@@ -214,7 +214,10 @@
     if (sig === lastSig) return;
     lastSig = sig;
 
-    if (reqs.length > 0) studyGroupStore.fetchBatch(reqs);
+    if (reqs.length > 0) {
+      studyGroupStore.preloadFromCache(reqs);
+      studyGroupStore.fetchBatch(reqs);
+    }
   });
 
   // ---- Course resolution helpers ----
