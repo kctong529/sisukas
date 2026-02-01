@@ -5,55 +5,27 @@
   import { academicPeriodStore } from "../lib/stores/academicPeriodStore";
   import { courseIndexStore } from "../lib/stores/courseIndexStore.svelte";
 
-  import type { Plan } from "../domain/models/Plan";
   import type { AcademicPeriod } from "../domain/models/AcademicPeriod";
-  import type { PeriodTimelineModel } from "../domain/viewModels/PeriodTimelineModel";
   import type { Course } from "../domain/models/Course";
 
-  interface PlansStoreState {
-    plans: Plan[];
-    activePlan: Plan | null;
-    loading: boolean;
-    error: string | null;
-  }
-
-  let timeline = $state<PeriodTimelineModel | null>(null);
-  let plansState = $state<PlansStoreState | null>(null);
-  let periods = $state<AcademicPeriod[] | null>(null);
+  // =========================================================
+  // ACCESS STORES DIRECTLY — No subscription needed!
+  // =========================================================
+  
+  // periodTimelineStore.timeline is already a $derived, so it's reactive
+  const timeline = $derived.by(() => periodTimelineStore.timeline);
+  
+  // plansStore.state is a $state, so it's reactive
+  const plansState = $derived.by(() => plansStore.state);
+  
+  // academicPeriodStore is a traditional store, use $ prefix
+  const periods = $derived.by(() => $academicPeriodStore ?? []);
 
   const courseIndexState = $derived.by(() => courseIndexStore.state);
 
   let isOpen = $state(false);
   let showMissing = $state(true);
   let expandedCols = $state(new Set<string>());
-
-  type Unsubscriber = () => void;
-  type Subscribable<T> = { subscribe(run: (value: T) => void): Unsubscriber };
-
-  type PeriodTimelineStoreValue = PeriodTimelineModel | null;
-  type AcademicPeriodStoreValue = AcademicPeriod[] | null;
-
-  function isSubscribable<T>(x: unknown): x is Subscribable<T> {
-    return !!x && typeof (x as { subscribe?: unknown }).subscribe === "function";
-  }
-
-  $effect(() => {
-    const unsubs: Unsubscriber[] = [];
-
-    if (isSubscribable<PeriodTimelineStoreValue>(periodTimelineStore)) {
-      unsubs.push(periodTimelineStore.subscribe((m) => (timeline = m)));
-    }
-
-    if (isSubscribable<PlansStoreState>(plansStore)) {
-      unsubs.push(plansStore.subscribe((s) => (plansState = s)));
-    }
-
-    if (isSubscribable<AcademicPeriodStoreValue>(academicPeriodStore)) {
-      unsubs.push(academicPeriodStore.subscribe((p) => (periods = p)));
-    }
-
-    return () => unsubs.forEach((u) => u());
-  });
 
   function togglePanel() {
     isOpen = !isOpen;
@@ -66,7 +38,7 @@
   }
 
   function activeInstanceIds(): string[] {
-    return plansState?.activePlan?.instanceIds ?? [];
+    return plansState.activePlanId ? plansStore.read.getActive()?.instanceIds ?? [] : [];
   }
 
   function resolveCourseFromIndex(instanceId: string): Course | undefined {
@@ -145,6 +117,8 @@
   const chipsTotal = $derived.by(() => totalChipsInTimeline());
   const uniqueInTimeline = $derived.by(() => uniqueInstanceIdsInTimeline());
   const dups = $derived.by(() => duplicateInstanceIdsInTimeline());
+
+  const activePlan = $derived.by(() => plansStore.read.getActive());
 </script>
 
 <div class="debug-panel" data-index="3">
@@ -164,8 +138,8 @@
 
           <div class="stat-item">
             <span class="label">Active plan:</span>
-            <span class="value" class:warn={!plansState?.activePlan}>
-              {plansState?.activePlan ? "✓ yes" : "— none"}
+            <span class="value" class:warn={!activePlan}>
+              {activePlan ? "✓ yes" : "— none"}
             </span>
           </div>
 
@@ -262,7 +236,6 @@
           <div class="cols">
             {#each timeline.columns as col (col.period.id)}
               <div class="col">
-                <!-- REFACTORED: Use .header-toggle instead of .col-header -->
                 <button
                   class="header-toggle"
                   class:expanded={expandedCols.has(col.period.id)}
@@ -302,7 +275,7 @@
       <div class="section">
         <h4>Active plan → resolved lookup</h4>
 
-        {#if !plansState?.activePlan}
+        {#if !activePlan}
           <div class="empty">No active plan</div>
         {:else if planIds.length === 0}
           <div class="empty">Active plan has no instanceIds</div>
@@ -333,7 +306,7 @@
         </label>
       </div>
 
-      {#if plansState?.error}
+      {#if plansState.error}
         <div class="section error">
           <h4>⚠️ Plans error</h4>
           <div class="error-message">{plansState.error}</div>
