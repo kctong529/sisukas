@@ -1,4 +1,4 @@
-# v1.0.0 — Release Contract
+# v1.0.0 - Release Contract
 
 > **Rule:**
 > Everything in this file must be done before tagging `v1.0.0`.
@@ -24,21 +24,56 @@ A student can:
 
 * [x] Build historical course instance database via SISU historical endpoint ingestion script.
 * [ ] Update data workflow to keep `courses.json` and historical DB in sync.
-  - current dataset contains only active/current offerings
-  - historical DB contains all past + archived instances
-  - disappearing instance -> archived to historical DB
-  - reappearing instance -> marked active (history preserved)
+  - [x] `courses.json` contains only active course instances (current academic year onwards)
+  - [x] `historical.json` is an append-only archive of instances that were previously present in `courses.json` (i.e. "once-active" instances)  
+    - Note: this archive is not expected to be globally complete because SISU historical coverage cannot be ingested fully without extra permission.
+  - [x] When an instance expires from `courses.json`, it is archived into `historical.json`
+  - [ ] If an archived instance reappears as active, it is removed from `historical.json` and served only from `courses.json` (datasets remain disjoint by instanceId)
+  - [x] Snapshot system captures missing course instances not present in `courses.json` or `historical.json`, including:
+    - [x] transcript-only courses (no active offering observed)
+    - [x] archived course with future offerings not yet visible in `courses.json`
+  - [ ] Snapshots are a patch layer for runtime resolution; only pipeline-accepted candidates graduate into `historical.json`
+* [ ] Implement snapshot backfill pipeline.
+  - [ ] Collect runtime-resolved snapshots as append-only candidate records in GCS
+  - [ ] Process candidates after fixed delay window (e.g. 24-48h) to absorb duplicates
+  - [ ] Deduplicate and classify candidates (auto-acceptable vs. review-required)
+  - [ ] Output accepted candidates for integration into historical dataset
+* [ ] Integrate processed snapshots into historical dataset.
+  - [ ] Merge accepted candidates into `historical.json` via scheduled job
+  - [ ] Run existing dedup + validation workflow on merged result
+  - [ ] Publish updated `historical.json` to GCS
+* [ ] Ensure snapshot store remains non-canonical.
+  - [ ] Snapshots have TTL and are never directly served as canonical data
+  - [ ] User-triggered snapshots are marked temporary and clearly distinguished in UI
+  - [ ] Pipeline acceptance is explicit and produces a concrete merge artifact (JSON) consumed by the historical merge job
+  - [ ] Only pipeline-accepted snapshots graduate to `historical.json`
 * [ ] Verify that compiled metadata is used at runtime.
+  - [ ] Build step generates `metadata.json` from source YAML files
+  - [ ] App loads `metadata.json` instead of individual YAML files (single request)
+  - [ ] Metadata fields (organizations, periods, majors, minors) are validated against current `courses.json` and `historical.json`
+  - [ ] No stale or missing values that would break UI filters or course resolution
+* [ ] Implement data backup and rollback strategy.
+  - [ ] `courses.json` and `historical.json` are versioned in GCS with timestamps before each publish
+  - [ ] Backups are retained for at least 30 days
+  - [ ] Rollback procedure is documented and tested (restore both files atomically)
+  - [ ] Data validation failures in dedup/merge workflow block publication
+  - [ ] Hash mismatch or validation error triggers alert
 * [ ] Ensure existing plans are immune to upstream SISU data drift.
 
 **Data invariants (runtime):**
 
-* [ ] Active and historical datasets are disjoint by `instanceId` (after pruning overlaps).
-  - historical may contain archived versions, but must not duplicate active `instanceId`s
-* [ ] Unified course schema across all sources.
-  - active, historical, and snapshots resolve into the exact same `Course` shape
-  - runtime code does not rely on source-specific fields
+* [x] Active and historical datasets are disjoint by `instanceId`.
+  - [x] `courses.json` and `historical.json` share no overlapping `instanceId`s
+  - [x] snapshot system bridges gaps in historical coverage for grade lookup and course resolution
+* [x] Unified course schema across all sources.
+  - [x] active, historical, and snapshots resolve into the exact same `Course` shape
+  - [x] runtime code does not rely on source-specific fields
 * [ ] Runtime does not branch on data source to access core course fields
+* [ ] Snapshot store is signal, not source of truth.
+  - [ ] All candidate data is append-only and time-partitioned
+  - [ ] Backfill processing is deterministic and fully replayable
+* [ ] Correctness is mandatory; completeness is best-effort.
+  - [ ] Canonical datasets must be internally consistent and stable even if not globally complete
 
 ## 2. Transcript Import & Grades
 
@@ -81,11 +116,12 @@ A student can:
 
 * [x] Ensure all plan- and schedule-mutating endpoints require authentication.
 * [ ] Verify no unauthenticated writes are possible.
+  - [ ] Add a CI job that runs a small script calling all mutating endpoints without cookies and expects 401/403
 
 ## 7. Infrastructure & Safety
 
 * [ ] Add health check endpoint.
-* [ ] Ensure prod and dev environments do not share test data.
+* [x] Prod bucket must be sisukas-core, test must be sisukas-core-test, enforced by workflow + runtime env.
 
 ## 8. UX Clarity
 
@@ -103,4 +139,8 @@ A student can:
 * [ ] Transcript import works end-to-end
 * [ ] Manual grade edits persist correctly
 * [ ] Auth enforced everywhere it should be
+* [ ] Snapshot backfill pipeline processes candidates correctly
+* [ ] Snapshot-derived data integrates cleanly into historical dataset
+* [ ] Data backup and rollback procedure is tested
+* [ ] At least one backup exists and can be restored
 * [ ] Tag and release `v1.0.0`

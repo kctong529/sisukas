@@ -3,7 +3,7 @@
 /**
  * Shared types for interval overlap analytics.
  *
- * This module contains only data shapes — no logic.
+ * This module contains only data shapes - no logic.
  * It defines the vocabulary used by the sweep-line algorithm.
  */
 

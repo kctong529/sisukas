@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+import argparse
 
 def get_important_fields(course):
     """Extract important fields from a course for comparison"""
@@ -70,7 +71,7 @@ def compare_courses(old_path, new_path):
         print(f"ADDED COURSES ({len(added)}):")
         for c in added:
             fields = get_important_fields(c)
-            print(f"  + {fields['code']} — {truncate(fields['name_en'])}")
+            print(f"  + {fields['code']} - {truncate(fields['name_en'])}")
             print(f"       Credits: {fields['credits_min'] or 'N/A'}")
             print(f"       Start: {fields['start_date'] or 'N/A'} | End: {fields['end_date'] or 'N/A'}")
         print()
@@ -81,7 +82,7 @@ def compare_courses(old_path, new_path):
         print(f"REMOVED COURSES ({len(removed)}):")
         for c in removed:
             fields = get_important_fields(c)
-            print(f"  - {fields['code']} — {truncate(fields['name_en'])}")
+            print(f"  - {fields['code']} - {truncate(fields['name_en'])}")
         print()
 
     # Updated courses
@@ -94,7 +95,7 @@ def compare_courses(old_path, new_path):
             if not changes:
                 continue
 
-            print(f"  ? {code} — {name}")
+            print(f"  ? {code} - {name}")
             for change in changes[:2]:
                 field, old_val, new_val = change
                 print(f"      * {field}:")
@@ -147,4 +148,31 @@ def compare_courses(old_path, new_path):
     return True
 
 if __name__ == "__main__":
-    compare_courses("courses.json", "latest.json")
+    parser = argparse.ArgumentParser(description="Compare courses.json and latest.json and emit a change report.")
+    parser.add_argument("--old", default="courses.json", help="Old courses file (default: courses.json)")
+    parser.add_argument("--new", default="latest.json", help="New courses file (default: latest.json)")
+    parser.add_argument(
+        "--removed-out",
+        default="",
+        help="Optional path to write removed course objects as JSON (full objects from old dataset).",
+    )
+    args = parser.parse_args()
+
+    changed = compare_courses(args.old, args.new)
+
+    # If requested, persist removed course objects (full JSON entries).
+    # Note: this is only written when there *are* changes, and only if removed-out is provided.
+    if changed and args.removed_out:
+        # Recompute removed deterministically (cheap compared to the fetch step)
+        with open(args.old, "r", encoding="utf-8") as f:
+            old_courses = json.load(f)
+        with open(args.new, "r", encoding="utf-8") as f:
+            new_courses = json.load(f)
+        old_by_id = {c["id"]: c for c in old_courses}
+        new_by_id = {c["id"]: c for c in new_courses}
+        removed = [c for cid, c in old_by_id.items() if cid not in new_by_id]
+
+        os.makedirs(os.path.dirname(args.removed_out) or ".", exist_ok=True)
+        with open(args.removed_out, "w", encoding="utf-8") as f:
+            json.dump(removed, f, ensure_ascii=False, indent=2)
+        print(f"Wrote removed course objects to: {args.removed_out}")

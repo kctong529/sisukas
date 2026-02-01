@@ -50,6 +50,12 @@ jobs:
           "https://storage.googleapis.com/${{ steps.set_bucket.outputs.gcs_bucket }}/courses.json" \
           -o courses.json || echo "No existing courses.json"
 
+      - name: Fetch existing historical.json if available
+        run: |
+          curl -fSL \
+          "https://storage.googleapis.com/${{ steps.set_bucket.outputs.gcs_bucket }}/historical.json" \
+          -o historical.json || echo "No existing historical.json"
+        
       - name: Fetch latest courses
         env:
           AALTO_USER_KEY: ${{ secrets.AALTO_USER_KEY }}
@@ -59,10 +65,11 @@ jobs:
         run: |
           python scripts/transform_courses.py latest_fetch.json latest.json
 
-      - name: Check for changes
+      - name: Check for changes (and write removed objects)
         id: check_changes
         run: |
-          python scripts/report_course_changes.py
+          mkdir -p artifacts
+          python scripts/report_course_changes.py --removed-out artifacts/expired_courses.json
 
       - name: Prepare artifacts
         if: steps.check_changes.outputs.has_changes == 'true'
@@ -70,6 +77,9 @@ jobs:
           mkdir -p artifacts
           gzip -c latest.json > artifacts/courses.json.gz
           python scripts/generate_hash.py latest.json artifacts/courses.hash.json
+          python scripts/merge_expired_into_historical.py historical.json artifacts/expired_courses.json historical.next.json
+          gzip -c historical.next.json > artifacts/historical.json.gz
+          python scripts/generate_hash.py historical.next.json artifacts/historical.hash.json
           LATEST_LOG=$(ls -1t logs/course_changes_*.json | head -n 1)
           cp "$LATEST_LOG" artifacts/
 
@@ -111,21 +121,24 @@ jobs:
         env:
           BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
         run: |
-          gcloud storage cp \
-            artifacts/courses.json.gz \
-            gs://$BUCKET/courses.json \
-            --content-type="application/json" \
-            --content-encoding="gzip"
+          gcloud storage cp artifacts/courses.json.gz gs://$BUCKET/courses.json \
+            --content-type="application/json" --content-encoding="gzip"
+
+      - name: Upload historical.json.gz (renamed to historical.json)
+        env:
+          BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
+        run: |
+          gcloud storage cp artifacts/historical.json.gz gs://$BUCKET/historical.json \
+            --content-type="application/json" --content-encoding="gzip"
 
       - name: Upload hash file (no caching)
         env:
           BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
         run: |
-          gcloud storage cp \
-            artifacts/courses.hash.json \
-            gs://$BUCKET/courses.hash.json \
-            --content-type="application/json" \
-            --cache-control="no-store, max-age=0"
+          gcloud storage cp artifacts/courses.hash.json gs://$BUCKET/courses.hash.json \
+            --content-type="application/json" --cache-control="no-store, max-age=0"
+          gcloud storage cp artifacts/historical.hash.json gs://$BUCKET/historical.hash.json \
+            --content-type="application/json" --cache-control="no-store, max-age=0"
 
       - name: Upload log files
         env:

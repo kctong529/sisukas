@@ -1,7 +1,7 @@
 // src/domain/analytics/intervalOverlap/index.ts
 
 /**
- * Interval Overlap Analytics — Architecture Notes
+ * Interval Overlap Analytics - Architecture Notes
  *
  * What this module provides
  * -------------------------
