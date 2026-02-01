@@ -25,7 +25,7 @@
   import { courseIndexStore } from './lib/stores/courseIndexStore.svelte';
   import type { CourseIndexMode } from './lib/stores/courseIndexStore.svelte';
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
-  import DebugPanels from './components/DebugPanels.svelte';
+  import DebugPanels from './components/debug/DebugPanels.svelte';
 
   // -----------------------------
   // Local state (Svelte 5 runes)

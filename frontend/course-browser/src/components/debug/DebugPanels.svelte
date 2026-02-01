@@ -1,7 +1,8 @@
 <!-- src/components/DebugPanels.svelte -->
 <script lang="ts">
-  import '../styles/debug-panels.css';
+  import '../../styles/debug-panels.css';
   import AuthDebugPanel from './AuthDebugPanel.svelte';
+  import CourseIndexDebug from './CourseIndexDebug.svelte';
   import StudyGroupStoreDebug from './StudyGroupStoreDebug.svelte';
   import PlansStoreDebug from './PlansStoreDebug.svelte';
   import BlockStoreDebug from './BlockStoreDebug.svelte';
@@ -11,10 +12,12 @@
   const debugStudyGroupStore = import.meta.env.VITE_DEBUG_STUDY_GROUP_STORE === 'true';
   const debugPlanStore = import.meta.env.VITE_DEBUG_PLAN_STORE === 'true';
   const debugBlockStore = import.meta.env.VITE_DEBUG_BLOCK_STORE === 'true';
+  const debugCourseIndexStore = import.meta.env.VITE_DEBUG_COURSE_INDEX === 'true';
   const debugPeriodTimelineStore = import.meta.env.VITE_DEBUG_PERIOD_TIMELINE_STORE === 'true';
 
   const panelsToShow = [
     { name: 'StudyGroupStoreDebug', show: debugStudyGroupStore, component: StudyGroupStoreDebug },
+    { name: 'CourseIndexDebug', show: debugCourseIndexStore, component: CourseIndexDebug },
     { name: 'PlansStoreDebug', show: debugPlanStore, component: PlansStoreDebug },
     { name: 'BlockStoreDebug', show: debugBlockStore, component: BlockStoreDebug },
     { name: 'PeriodTimelineStoreDebug', show: debugPeriodTimelineStore, component: PeriodTimelineStoreDebug },

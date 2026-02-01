@@ -1,6 +1,6 @@
 <!-- src/components/AuthDebugPanel.svelte -->
 <script lang="ts">
-  import { useSession, authClient } from '../lib/authClient';
+  import { useSession, authClient } from '../../lib/authClient';
 
   const session = useSession();
   const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;

@@ -1,10 +1,10 @@
 <!-- src/components/BlockStoreDebug.svelte -->
 <script lang="ts">
-  import { blockStore } from "../lib/stores/blockStore";
-  import { studyGroupStore } from "../lib/stores/studyGroupStore.svelte";
-  import type { Block } from "../domain/models/Block";
-  import type { StudyGroup } from "../domain/models/StudyGroup";
-
+  import { blockStore } from '../../lib/stores/blockStore';
+  import { studyGroupStore } from '../../lib/stores/studyGroupStore.svelte';
+  import type { Block } from '../../domain/models/Block';
+  import type { StudyGroup } from '../../domain/models/StudyGroup';
+  
   interface BlockStoreState {
     blocksByCourseInstance: Record<string, Block[]>;
     loadingInstances: Set<string>;

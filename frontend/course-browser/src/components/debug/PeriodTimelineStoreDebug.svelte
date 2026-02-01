@@ -1,12 +1,12 @@
 <!-- src/components/PeriodTimelineStoreDebug.svelte -->
 <script lang="ts">
-  import { periodTimelineStore } from "../lib/stores/periodTimelineStore.svelte";
-  import { plansStore } from "../lib/stores/plansStore.svelte";
-  import { academicPeriodStore } from "../lib/stores/academicPeriodStore";
-  import { courseIndexStore } from "../lib/stores/courseIndexStore.svelte";
+  import { periodTimelineStore } from "../../lib/stores/periodTimelineStore.svelte";
+  import { plansStore } from "../../lib/stores/plansStore.svelte";
+  import { academicPeriodStore } from "../../lib/stores/academicPeriodStore";
+  import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
 
-  import type { AcademicPeriod } from "../domain/models/AcademicPeriod";
-  import type { Course } from "../domain/models/Course";
+  import type { AcademicPeriod } from "../../domain/models/AcademicPeriod";
+  import type { Course } from "../../domain/models/Course";
 
   // =========================================================
   // ACCESS STORES DIRECTLY — No subscription needed!

@@ -1,6 +1,6 @@
 <!-- src/components/PlansStoreDebug.svelte -->
 <script lang="ts">
-  import { plansStore } from "../lib/stores/plansStore.svelte";
+  import { plansStore } from "../../lib/stores/plansStore.svelte";
 
   let isOpen = $state(false);
 
