@@ -37,7 +37,7 @@
   }
 </script>
 
-<div class="debug-panel" data-index="1">
+<div class="debug-panel" data-index="4">
   <button class="debug-toggle" onclick={togglePanel}>
     🔐 Auth Debug {isOpen ? '▼' : '▶'}
   </button>
@@ -74,7 +74,7 @@
         <button
           onclick={handleMagicLink}
           disabled={loading || !email}
-          class="action-btn"
+          class="action-btn primary"
         >
           {loading ? 'Sending…' : 'Send'}
         </button>
@@ -100,158 +100,53 @@
 </div>
 
 <style>
+  /* sizing overrides only */
   .debug-panel {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    font-family: monospace;
-    font-size: 0.75rem;
-    max-width: 400px;
-    max-height: 580px;
+    --dbg-max-width: 400px;
+    --dbg-content-max-height: 500px;
   }
 
-  .debug-toggle {
-    width: 100%;
-    padding: 0.75rem;
-    background: #2c3e50;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background 0.2s;
-  }
-
-  .debug-toggle:hover {
-    background: #1a252f;
-  }
-
-  .debug-content {
-    padding: 1rem;
-    max-height: 500px;
-    overflow-y: auto;
-    border-top: 1px solid #ddd;
-  }
-
-  .section {
-    margin-bottom: 1rem;
-  }
-
-  .section:last-of-type {
-    margin-bottom: 0;
-  }
-
-  h4 {
-    margin: 0 0 0.5rem;
-    color: #2c3e50;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
+  /* panel-specific visuals */
   .status-item {
     padding: 0.5rem;
-    background: #f8f9fa;
+    background: var(--dbg-muted-bg);
     border-radius: 4px;
     border-left: 3px solid #6c757d;
   }
-
   .status-item.pending {
-    border-left-color: #ffc107;
+    border-left-color: var(--dbg-yellow);
     background: #fffbf0;
   }
-
   .status-item.success {
-    border-left-color: #198754;
+    border-left-color: var(--dbg-green);
     background: #f0f9f7;
     color: #155724;
   }
-
   .status-item.error {
-    border-left-color: #d9534f;
+    border-left-color: var(--dbg-red);
     background: #fdf8f8;
     color: #842029;
-  }
-
-  code {
-    background: #e9ecef;
-    padding: 0.2rem 0.4rem;
-    border-radius: 3px;
-  }
-
-  .input {
-    display: block;
-    width: 100%;
-    padding: 0.5rem;
-    margin-bottom: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 0.75rem;
-  }
-
-  .input:focus {
-    outline: none;
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
-  }
-
-  .action-btn {
-    display: inline-block;
-    padding: 0.5rem 0.75rem;
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-    background: #0d6efd;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.75rem;
-    transition: background 0.2s;
-  }
-
-  .action-btn:hover:not(:disabled) {
-    background: #0b5ed7;
-  }
-
-  .action-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .action-btn.danger {
-    background: #d9534f;
-  }
-
-  .action-btn.danger:hover {
-    background: #c82333;
   }
 
   .message {
     padding: 0.5rem;
     margin-top: 0.5rem;
     background: #e7f3ff;
-    border-left: 3px solid #0d6efd;
+    border-left: 3px solid var(--dbg-blue);
     border-radius: 4px;
     color: #004085;
     font-size: 0.7rem;
   }
 
-  .json-details {
-    cursor: pointer;
-  }
-
   .json-details summary {
     padding: 0.5rem;
-    background: #f8f9fa;
+    background: var(--dbg-muted-bg);
     border-radius: 4px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--dbg-muted-border);
     font-weight: 600;
     user-select: none;
+    cursor: pointer;
   }
-
   .json-details summary:hover {
     background: #e9ecef;
   }

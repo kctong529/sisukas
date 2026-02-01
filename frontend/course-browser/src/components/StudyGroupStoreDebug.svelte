@@ -1,4 +1,4 @@
-<!-- src/components/StudyGroupStoreDebug.svelte -->
+<!-- src/components/StudyGroupStoreDebug.svelte - REFACTORED -->
 <script lang="ts">
   import type { StudyGroup } from "../domain/models/StudyGroup";
   import { studyGroupStore } from "../lib/stores/studyGroupStore.svelte";
@@ -63,7 +63,7 @@
         <h4>Full Cache ({cacheEntries.length})</h4>
         <div class="list">
           {#each cacheEntries as [key, groups] (key)}
-            <div class="cache-item">
+            <div class="detail-row">
               <div class="cache-key">{key}</div>
               <div class="cache-value">{groups.length} groups</div>
             </div>
@@ -78,7 +78,7 @@
         <h4>Summary Cache ({summaryEntries.length})</h4>
         <div class="list">
           {#each summaryEntries as [key, summaries] (key)}
-            <div class="cache-item">
+            <div class="detail-row">
               <div class="cache-key">{key}</div>
               <div class="cache-value">{summaries.length} summaries</div>
             </div>
@@ -93,7 +93,7 @@
         <h4>Fallback Summaries ({fallbackEntries.length})</h4>
         <div class="list">
           {#each fallbackEntries as [key, summaries] (key)}
-            <div class="cache-item">
+            <div class="detail-row">
               <div class="cache-key">{key}</div>
               <div class="cache-value">{summaries.length} summaries</div>
             </div>
@@ -111,131 +111,33 @@
         </div>
       {/if}
 
-      <button class="clear-btn" onclick={clearCache}>Clear Cache</button>
+      <button class="action-btn danger clear-btn" onclick={clearCache}>Clear Cache</button>
     </div>
   {/if}
 </div>
 
 <style>
   .debug-panel {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    font-family: monospace;
-    font-size: 0.75rem;
-    max-width: 400px;
-    max-height: 350px;
-    --panel-index: 0;
+    --dbg-max-width: 400px;
+    --dbg-max-height: 350px;
+    --dbg-content-max-height: 400px;
+    --dbg-list-max-height: 120px;
   }
 
-  .debug-toggle {
-    width: 100%;
-    padding: 0.75rem;
-    background: #2c3e50;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background 0.2s;
-  }
-
-  .debug-toggle:hover {
-    background: #1a252f;
-  }
-
-  .debug-content {
-    padding: 1rem;
-    max-height: 400px;
-    overflow-y: auto;
-    border-top: 1px solid #ddd;
-  }
-
-  .section {
-    margin-bottom: 1rem;
-  }
-
-  .section:last-of-type {
-    margin-bottom: 0.75rem;
-  }
-
-  .section.error {
-    background: #fee;
-    padding: 0.5rem;
-    border-radius: 4px;
-  }
-
-  h4 {
-    margin: 0 0 0.5rem;
-    color: #2c3e50;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .list {
-    background: #f8f9fa;
-    border-radius: 4px;
-    border: 1px solid #e9ecef;
-    max-height: 120px;
-    overflow-y: auto;
-  }
-
-  .item,
-  .cache-item {
-    padding: 0.4rem 0.5rem;
-    border-bottom: 1px solid #e9ecef;
-  }
-
-  .item:last-child,
-  .cache-item:last-child {
-    border-bottom: none;
-  }
-
-  .empty {
-    color: #adb5bd;
-    font-style: italic;
-    padding: 0.5rem;
-  }
-
-  .cache-item {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
+  /* Component-specific text styling only */
   .cache-key {
-    color: #0d6efd;
+    color: var(--dbg-blue);
     font-weight: 600;
     word-break: break-all;
     flex: 1;
   }
 
   .cache-value {
-    color: #198754;
+    color: var(--dbg-green);
     white-space: nowrap;
-  }
-
-  .error-message {
-    color: #d9534f;
-    padding: 0.5rem;
-    word-break: break-word;
   }
 
   .clear-btn {
     width: 100%;
-    padding: 0.5rem;
-    background: #d9534f;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background 0.2s;
-  }
-
-  .clear-btn:hover {
-    background: #c82333;
   }
 </style>

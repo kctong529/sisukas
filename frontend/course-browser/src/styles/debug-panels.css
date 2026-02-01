@@ -1,0 +1,547 @@
+/* src/styles/debug-panels.css */
+
+/* --------------------
+   Debug panel tokens
+--------------------- */
+:root {
+  --dbg-bg: #fff;
+  --dbg-border: #ddd;
+  --dbg-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  --dbg-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  --dbg-font-size: 0.75rem;
+
+  --dbg-radius: 8px;
+
+  --dbg-header-bg: #2c3e50;
+  --dbg-header-bg-hover: #1a252f;
+  --dbg-header-fg: #fff;
+
+  --dbg-muted-bg: #f8f9fa;
+  --dbg-muted-border: #e9ecef;
+
+  --dbg-blue: #0d6efd;
+  --dbg-green: #198754;
+  --dbg-yellow: #ffc107;
+  --dbg-red: #d9534f;
+
+  --dbg-warn-bg: #fff3cd;
+  --dbg-warn-border: #ffe69c;
+
+  --dbg-ok-bg: #d1e7dd;
+
+  --dbg-gap: 0.5rem;
+}
+
+/* --------------------
+   Base panel shell
+--------------------- */
+.debug-panel {
+  background: var(--dbg-bg);
+  border: 1px solid var(--dbg-border);
+  border-radius: var(--dbg-radius);
+  box-shadow: var(--dbg-shadow);
+  font-family: var(--dbg-font);
+  font-size: var(--dbg-font-size);
+
+  display: flex;
+  flex-direction: column;
+
+  max-width: var(--dbg-max-width, 520px);
+  max-height: calc(100vh - var(--dbg-dock-reserved, 180px));
+}
+
+/* --------------------
+   Toggle button (shared)
+--------------------- */
+.debug-toggle {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--dbg-header-bg);
+  color: var(--dbg-header-fg);
+  border: none;
+
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+
+  border-radius: var(--dbg-radius);
+  order: 1;
+  flex: 0 0 auto;
+  margin-top: 0;
+}
+
+.debug-toggle:hover {
+  background: var(--dbg-header-bg-hover);
+}
+
+.debug-panel:has(.debug-content) .debug-toggle {
+  border-radius: 0 0 var(--dbg-radius) var(--dbg-radius);
+}
+
+/* --------------------
+   Content area (shared)
+--------------------- */
+.debug-content {
+  order: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1rem;
+
+  overflow-y: auto;
+  max-height: none;
+
+  border-bottom: 1px solid var(--dbg-border);
+  border-radius: var(--dbg-radius) var(--dbg-radius) 0 0;
+}
+
+/* --------------------
+   Common typography
+--------------------- */
+.dbg-h4,
+.debug-panel h4 {
+  margin: 0 0 0.5rem;
+  color: #2c3e50;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mono {
+  font-family: var(--dbg-font);
+}
+
+/* --------------------
+   Layout utilities
+--------------------- */
+/* Flex row with space-between (used everywhere) */
+.row-spaced {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Flex row baseline (for headers with mixed-size text) */
+.row-spaced.baseline {
+  align-items: baseline;
+}
+
+/* Flex row wrap with gap */
+.row-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+/* Icon for expanding/collapsing */
+.expand-icon {
+  font-size: 0.65rem;
+  width: 0.8rem;
+  flex-shrink: 0;
+}
+
+/* --------------------
+   Sections / boxes
+--------------------- */
+.section {
+  margin-bottom: 1rem;
+}
+.section:last-of-type {
+  margin-bottom: 0.75rem;
+}
+
+.section.error {
+  background: #fee;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.warn-box {
+  margin-top: 0.4rem;
+  padding: 0.5rem;
+  background: var(--dbg-warn-bg);
+  border: 1px solid var(--dbg-warn-border);
+  border-radius: 4px;
+}
+
+.warn-title {
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+  color: #664d03;
+  font-size: 0.7rem;
+}
+
+.hint {
+  margin-top: 0.4rem;
+  font-size: 0.65rem;
+  color: #6c757d;
+  line-height: 1.25;
+}
+
+.empty {
+  color: #adb5bd;
+  font-style: italic;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+/* --------------------
+   Lists / items
+--------------------- */
+.list {
+  background: var(--dbg-muted-bg);
+  border-radius: 4px;
+  border: 1px solid var(--dbg-muted-border);
+  overflow-y: auto;
+
+  max-height: var(--dbg-list-max-height, 150px);
+}
+
+.item {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--dbg-muted-border);
+}
+.item:last-child {
+  border-bottom: none;
+}
+
+/* --------------------
+   Collapsible header/toggle
+--------------------- */
+/* Base class for all expandable headers (instance, column, etc.) */
+.header-toggle {
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--dbg-muted-bg);
+  border: none;
+  border-bottom: 1px solid var(--dbg-muted-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.75rem;
+  transition: background 0.2s;
+}
+
+.header-toggle:hover {
+  background: #e9ecef;
+}
+
+.header-toggle.expanded {
+  background: #dbeafe;
+  border-bottom-color: #93c5fd;
+}
+
+/* --------------------
+   Row with two columns (detail rows, item rows)
+--------------------- */
+.detail-row,
+.cache-item,
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--dbg-muted-border);
+  background: var(--dbg-muted-bg);
+  border-radius: 3px;
+  margin-bottom: 0.4rem;
+}
+
+.detail-row:last-child,
+.cache-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+/* --------------------
+   Chips / pills / tags
+--------------------- */
+.pill {
+  background: #e9ecef;
+  color: #495057;
+  padding: 0.12rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  line-height: 1.2;
+}
+.pill.warn {
+  background: var(--dbg-warn-bg);
+  color: #664d03;
+}
+.pill.ok {
+  background: var(--dbg-ok-bg);
+  color: #0f5132;
+}
+.pill.active {
+  background: #f8d7da;
+  color: #842029;
+}
+
+/* Tags (inline group labels) */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.tag,
+.group-tag {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 0.15rem 0.3rem;
+  border-radius: 2px;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.tag.warn,
+.group-tag.warn {
+  background: #f8d7da;
+  color: #842029;
+}
+
+/* Meta badge (small inline label) */
+.meta-badge,
+.instance-tag,
+.badge {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 0.15rem 0.3rem;
+  border-radius: 2px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* --------------------
+   Buttons
+--------------------- */
+.action-btn {
+  padding: 0.4rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 600;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.action-btn.primary {
+  background: var(--dbg-blue);
+  color: white;
+}
+.action-btn.primary:hover:not(:disabled) {
+  background: #0b5ed7;
+}
+
+.action-btn.danger {
+  background: var(--dbg-red);
+  color: white;
+}
+.action-btn.danger:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.action-btn.success {
+  background: var(--dbg-green);
+  color: white;
+}
+.action-btn.success:hover:not(:disabled) {
+  background: #157347;
+}
+
+.action-btn.warn {
+  background: var(--dbg-warn-bg);
+  color: #664d03;
+}
+.action-btn.warn:hover:not(:disabled) {
+  background: #ffe69c;
+}
+
+/* Button container (actions layout) */
+.btn-row,
+.instance-actions,
+.plan-item-actions {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.btn-row.flex-end {
+  justify-content: flex-end;
+}
+
+/* Full-width or flex:1 buttons in containers */
+.btn-row .action-btn,
+.instance-actions .action-btn,
+.plan-item-actions .action-btn {
+  flex: 1;
+  font-size: 0.65rem;
+  padding: 0.3rem 0.4rem;
+}
+
+/* --------------------
+   Inputs (Auth panel)
+--------------------- */
+.dbg-input,
+.input {
+  display: block;
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--dbg-border);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: var(--dbg-font-size);
+}
+.dbg-input:focus,
+.input:focus {
+  outline: none;
+  border-color: var(--dbg-blue);
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+/* --------------------
+   Error message
+--------------------- */
+.error-message {
+  color: var(--dbg-red);
+  padding: 0.5rem;
+  word-break: break-word;
+  background: white;
+  border-radius: 3px;
+}
+
+/* --------------------
+   Stats / key-value grids
+--------------------- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: var(--dbg-muted-bg);
+  padding: 0.4rem 0.5rem;
+  border-radius: 3px;
+  border: 1px solid var(--dbg-muted-border);
+}
+
+.label {
+  color: #495057;
+  font-weight: 600;
+}
+
+.value {
+  color: var(--dbg-blue);
+  font-weight: 600;
+}
+
+.value.warn {
+  color: var(--dbg-red);
+}
+
+.value.ok {
+  color: var(--dbg-green);
+}
+
+.value.active {
+  color: var(--dbg-yellow);
+}
+
+/* Meta line used below stats blocks */
+.meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+/* --------------------
+   Check rows (two-column)
+--------------------- */
+.check-row {
+  display: flex;
+  justify-content: space-between;
+  background: var(--dbg-muted-bg);
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--dbg-muted-border);
+  border-radius: 3px;
+  margin-bottom: 0.4rem;
+  gap: 0.5rem;
+}
+
+.check-label {
+  color: #495057;
+  font-weight: 600;
+}
+
+.check-value {
+  color: var(--dbg-blue);
+  font-weight: 700;
+}
+
+.check-value.warn {
+  color: var(--dbg-red);
+}
+
+/* --------------------
+   Subitem rows (resolved label)
+--------------------- */
+.subitem {
+  padding: 0.25rem 0.5rem 0.45rem;
+  border-bottom: 1px solid var(--dbg-muted-border);
+  color: var(--dbg-green);
+  background: white;
+  font-size: 0.68rem;
+  word-break: break-word;
+}
+
+.right {
+  font-weight: 700;
+}
+.right.ok {
+  color: var(--dbg-green);
+}
+.right.warn {
+  color: var(--dbg-red);
+}
+
+/* --------------------
+   Simple checkbox row
+--------------------- */
+.toggle {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.72rem;
+  color: #495057;
+  background: var(--dbg-muted-bg);
+  border: 1px solid var(--dbg-muted-border);
+  border-radius: 4px;
+  padding: 0.4rem 0.5rem;
+}
+
+/* --------------------
+   Code styling
+--------------------- */
+.debug-panel code {
+  background: #e9ecef;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+}

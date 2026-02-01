@@ -16,17 +16,11 @@
   let isOpen = $state(false);
   let expandedInstances = $state<Set<string>>(new Set());
 
-  // Subscribe to block store (legacy)
   const unsubscribeBlocks = blockStore.subscribe((state: BlockStoreState) => {
     storeState = state;
   });
 
-  // Cleanup
-  $effect(() => {
-    return () => {
-      unsubscribeBlocks();
-    };
-  });
+  $effect(() => () => unsubscribeBlocks());
 
   function togglePanel() {
     isOpen = !isOpen;
@@ -77,8 +71,6 @@
     return blockId;
   }
 
-  // ---------- Extra debug calculations ----------
-
   function countGroupsInInstance(blocks: Block[]): number {
     return blocks.reduce((sum, b) => sum + (b.studyGroupIds?.length ?? 0), 0);
   }
@@ -112,40 +104,16 @@
   }
 
   // ---------- StudyGroup cache helpers (UI-only) ----------
-  // We don’t have unitId here; keys look like `${unitId}:${offeringId}`.
-  // So build a small index from whatever keys we see in blockStore state.
-  // (Cheap enough for a debug panel.)
-
   const studyGroupKeyByInstanceId = $derived.by(() => {
-    const map = new Map<string, string>(); // offeringId -> fullKey (unitId:offeringId)
-
+    const map = new Map<string, string>();
     const instanceIds = Object.keys(storeState?.blocksByCourseInstance ?? {});
     for (const instanceId of instanceIds) {
-      // Try to find a key that ends with `:${instanceId}`.
-      // We need a list of keys; we can infer it by probing known unitIds only if we had them.
-      // Since we don't: keep the same heuristic, but scan the store's internal known keys
-      // via read.getKnownKeys() if you have it. If not, we do a best-effort map by
-      // checking currently cached summaries/groups keys exposed by your store state.
-      //
-      // Recommended: add `read.getKnownKeys()` to the store later.
-      //
-      // For now: just leave it empty and rely on the fallback scan below.
       void instanceId;
     }
-
     return map;
   });
 
   function findStudyGroupCacheKeyForInstance(instanceId: string): string | null {
-    // If you add `studyGroupStore.read.getKnownKeys()` later, replace this with it.
-    // For now: best-effort scan over keys we can see *through storeState* is not possible
-    // because we no longer subscribe to studyGroupStore internal state.
-    //
-    // So we do a pragmatic approach:
-    // - If we already resolved it once and you want caching, you can store it in a Map.
-    // - Otherwise we just return null and show "not cached".
-    //
-    // Since this is debug UI, simplest is: return null unless you add known keys API.
     return studyGroupKeyByInstanceId.get(instanceId) ?? null;
   }
 
@@ -158,7 +126,9 @@
   }
 
   async function autoPartition(instanceId: string) {
-    await blockStore.autoPartitionForInstance(instanceId, () => getStudyGroupsForInstance(instanceId));
+    await blockStore.autoPartitionForInstance(instanceId, () =>
+      getStudyGroupsForInstance(instanceId)
+    );
   }
 </script>
 
@@ -169,7 +139,6 @@
 
   {#if isOpen && storeState}
     <div class="debug-content">
-      <!-- Summary Stats -->
       <div class="section">
         <h4>Overview</h4>
         <div class="stats-grid">
@@ -195,7 +164,7 @@
       {#if storeState.loadingInstances.size > 0}
         <div class="section">
           <h4>Loading ({storeState.loadingInstances.size})</h4>
-          <div class="list">
+          <div class="list" style="--dbg-list-max-height: 100px;">
             {#each Array.from(storeState.loadingInstances) as instanceId (instanceId)}
               <div class="item">⏳ {instanceId}</div>
             {/each}
@@ -206,7 +175,7 @@
       {#if storeState.modifyingBlocks.size > 0}
         <div class="section">
           <h4>Modifying ({storeState.modifyingBlocks.size})</h4>
-          <div class="list">
+          <div class="list" style="--dbg-list-max-height: 120px;">
             {#each Array.from(storeState.modifyingBlocks) as blockId (blockId)}
               <div class="item mono">{formatBlockId(blockId)}</div>
             {/each}
@@ -216,6 +185,7 @@
 
       <div class="section">
         <h4>Course Instances ({getCacheSize()})</h4>
+
         {#if getCacheSize() === 0}
           <div class="empty">No cached instances</div>
         {:else}
@@ -229,10 +199,11 @@
               {@const hasSG = cachedStudyGroups.length > 0}
 
               <div class="instance-item">
+                <!-- REFACTORED: Use .header-toggle instead of .instance-header -->
                 <button
-                  class="instance-header"
-                  onclick={() => toggleInstanceExpanded(instanceId)}
+                  class="header-toggle"
                   class:expanded={expandedInstances.has(instanceId)}
+                  onclick={() => toggleInstanceExpanded(instanceId)}
                 >
                   <span class="expand-icon">{expandedInstances.has(instanceId) ? "▼" : "▶"}</span>
                   <span class="instance-name">{instanceId}</span>
@@ -256,11 +227,11 @@
 
                 {#if expandedInstances.has(instanceId) && blocks && blocks.length > 0}
                   {#if dups.length > 0}
-                    <div class="dups-box">
-                      <div class="dups-title">⚠️ Invariant violations (same group in multiple blocks)</div>
-                      <div class="dups-tags">
+                    <div class="warn-box">
+                      <div class="warn-title">⚠️ Invariant violations (same group in multiple blocks)</div>
+                      <div class="tags">
                         {#each dups as gid (gid)}
-                          <span class="group-tag warn">{gid}</span>
+                          <span class="tag warn">{gid}</span>
                         {/each}
                       </div>
                     </div>
@@ -281,9 +252,9 @@
                         </div>
 
                         {#if block.studyGroupIds.length > 0}
-                          <div class="group-ids">
+                          <div class="tags">
                             {#each block.studyGroupIds as groupId (groupId)}
-                              <span class="group-tag">{groupId}</span>
+                              <span class="tag">{groupId}</span>
                             {/each}
                           </div>
                         {/if}
@@ -294,7 +265,8 @@
                   <div class="empty-blocks">No blocks</div>
                 {/if}
 
-                <div class="instance-actions">
+                <!-- REFACTORED: Use .btn-row instead of .instance-actions -->
+                <div class="btn-row instance-actions">
                   <button
                     class="action-btn primary"
                     onclick={() => autoPartition(instanceId)}
@@ -305,7 +277,7 @@
                   </button>
 
                   <button
-                    class="action-btn invalidate"
+                    class="action-btn warn"
                     onclick={() => invalidateInstance(instanceId)}
                     title="Invalidate cache for this instance"
                   >
@@ -335,127 +307,12 @@
 
 <style>
   .debug-panel {
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    font-family: monospace;
-    font-size: 0.75rem;
-    max-width: 520px;
-    max-height: 680px;
+    --dbg-max-width: 520px;
+    --dbg-max-height: 680px;
+    --dbg-content-max-height: 630px;
   }
 
-  .debug-toggle {
-    width: 100%;
-    padding: 0.75rem;
-    background: #2c3e50;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: background 0.2s;
-  }
-  .debug-toggle:hover {
-    background: #1a252f;
-  }
-
-  .debug-content {
-    padding: 1rem;
-    max-height: 630px;
-    overflow-y: auto;
-    border-top: 1px solid #ddd;
-  }
-
-  .section {
-    margin-bottom: 1rem;
-  }
-  .section:last-of-type {
-    margin-bottom: 0.75rem;
-  }
-
-  .section.error {
-    background: #fee;
-    padding: 0.5rem;
-    border-radius: 4px;
-  }
-
-  h4 {
-    margin: 0 0 0.5rem;
-    color: #2c3e50;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .mono {
-    font-family: 'Courier New', monospace;
-  }
-
-  /* Stats Grid */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-  }
-
-  .stat-item {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-    background: #f8f9fa;
-    padding: 0.4rem 0.5rem;
-    border-radius: 3px;
-    border: 1px solid #e9ecef;
-  }
-
-  .stat-item .label {
-    color: #495057;
-    font-weight: 600;
-  }
-
-  .stat-item .value {
-    color: #0d6efd;
-    font-weight: 600;
-  }
-
-  .stat-item .value.active {
-    color: #ffc107;
-  }
-
-  .list {
-    background: #f8f9fa;
-    border-radius: 4px;
-    border: 1px solid #e9ecef;
-    max-height: 100px;
-    overflow-y: auto;
-  }
-
-  .item {
-    padding: 0.4rem 0.5rem;
-    border-bottom: 1px solid #e9ecef;
-    color: #0d6efd;
-  }
-  .item:last-child {
-    border-bottom: none;
-  }
-
-  .empty {
-    color: #adb5bd;
-    font-style: italic;
-    padding: 0.5rem;
-    text-align: center;
-  }
-
-  .empty-blocks {
-    padding: 0.5rem;
-    color: #adb5bd;
-    font-style: italic;
-    background: #f8f9fa;
-    border-radius: 3px;
-  }
-
-  /* Instances List */
+  /* Layout containers - component-specific */
   .instances-list {
     display: flex;
     flex-direction: column;
@@ -463,52 +320,25 @@
   }
 
   .instance-item {
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--dbg-muted-border);
     border-radius: 4px;
     overflow: hidden;
     background: white;
   }
 
-  .instance-header {
-    width: 100%;
-    padding: 0.5rem;
-    background: #f8f9fa;
-    border: none;
-    border-bottom: 1px solid #e9ecef;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    text-align: left;
-    font-family: monospace;
-    font-size: 0.75rem;
-    transition: background 0.2s;
-  }
+  /* REMOVED: .instance-header, .expand-icon, .instance-actions CSS
+     They are now defined globally in debug-panels.css */
 
-  .instance-header:hover {
-    background: #e9ecef;
-  }
-
-  .instance-header.expanded {
-    background: #dbeafe;
-    border-bottom-color: #93c5fd;
-  }
-
-  .expand-icon {
-    font-size: 0.65rem;
-    width: 0.8rem;
-    flex-shrink: 0;
-  }
-
+  /* Component-specific text styling */
   .instance-name {
-    color: #0d6efd;
+    color: var(--dbg-blue);
     font-weight: 600;
     flex: 1;
     word-break: break-all;
   }
 
   .block-count {
-    color: #198754;
+    color: var(--dbg-green);
     white-space: nowrap;
     font-size: 0.7rem;
   }
@@ -519,67 +349,30 @@
     gap: 0.35rem;
     padding: 0.45rem 0.5rem;
     background: #ffffff;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--dbg-muted-border);
   }
 
-  .pill {
-    background: #e9ecef;
-    color: #495057;
-    padding: 0.12rem 0.35rem;
-    border-radius: 999px;
-    font-size: 0.65rem;
-    line-height: 1.2;
-  }
-  .pill.warn {
-    background: #fff3cd;
-    color: #664d03;
-  }
-  .pill.ok {
-    background: #d1e7dd;
-    color: #0f5132;
-  }
-  .pill.warn.active {
-    background: #f8d7da;
-    color: #842029;
-  }
-
-  /* Duplicates box */
-  .dups-box {
-    margin: 0.5rem;
-    padding: 0.5rem;
-    background: #fff3cd;
-    border: 1px solid #ffe69c;
-    border-radius: 4px;
-  }
-
-  .dups-title {
+  .warn-title {
     font-weight: 700;
     margin-bottom: 0.35rem;
     color: #664d03;
     font-size: 0.7rem;
   }
 
-  .dups-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-  }
-
-  /* Blocks List */
   .blocks-list {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     padding: 0.5rem;
     background: white;
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid var(--dbg-muted-border);
   }
 
   .block-item {
     padding: 0.5rem;
-    background: #f8f9fa;
+    background: var(--dbg-muted-bg);
     border-radius: 3px;
-    border: 1px solid #e9ecef;
+    border: 1px solid var(--dbg-muted-border);
   }
 
   .block-header {
@@ -618,95 +411,28 @@
     border-radius: 2px;
   }
 
-  .group-ids {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-  }
-
-  .group-tag {
-    background: #dbeafe;
-    color: #1e40af;
-    padding: 0.15rem 0.3rem;
-    border-radius: 2px;
-    font-size: 0.65rem;
-    font-weight: 600;
-  }
-
-  .group-tag.warn {
-    background: #f8d7da;
-    color: #842029;
-  }
-
-  /* Instance Actions */
-  .instance-actions {
-    display: flex;
-    gap: 0.3rem;
-    padding: 0.4rem 0.5rem;
-    border-top: 1px solid #e9ecef;
-    background: #f8f9fa;
-  }
-
-  .action-btn {
-    padding: 0.3rem 0.4rem;
-    border: none;
+  .empty-blocks {
+    padding: 0.5rem;
+    color: #adb5bd;
+    font-style: italic;
+    background: var(--dbg-muted-bg);
     border-radius: 3px;
-    cursor: pointer;
-    font-size: 0.65rem;
-    font-weight: 600;
-    transition: all 0.2s;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    flex: 1;
   }
 
-  .action-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
+  /* Keep only layout-specific padding for actions row */
+  .instance-actions {
+    padding: 0.4rem 0.5rem;
+    border-top: 1px solid var(--dbg-muted-border);
+    background: var(--dbg-muted-bg);
   }
 
-  .action-btn.primary {
-    background: #0d6efd;
-    color: white;
-  }
-  .action-btn.primary:hover {
-    background: #0b5ed7;
-  }
-  .action-btn.primary:disabled:hover {
-    background: #0d6efd;
-  }
-
-  .action-btn.invalidate {
-    background: #fff3cd;
-    color: #664d03;
-  }
-  .action-btn.invalidate:hover {
-    background: #ffe69c;
-  }
-
-  /* Global Actions */
   .actions {
     display: flex;
     gap: 0.4rem;
     margin-top: 0.75rem;
   }
 
-  .action-btn.danger {
-    background: #d9534f;
-    color: white;
+  .actions .action-btn {
     flex: 1;
-    padding: 0.4rem 0.5rem;
-    font-size: 0.7rem;
-  }
-  .action-btn.danger:hover {
-    background: #c82333;
-  }
-
-  .error-message {
-    color: #d9534f;
-    padding: 0.5rem;
-    word-break: break-word;
-    background: white;
-    border-radius: 3px;
   }
 </style>
