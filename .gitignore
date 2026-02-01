@@ -8,3 +8,5 @@ __pycache__/
 .env
 .env.test
 uv.lock
+
+.vscode

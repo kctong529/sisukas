@@ -46,6 +46,10 @@ on:
         required: false
         type: string
         default: europe-north1
+      debug:
+        required: false
+        type: boolean
+        default: false
 
 
 jobs:
@@ -59,6 +63,7 @@ jobs:
       fly_io_url: ${{ inputs.fly_io_url }}
       frontend_url: ${{ inputs.frontend_url }}
       backend_url: ${{ inputs.backend_url }}
+      debug: ${{ inputs.debug }}
     secrets: inherit
 
   deploy_backend:

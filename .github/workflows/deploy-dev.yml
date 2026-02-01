@@ -23,4 +23,5 @@ jobs:
       sisu_wrapper_api_cloud_run_service: sisu-wrapper-api-test
       gcs_bucket_name: sisukas-filters-api-test
       region: europe-north1
+      debug: true
     secrets: inherit

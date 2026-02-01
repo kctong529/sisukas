@@ -24,6 +24,10 @@ on:
       backend_url:
         required: true
         type: string
+      debug:
+        required: false
+        type: boolean
+        default: false
 
 env:
   WORKING_DIR: frontend/course-browser
@@ -61,15 +65,19 @@ jobs:
         id: build
         working-directory: ${{ env.WORKING_DIR }}
         env:
+          VITE_ENVIRONMENT: ${{ inputs.environment }}   # "test" | "production"
           VITE_FILTERS_API: ${{ inputs.vite_filters_api }}
           VITE_WRAPPER_API: ${{ inputs.vite_wrapper_api }}
           VITE_GCS_BUCKET: ${{ inputs.vite_gcs_bucket }}
           VITE_FRONTEND_URL: ${{ inputs.frontend_url }}
           VITE_BACKEND_URL: ${{ inputs.backend_url }}
-          VITE_DEBUG_AUTH: false
-          VITE_DEBUG_STUDY_GROUP_STORE: false
-          VITE_DEBUG_PLAN_STORE: false
-          VITE_DEBUG_BLOCK_STORE: false
+          VITE_DEBUG_PANELS: ${{ inputs.debug }}
+          VITE_DEBUG_AUTH: ${{ inputs.debug }}
+          VITE_DEBUG_COURSE_INDEX: ${{ inputs.debug }}
+          VITE_DEBUG_STUDY_GROUP_STORE: ${{ inputs.debug }}
+          VITE_DEBUG_PLAN_STORE: ${{ inputs.debug }}
+          VITE_DEBUG_BLOCK_STORE: ${{ inputs.debug }}
+          VITE_DEBUG_PERIOD_TIMELINE_STORE: ${{ inputs.debug }}
         run: |
           npm run build
           echo "result=success" >> $GITHUB_OUTPUT

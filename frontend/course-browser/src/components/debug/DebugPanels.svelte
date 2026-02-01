@@ -1,37 +1,60 @@
 <!-- src/components/DebugPanels.svelte -->
 <script lang="ts">
   import '../../styles/debug-panels.css';
-  import AuthDebugPanel from './AuthDebugPanel.svelte';
-  import CourseIndexDebug from './CourseIndexDebug.svelte';
-  import StudyGroupStoreDebug from './StudyGroupStoreDebug.svelte';
-  import PlansStoreDebug from './PlansStoreDebug.svelte';
-  import BlockStoreDebug from './BlockStoreDebug.svelte';
-  import PeriodTimelineStoreDebug from './PeriodTimelineStoreDebug.svelte';
 
-  const debugAuthStore = import.meta.env.VITE_DEBUG_AUTH === 'true';
-  const debugStudyGroupStore = import.meta.env.VITE_DEBUG_STUDY_GROUP_STORE === 'true';
-  const debugPlanStore = import.meta.env.VITE_DEBUG_PLAN_STORE === 'true';
-  const debugBlockStore = import.meta.env.VITE_DEBUG_BLOCK_STORE === 'true';
-  const debugCourseIndexStore = import.meta.env.VITE_DEBUG_COURSE_INDEX === 'true';
-  const debugPeriodTimelineStore = import.meta.env.VITE_DEBUG_PERIOD_TIMELINE_STORE === 'true';
+  const ENV = import.meta.env.VITE_ENVIRONMENT; // "dev" | "test" | "production"
+  const DEBUG_ALLOWED = import.meta.env.VITE_DEBUG_PANELS === 'true';
+  const ENABLE_DEBUG_PANELS = (ENV === 'dev' || ENV === 'test') && DEBUG_ALLOWED;
+  
+  const flags = {
+    StudyGroupStoreDebug:
+      ENABLE_DEBUG_PANELS && import.meta.env.VITE_DEBUG_STUDY_GROUP_STORE === 'true',
+    CourseIndexDebug:
+      ENABLE_DEBUG_PANELS && import.meta.env.VITE_DEBUG_COURSE_INDEX === 'true',
+    PlansStoreDebug:
+      ENABLE_DEBUG_PANELS && import.meta.env.VITE_DEBUG_PLAN_STORE === 'true',
+    BlockStoreDebug:
+      ENABLE_DEBUG_PANELS && import.meta.env.VITE_DEBUG_BLOCK_STORE === 'true',
+    PeriodTimelineStoreDebug:
+      ENABLE_DEBUG_PANELS && import.meta.env.VITE_DEBUG_PERIOD_TIMELINE_STORE === 'true',
+    AuthDebugPanel:
+      ENABLE_DEBUG_PANELS && import.meta.env.VITE_DEBUG_AUTH === 'true',
+  };
 
-  const panelsToShow = [
-    { name: 'StudyGroupStoreDebug', show: debugStudyGroupStore, component: StudyGroupStoreDebug },
-    { name: 'CourseIndexDebug', show: debugCourseIndexStore, component: CourseIndexDebug },
-    { name: 'PlansStoreDebug', show: debugPlanStore, component: PlansStoreDebug },
-    { name: 'BlockStoreDebug', show: debugBlockStore, component: BlockStoreDebug },
-    { name: 'PeriodTimelineStoreDebug', show: debugPeriodTimelineStore, component: PeriodTimelineStoreDebug },
-    { name: 'AuthDebugPanel', show: debugAuthStore, component: AuthDebugPanel },
-  ].filter(p => p.show);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const loaders: Record<string, () => Promise<{ default: any }>> = {
+    StudyGroupStoreDebug: () => import('./StudyGroupStoreDebug.svelte'),
+    CourseIndexDebug: () => import('./CourseIndexDebug.svelte'),
+    PlansStoreDebug: () => import('./PlansStoreDebug.svelte'),
+    BlockStoreDebug: () => import('./BlockStoreDebug.svelte'),
+    PeriodTimelineStoreDebug: () => import('./PeriodTimelineStoreDebug.svelte'),
+    AuthDebugPanel: () => import('./AuthDebugPanel.svelte'),
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type Panel = { name: string; module: any };
+  let panels: Panel[] = [];
+
+  if (ENABLE_DEBUG_PANELS && Object.values(flags).some(Boolean)) {
+    Promise.all(
+      Object.entries(flags)
+        .filter(([, enabled]) => enabled)
+        .map(async ([name]) => ({ name, module: await loaders[name]() }))
+    ).then((loaded) => {
+      panels = loaded;
+    });
+  }
 </script>
 
-<div class="debug-panels-container">
-  {#each panelsToShow as panel, index (panel.name)}
-    <div class="debug-panel-wrapper" style="--panel-index: {index}">
-      <svelte:component this={panel.component} />
-    </div>
-  {/each}
-</div>
+{#if panels.length > 0}
+  <div class="debug-panels-container">
+    {#each panels as panel, index (panel.name)}
+      <div class="debug-panel-wrapper" style="--panel-index: {index}">
+        <svelte:component this={panel.module.default} />
+      </div>
+    {/each}
+  </div>
+{/if}
 
 <style>
   .debug-panels-container {
