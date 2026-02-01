@@ -1,102 +1,105 @@
+<!-- src/components/BlocksGrid.svelte -->
 <script lang="ts">
-  import { tick, onDestroy } from 'svelte';
-  import { blockStore, previewColorForInstance } from '../lib/stores/blockStore';
-  import { studyGroupStore } from '../lib/stores/studyGroupStore';
-  import type { Block } from '../domain/models/Block';
-  import type { Course } from '../domain/models/Course';
-  import type { StudyGroup } from '../domain/models/StudyGroup';
+  import { tick, onDestroy } from "svelte";
+  import { blockStore, previewColorForInstance } from "../lib/stores/blockStore";
+  import { studyGroupStore } from "../lib/stores/studyGroupStore.svelte";
+  import type { Block } from "../domain/models/Block";
+  import type { Course } from "../domain/models/Course";
 
-  export let course: Course;
+  const { course } = $props<{ course: Course }>();
 
-  // Subscribe to stores
-  let studyGroups: StudyGroup[] = [];
-  let blocks: Block[] = [];
-  let isLoading = false;
+  // ---- Minimal derived: template needs groups to render ----
+  const studyGroups = $derived.by(() =>
+    course ? studyGroupStore.read.getGroups(course.unitId, course.id) : []
+  );
 
-  let nextColorIndex = 0;
-  let groupColorIndexById: Record<string, number> = {};
-
-  let unsubscribeGroups: (() => void) | null = null;
   let unsubscribeBlocks: (() => void) | null = null;
-  let unsubscribeBlocksLoading: (() => void) | null = null;
   let unsubscribePreview: (() => void) | null = null;
-
-  let hasDragged = false;
-  let downIndex = -1;
-
-  // Hold "dragging" styling during async delete+create to avoid 1-frame fallback
-  let isCommitPreviewActive = false;
 
   const fetchedFor = new Set<string>();
   const autoPartitionDoneFor = new Set<string>();
 
-  // Fetch once
-  $: if (course && !fetchedFor.has(course.id)) {
-    fetchedFor.add(course.id);
-    studyGroupStore.fetch(course.unitId, course.id);
-    blockStore.fetchForInstance(course.id);
-  }
+  // Fetch once per instance (store decides if it actually fetches)
+  $effect(() => {
+    if (!course) return;
+    if (fetchedFor.has(course.id)) return;
 
-  // Auto-partition once, when data becomes available
-  $: if (course && studyGroups.length > 0 && !autoPartitionDoneFor.has(course.id)) {
+    fetchedFor.add(course.id);
+
+    studyGroupStore.actions.ensureFetched(course.unitId, course.id);
+    blockStore.fetchForInstance(course.id);
+  });
+
+  // Auto-partition once when groups exist
+  $effect(() => {
+    if (!course) return;
+    if (autoPartitionDoneFor.has(course.id)) return;
+    if (studyGroups.length === 0) return;
+
     autoPartitionDoneFor.add(course.id);
     blockStore.autoPartitionForInstance(course.id, () => studyGroups);
-  }
+  });
 
-  $: if (course) {
-    // reset subscriptions on course change
-    if (unsubscribeGroups) unsubscribeGroups();
-    if (unsubscribeBlocks) unsubscribeBlocks();
-    if (unsubscribeBlocksLoading) unsubscribeBlocksLoading();
-    if (unsubscribePreview) unsubscribePreview();
+  // Subscribe to block store + preview color (legacy stores)
+  $effect(() => {
+    if (!course) return;
 
-    unsubscribeGroups = studyGroupStore.subscribe(state => {
-      const key = `${course.unitId}:${course.id}`;
-      studyGroups = state.cache[key] || [];
-    });
+    unsubscribeBlocks?.();
+    unsubscribePreview?.();
 
-    unsubscribeBlocks = blockStore.subscribe(state => {
+    unsubscribeBlocks = blockStore.subscribe((state) => {
       blocks = state.blocksByCourseInstance[course.id] || [];
     });
 
-    unsubscribeBlocksLoading = blockStore.subscribe(state => {
-      isLoading = state.loadingInstances.has(course.id);
-    });
-
-    unsubscribePreview = previewColorForInstance(course.id).subscribe(v => {
+    unsubscribePreview = previewColorForInstance(course.id).subscribe((v) => {
       nextColorIndex = v;
     });
-  }
+
+    return () => {
+      unsubscribeBlocks?.();
+      unsubscribePreview?.();
+      unsubscribeBlocks = null;
+      unsubscribePreview = null;
+    };
+  });
 
   onDestroy(() => {
-    if (unsubscribeGroups) unsubscribeGroups();
-    if (unsubscribeBlocks) unsubscribeBlocks();
-    if (unsubscribeBlocksLoading) unsubscribeBlocksLoading();
-    if (unsubscribePreview) unsubscribePreview();
+    unsubscribeBlocks?.();
+    unsubscribePreview?.();
     detachGlobalMouseUp();
   });
 
-  // Drag-select state
-  let isSelecting = false;
-  let firstSelectedIndex = -1;
-  let selectedGroupIds: string[] = [];
-  let committingIds: string[] = [];
+  // ---- Local state (mutated) ----
+  let blocks = $state<Block[]>([]);
+  let nextColorIndex = $state(0);
 
-  function computeGroupColorIndexMap(blocks: Block[]) {
+  // ---- Drag-select state (mutated + used by template) ----
+  let hasDragged = $state(false);
+  let downIndex = $state(-1);
+
+  // Hold "dragging" styling during async delete+create to avoid 1-frame fallback
+  let isCommitPreviewActive = $state(false);
+
+  let isSelecting = $state(false);
+  let firstSelectedIndex = $state(-1);
+  let selectedGroupIds = $state<string[]>([]);
+  let committingIds = $state<string[]>([]);
+
+  function computeGroupColorIndexMap(bs: Block[]) {
     const map: Record<string, number> = {};
-    for (const block of blocks) {
+    for (const block of bs) {
       for (const gid of block.studyGroupIds) map[gid] = block.colorIndex;
     }
     return map;
   }
 
-  $: groupColorIndexById = computeGroupColorIndexMap(blocks);
+  const groupColorIndexById = $derived.by(() => computeGroupColorIndexMap(blocks));
 
   function updateSelectionRange(index: number) {
     if (!isSelecting || firstSelectedIndex === -1) return;
     const start = Math.min(firstSelectedIndex, index);
     const end = Math.max(firstSelectedIndex, index);
-    selectedGroupIds = studyGroups.slice(start, end + 1).map(g => g.groupId);
+    selectedGroupIds = studyGroups.slice(start, end + 1).map((g) => g.groupId);
   }
 
   function endSelection(clear = false) {
@@ -106,20 +109,22 @@
   }
 
   async function createBlockFromSelection(ids: string[]) {
+    if (!course) return;
     if (ids.length === 0) return;
-    const label = ids.length === 1 ? 'Block (1 group)' : `Block (${ids.length} groups)`;
+    const label = ids.length === 1 ? "Block (1 group)" : `Block (${ids.length} groups)`;
     await blockStore.createBlock(course.id, label, ids, blocks.length, nextColorIndex);
   }
 
   function attachGlobalMouseUp() {
-    window.addEventListener('mouseup', handleGlobalMouseUp, true);
+    window.addEventListener("mouseup", handleGlobalMouseUp, true);
   }
 
   function detachGlobalMouseUp() {
-    window.removeEventListener('mouseup', handleGlobalMouseUp, true);
+    window.removeEventListener("mouseup", handleGlobalMouseUp, true);
   }
 
   async function handleMouseDown(index: number, groupId: string, e: MouseEvent) {
+    if (!course) return;
     if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
@@ -127,13 +132,11 @@
     hasDragged = false;
     downIndex = index;
 
-    // Enter dragging state immediately
     isSelecting = true;
     firstSelectedIndex = index;
     selectedGroupIds = [groupId];
     attachGlobalMouseUp();
 
-    // Reserve color (no deletion)
     await blockStore.beginDragSelect(course.id);
   }
 
@@ -143,7 +146,6 @@
   }
 
   async function clearCommitBridgeAfterPaint() {
-    // Let store updates + DOM paint settle, then drop the bridge
     await tick();
     setTimeout(() => {
       committingIds = [];
@@ -152,6 +154,7 @@
   }
 
   async function finalizeSelection() {
+    if (!course) return;
     if (!isSelecting) return;
     detachGlobalMouseUp();
 
@@ -160,38 +163,32 @@
 
     // CLICK (no drag)
     if (!hasDragged) {
-      // If it was in a block: remove that block and stop.
       const removed = await blockStore.removeBlockIfGroupIsAssigned(course.id, firstId);
       endSelection(true);
       committingIds = [];
 
-      // If it was NOT in a block: create a 1-group block.
       if (!removed) {
-        committingIds = [firstId]; // "no blink" bridge
+        committingIds = [firstId];
         try {
           await createBlockFromSelection([firstId]);
         } catch (err) {
-          console.error('Failed to create block:', err);
+          console.error("Failed to create block:", err);
         } finally {
           await clearCommitBridgeAfterPaint();
         }
       }
-
       return;
     }
 
     // DRAG
     committingIds = ids;
     isCommitPreviewActive = true;
-
-    // Important: end selection early (so we don't keep extending the range),
-    // but keep "commit preview" active so overlapped in-block squares don't flash old color.
     endSelection(true);
 
     try {
       await createBlockFromSelection(ids);
     } catch (err) {
-      console.error('Failed to create block:', err);
+      console.error("Failed to create block:", err);
     } finally {
       await clearCommitBridgeAfterPaint();
     }
@@ -204,6 +201,7 @@
   // ===== Touch =====
 
   async function handleTouchStart(index: number, groupId: string, e: TouchEvent) {
+    if (!course) return;
     e.preventDefault();
 
     hasDragged = false;
@@ -222,10 +220,10 @@
 
     const touch = e.touches[0];
     const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    const row = (element as HTMLElement | null)?.closest?.('[data-index]') as HTMLElement | null;
+    const row = (element as HTMLElement | null)?.closest?.("[data-index]") as HTMLElement | null;
     if (!row) return;
 
-    const raw = row.getAttribute('data-index');
+    const raw = row.getAttribute("data-index");
     const idx = raw ? parseInt(raw, 10) : -1;
     if (idx !== -1) {
       if (idx !== downIndex) hasDragged = true;
@@ -251,10 +249,12 @@
 </script>
 
 <div class="blocks-grid">
-  {#if isLoading}
-    <div class="loading">Loading study groups...</div>
-  {:else if studyGroups.length === 0}
-    <div class="empty">No study groups available</div>
+  {#if studyGroups.length === 0}
+    {#if course && studyGroupStore.read.isLoading(course.unitId, course.id)}
+      <div class="loading">Loading study groups...</div>
+    {:else}
+      <div class="empty">No study groups available</div>
+    {/if}
   {:else}
     <div class="section">
       <div
@@ -268,15 +268,15 @@
             class:selected={selectedGroupIds.includes(group.groupId) || committingIds.includes(group.groupId)}
             class:commit-preview={committingIds.includes(group.groupId)}
             class:in-block={groupColorIndexById[group.groupId] !== undefined}
-            data-color={groupColorIndexById[group.groupId] ?? ''}
+            data-color={groupColorIndexById[group.groupId] ?? ""}
             data-index={idx}
-            on:mousedown={(e) => handleMouseDown(idx, group.groupId, e)}
-            on:mouseenter={() => handleMouseOver(idx)}
-            on:focus={() => handleMouseOver(idx)}
-            on:touchstart={(e) => handleTouchStart(idx, group.groupId, e)}
-            on:touchmove={handleTouchMove}
-            on:touchend={handleTouchEnd}
-            on:touchcancel={handleTouchCancel}
+            onmousedown={(e) => handleMouseDown(idx, group.groupId, e)}
+            onmouseenter={() => handleMouseOver(idx)}
+            onfocus={() => handleMouseOver(idx)}
+            ontouchstart={(e) => handleTouchStart(idx, group.groupId, e)}
+            ontouchmove={handleTouchMove}
+            ontouchend={handleTouchEnd}
+            ontouchcancel={handleTouchCancel}
             role="button"
             tabindex="0"
           >
@@ -298,12 +298,12 @@
   }
 
   .blocks-grid {
-    --c0: 234, 88, 12;   /* Burnt Orange */
-    --c1: 21, 128, 61;   /* Forest Green */
-    --c2: 124, 58, 237;  /* Deep Violet */
-    --c3: 2, 132, 199;   /* Sky Blue */
-    --c4: 245, 158, 11;  /* Amber */
-    --c5: 219, 39, 119;  /* Deep Pink */
+    --c0: 234, 88, 12;
+    --c1: 21, 128, 61;
+    --c2: 124, 58, 237;
+    --c3: 2, 132, 199;
+    --c4: 245, 158, 11;
+    --c5: 219, 39, 119;
 
     width: 100%;
     display: flex;
@@ -311,7 +311,6 @@
     gap: 1rem;
   }
 
-  /* Core Variable Mapping */
   .study-group-square[data-color="0"] { --rgb: var(--c0); }
   .study-group-square[data-color="1"] { --rgb: var(--c1); }
   .study-group-square[data-color="2"] { --rgb: var(--c2); }
@@ -319,7 +318,6 @@
   .study-group-square[data-color="4"] { --rgb: var(--c4); }
   .study-group-square[data-color="5"] { --rgb: var(--c5); }
 
-  /* 1. Base Square */
   .study-group-square {
     display: flex;
     flex-direction: column;
@@ -336,14 +334,12 @@
     transition: none;
   }
 
-  /* 2. Permanent Block Style */
   .study-group-square.in-block {
     background: color-mix(in srgb, rgb(var(--rgb)), white 88%) !important;
     border-color: rgb(var(--rgb)) !important;
     color: rgb(var(--rgb)) !important;
   }
 
-  /* 3. Selection Preview (non-block click should preview next color) */
   .study-group-square.selected:not(.in-block) {
     outline: none;
     background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
@@ -351,7 +347,6 @@
     color: rgb(var(--next-rgb)) !important;
   }
 
-  /* 3b. Commit preview (FORCE preview even if it was in an old block) */
   .study-group-square.commit-preview {
     outline: none;
     background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
@@ -359,7 +354,6 @@
     color: rgb(var(--next-rgb)) !important;
   }
 
-  /* Only desktop/laptop should get hover preview */
   @media (hover: hover) and (pointer: fine) {
     .study-group-square:hover {
       outline: none;
@@ -381,7 +375,6 @@
     }
   }
 
-  /* During drag, preview must win */
   .squares-container.dragging .study-group-square.selected {
     background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
     border-color: rgb(var(--next-rgb)) !important;

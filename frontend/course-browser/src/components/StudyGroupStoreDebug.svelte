@@ -1,74 +1,113 @@
 <!-- src/components/StudyGroupStoreDebug.svelte -->
 <script lang="ts">
-  import { studyGroupStore } from '../lib/stores/studyGroupStore';
-  import type { StudyGroup } from '../domain/models/StudyGroup';
+  import type { StudyGroup } from "../domain/models/StudyGroup";
+  import { studyGroupStore } from "../lib/stores/studyGroupStore.svelte";
 
-  interface StudyGroupStoreState {
-    cache: { [key: string]: StudyGroup[] };
-    loadingKeys: string[];
-    error: string | null;
-  }
-
-  let storeState: StudyGroupStoreState | null = $state(null);
   let isOpen = $state(false);
 
-  // Subscribe to store
-  const unsubscribe = studyGroupStore.subscribe((state: StudyGroupStoreState) => {
-    storeState = state;
-  });
+  const loadingKeys = $derived.by(() => studyGroupStore.state.loadingKeys);
+  const staleKeys = $derived.by(() => Array.from(studyGroupStore.state.staleKeys));
+  const error = $derived.by(() => studyGroupStore.state.error);
 
-  // Cleanup on destroy
-  $effect(() => {
-    return () => unsubscribe();
-  });
+  // Only count "real" cached entries (ignore keys with undefined)
+  const cacheEntries = $derived.by(() =>
+    Object.entries(studyGroupStore.state.cache).filter(
+      (entry): entry is [string, StudyGroup[]] => entry[1] !== undefined
+    )
+  );
+
+  const summaryEntries = $derived.by(() => Object.entries(studyGroupStore.state.summaryCache));
+  const fallbackEntries = $derived.by(() => Object.entries(studyGroupStore.state.fallbackSummaries));
 
   function togglePanel() {
     isOpen = !isOpen;
   }
 
   function clearCache() {
-    studyGroupStore.clear();
+    studyGroupStore.actions.clear();
   }
 </script>
 
 <div class="debug-panel" data-index="0">
   <button class="debug-toggle" onclick={togglePanel}>
-    🔍 Study Groups Store {isOpen ? '▼' : '▶'}
+    🔍 Study Groups Store {isOpen ? "▼" : "▶"}
   </button>
 
-  {#if isOpen && storeState}
+  {#if isOpen}
     <div class="debug-content">
       <div class="section">
-        <h4>Loading ({storeState.loadingKeys.length})</h4>
+        <h4>Loading ({loadingKeys.length})</h4>
         <div class="list">
-          {#each storeState.loadingKeys as key (key)}
+          {#each loadingKeys as key (key)}
             <div class="item">{key}</div>
           {/each}
-          {#if storeState.loadingKeys.length === 0}
+          {#if loadingKeys.length === 0}
             <div class="empty">None</div>
           {/if}
         </div>
       </div>
 
       <div class="section">
-        <h4>Cache ({Object.keys(storeState.cache).length})</h4>
+        <h4>Stale ({staleKeys.length})</h4>
         <div class="list">
-          {#each Object.entries(storeState.cache) as [key, groups] (key)}
+          {#each staleKeys as key (key)}
+            <div class="item">{key}</div>
+          {/each}
+          {#if staleKeys.length === 0}
+            <div class="empty">None</div>
+          {/if}
+        </div>
+      </div>
+
+      <div class="section">
+        <h4>Full Cache ({cacheEntries.length})</h4>
+        <div class="list">
+          {#each cacheEntries as [key, groups] (key)}
             <div class="cache-item">
               <div class="cache-key">{key}</div>
               <div class="cache-value">{groups.length} groups</div>
             </div>
           {/each}
-          {#if Object.keys(storeState.cache).length === 0}
+          {#if cacheEntries.length === 0}
             <div class="empty">Empty</div>
           {/if}
         </div>
       </div>
 
-      {#if storeState.error}
+      <div class="section">
+        <h4>Summary Cache ({summaryEntries.length})</h4>
+        <div class="list">
+          {#each summaryEntries as [key, summaries] (key)}
+            <div class="cache-item">
+              <div class="cache-key">{key}</div>
+              <div class="cache-value">{summaries.length} summaries</div>
+            </div>
+          {/each}
+          {#if summaryEntries.length === 0}
+            <div class="empty">Empty</div>
+          {/if}
+        </div>
+      </div>
+
+      <div class="section">
+        <h4>Fallback Summaries ({fallbackEntries.length})</h4>
+        <div class="list">
+          {#each fallbackEntries as [key, summaries] (key)}
+            <div class="cache-item">
+              <div class="cache-key">{key}</div>
+              <div class="cache-value">{summaries.length} summaries</div>
+            </div>
+          {/each}
+          {#if fallbackEntries.length === 0}
+            <div class="empty">Empty</div>
+          {/if}
+        </div>
+      </div>
+
+      {#if error}
         <div class="section error">
           <h4>Error</h4>
-          <div class="error-message">{storeState.error}</div>
+          <div class="error-message">{error}</div>
         </div>
       {/if}
 

@@ -4,7 +4,7 @@
   import { favouritesStore } from '../lib/stores/favouritesStore';
   import { plansStore } from '../lib/stores/plansStore.svelte';
   import { courseIndexStore } from '../lib/stores/courseIndexStore.svelte';
-  import { studyGroupStore } from '../lib/stores/studyGroupStore';
+  import { studyGroupStore } from '../lib/stores/studyGroupStore.svelte';
   import { courseGradeStore } from '../lib/stores/courseGradeStore';
   import { NotificationService } from '../infrastructure/services/NotificationService';
   import StudyGroupsSection from './StudyGroupsSection.svelte';
@@ -96,6 +96,7 @@
       favouritesStore.clear?.();
       plansStore.actions.clear();
       courseGradeStore.clear?.();
+      studyGroupStore.actions.clear();
 
       expandedInstanceIds = new Set();
       ui.hasLoadedForUser = false;
@@ -219,7 +220,7 @@
     lastSig = sig;
 
     fetchTimer = window.setTimeout(() => {
-      void studyGroupStore.fetchWithStaleWhileRevalidate(reqs);
+      void studyGroupStore.actions.fetchWithStaleWhileRevalidate(reqs);
     }, 50);
 
     return () => {
@@ -367,7 +368,7 @@
 
       const activeHit = courseIndexStore.read.resolveByInstanceId(instanceId);
       if (activeHit) {
-        studyGroupStore.fetch(activeHit.unitId, activeHit.id);
+        studyGroupStore.actions.ensureFetched(activeHit.unitId, activeHit.id);
       }
     }
     

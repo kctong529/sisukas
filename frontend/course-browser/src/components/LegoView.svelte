@@ -5,7 +5,7 @@
   import { courseIndexStore } from "../lib/stores/courseIndexStore.svelte";
   import { plansStore } from "../lib/stores/plansStore.svelte";
   import { blockStore } from "../lib/stores/blockStore";
-  import { studyGroupStore } from "../lib/stores/studyGroupStore";
+  import { studyGroupStore } from "../lib/stores/studyGroupStore.svelte";
 
   import PlanManager from "./PlanManager.svelte";
   import BlocksGrid from "./BlocksGrid.svelte";
@@ -76,7 +76,7 @@
         instanceIds,
         getCourseForInstance: resolveCourse,
         getBlocksForInstance: (id) => blockStore.getCachedForInstance(id) ?? [],
-        getStudyGroupsForInstance: (unitId, offeringId) => studyGroupStore.getCached(unitId, offeringId),
+        getStudyGroupsForInstance: (unitId, offeringId) => studyGroupStore.read.getGroups(unitId, offeringId),
         topK: 20,
         scoreMode: "minMaxConcurrentThenOverlap"
       });

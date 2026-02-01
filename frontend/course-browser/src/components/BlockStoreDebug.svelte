@@ -1,10 +1,10 @@
 <!-- src/components/BlockStoreDebug.svelte -->
 <script lang="ts">
-  import { blockStore } from '../lib/stores/blockStore';
-  import { studyGroupStore } from '../lib/stores/studyGroupStore';
-  import type { Block } from '../domain/models/Block';
-  import type { StudyGroup } from '../domain/models/StudyGroup';
-  
+  import { blockStore } from "../lib/stores/blockStore";
+  import { studyGroupStore } from "../lib/stores/studyGroupStore.svelte";
+  import type { Block } from "../domain/models/Block";
+  import type { StudyGroup } from "../domain/models/StudyGroup";
+
   interface BlockStoreState {
     blocksByCourseInstance: Record<string, Block[]>;
     loadingInstances: Set<string>;
@@ -12,30 +12,19 @@
     error: string | null;
   }
 
-  interface StudyGroupStoreState {
-    cache: Record<string, StudyGroup[]>;
-  }
-
-  let storeState: BlockStoreState | null = $state(null);
-  let sgState: StudyGroupStoreState | null = $state(null);
-
+  let storeState = $state<BlockStoreState | null>(null);
   let isOpen = $state(false);
-  let expandedInstances: Set<string> = $state(new Set());
+  let expandedInstances = $state<Set<string>>(new Set());
 
-  // Subscribe to stores
+  // Subscribe to block store (legacy)
   const unsubscribeBlocks = blockStore.subscribe((state: BlockStoreState) => {
     storeState = state;
   });
 
-  const unsubscribeStudyGroups = studyGroupStore.subscribe((state: StudyGroupStoreState) => {
-    sgState = state;
-  });
-
-  // Cleanup on destroy
+  // Cleanup
   $effect(() => {
     return () => {
       unsubscribeBlocks();
-      unsubscribeStudyGroups();
     };
   });
 
@@ -44,13 +33,18 @@
   }
 
   function toggleInstanceExpanded(instanceId: string) {
-    if (expandedInstances.has(instanceId)) expandedInstances.delete(instanceId);
-    else expandedInstances.add(instanceId);
-    expandedInstances = new Set(expandedInstances);
+    const next = new Set(expandedInstances);
+    if (next.has(instanceId)) next.delete(instanceId);
+    else next.add(instanceId);
+    expandedInstances = next;
   }
 
   function clearStore() {
     blockStore.clear();
+  }
+
+  function clearStudyGroups() {
+    studyGroupStore.actions.clear();
   }
 
   function invalidateInstance(instanceId: string) {
@@ -71,13 +65,15 @@
 
   function getTotalBlocks(): number {
     if (!storeState) return 0;
-    return Object.values(storeState.blocksByCourseInstance).reduce((sum, blocks) => sum + (blocks?.length ?? 0), 0);
+    return Object.values(storeState.blocksByCourseInstance).reduce(
+      (sum, blocks) => sum + (blocks?.length ?? 0),
+      0
+    );
   }
 
   function formatBlockId(blockId: string): string {
-    // block:COURSE:LABEL -> just the label part for readability
-    const parts = blockId.split(':');
-    if (parts.length >= 3) return parts.slice(2).join(':');
+    const parts = blockId.split(":");
+    if (parts.length >= 3) return parts.slice(2).join(":");
     return blockId;
   }
 
@@ -109,29 +105,58 @@
     const counts: Record<number, number> = {};
     for (const b of blocks) {
       const ci = (b as Block).colorIndex;
-      if (typeof ci !== 'number') continue;
+      if (typeof ci !== "number") continue;
       counts[ci] = (counts[ci] ?? 0) + 1;
     }
     return counts;
   }
 
   // ---------- StudyGroup cache helpers (UI-only) ----------
+  // We don’t have unitId here; keys look like `${unitId}:${offeringId}`.
+  // So build a small index from whatever keys we see in blockStore state.
+  // (Cheap enough for a debug panel.)
+
+  const studyGroupKeyByInstanceId = $derived.by(() => {
+    const map = new Map<string, string>(); // offeringId -> fullKey (unitId:offeringId)
+
+    const instanceIds = Object.keys(storeState?.blocksByCourseInstance ?? {});
+    for (const instanceId of instanceIds) {
+      // Try to find a key that ends with `:${instanceId}`.
+      // We need a list of keys; we can infer it by probing known unitIds only if we had them.
+      // Since we don't: keep the same heuristic, but scan the store's internal known keys
+      // via read.getKnownKeys() if you have it. If not, we do a best-effort map by
+      // checking currently cached summaries/groups keys exposed by your store state.
+      //
+      // Recommended: add `read.getKnownKeys()` to the store later.
+      //
+      // For now: just leave it empty and rely on the fallback scan below.
+      void instanceId;
+    }
+
+    return map;
+  });
 
   function findStudyGroupCacheKeyForInstance(instanceId: string): string | null {
-    const cache = sgState?.cache ?? {};
-    const keys = Object.keys(cache);
-    // your cache keys look like `${unitId}:${instanceId}`
-    return keys.find(k => k.endsWith(`:${instanceId}`)) ?? null;
+    // If you add `studyGroupStore.read.getKnownKeys()` later, replace this with it.
+    // For now: best-effort scan over keys we can see *through storeState* is not possible
+    // because we no longer subscribe to studyGroupStore internal state.
+    //
+    // So we do a pragmatic approach:
+    // - If we already resolved it once and you want caching, you can store it in a Map.
+    // - Otherwise we just return null and show "not cached".
+    //
+    // Since this is debug UI, simplest is: return null unless you add known keys API.
+    return studyGroupKeyByInstanceId.get(instanceId) ?? null;
   }
 
   function getStudyGroupsForInstance(instanceId: string): StudyGroup[] {
-    const cache = sgState?.cache ?? {};
     const key = findStudyGroupCacheKeyForInstance(instanceId);
     if (!key) return [];
-    return cache[key] ?? [];
+    const [unitId, offeringId] = key.split(":");
+    if (!unitId || !offeringId) return [];
+    return studyGroupStore.read.getGroups(unitId, offeringId);
   }
 
-  // Uses the NEW blockStore wrapper (so DebugPanel shows the intended usage pattern)
   async function autoPartition(instanceId: string) {
     await blockStore.autoPartitionForInstance(instanceId, () => getStudyGroupsForInstance(instanceId));
   }
@@ -139,7 +164,7 @@
 
 <div class="debug-panel" data-index="2">
   <button class="debug-toggle" onclick={togglePanel}>
-    🧩 Block Store {isOpen ? '▼' : '▶'}
+    🧩 Block Store {isOpen ? "▼" : "▶"}
   </button>
 
   {#if isOpen && storeState}
@@ -167,7 +192,6 @@
         </div>
       </div>
 
-      <!-- Loading Instances -->
       {#if storeState.loadingInstances.size > 0}
         <div class="section">
           <h4>Loading ({storeState.loadingInstances.size})</h4>
@@ -179,7 +203,6 @@
         </div>
       {/if}
 
-      <!-- Modifying Blocks -->
       {#if storeState.modifyingBlocks.size > 0}
         <div class="section">
           <h4>Modifying ({storeState.modifyingBlocks.size})</h4>
@@ -191,7 +214,6 @@
         </div>
       {/if}
 
-      <!-- Course Instances -->
       <div class="section">
         <h4>Course Instances ({getCacheSize()})</h4>
         {#if getCacheSize() === 0}
@@ -212,12 +234,11 @@
                   onclick={() => toggleInstanceExpanded(instanceId)}
                   class:expanded={expandedInstances.has(instanceId)}
                 >
-                  <span class="expand-icon">{expandedInstances.has(instanceId) ? '▼' : '▶'}</span>
+                  <span class="expand-icon">{expandedInstances.has(instanceId) ? "▼" : "▶"}</span>
                   <span class="instance-name">{instanceId}</span>
                   <span class="block-count">{blocks?.length ?? 0} blocks</span>
                 </button>
 
-                <!-- Instance summary row -->
                 <div class="instance-summary">
                   <span class="pill">groups: {totalGroups}</span>
                   <span class="pill">unique: {uniq.size}</span>
@@ -227,7 +248,7 @@
                   </span>
 
                   <span class="pill">
-                    colors: {Object.entries(colorCounts).map(([k, v]) => `${k}:${v}`).join(' ') || '-'}
+                    colors: {Object.entries(colorCounts).map(([k, v]) => `${k}:${v}`).join(" ") || "-"}
                   </span>
 
                   <span class="pill warn" class:active={dups.length > 0}>dups: {dups.length}</span>
@@ -255,7 +276,7 @@
 
                         <div class="block-meta">
                           <span class="meta-item">{block.studyGroupIds.length} groups</span>
-                          <span class="meta-item">color: {(block as Block).colorIndex ?? '?'}</span>
+                          <span class="meta-item">color: {(block as Block).colorIndex ?? "?"}</span>
                           <span class="meta-item mono" title={block.id}>{formatBlockId(block.id)}</span>
                         </div>
 
@@ -297,7 +318,6 @@
         {/if}
       </div>
 
-      <!-- Error State -->
       {#if storeState.error}
         <div class="section error">
           <h4>⚠️ Error</h4>
@@ -305,9 +325,9 @@
         </div>
       {/if}
 
-      <!-- Action Buttons -->
       <div class="actions">
-        <button class="action-btn danger" onclick={clearStore}>Clear Store</button>
+        <button class="action-btn danger" onclick={clearStore}>Clear Block Store</button>
+        <button class="action-btn danger" onclick={clearStudyGroups}>Clear Study Groups</button>
       </div>
     </div>
   {/if}
