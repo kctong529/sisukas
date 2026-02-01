@@ -79,8 +79,9 @@
 
   let expandedInstanceIds = $state<Set<string>>(new Set());
   let isPlanningSwitching = $state(false);
-  let lastSig = "";
   let prevPlanId: string | null = null;
+  let lastSig = "";
+  let fetchTimer: number | null = null;
 
   const planInstanceIds = $derived.by(() => new Set(activePlan?.instanceIds ?? []));
   const expandedIds = $derived.by(() => expandedInstanceIds);
@@ -182,10 +183,8 @@
     if (activePlanId !== prevPlanId) {
       // Clear old expanded state
       expandedInstanceIds = new Set();
-      lastSig = "";
       prevPlanId = activePlanId;
       
-      // If plans are initialized and we have a plan, sync with new plan instances
       if (ui.hasInitializedPlans && activePlan && activePlan.instanceIds && activePlan.instanceIds.length > 0) {
         expandedInstanceIds = new Set(activePlan.instanceIds);
       }
@@ -210,14 +209,23 @@
       }
     }
 
-    const sig = reqs.slice(0, 200).map((r) => `${r.courseUnitId}:${r.courseOfferingId}`).join("|");
+    const sig = [
+      `plan:${activePlanId ?? "none"}`,
+      ...reqs.map(r => `${r.courseUnitId}:${r.courseOfferingId}`).sort().slice(0, 200),
+    ].join("|");
+
     if (sig === lastSig) return;
+    if (fetchTimer) window.clearTimeout(fetchTimer);
     lastSig = sig;
 
-    if (reqs.length > 0) {
-      studyGroupStore.preloadFromCache(reqs);
-      studyGroupStore.fetchBatch(reqs);
-    }
+    fetchTimer = window.setTimeout(() => {
+      void studyGroupStore.fetchWithStaleWhileRevalidate(reqs);
+    }, 50);
+
+    return () => {
+      if (fetchTimer) window.clearTimeout(fetchTimer);
+      fetchTimer = null;
+    };
   });
 
   // ---- Course resolution helpers ----

@@ -1,6 +1,11 @@
+<!-- src/components/StudyGroupsSection.svelte -->
+<!-- 
+  Shows how to display cached summaries while full data loads,
+  then switch to full data when available.
+-->
+
 <script lang="ts">
   import { onDestroy } from "svelte";
-  import { get } from "svelte/store";
   import { studyGroupStore, type StudyGroupSummary } from "../lib/stores/studyGroupStore";
   import type { Course } from "../domain/models/Course";
   import type { StudyGroup } from "../domain/models/StudyGroup";
@@ -11,26 +16,43 @@
 
   const keyOf = (c: Course) => `${c.unitId}:${c.id}`;
 
-  let groups: StudyGroup[] = [];
-  let summaries: StudyGroupSummary[] = [];
-  let isLoading = false;
+  // STATE: What we display
+  let groups: StudyGroup[] = [];           // Full groups (rich display)
+  let summaries: StudyGroupSummary[] = []; // Summary fallback
+  let isLoading = false;                   // Show spinner
+  let isStale = false;                     // Show "Refreshing..." badge
 
   let unsubscribe: (() => void) | null = null;
   let currentKey: string | null = null;
 
+  /**
+   * Subscribe to store state
+   * Strategy: Show full data if available, otherwise show summaries
+   */
   function subscribeForKey(k: string) {
     if (unsubscribe) unsubscribe();
 
     unsubscribe = studyGroupStore.subscribe((state) => {
-      groups = state.cache[k] || [];
-      summaries = state.summaryCache[k] || [];
+      const full = state.cache[k];
+      const hasFull = full !== undefined;
 
-      const loadingKey = state.loadingKeys.includes(k);
-      isLoading = loadingKey && groups.length === 0 && summaries.length === 0;
+      groups = full ?? [];
+      summaries = studyGroupStore.getSummaries(course.unitId, course.id);
+
+      const isKeyLoading = state.loadingKeys.includes(k);
+      const staleKey = state.staleKeys.has(k);
+
+      isLoading =
+        !hasFull &&
+        summaries.length === 0 &&
+        isKeyLoading;
+
+      isStale =
+        staleKey &&
+        (hasFull || summaries.length > 0);
     });
   }
 
-  // Subscribe only when the course key changes
   $: if (course) {
     const k = keyOf(course);
     if (k !== currentKey) {
@@ -39,14 +61,12 @@
     }
   }
 
-  // Fetch when expanded, but only if we don't already have full data AND we're not already loading
+  // Fetch when expanded
   $: if (isExpanded && course && currentKey) {
-    const state = get(studyGroupStore);
-    const hasFull = (state.cache[currentKey]?.length ?? 0) > 0;
-    const isAlreadyLoading = state.loadingKeys.includes(currentKey);
+    const isAlreadyLoading = studyGroupStore.isLoading(course.unitId, course.id);
+    const hasFull = studyGroupStore.hasFull(course.unitId, course.id);
 
     if (!hasFull && !isAlreadyLoading) {
-      // low-priority enqueue in your store
       void studyGroupStore.fetch(course.unitId, course.id);
     }
   }
@@ -123,7 +143,7 @@
 <div class="study-groups-container">
   <div class="study-groups-content">
     {#if groups.length > 0}
-      <!-- Full data wins -->
+      <!-- PRIORITY 1: Full data display (rich event details) -->
       <div class="study-groups-list">
         {#each groups as group (group.groupId)}
           <div class="study-group-item">
@@ -148,12 +168,16 @@
                 </div>
               </details>
             {/if}
+
+            {#if isStale}
+              <div class="updating-badge">Refreshing...</div>
+            {/if}
           </div>
         {/each}
       </div>
 
     {:else if summaries.length > 0}
-      <!-- Cached summary shows instantly -->
+      <!-- PRIORITY 2: Cached summary display (while full data loads) -->
       <div class="study-groups-list">
         {#each summaries as s (s.groupId)}
           <div class="study-group-item">
@@ -163,12 +187,13 @@
             </div>
 
             <div class="group-schedule">{s.schedule}</div>
+
             <div class="group-meta">
               {s.eventCount} events
-              {#if isExpanded && isLoading}
-                <span class="updating"> · updating…</span>
-              {/if}
             </div>
+            {#if isStale}
+              <div class="updating-badge">Refreshing...</div>
+            {/if}
           </div>
         {/each}
       </div>
@@ -204,6 +229,7 @@
     background: white;
     border-radius: 5px;
     border: 1px solid #e0e0e0;
+    position: relative;
   }
 
   .group-header {
@@ -240,9 +266,21 @@
     color: var(--text-muted);
   }
 
-  .updating {
+  .updating-badge {
+    font-size: 0.65rem;
+    color: #059669;
+    margin-top: 0.25rem;
     font-style: italic;
-    opacity: 0.9;
+    padding: 0.15rem 0.3rem;
+    background: #d1fae5;
+    border-radius: 3px;
+    display: inline-block;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
   }
 
   .group-events { margin-top: 0.25rem; }
