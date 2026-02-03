@@ -45,6 +45,9 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
+      - name: Create artifacts and logs directories
+        run: mkdir -p artifacts logs
+
       - name: Fetch existing courses.json if available
         run: |
           curl -fSL \
@@ -60,7 +63,12 @@ jobs:
       - name: Fetch latest courses
         env:
           AALTO_USER_KEY: ${{ secrets.AALTO_USER_KEY }}
-        run: python scripts/fetch_latest_courses.py
+        run: |
+          if [ -z "$AALTO_USER_KEY" ]; then
+            echo "ERROR: AALTO_USER_KEY secret not set" >&2
+            exit 1
+          fi
+          python scripts/fetch_latest_courses.py
 
       - name: Transform latest fetch
         run: |
@@ -69,58 +77,86 @@ jobs:
       - name: Check for changes (and write removed objects)
         id: check_changes
         run: |
-          mkdir -p artifacts
           python scripts/report_course_changes.py --removed-out artifacts/expired_courses.json
-      
+
       - name: Count reactivated instances (historical ∩ latest)
         id: reactivated
         run: |
           python scripts/report_reactivated.py --historical historical.json --active latest.json
-      
+
       - name: Decide whether to update historical
         id: scope
+        env:
+          REMOVED: ${{ steps.check_changes.outputs.removed_count }}
+          REACTIVATED: ${{ steps.reactivated.outputs.reactivated_count }}
         run: |
-          REMOVED="${{ steps.check_changes.outputs.removed_count }}"
-          REACTIVATED="${{ steps.reactivated.outputs.reactivated_count }}"
-          if [ "${REMOVED:-0}" != "0" ] || [ "${REACTIVATED:-0}" != "0" ]; then
+          echo "DEBUG: REMOVED='$REMOVED' REACTIVATED='$REACTIVATED'"
+          
+          REMOVED_NUM="${REMOVED:-0}"
+          REACTIVATED_NUM="${REACTIVATED:-0}"
+          
+          if [ "$REMOVED_NUM" != "0" ] || [ "$REACTIVATED_NUM" != "0" ]; then
             echo "update_historical=true" >> $GITHUB_OUTPUT
+            echo "INFO: Will update historical (removed: $REMOVED_NUM, reactivated: $REACTIVATED_NUM)"
           else
             echo "update_historical=false" >> $GITHUB_OUTPUT
+            echo "INFO: No changes to historical"
           fi
 
-      - name: Prepare artifacts
+      - name: Prepare active courses artifact
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
-          mkdir -p artifacts
           cp latest.json artifacts/courses.next.json
-      
+          echo "INFO: Prepared active courses artifact"
+
       - name: Prepare historical artifacts
         if: steps.check_changes.outputs.has_changes == 'true' && steps.scope.outputs.update_historical == 'true'
         run: |
-          mkdir -p artifacts
           python scripts/merge_expired_into_historical.py \
             historical.json artifacts/expired_courses.json latest.json artifacts/historical.next.json
+          echo "INFO: Prepared historical artifacts"
 
       - name: Validate active/historical disjointness
-        if: steps.scope.outputs.update_historical == 'true'
+        if: steps.check_changes.outputs.has_changes == 'true' && steps.scope.outputs.update_historical == 'true'
         run: |
           python scripts/validate_disjoint_datasets.py \
             --a artifacts/courses.next.json --label-a active \
             --b artifacts/historical.next.json --label-b historical
+          echo "INFO: Validation passed - active and historical are disjoint"
 
-      - name: Package artifacts
+      - name: Generate hashes for active courses
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          python scripts/generate_hash.py artifacts/courses.next.json artifacts/courses.hash.json
+          echo "INFO: Generated hash for active courses"
+
+      - name: Generate hashes for historical courses
+        if: steps.check_changes.outputs.has_changes == 'true' && steps.scope.outputs.update_historical == 'true'
+        run: |
+          python scripts/generate_hash.py artifacts/historical.next.json artifacts/historical.hash.json
+          echo "INFO: Generated hash for historical courses"
+
+      - name: Compress artifacts
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
           gzip -c artifacts/courses.next.json > artifacts/courses.json.gz
-          python scripts/generate_hash.py artifacts/courses.next.json artifacts/courses.hash.json
-
+          
           if [ "${{ steps.scope.outputs.update_historical }}" = "true" ]; then
             gzip -c artifacts/historical.next.json > artifacts/historical.json.gz
-            python scripts/generate_hash.py artifacts/historical.next.json artifacts/historical.hash.json
           fi
+          
+          echo "INFO: Compressed artifacts"
 
-          LATEST_LOG=$(ls -1t logs/course_changes_*.json | head -n 1)
-          cp "$LATEST_LOG" artifacts/
+      - name: Copy latest change log
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          LATEST_LOG=$(ls -1t logs/course_changes_*.json 2>/dev/null | head -n 1)
+          if [ -n "$LATEST_LOG" ]; then
+            cp "$LATEST_LOG" artifacts/
+            echo "INFO: Copied change log: $LATEST_LOG"
+          else
+            echo "WARNING: No change log found"
+          fi
 
       - name: Upload artifacts (internal)
         if: steps.check_changes.outputs.has_changes == 'true'
@@ -128,6 +164,7 @@ jobs:
         with:
           name: courses-artifacts
           path: artifacts/
+          retention-days: 7
 
   upload_to_gcs:
     needs: prepare_data
@@ -156,39 +193,59 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y google-cloud-cli
 
+      - name: Verify artifacts exist
+        run: |
+          ls -lh artifacts/ || (echo "ERROR: No artifacts directory" >&2 && exit 1)
+          [ -f artifacts/courses.json.gz ] || (echo "ERROR: courses.json.gz not found" >&2 && exit 1)
+
       - name: Upload courses.json.gz (renamed to courses.json)
         env:
           BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
         run: |
           gcloud storage cp artifacts/courses.json.gz gs://$BUCKET/courses.json \
             --content-type="application/json" --content-encoding="gzip"
+          echo "INFO: Uploaded courses.json"
 
       - name: Upload historical.json.gz (renamed to historical.json)
         if: needs.prepare_data.outputs.update_historical == 'true'
         env:
           BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
         run: |
+          [ -f artifacts/historical.json.gz ] || (echo "ERROR: historical.json.gz not found" >&2 && exit 1)
           gcloud storage cp artifacts/historical.json.gz gs://$BUCKET/historical.json \
             --content-type="application/json" --content-encoding="gzip"
+          echo "INFO: Uploaded historical.json"
 
-      - name: Upload course.json hash file (no caching)
+      - name: Upload courses.json hash file (no caching)
         env:
           BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
         run: |
+          [ -f artifacts/courses.hash.json ] || (echo "ERROR: courses.hash.json not found" >&2 && exit 1)
           gcloud storage cp artifacts/courses.hash.json gs://$BUCKET/courses.hash.json \
             --content-type="application/json" --cache-control="no-store, max-age=0"
+          echo "INFO: Uploaded courses.hash.json"
       
       - name: Upload historical.json hash file (no caching)
         if: needs.prepare_data.outputs.update_historical == 'true'
         env:
           BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
         run: |
+          [ -f artifacts/historical.hash.json ] || (echo "ERROR: historical.hash.json not found" >&2 && exit 1)
           gcloud storage cp artifacts/historical.hash.json gs://$BUCKET/historical.hash.json \
             --content-type="application/json" --cache-control="no-store, max-age=0"
+          echo "INFO: Uploaded historical.hash.json"
 
       - name: Upload log files
         env:
           BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
         run: |
-          gcloud storage cp artifacts/course_changes_*.json \
-            gs://$BUCKET/logs/
+          if ls artifacts/course_changes_*.json 1>/dev/null 2>&1; then
+            gcloud storage cp artifacts/course_changes_*.json gs://$BUCKET/logs/
+            echo "INFO: Uploaded log files"
+          else
+            echo "WARNING: No log files to upload"
+          fi
+
+      - name: Confirm successful upload
+        run: |
+          echo "✓ All artifacts uploaded successfully"
