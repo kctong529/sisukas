@@ -76,22 +76,26 @@ jobs:
         id: reactivated
         run: |
           python - <<'PY'
-          import json, os
+          import json, os, sys
           from pathlib import Path
 
           def load_list(p):
               if not Path(p).exists():
                   return []
-              return json.load(open(p))
+              with open(p, "r", encoding="utf-8") as f:
+                  data = json.load(f)
+              if not isinstance(data, list):
+                  print(f"ERROR: expected list in {p}", file=sys.stderr)
+                  sys.exit(1)
+              return data
 
           historical = load_list("historical.json")
           latest = load_list("latest.json")
 
           hist_ids = {c.get("id") for c in historical if isinstance(c, dict) and c.get("id")}
           active_ids = {c.get("id") for c in latest if isinstance(c, dict) and c.get("id")}
-          reactivated = hist_ids & active_ids
 
-          count = len(reactivated)
+          count = len(hist_ids & active_ids)
           print("reactivated_count", count)
 
           if os.getenv("GITHUB_ACTIONS"):
@@ -117,7 +121,7 @@ jobs:
           cp latest.json artifacts/courses.next.json
       
       - name: Prepare historical artifacts
-        if: steps.scope.outputs.update_historical == 'true'
+        if: steps.check_changes.outputs.has_changes == 'true' && steps.scope.outputs.update_historical == 'true'
         run: |
           mkdir -p artifacts
           python scripts/merge_expired_into_historical.py \
