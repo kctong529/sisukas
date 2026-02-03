@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 """
-Deduplicate historical.json against courses.json.
+MANUAL REPAIR TOOL – NOT USED IN AUTOMATED PIPELINE
 
-Removes entries from historical.json that exist in courses.json,
-while detecting and logging conflicts when entries have different field values.
+This script exists for one-off cleanup / audits of historical.json
+against courses.json.
+
+The canonical invariant (active ∩ historical = ∅) is enforced by:
+  merge_expired_into_historical.py during publication.
+
+Do NOT add this script to CI or scheduled workflows.
 """
 
 import json
