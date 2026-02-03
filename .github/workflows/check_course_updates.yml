@@ -77,7 +77,7 @@ jobs:
           mkdir -p artifacts
           gzip -c latest.json > artifacts/courses.json.gz
           python scripts/generate_hash.py latest.json artifacts/courses.hash.json
-          python scripts/merge_expired_into_historical.py historical.json artifacts/expired_courses.json historical.next.json
+          python scripts/merge_expired_into_historical.py historical.json artifacts/expired_courses.json latest.json historical.next.json
           gzip -c historical.next.json > artifacts/historical.json.gz
           python scripts/generate_hash.py historical.next.json artifacts/historical.hash.json
           LATEST_LOG=$(ls -1t logs/course_changes_*.json | head -n 1)
