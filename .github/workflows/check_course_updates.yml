@@ -21,6 +21,7 @@ jobs:
       id-token: 'write'
     outputs:
       has_changes: ${{ steps.check_changes.outputs.has_changes }}
+      update_historical: ${{ steps.scope.outputs.update_historical }}
       gcs_bucket: ${{ steps.set_bucket.outputs.gcs_bucket }}
     steps:
       - name: Checkout repo
@@ -70,17 +71,60 @@ jobs:
         run: |
           mkdir -p artifacts
           python scripts/report_course_changes.py --removed-out artifacts/expired_courses.json
+      
+      - name: Count reactivated instances (historical ∩ latest)
+        id: reactivated
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+
+          def load_list(p):
+              if not Path(p).exists():
+                  return []
+              return json.load(open(p))
+
+          historical = load_list("historical.json")
+          latest = load_list("latest.json")
+
+          hist_ids = {c.get("id") for c in historical if isinstance(c, dict) and c.get("id")}
+          active_ids = {c.get("id") for c in latest if isinstance(c, dict) and c.get("id")}
+          reactivated = hist_ids & active_ids
+
+          count = len(reactivated)
+          print("reactivated_count", count)
+
+          if os.getenv("GITHUB_ACTIONS"):
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write(f"reactivated_count={count}\n")
+          PY
+      
+      - name: Decide whether to update historical
+        id: scope
+        run: |
+          REMOVED="${{ steps.check_changes.outputs.removed_count }}"
+          REACTIVATED="${{ steps.reactivated.outputs.reactivated_count }}"
+          if [ "${REMOVED:-0}" != "0" ] || [ "${REACTIVATED:-0}" != "0" ]; then
+            echo "update_historical=true" >> $GITHUB_OUTPUT
+          else
+            echo "update_historical=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Prepare artifacts
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
           mkdir -p artifacts
           cp latest.json artifacts/courses.next.json
+      
+      - name: Prepare historical artifacts
+        if: steps.scope.outputs.update_historical == 'true'
+        run: |
+          mkdir -p artifacts
           python scripts/merge_expired_into_historical.py \
             historical.json artifacts/expired_courses.json latest.json artifacts/historical.next.json
 
       - name: Validate active/historical disjointness
-        if: steps.check_changes.outputs.has_changes == 'true'
+        if: steps.scope.outputs.update_historical == 'true'
         run: |
           python - <<'PY'
           import json, sys
@@ -97,12 +141,13 @@ jobs:
       - name: Package artifacts
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
-          # --- Compress + hashes only after validation passes ---
           gzip -c artifacts/courses.next.json > artifacts/courses.json.gz
           python scripts/generate_hash.py artifacts/courses.next.json artifacts/courses.hash.json
 
-          gzip -c artifacts/historical.next.json > artifacts/historical.json.gz
-          python scripts/generate_hash.py artifacts/historical.next.json artifacts/historical.hash.json
+          if [ "${{ steps.scope.outputs.update_historical }}" = "true" ]; then
+            gzip -c artifacts/historical.next.json > artifacts/historical.json.gz
+            python scripts/generate_hash.py artifacts/historical.next.json artifacts/historical.hash.json
+          fi
 
           LATEST_LOG=$(ls -1t logs/course_changes_*.json | head -n 1)
           cp "$LATEST_LOG" artifacts/
@@ -149,18 +194,25 @@ jobs:
             --content-type="application/json" --content-encoding="gzip"
 
       - name: Upload historical.json.gz (renamed to historical.json)
+        if: needs.prepare_data.outputs.update_historical == 'true'
         env:
           BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
         run: |
           gcloud storage cp artifacts/historical.json.gz gs://$BUCKET/historical.json \
             --content-type="application/json" --content-encoding="gzip"
 
-      - name: Upload hash file (no caching)
+      - name: Upload course.json hash file (no caching)
         env:
           BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
         run: |
           gcloud storage cp artifacts/courses.hash.json gs://$BUCKET/courses.hash.json \
             --content-type="application/json" --cache-control="no-store, max-age=0"
+      
+      - name: Upload historical.json hash file (no caching)
+        if: needs.prepare_data.outputs.update_historical == 'true'
+        env:
+          BUCKET: ${{ needs.prepare_data.outputs.gcs_bucket }}
+        run: |
           gcloud storage cp artifacts/historical.hash.json gs://$BUCKET/historical.hash.json \
             --content-type="application/json" --cache-control="no-store, max-age=0"
 
