@@ -75,33 +75,7 @@ jobs:
       - name: Count reactivated instances (historical ∩ latest)
         id: reactivated
         run: |
-          python - <<'PY'
-          import json, os, sys
-          from pathlib import Path
-
-          def load_list(p):
-              if not Path(p).exists():
-                  return []
-              with open(p, "r", encoding="utf-8") as f:
-                  data = json.load(f)
-              if not isinstance(data, list):
-                  print(f"ERROR: expected list in {p}", file=sys.stderr)
-                  sys.exit(1)
-              return data
-
-          historical = load_list("historical.json")
-          latest = load_list("latest.json")
-
-          hist_ids = {c.get("id") for c in historical if isinstance(c, dict) and c.get("id")}
-          active_ids = {c.get("id") for c in latest if isinstance(c, dict) and c.get("id")}
-
-          count = len(hist_ids & active_ids)
-          print("reactivated_count", count)
-
-          if os.getenv("GITHUB_ACTIONS"):
-              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-                  f.write(f"reactivated_count={count}\n")
-          PY
+          python scripts/report_reactivated.py --historical historical.json --active latest.json
       
       - name: Decide whether to update historical
         id: scope
@@ -130,17 +104,9 @@ jobs:
       - name: Validate active/historical disjointness
         if: steps.scope.outputs.update_historical == 'true'
         run: |
-          python - <<'PY'
-          import json, sys
-          a=set(c["id"] for c in json.load(open("artifacts/courses.next.json")))
-          h=set(c["id"] for c in json.load(open("artifacts/historical.next.json")))
-          overlap=a & h
-          if overlap:
-              print("ERROR: active/historical overlap:", len(overlap))
-              print("examples:", list(overlap)[:10])
-              sys.exit(1)
-          print("OK: active and historical are disjoint")
-          PY
+          python scripts/validate_disjoint_datasets.py \
+            --a artifacts/courses.next.json --label-a active \
+            --b artifacts/historical.next.json --label-b historical
 
       - name: Package artifacts
         if: steps.check_changes.outputs.has_changes == 'true'
