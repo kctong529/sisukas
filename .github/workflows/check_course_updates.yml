@@ -75,11 +75,35 @@ jobs:
         if: steps.check_changes.outputs.has_changes == 'true'
         run: |
           mkdir -p artifacts
-          gzip -c latest.json > artifacts/courses.json.gz
-          python scripts/generate_hash.py latest.json artifacts/courses.hash.json
-          python scripts/merge_expired_into_historical.py historical.json artifacts/expired_courses.json latest.json historical.next.json
-          gzip -c historical.next.json > artifacts/historical.json.gz
-          python scripts/generate_hash.py historical.next.json artifacts/historical.hash.json
+          cp latest.json artifacts/courses.next.json
+          python scripts/merge_expired_into_historical.py \
+            historical.json artifacts/expired_courses.json latest.json artifacts/historical.next.json
+
+      - name: Validate active/historical disjointness
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          python - <<'PY'
+          import json, sys
+          a=set(c["id"] for c in json.load(open("artifacts/courses.next.json")))
+          h=set(c["id"] for c in json.load(open("artifacts/historical.next.json")))
+          overlap=a & h
+          if overlap:
+              print("ERROR: active/historical overlap:", len(overlap))
+              print("examples:", list(overlap)[:10])
+              sys.exit(1)
+          print("OK: active and historical are disjoint")
+          PY
+
+      - name: Package artifacts
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          # --- Compress + hashes only after validation passes ---
+          gzip -c artifacts/courses.next.json > artifacts/courses.json.gz
+          python scripts/generate_hash.py artifacts/courses.next.json artifacts/courses.hash.json
+
+          gzip -c artifacts/historical.next.json > artifacts/historical.json.gz
+          python scripts/generate_hash.py artifacts/historical.next.json artifacts/historical.hash.json
+
           LATEST_LOG=$(ls -1t logs/course_changes_*.json | head -n 1)
           cp "$LATEST_LOG" artifacts/
 
