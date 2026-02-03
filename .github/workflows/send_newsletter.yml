@@ -36,7 +36,7 @@ jobs:
 
       - name: Generate newsletter HTML
         run: |
-          python scripts/generate_newsletter.py courses.json -o newsletter.html
+          python scripts/newsletter/generate_newsletter.py courses.json -o newsletter.html
 
       - name: Upload newsletter artifact
         uses: actions/upload-artifact@v4
@@ -77,8 +77,8 @@ jobs:
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |
-          chmod +x scripts/send_newsletter.sh
-          ./scripts/send_newsletter.sh
+          chmod +x scripts/newsletter/send_newsletter.sh
+          ./scripts/newsletter/send_newsletter.sh
 
   publish:
     name: Publish Newsletter to GCS
@@ -97,7 +97,7 @@ jobs:
       - name: Wrap newsletter for public view
         run: |
           pip install beautifulsoup4
-          python scripts/wrap_newsletter.py newsletter.html -o newsletter_wrapped.html
+          python scripts/newsletter/wrap_newsletter.py newsletter.html -o newsletter_wrapped.html
 
       - id: auth
         uses: google-github-actions/auth@v3
