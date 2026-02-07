@@ -2,12 +2,21 @@
 api/routers/root.py
 ===================
 
-Root API Router for Sisu Wrapper.
+Root endpoint for API discovery.
+
+Returns static API metadata and a human-readable list of available endpoints.
+Operational status and deployment metadata live under /health.
 """
 
 from fastapi import APIRouter
-from pydantic import BaseModel, Field
-from core.config import API_TITLE, API_VERSION, ENV
+from pydantic import BaseModel
+from core.config import (
+    API_TITLE,
+    API_VERSION,
+    API_DESCRIPTION,
+    API_ENDPOINTS,
+    ENV,
+)
 from models import ErrorResponse
 
 router = APIRouter()
@@ -46,27 +55,6 @@ async def root():
         service=API_TITLE,
         version=API_VERSION,
         environment=ENV,
-        description="Lightweight wrapper for Aalto Sisu course data API",
-        endpoints={
-            "study_groups": {
-                "method": "GET",
-                "path": "/api/courses/study-groups",
-                "description": "Fetch study groups for a course offering"
-            },
-            "batch_study_groups": {
-                "method": "POST",
-                "path": "/api/courses/batch/study-groups",
-                "description": "Batch fetch study groups for multiple offerings"
-            },
-            "batch_offerings": {
-                "method": "POST",
-                "path": "/api/courses/batch/offerings",
-                "description": "Batch fetch complete course offerings"
-            },
-            "docs": {
-                "method": "GET",
-                "path": "/docs",
-                "description": "Interactive API documentation (Swagger UI)"
-            }
-        }
+        description=API_DESCRIPTION,
+        endpoints=API_ENDPOINTS,
     )

@@ -32,32 +32,39 @@ jobs:
 
     steps:
       - name: 'Checkout'
-        uses: 'actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332' # actions/checkout@v4
+        uses: actions/checkout@v4
 
-      # Configure Workload Identity Federation and generate an access token.
-      #
-      # See https://github.com/google-github-actions/auth for more options,
-      # including authenticating via a JSON credentials file.
+      - name: Compute build timestamp
+        run: echo "BUILD_TIME_ISO=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+
       - id: 'auth'
         name: Authenticate to Google Cloud
-        uses: 'google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2' # google-github-actions/auth@v2
+        uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: 'projects/969370446235/locations/global/workloadIdentityPools/github/providers/my-repo'
           service_account: 'github-actions-deployer@sisukas-fastapi.iam.gserviceaccount.com'
 
       - name: Deploy to Cloud Run
-        uses: 'google-github-actions/deploy-cloudrun@33553064113a37d688aa6937bacbdc481580be17' # google-github-actions/deploy-cloudrun@v2
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: '${{ inputs.sisu_wrapper_api_cloud_run_service }}'
-          region: '${{ inputs.region }}'
-          source: './sisu-wrapper/'
-          project_id: '${{ inputs.gcp_project_id }}'
+          service: ${{ inputs.sisu_wrapper_api_cloud_run_service }}
+          region: ${{ inputs.region }}
+          source: ./sisu-wrapper/
+          project_id: ${{ inputs.gcp_project_id }}
+          allow-unauthenticated: true
           env_vars: |
-            SISUKAS_ENV=${{ inputs.environment }}
-            AALTO_COURSE_API_KEY=${{ secrets.AALTO_USER_KEY }}
+            ENVIRONMENT=${{ inputs.environment }}
+            SERVICE_NAME=sisu-wrapper-api
+            GIT_COMMIT_SHA=${{ github.sha }}
+            BUILD_TIME_ISO=${{ env.BUILD_TIME_ISO }}
             CORS_ORIGINS=${{ inputs.cors_origins }}
+            AALTO_COURSE_API_KEY=${{ secrets.AALTO_USER_KEY }}
 
-      # If required, use the Cloud Run URL output in later steps
-      - name: 'Show output'
-        run: |-
-          echo ${{ steps.deploy.outputs.url }}
+      - name: Check Deployment Health
+        run: |
+          sleep 10
+          curl -f "${{ steps.deploy.outputs.url }}/health" || exit 1
+
+      - name: Show output
+        run: echo "${{ steps.deploy.outputs.url }}"

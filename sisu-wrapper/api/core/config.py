@@ -2,75 +2,86 @@
 api/core/config.py
 ==================
 
-Environment and application configuration for the Sisu Wrapper API.
+Central configuration for the Sisu Wrapper API.
 
-This module provides centralized configuration for:
+This module defines:
+- Runtime environment name (ENVIRONMENT)
+- CORS allowlist (CORS_ORIGINS), with production hardening
+- API metadata used by FastAPI docs (title/version/contact)
 
-1. Environment detection:
-    - Loads environment variables from a .env file using python-dotenv.
-    - Determines the current environment (SISUKAS_ENV), defaulting to "test".
-
-2. FastAPI app configuration:
-    - CORS origins (CORS_ORIGINS)
-    - API metadata: title (API_TITLE), version (API_VERSION),
-      and contact info (API_CONTACT)
-
-Variables
----------
-ENV : str
-    Current environment (e.g. "prod", "test", "development").
-    Defaults to "test" if SISUKAS_ENV is not set.
-
-CORS_ORIGINS : list[str]
-    List of allowed origins for CORS middleware.
-    Loaded from CORS_ORIGINS environment variable, or uses sensible defaults
-    for local development and staging deployments.
-
-API_VERSION : str
-    Semantic version string of the API.
-
-API_TITLE : str
-    Display title for the API in FastAPI documentation (Swagger UI).
-
-API_CONTACT : dict[str, str]
-    Contact information displayed in FastAPI documentation.
-    Contains 'name' and 'email' fields.
-
-Usage
------
-Import this module wherever configuration is needed:
-
-    from core.config import ENV, CORS_ORIGINS, API_VERSION, API_TITLE
+Conventions
+-----------
+- ENVIRONMENT controls environment selection (e.g. "test", "production").
+- CORS_ORIGINS is read from the environment when provided.
+  If missing, defaults are local-dev friendly.
+- In production, loopback origins (localhost/127.0.0.1/::1) are always dropped
+  even if misconfigured, to prevent accidentally allowing local dev origins.
 """
 
 import os
+from urllib.parse import urlparse
 
-# ========================
-# Environment configuration
-# ========================
+ENV = os.getenv("ENVIRONMENT", "test")
 
-ENV = os.getenv("SISUKAS_ENV", "test")
+def _parse_csv(v: str) -> list[str]:
+    return [s.strip() for s in v.split(",") if s.strip()]
 
-# ========================
-# FastAPI app configuration
-# ========================
+def _is_loopback(origin: str) -> bool:
+    try:
+        host = urlparse(origin).hostname
+        return host in ("localhost", "127.0.0.1", "::1")
+    except Exception:
+        # Treat invalid origins as unsafe so they don't get allowed silently.
+        return True
 
-CORS_ORIGINS: list[str] = [
-    origin.strip() for origin in os.getenv(
-        "CORS_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173"
-        ",https://sisukas.fly.dev,https://sisukas.eu"
-        ",https://sisukas-test.fly.dev"
-        ",https://test.api.sisukas.eu,https://api.sisukas.eu"
-        ",https://fuzzy-test.sisukas.eu"
-        ",https://localhost:5173"
-        ",http://localhost:3000"
-    ).split(",")
-]
+# Raw allowlist (default is local-dev friendly; Cloud Run should set CORS_ORIGINS explicitly)
+CORS_ORIGINS: list[str] = _parse_csv(os.getenv("CORS_ORIGINS", ""))
 
-API_VERSION = "0.4.0"
+# Harden production: never allow loopback origins
+if ENV == "production":
+    CORS_ORIGINS = [o for o in CORS_ORIGINS if not _is_loopback(o)]
+
+# Exposed for /health and debugging (matches what CORSMiddleware enforces)
+CORS_ORIGINS_EFFECTIVE = CORS_ORIGINS
+
+API_VERSION = "0.4.1"
 API_TITLE = "Sisu Wrapper API"
+
+API_DESCRIPTION = (
+    "Lightweight, read-only wrapper around Aalto University's Sisu system. "
+    "Provides stable endpoints for resolving course offerings and study groups "
+    "used by Sisukas and related tooling."
+)
+
 API_CONTACT = {
     "name": "API Support",
     "email": "kichun.tong@aalto.fi"
+}
+
+API_ENDPOINTS = {
+    "health": {
+        "method": "GET",
+        "path": "/health",
+        "description": "Service health, build metadata, and runtime info",
+    },
+    "study_groups": {
+        "method": "GET",
+        "path": "/api/courses/study-groups",
+        "description": "Fetch study groups for a course offering",
+    },
+    "batch_study_groups": {
+        "method": "POST",
+        "path": "/api/courses/batch/study-groups",
+        "description": "Batch fetch study groups for multiple offerings",
+    },
+    "batch_offerings": {
+        "method": "POST",
+        "path": "/api/courses/batch/offerings",
+        "description": "Batch fetch complete course offerings",
+    },
+    "docs": {
+        "method": "GET",
+        "path": "/docs",
+        "description": "Interactive API documentation (Swagger UI)",
+    },
 }

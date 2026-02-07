@@ -2,40 +2,39 @@
 api/main.py
 ===========
 
-FastAPI application for the Sisu Wrapper API.
+FastAPI application wiring for the Sisu Wrapper API.
 
-This module sets up the FastAPI application with routers for accessing
-course data from the Aalto University Sisu API.
-
-The API provides endpoints for:
-- Fetching study groups for course offerings
-- Batch fetching multiple study groups
-- Batch fetching complete course offerings
-- Health checks and API metadata
-
-Routers
--------
-- routers.courses: Endpoints for course and study group operations
-- routers.root: Root endpoint with API metadata and service information
+Responsibilities
+---------------
+- Load environment variables from the repository-level .env for local dev.
+  (Cloud Run should set env vars via deployment configuration instead.)
+- Create the FastAPI app with metadata from core.config.
+- Configure CORS using the effective allowlist from core.config.
+- Register routers:
+  - /        : API discovery/metadata (root router)
+  - /health  : standardized health/build/runtime info (health router)
+  - /api/... : course endpoints (courses router)
 """
 
 import logging
+from pathlib import Path
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from pathlib import Path
-from dotenv import load_dotenv
-ROOT = Path(__file__).resolve().parents[1]  # points to sisu-wrapper root
-load_dotenv(ROOT / ".env")                  # root .env
+ROOT = Path(__file__).resolve().parents[1]  # sisu-wrapper repository root
+load_dotenv(ROOT / ".env")                  # local development convenience
 
 from core.config import (
     CORS_ORIGINS,
     API_TITLE,
     API_VERSION,
+    API_DESCRIPTION,
     API_CONTACT,
 )
 
-from routers import courses, root
+from routers import courses, root, health
 
 # Configure logging
 logger = logging.getLogger("uvicorn.error")
@@ -45,7 +44,7 @@ app = FastAPI(
     title=API_TITLE,
     version=API_VERSION,
     contact=API_CONTACT,
-    description="Lightweight API for fetching course data from Aalto Sisu"
+    description=API_DESCRIPTION,
 )
 
 # CORS middleware
@@ -59,4 +58,5 @@ app.add_middleware(
 
 # Include routers
 app.include_router(root.router)
+app.include_router(health.router)
 app.include_router(courses.router)

@@ -2,10 +2,17 @@
 api/routers/courses.py
 ======================
 
-API Router for Sisu course data endpoints.
+Course-data endpoints for the Sisu Wrapper API.
 
-This module defines endpoints for accessing course offerings, study groups,
-and related data from the Aalto University Sisu API.
+This router exposes a stable HTTP API for:
+- Study group lookups (single and batch)
+- Course offering lookups (batch)
+- Course code resolution into CUR snapshots (for Sisukas snapshot pipeline)
+
+Implementation notes
+--------------------
+- The HTTP layer maps domain/service exceptions into HTTP status codes.
+- The underlying Sisu client/service are initialized once for process reuse.
 """
 
 from datetime import date
@@ -33,7 +40,7 @@ from utils.responses import (
 logger = logging.getLogger("uvicorn.error")
 router = APIRouter()
 
-# Initialize client and service (singleton)
+# Initialize client and service once per process (FastAPI workers will each have their own instance)
 _client = SisuClient()
 _service = SisuService(client=_client)
 

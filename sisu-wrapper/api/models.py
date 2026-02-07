@@ -2,10 +2,10 @@
 api/models.py
 =============
 
-Shared Pydantic models for API responses.
+Shared Pydantic models used across routers.
 
-This module contains models used across multiple routers and utilities
-to avoid circular imports.
+This module is intentionally small and import-safe to avoid circular imports
+between routers and utility modules.
 """
 
 from pydantic import BaseModel, Field
