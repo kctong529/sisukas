@@ -23,12 +23,12 @@ A student can:
 ## 1. Data Truth & Drift Control (Hard Blockers)
 
 * [x] Build historical course instance database via SISU historical endpoint ingestion script.
-* [ ] Update data workflow to keep `courses.json` and historical DB in sync.
+* [x] Update data workflow to keep `courses.json` and historical DB in sync.
   - [x] `courses.json` contains only active course instances (current academic year onwards)
   - [x] `historical.json` is an append-only archive of instances that were previously present in `courses.json` (i.e. "once-active" instances)  
     - Note: this archive is not expected to be globally complete because SISU historical coverage cannot be ingested fully without extra permission.
   - [x] When an instance expires from `courses.json`, it is archived into `historical.json`
-  - [ ] If an archived instance reappears as active, it is removed from `historical.json` and served only from `courses.json` (datasets remain disjoint by instanceId)
+  - [x] If an archived instance reappears as active, it is removed from `historical.json` and served only from `courses.json` (datasets remain disjoint by instanceId)
   - [x] Snapshot system captures missing course instances not present in `courses.json` or `historical.json`, including:
     - [x] transcript-only courses (no active offering observed)
     - [x] archived course with future offerings not yet visible in `courses.json`
@@ -85,11 +85,12 @@ A student can:
 ## 3. Core Domain Consistency
 
 * [ ] Clean up and centralize the core data model.
+  - [x] course index (active, historical, and snapshots)
+  - [ ] favourites
   - [x] plans
   - [ ] study groups
-  - [ ] schedule pairs
   - [ ] blocks
-  - [x] course index (active, historical, and snapshots)
+  - [ ] schedule pairs
 * [x] Enforce active-plan invariant:
   - [x] exactly one active plan exists per user when at least one plan exists
   - [x] active plan selection is deterministic and stable across reloads

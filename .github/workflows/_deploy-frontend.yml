@@ -41,6 +41,7 @@ jobs:
 
     outputs:
       build-complete: ${{ steps.build.outputs.result }}
+      app-version: ${{ steps.frontend_version.outputs.app_version }}
 
     steps:
       - name: Checkout Code
@@ -60,6 +61,12 @@ jobs:
       - name: Compile Metadata
         working-directory: ${{ env.WORKING_DIR }}
         run: npm run compile-metadata
+      
+      - name: Read frontend version
+        id: frontend_version
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          echo "app_version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
       - name: Build Vite app
         id: build
@@ -129,14 +136,26 @@ jobs:
 
       - name: Deploy on Fly.io
         working-directory: ${{ env.WORKING_DIR }}
-        run: flyctl deploy --config fly.dev.toml --remote-only --build-arg COMMIT_SHA=${{ github.sha }}
+        run: |
+          flyctl deploy --config fly.dev.toml --remote-only \
+            --build-arg SERVICE_NAME=course-browser \
+            --build-arg ENVIRONMENT=${{ inputs.environment }} \
+            --build-arg COMMIT_SHA=${{ github.sha }} \
+            --build-arg BUILD_TIME_ISO=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+            --build-arg APP_VERSION=v${{ needs.build.outputs.app-version }} \
+            --build-arg VITE_FILTERS_API=${{ inputs.vite_filters_api }} \
+            --build-arg VITE_WRAPPER_API=${{ inputs.vite_wrapper_api }} \
+            --build-arg VITE_GCS_BUCKET=${{ inputs.vite_gcs_bucket }} \
+            --build-arg VITE_FRONTEND_URL=${{ inputs.frontend_url }} \
+            --build-arg VITE_BACKEND_URL=${{ inputs.backend_url }} \
+            --build-arg VITE_DEBUG_PANELS=${{ inputs.debug }}
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TEST_TOKEN }}
 
       - name: Check Deployment Health
         run: |
           sleep 10
-          curl -f ${{ inputs.fly_io_url }} || exit 1
+          curl -f ${{ inputs.fly_io_url }}/health || exit 1
 
   deploy_frontend_prod:
     name: Deploy Frontend (Prod)
@@ -169,11 +188,23 @@ jobs:
 
       - name: Deploy on Fly.io
         working-directory: ${{ env.WORKING_DIR }}
-        run: flyctl deploy --config fly.toml --remote-only --build-arg COMMIT_SHA=${{ github.sha }}
+        run: |
+          flyctl deploy --config fly.toml --remote-only \
+            --build-arg SERVICE_NAME=course-browser \
+            --build-arg ENVIRONMENT=${{ inputs.environment }} \
+            --build-arg COMMIT_SHA=${{ github.sha }} \
+            --build-arg BUILD_TIME_ISO=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+            --build-arg APP_VERSION=v${{ needs.build.outputs.app-version }} \
+            --build-arg VITE_FILTERS_API=${{ inputs.vite_filters_api }} \
+            --build-arg VITE_WRAPPER_API=${{ inputs.vite_wrapper_api }} \
+            --build-arg VITE_GCS_BUCKET=${{ inputs.vite_gcs_bucket }} \
+            --build-arg VITE_FRONTEND_URL=${{ inputs.frontend_url }} \
+            --build-arg VITE_BACKEND_URL=${{ inputs.backend_url }} \
+            --build-arg VITE_DEBUG_PANELS=${{ inputs.debug }}
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
       - name: Check Deployment Health
         run: |
           sleep 10
-          curl -f ${{ inputs.fly_io_url }} || exit 1
+          curl -f ${{ inputs.fly_io_url }}/health || exit 1
