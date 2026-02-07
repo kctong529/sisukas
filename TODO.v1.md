@@ -16,7 +16,7 @@ A student can:
 * create and manage a plan,
 * import transcript data,
 * view a stable academic timeline with grades,
-* and trust that plans do not break when upstream SISU data changes.
+* and trust that plans do not break when upstream SISU data changes or when the system is redeployed.
 
 ---
 
@@ -111,7 +111,24 @@ A student can:
 * [x] Fix favourites: removing an instance from plan updates favourites UI immediately (no stale expanded/selected state).
 * [x] Fix favourites: switching active plan resets/syncs expanded instance state deterministically.
 * [x] Fix favourites: removing a planned instance propagates correctly (plan + favourites UI stay in sync).
-* [ ] Deterministic sorting rule for favourites (clearly defined).
+* [ ] Deterministic sorting rule for favourites (next relevant offering).
+  - [ ] Each favourite course is sorted by its most relevant instance relative to `now` (Europe/Helsinki)
+  - [ ] Representative instance selection:
+    - Ongoing (`startDate <= now <= endDate`): pick the instance with the earliest `endDate`
+    - Else Future (`startDate > now`): pick the instance with the earliest `startDate`
+    - Else Past (`endDate < now`): pick the instance with the latest `endDate`
+    - Else: Unknown (missing or inconsistent dates)
+  - [ ] Courses are sorted by `(bucket, timeKey, stableTieBreakers…)`, ascending:
+    - `bucket`: `0=ongoing`, `1=future`, `2=past`, `3=unknown`
+    - `timeKey`:
+      - ongoing: `endDate` (soonest-ending first)
+      - future: `startDate` (soonest-starting first)
+      - past: `endDate` descending (most recent first)
+      - unknown: `+∞`
+    - Stable tie-breakers (always applied):
+      - `courseCode` asc
+      - stable course id (`courseUnitId`/`courseId`) asc
+  - [ ] Sort key is computed once per course when favourites change (not during render)
 
 ## 6. Authentication Enforcement
 
@@ -121,7 +138,11 @@ A student can:
 
 ## 7. Infrastructure & Safety
 
-* [ ] Add health check endpoint.
+* [x] Add standardized health check endpoint.
+  - [x] `/health` exposed on all services (frontend, backend, filters-api, sisu-wrapper)
+  - [x] Health includes build metadata (commit, build time, environment, service)
+  - [x] Deployment verifies `/health` before marking revision healthy
+  - [x] Production CORS hardened and auditable via health output
 * [x] Prod bucket must be sisukas-core, test must be sisukas-core-test, enforced by workflow + runtime env.
 
 ## 8. UX Clarity
@@ -140,6 +161,7 @@ A student can:
 * [ ] Transcript import works end-to-end
 * [ ] Manual grade edits persist correctly
 * [ ] Auth enforced everywhere it should be
+* [ ] All services report healthy status with correct build metadata
 * [ ] Snapshot backfill pipeline processes candidates correctly
 * [ ] Snapshot-derived data integrates cleanly into historical dataset
 * [ ] Data backup and rollback procedure is tested
