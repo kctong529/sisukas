@@ -16,28 +16,50 @@ import analyticsRoutes from './routes/analytics';
 import gradesRoutes from "./routes/grades";
 import transcriptRoutes from "./routes/transcript";
 import courseSnapshotsRoutes from "./routes/courseSnapshots";
+import { makeHealthHandler } from "./routes/health";
 import { extractSession } from './middleware/auth';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.set("trust proxy", 1);
 
-const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',').map(origin => origin.trim())
-  : ['http://localhost:5173'];
+const envName =
+  process.env.ENVIRONMENT ??
+  process.env.SISUKAS_ENV ??
+  process.env.NODE_ENV ??
+  "development";
+
+const isProd = envName === "production";
+
+let allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+  : ["http://localhost:5173"];
+
+if (isProd) {
+  allowedOrigins = allowedOrigins.filter((o) => {
+    try {
+      const u = new URL(o);
+      const h = u.hostname;
+      return !["localhost", "127.0.0.1", "::1"].includes(h);
+    } catch {
+      return false;
+    }
+  });
+}
+process.env.CORS_ORIGINS_EFFECTIVE = allowedOrigins.join(",");
 
 // Middleware
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS policy: Origin ${origin} not allowed`));
-      }
-    },
-    credentials: true,
-  })
+  cors(
+    {
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true); // keep curl / server-to-server OK
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error(`CORS policy: Origin ${origin} not allowed`));
+      },
+      credentials: true,
+    }
+  )
 );
 
 app.use(cookieParser());
@@ -49,26 +71,7 @@ app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Hello from Sisukas backend!' });
 });
 
-app.get('/health', async (req: Request, res: Response) => {
-  try {
-    const result = await pool.query('SELECT NOW()');
-    
-    res.json({ 
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      database: 'connected',
-      dbTime: result.rows[0].now
-    });
-  } catch (error) {
-    console.error('Database connection error:', error);
-    res.status(503).json({
-      status: 'error',
-      timestamp: new Date().toISOString(),
-      database: 'disconnected',
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
+app.get("/health", makeHealthHandler(pool));
 
 app.use("/api/course-snapshots", courseSnapshotsRoutes);
 
@@ -88,6 +91,7 @@ app.use("/api/grades", gradesRoutes);
 app.use("/api/transcript", transcriptRoutes);
 
 app.listen(PORT, () => {
+  console.log(`Environment: ${envName}`);
+  console.log(`Allowed CORS origins: ${allowedOrigins.join(", ")}`);
   console.log(`Server is running on ${process.env.BACKEND_URL}`);
-  console.log(`CORS allows requests from ${process.env.FRONTEND_URL}`);
 });

@@ -44,6 +44,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Read backend version
+        id: backend_version
+        working-directory: backend
+        run: |
+          echo "APP_VERSION=v$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+      
+      - name: Compute build timestamp
+        run: |
+          echo "BUILD_TIME_ISO=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+      
+      - name: Show build metadata
+        run: |
+          echo "APP_VERSION=$APP_VERSION"
+          echo "BUILD_TIME_ISO=$BUILD_TIME_ISO"
+
       - id: auth
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -60,7 +75,11 @@ jobs:
           source: './backend/'
           allow-unauthenticated: true
           env_vars: |
-            SISUKAS_ENV=${{ inputs.environment }}
+            ENVIRONMENT=${{ inputs.environment }}
+            SERVICE_NAME=sisukas-backend
+            APP_VERSION=${{ env.APP_VERSION }}
+            GIT_COMMIT_SHA=${{ github.sha }}
+            BUILD_TIME_ISO=${{ env.BUILD_TIME_ISO }}
             FRONTEND_URL=${{ inputs.frontend_url }}
             BACKEND_URL=${{ inputs.backend_url }}
             BETTER_AUTH_URL=${{ inputs.frontend_url }}
@@ -74,7 +93,7 @@ jobs:
       - name: Check Deployment Health
         run: |
           sleep 10
-          curl -f ${{ inputs.backend_url }} || exit 1
+          curl -f ${{ inputs.backend_url }}/health || exit 1
 
   deploy_backend_prod:
     name: Deploy Backend (Prod)
@@ -93,6 +112,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Read backend version
+        id: backend_version
+        working-directory: backend
+        run: |
+          echo "APP_VERSION=v$(node -p "require('./package.json').version")" >> $GITHUB_ENV
+      
+      - name: Compute build timestamp
+        run: |
+          echo "BUILD_TIME_ISO=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+      
+      - name: Show build metadata
+        run: |
+          echo "APP_VERSION=$APP_VERSION"
+          echo "BUILD_TIME_ISO=$BUILD_TIME_ISO"
+
       - id: auth
         name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -110,7 +144,11 @@ jobs:
           allow-unauthenticated: true
           flags: '--min-instances=1'
           env_vars: |
-            SISUKAS_ENV=${{ inputs.environment }}
+            ENVIRONMENT=${{ inputs.environment }}
+            SERVICE_NAME=sisukas-backend
+            APP_VERSION=${{ env.APP_VERSION }}
+            GIT_COMMIT_SHA=${{ github.sha }}
+            BUILD_TIME_ISO=${{ env.BUILD_TIME_ISO }}
             FRONTEND_URL=${{ inputs.frontend_url }}
             BACKEND_URL=${{ inputs.backend_url }}
             BETTER_AUTH_URL=${{ inputs.frontend_url }}
@@ -124,4 +162,4 @@ jobs:
       - name: Check Deployment Health
         run: |
           sleep 10
-          curl -f ${{ inputs.backend_url }} || exit 1
+          curl -f ${{ inputs.backend_url }}/health || exit 1
