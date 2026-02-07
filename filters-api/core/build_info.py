@@ -1,27 +1,27 @@
 """
-api/core/build_info.py
+core/build_info.py
 ======================
 
 Build and runtime metadata for the /health endpoint.
 
 This module exposes a single, process-wide BuildInfo object that:
-- Is stable for the lifetime of the process
+- Is initialized once per process
+- Remains stable for the lifetime of the service
 - Captures deployment metadata (commit hash, build time)
-- Uses the API's own semantic version (API_VERSION) as the canonical version
+- Uses the API's semantic version (API_VERSION) as the canonical version
 
 Versioning rules
 ----------------
 - Python APIs always expose API_VERSION.
-- There is no APP_VERSION for APIs.
-- Commit hash and build time describe which deployment is running,
+- Commit hash and build time identify which deployment is running,
   not the API contract itself.
 
 Expected environment variables
 ------------------------------
-- SERVICE_NAME      : Logical service identifier
-- ENVIRONMENT       : Runtime environment (test / production)
-- GIT_COMMIT_SHA    : Git commit deployed
-- BUILD_TIME_ISO    : UTC build timestamp (ISO-8601)
+- SERVICE_NAME   : Logical service identifier
+- ENVIRONMENT    : Runtime environment
+- GIT_COMMIT_SHA : Git commit deployed
+- BUILD_TIME_ISO : UTC build timestamp (ISO-8601)
 """
 
 import os
@@ -34,9 +34,10 @@ from core.config import API_VERSION, API_TITLE, ENV
 _started_at = datetime.now(timezone.utc)
 _started_at_ts = time.time()
 
+
 def _env(k: str, default: str = "") -> str:
-    """Read an environment variable with a default."""
     return os.getenv(k, default)
+
 
 @dataclass(frozen=True)
 class BuildInfo:
@@ -47,6 +48,7 @@ class BuildInfo:
     build_time: str
     started_at: datetime
     started_at_ts: float
+
 
 build_info = BuildInfo(
     service=_env("SERVICE_NAME", API_TITLE),

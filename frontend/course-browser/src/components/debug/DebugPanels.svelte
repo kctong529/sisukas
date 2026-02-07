@@ -2,9 +2,9 @@
 <script lang="ts">
   import '../../styles/debug-panels.css';
 
-  const ENV = import.meta.env.VITE_ENVIRONMENT; // "dev" | "test" | "production"
+  const ENV = import.meta.env.VITE_ENVIRONMENT; // "development" | "test" | "production"
   const DEBUG_ALLOWED = import.meta.env.VITE_DEBUG_PANELS === 'true';
-  const ENABLE_DEBUG_PANELS = (ENV === 'dev' || ENV === 'test') && DEBUG_ALLOWED;
+  const ENABLE_DEBUG_PANELS = (ENV === 'development' || ENV === 'test') && DEBUG_ALLOWED;
   
   const flags = {
     StudyGroupStoreDebug:

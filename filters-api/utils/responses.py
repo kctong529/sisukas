@@ -1,47 +1,14 @@
 """
-API Response Definitions for Sisukas Filters
-=============================================
+utils/responses.py
+==================
 
-This module defines structured responses for all API endpoints in the
-Sisukas Filters application, using Pydantic response models.
+Shared FastAPI response definitions for endpoint documentation.
 
-It includes:
+This module centralizes:
+- A helper for standardized ErrorResponse documentation
+- Predefined response mappings used in router decorators
 
-- Error responses: A utility function error_response to generate
-  standardized error responses with ErrorResponse model and example detail.
-
-- Endpoint-specific responses: Predefined response dictionaries for each
-  endpoint, including success and error codes:
-
-    - POST_RESPONSES:
-        Responses for creating a filter configuration.
-        - 201: Filter created successfully (PostResponse)
-        - 422: Invalid request data (ErrorResponse)
-        - 500: Internal server error (ErrorResponse)
-
-    - GET_RESPONSES:
-        Responses for retrieving a filter configuration by hash.
-        - 200: Filter retrieved successfully (GetResponse)
-        - 422: Invalid hash format (ErrorResponse)
-        - 404: Filter not found (ErrorResponse)
-        - 500: Internal server error (ErrorResponse)
-
-    - DELETE_RESPONSES:
-        Responses for deleting a filter configuration.
-        - 200: Filter deleted successfully (DeleteResponse)
-        - 422: Invalid hash format (ErrorResponse)
-        - 404: Filter not found (ErrorResponse)
-        - 500: Internal server error (ErrorResponse)
-
-    - ROOT_RESPONSES:
-        Responses for the root metadata endpoint.
-        - 200: Metadata retrieved successfully (RootResponse)
-        - 500: Internal server error (ErrorResponse)
-
-Usage
------
-These response dictionaries can be used in FastAPI endpoint definitions
-to specify response models, descriptions, and examples
+This is documentation-only and does not affect runtime behavior.
 """
 
 from models.response_models import (

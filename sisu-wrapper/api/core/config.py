@@ -11,7 +11,7 @@ This module defines:
 
 Conventions
 -----------
-- ENVIRONMENT controls environment selection (e.g. "test", "production").
+- ENVIRONMENT controls runtime mode (e.g. development, test, production).
 - CORS_ORIGINS is read from the environment when provided.
   If missing, defaults are local-dev friendly.
 - In production, loopback origins (localhost/127.0.0.1/::1) are always dropped
@@ -21,7 +21,7 @@ Conventions
 import os
 from urllib.parse import urlparse
 
-ENV = os.getenv("ENVIRONMENT", "test")
+ENV = os.getenv("ENVIRONMENT", "development")
 
 def _parse_csv(v: str) -> list[str]:
     return [s.strip() for s in v.split(",") if s.strip()]

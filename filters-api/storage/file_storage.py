@@ -1,28 +1,23 @@
 """
-file_storage.py
-===============
+storage/file_storage.py
+==================
 
-Utility functions for storing, retrieving, and managing filter
-configurations as JSON files in Google Cloud Storage (GCS).
-Each filter is stored idempotently, with a unique hash-based ID
-to prevent duplication.
+Storage backend for filter configurations.
 
+This module handles:
+- Persisting filter configurations to storage
+- Loading stored configurations by hash ID
+- Deduplication based on full-content hashing
+- Deletion of stored configurations
 
-Intended Usage
---------------
-This module is designed to be used by the FastAPI filter endpoints to handle
-filter persistence. Typical workflow:
-
-1. Generate a hash for a filter dictionary using generate_unique_hash()
-2. Save it with save_filter_file() if not already present
-3. Load it later using load_filter_file()
-4. Delete it using delete_filter_file()
+The storage layer is intentionally isolated so the API layer can
+map storage errors cleanly to HTTP responses.
 """
 
 import json
 import hashlib
 from functools import lru_cache
-from typing import Optional, Callable, Tuple, Any
+from typing import Optional, Callable, Tuple, Dict, Any
 from google.cloud import storage
 from google.auth import exceptions as auth_exceptions
 from google.api_core.exceptions import GoogleAPIError
@@ -91,7 +86,7 @@ def save_filter_file(
 
 
 @lru_cache(maxsize=256)
-def load_filter_file(hash_id: str) -> Optional[dict[str, Any]]:
+def load_filter_file(hash_id: str) -> Optional[Dict[str, Any]]:
     """Load a filter configuration from GCS"""
     bucket = get_bucket()
     blob = bucket.blob(_blob_name(hash_id))
@@ -127,7 +122,7 @@ def delete_filter_file(hash_id: str) -> bool:
 
 
 def generate_unique_hash(
-    content: dict,
+    content: Dict[str, Any],
     hash_func: Callable = hashlib.sha256,
     min_length: int = 16,
     max_length: int = 64

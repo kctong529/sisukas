@@ -1,6 +1,6 @@
 """
-exceptions.py
-=============
+core/exceptions.py
+==================
 
 Custom exception handlers for the Sisukas Filters API.
 

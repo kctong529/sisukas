@@ -1,22 +1,17 @@
 """
-response_models.py
+models/response_models.py
 ==================
 
-Pydantic models defining standardized API responses for Sisukas Filters
+Pydantic response models for the Sisukas Filters API.
 
-This module provides response schemas for all endpoints, including:
+This module defines structured response schemas used by API endpoints,
+including:
+- Successful operation responses (create, retrieve, delete)
+- Root discovery response
+- Standardized error responses
 
-- Success responses:
-    - PostResponse: Returned when a filter is successfully created
-    - GetResponse: Returned when a filter is retrieved
-    - DeleteResponse: Returned when a filter is deleted
-    - RootResponse: Returned by the root endpoint with API metadata
-- Error responses:
-    - ErrorResponse: Standardized model for validation errors, not found,
-      or internal server errors
-
-These models are used in FastAPI endpoints to generate structured JSON
-responses and OpenAPI/Swagger documentation.
+These models are documentation-facing and used to generate
+consistent OpenAPI specifications.
 """
 
 from pydantic import BaseModel, Field
@@ -77,9 +72,9 @@ class RootResponse(BaseModel):
         ...,
         json_schema_extra={
             "example": {
-                "save": "/api/filter",
-                "load": "/api/filter/{hash_id}",
-                "delete": "/api/filter/{hash_id}",
+                "save": "/api/filters",
+                "load": "/api/filters/{hash_id}",
+                "delete": "/api/filters/{hash_id}",
                 "docs": "/docs"
             }
         }

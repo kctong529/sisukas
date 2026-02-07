@@ -1,21 +1,15 @@
 """
-filter_models.py
-================
+models/filter_models.py
+==================
 
-Pydantic models and utilities for filter configurations in Sisukas.
+Pydantic models for filter configuration input and validation.
 
-This module defines the structure of filter rules, groups, and complete
-filter configurations used to select courses. It also provides a FastAPI
-dependency for validating SHA-256-based hash IDs associated with saved
-filters.
+This module defines:
+- The structure of filter query payloads
+- Validation helpers for hash IDs used in filter lookup and deletion
 
-
-Components
-----------
-- FilterRule : Represents a single atomic filter condition on a course.
-- FilterGroup : A group of filter rules combined with AND logic.
-- FilterQuery : Complete filter configuration containing multiple groups.
-- validate_hash_id : FastAPI dependency to validate hash ID path parameters.
+These models are shared across routers to keep request validation
+consistent and centralized.
 """
 
 import re

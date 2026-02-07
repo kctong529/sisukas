@@ -1,76 +1,88 @@
 """
-config.py
-=========
+core/config.py
+==================
 
-Environment and storage configuration for the Sisukas Filters API.
+Central configuration for the Sisukas Filters API.
 
-This module provides centralized configuration for:
+This module defines:
+- Runtime environment name (ENVIRONMENT)
+- CORS allowlist (CORS_ORIGINS), with production hardening
+- API metadata used by FastAPI docs (title/version/contact)
+- Storage configuration (GCS bucket)
 
-1. Environment detection:
-    - Loads environment variables from a .env file using python-dotenv.
-    - Determines the current environment (SISUKAS_ENV), defaulting to "test".
-      Only "prod" and "test" are valid; any other value raises an error.
-2. Storage configuration:
-    - Selects the Google Cloud Storage bucket name based on environment:
-        - "sisukas-filters-api-prod" if ENV is "prod"
-        - "sisukas-filters-api-test" if ENV is "test"
-3. FastAPI app configuration:
-    - CORS origins (CORS_ORIGINS)
-    - API metadata: title (API_TITLE), version (API_VERSION),
-      and contact info (API_CONTACT)
-
-
-Variables
----------
-ENV : str
-    Current environment, either "prod" or "test".
-BASE_DIR : pathlib.Path
-    Base directory of the project (directory of this file's parent).
-GCS_BUCKET_NAME: str
-    Name of the Google Cloud Storage bucket based on ENV.
-CORS_ORIGINS : list[str]
-    Allowed origins for CORS middleware.
-API_VERSION : str
-    API version string.
-API_TITLE : str
-    API title for FastAPI documentation.
-API_CONTACT : dict[str, str]
-    Contact information for FastAPI documentation.
-
-
-Usage
------
-Import this module wherever environment or storage configuration is needed:
-
-    from core.config import ENV, GCS_BUCKET_NAME, CORS_ORIGINS, API_VERSION
+Conventions
+-----------
+- ENVIRONMENT controls runtime mode (e.g. development, test, production).
+- CORS_ORIGINS is read from the environment when provided.
+  If missing, defaults are local-dev friendly.
+- In production, loopback origins (localhost/127.0.0.1/::1) are always dropped
+  even if misconfigured, to prevent accidentally allowing local dev origins.
 """
 
 import os
-from pathlib import Path as FsPath
-from dotenv import load_dotenv
+from urllib.parse import urlparse
 
-# Load the .env file
-load_dotenv()
+ENV = os.getenv("ENVIRONMENT", "development")
 
-ENV = os.getenv("SISUKAS_ENV", "test")
+def _parse_csv(v: str) -> list[str]:
+    return [s.strip() for s in v.split(",") if s.strip()]
+
+def _is_loopback(origin: str) -> bool:
+    try:
+        host = urlparse(origin).hostname
+        return host in ("localhost", "127.0.0.1", "::1")
+    except Exception:
+        return True
+
+CORS_ORIGINS = _parse_csv(os.getenv("CORS_ORIGINS", ""))
+
+if ENV == "production":
+    CORS_ORIGINS = [o for o in CORS_ORIGINS if not _is_loopback(o)]
+
+CORS_ORIGINS_EFFECTIVE = CORS_ORIGINS
 
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
 if not GCS_BUCKET_NAME:
     raise ValueError("Missing GCS_BUCKET_NAME environment variable.")
 
-BASE_DIR: FsPath = FsPath(__file__).parent.parent
-
-# --- FastAPI app configuration ---
-CORS_ORIGINS: list[str] = [
-    origin.strip() for origin in os.getenv(
-        "CORS_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173"
-    ).split(",")
-]
-
-API_VERSION = "0.3.2"
+API_VERSION = "0.4.0"
 API_TITLE = "Sisukas Filters API"
+API_DESCRIPTION = (
+    "Small persistence API for Sisukas filter configurations. "
+    "Clients POST a filter JSON, receive a stable hash ID, and can later "
+    "GET or DELETE the configuration by that hash. Identical payloads are "
+    "deduplicated and return the same hash ID."
+)
+
 API_CONTACT = {
     "name": "API Support",
     "email": "kichun.tong@aalto.fi"
+}
+
+API_ENDPOINTS = {
+    "health": {
+        "method": "GET",
+        "path": "/health",
+        "description": "Service health, build metadata, and runtime info",
+    },
+    "save_filter": {
+        "method": "POST",
+        "path": "/api/filters",
+        "description": "Save a filter configuration (deduplicated by content hash)",
+    },
+    "load_filter": {
+        "method": "GET",
+        "path": "/api/filters/{hash_id}",
+        "description": "Load a saved filter configuration by hash ID",
+    },
+    "delete_filter": {
+        "method": "DELETE",
+        "path": "/api/filters/{hash_id}",
+        "description": "Delete a saved filter configuration by hash ID",
+    },
+    "docs": {
+        "method": "GET",
+        "path": "/docs",
+        "description": "Interactive API documentation (Swagger UI)",
+    },
 }

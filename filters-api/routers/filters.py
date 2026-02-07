@@ -1,32 +1,18 @@
 """
-filters.py
-==========
+routers/filters.py
+==================
 
-API Router for managing filter configurations in the Sisukas application.
+Filter persistence endpoints for the Sisukas application.
 
-This module defines endpoints for saving, retrieving, and deleting filter
-configurations used for course selection. Filters are stored as JSON files
-with unique SHA-256-based hash IDs, allowing deduplication and easy sharing.
+This router provides endpoints to save, retrieve, and delete filter
+configurations used for course selection.
 
-
-Endpoints
----------
-- POST /api/filters
-    Save a new filter configuration. Returns a unique hash ID.
-- GET /api/filters/{hash_id}
-    Retrieve a filter configuration by its hash ID.
-- DELETE /api/filters/{hash_id}
-    Delete a filter configuration by its hash ID.
-
-
-Responses
----------
-All endpoints use structured Pydantic response models and predefined
-response dictionaries (POST_RESPONSES, GET_RESPONSES, DELETE_RESPONSES)
-to standardize success and error responses, including:
-
-- PostResponse, GetResponse, DeleteResponse for successful operations.
-- ErrorResponse for validation errors, not found, or internal server errors.
+Key properties
+--------------
+- Filter configurations are stored as JSON payloads.
+- Each configuration is identified by a SHA-256–derived hash ID.
+- Identical payloads are deduplicated and return the same hash ID.
+- All endpoints are deterministic and idempotent where applicable.
 """
 
 import logging
