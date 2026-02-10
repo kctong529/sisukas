@@ -40,28 +40,34 @@ export class PlansService {
   /**
    * Create a new plan for a user
    */
-  static async createPlan(data: {
-    userId: string;
-    name: string;
-  }): Promise<Plan> {
-    const newPlan = await db
-      .insert(plans)
-      .values({
-        userId: data.userId,
-        name: data.name,
-        isActive: false,
-      })
-      .returning();
+  static async createPlan(data: { userId: string; name: string; }): Promise<Plan> {
+    return await db.transaction(async (tx) => {
+      // 1) deactivate all existing plans for this user
+      await tx
+        .update(plans)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(plans.userId, data.userId));
 
-    return {
-      id: newPlan[0].id,
-      userId: newPlan[0].userId,
-      name: newPlan[0].name,
-      isActive: newPlan[0].isActive,
-      instanceIds: [],
-      createdAt: newPlan[0].createdAt,
-      updatedAt: newPlan[0].updatedAt,
-    };
+      // 2) insert the new plan as active
+      const inserted = await tx
+        .insert(plans)
+        .values({
+          userId: data.userId,
+          name: data.name,
+          isActive: true,
+        })
+        .returning();
+
+      return {
+        id: inserted[0].id,
+        userId: inserted[0].userId,
+        name: inserted[0].name,
+        isActive: inserted[0].isActive,
+        instanceIds: [],
+        createdAt: inserted[0].createdAt,
+        updatedAt: inserted[0].updatedAt,
+      };
+    });
   }
 
   /**
