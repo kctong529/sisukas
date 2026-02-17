@@ -46,5 +46,5 @@ COPY --from=buildmeta /health.json /srv/http/health
 COPY --from=buildmeta /version.json /srv/http/version.json
 
 EXPOSE 8080
-COPY config.json /srv/http/config.json
+COPY headerConfig.json /config/headerConfig.json
 CMD ["-port", "8080", "-https-promote", "-enable-logging", "-fallback", "index.html"]

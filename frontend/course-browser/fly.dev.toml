@@ -14,13 +14,6 @@ primary_region = 'arn'
   min_machines_running = 1
   processes = ['app']
 
-[[statics]]
-  guest_path = "/app/dist"
-  url_prefix = "/"
-  index_path = "index.html"
-  [statics.headers]
-    "Cache-Control" = "public, max-age=0, must-revalidate"
-
 [[vm]]
   memory = '256mb'
   cpu_kind = 'shared'
