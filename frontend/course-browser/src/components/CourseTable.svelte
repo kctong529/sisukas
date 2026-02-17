@@ -776,7 +776,7 @@
   }
   
   a {
-    color: #4a90e2;
+    color: #2f7fd6;
     text-decoration: none;
     transition: color 0.3s, transform 0.2s;
   }
@@ -794,7 +794,7 @@
   }
   
   a:focus {
-    outline: 2px solid #4a90e2;
+    outline: 2px solid #2f7fd6;
     outline-offset: 2px;
   }
   
@@ -829,9 +829,9 @@
   }
 
   .pagination-btn:hover:not(:disabled) {
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
   }
 
   .pagination-btn:disabled {
@@ -863,9 +863,9 @@
   }
 
   .page-btn.active {
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     font-weight: 600;
   }
 
@@ -899,7 +899,7 @@
   }
   
   .card-period {
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
     padding: 0.1rem 0.4rem;
     border-radius: 3px;
@@ -942,7 +942,7 @@
     font-weight: 500;
     line-height: 1.3;
     margin-bottom: 0.3rem;
-    color: #4a90e2;
+    color: #2f7fd6;
     text-decoration: none;
   }
   
@@ -1013,7 +1013,7 @@
   }
 
   .mobile-sort-select:focus {
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     box-shadow: 0 0 5px rgb(74 144 226 / 50%);
     outline: none;
   }
@@ -1029,7 +1029,7 @@
     border: 1px solid #ddd;
     border-radius: 4px;
     cursor: pointer;
-    color: #4a90e2;
+    color: #2f7fd6;
   }
 
   .sort-direction-btn:hover {
@@ -1038,7 +1038,7 @@
 
   .sort-direction-btn:active,
   .sort-direction-btn:focus {
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     box-shadow: 0 0 5px rgb(74 144 226 / 50%);
     outline: none;
   }
@@ -1065,7 +1065,7 @@
   }
 
   .mobile-pagination-btn:hover:not(:disabled) {
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
   }
 

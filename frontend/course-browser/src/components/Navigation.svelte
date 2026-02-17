@@ -267,7 +267,7 @@
   }
   
   .nav-link.active {
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
   }
   
@@ -291,7 +291,7 @@
   }
 
   .user-link i {
-    color: #4a90e2;
+    color: #2f7fd6;
   }
 
   .user-link:hover {
@@ -309,7 +309,7 @@
     align-items: center;
     gap: 0.4rem;
     padding: 0.6rem 0.7rem;
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
     border: none;
     border-radius: 6px;
@@ -372,7 +372,7 @@
   }
   
   .mobile-nav-link.active {
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
   }
   
@@ -395,12 +395,12 @@
 
   .mobile-user-info i {
     font-size: 1.4rem;
-    color: #4a90e2;
+    color: #2f7fd6;
     flex-shrink: 0;
   }
   
   .mobile-nav-link.sign-in {
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
     margin-top: 0.5rem;
   }

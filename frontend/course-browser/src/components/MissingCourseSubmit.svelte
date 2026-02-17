@@ -259,7 +259,7 @@
 
   .missing-course-info p:first-child {
     font-weight: 600;
-    color: #4a90e2;
+    color: #2f7fd6;
     margin-bottom: 0.75rem;
   }
 

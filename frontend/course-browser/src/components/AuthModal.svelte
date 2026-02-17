@@ -144,7 +144,7 @@
 
   .brand-icon {
     font-size: 2.5rem;
-    color: #4a90e2;
+    color: #2f7fd6;
     margin-bottom: 0.5rem;
   }
 
@@ -190,7 +190,7 @@
   }
 
   input:focus {
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
@@ -203,7 +203,7 @@
     padding: 0.8rem;
     border-radius: 6px;
     border: none;
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
     font-weight: 600;
     font-size: 1rem;

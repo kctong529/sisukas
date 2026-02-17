@@ -291,7 +291,7 @@
 
 <style>
   :root {
-    --primary: #4a90e2;
+    --primary: #2f7fd6;
     --text-main: #1e293b;
     --text-muted: #64748b;
     --border: #e2e8f0;

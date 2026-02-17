@@ -330,87 +330,89 @@
   });
 </script>
 
-<Navigation
-  currentView={ui.currentView}
-  {isSignedIn}
-  {userName}
-  on:navigate={handleNavigation}
-  on:signin={handleSignIn}
-  on:signout={handleSignOut}
-/>
+<main class="app-main">
+  <Navigation
+    currentView={ui.currentView}
+    {isSignedIn}
+    {userName}
+    on:navigate={handleNavigation}
+    on:signin={handleSignIn}
+    on:signout={handleSignOut}
+  />
 
-<DebugPanels />
+  <DebugPanels />
 
-{#if ui.showAuthModal}
-  <AuthModal on:close={() => (ui.showAuthModal = false)} />
-{/if}
+  {#if ui.showAuthModal}
+    <AuthModal on:close={() => (ui.showAuthModal = false)} />
+  {/if}
 
-<NotificationContainer />
+  <NotificationContainer />
 
-<div id="main-content">
-  <!-- Courses View -->
-  <div class="view" class:hidden={ui.currentView !== 'courses'}>
-    <h2 class="sr-only">Browse Courses</h2>
+  <div id="main-content">
+    <!-- Courses View -->
+    <div class="view" class:hidden={ui.currentView !== 'courses'}>
+      <h2 class="sr-only">Browse Courses</h2>
 
-    {#if loadingHistorical && courseIndexStore.state.mode === 'all'}
-      <p class="hint">Loading older courses...</p>
-    {/if}
+      {#if loadingHistorical && courseIndexStore.state.mode === 'all'}
+        <p class="hint">Loading older courses...</p>
+      {/if}
 
-    {#if loadingActive}
-      <div style="text-align: center; padding: 2rem;">
-        <p>Loading course data...</p>
-      </div>
-    {:else if ui.RuleBlueprints}
-      <FilterContainer
-        bind:this={filterContainerRef}
-        blueprints={ui.RuleBlueprints as Record<string, BaseRuleBlueprint>}
-        bind:filterRules={ui.filterRules}
-        periods={ui.periods}
-        on:search={handleSearch}
-      />
+      {#if loadingActive}
+        <div style="text-align: center; padding: 2rem;">
+          <p>Loading course data...</p>
+        </div>
+      {:else if ui.RuleBlueprints}
+        <FilterContainer
+          bind:this={filterContainerRef}
+          blueprints={ui.RuleBlueprints as Record<string, BaseRuleBlueprint>}
+          bind:filterRules={ui.filterRules}
+          periods={ui.periods}
+          on:search={handleSearch}
+        />
 
-      <SearchControls
-        bind:showUnique={ui.showUnique}
+        <SearchControls
+          bind:showUnique={ui.showUnique}
+          bind:source={ui.courseBrowserSource}
+          on:addRule={handleAddRule}
+          on:search={handleSearch}
+          on:sourceChange={handleSourceChange}
+          on:save={handleSaveFilters}
+          on:load={handleLoadFilters}
+        />
+
+        <CourseTable
+          source={ui.courseBrowserSource}
+          filteredInstanceIds={ui.filteredInstanceIds}
+        />
+      {:else}
+        <div style="text-align: center; padding: 2rem;">
+          <p>Failed to load filter blueprints. Please refresh the page.</p>
+        </div>
+      {/if}
+    </div>
+
+    <!-- Favourites View -->
+    <div class="view" class:hidden={ui.currentView !== 'favourites'}>
+      <FavouritesView
         bind:source={ui.courseBrowserSource}
-        on:addRule={handleAddRule}
-        on:search={handleSearch}
-        on:sourceChange={handleSourceChange}
-        on:save={handleSaveFilters}
-        on:load={handleLoadFilters}
       />
+    </div>
 
-      <CourseTable
-        source={ui.courseBrowserSource}
-        filteredInstanceIds={ui.filteredInstanceIds}
-      />
-    {:else}
-      <div style="text-align: center; padding: 2rem;">
-        <p>Failed to load filter blueprints. Please refresh the page.</p>
-      </div>
-    {/if}
+    <!-- LEGO View -->
+    <div class="view" class:hidden={ui.currentView !== 'lego'}>
+      <LegoView />
+    </div>
+
+    <!-- Period Timeline View -->
+    <div class="view" class:hidden={ui.currentView !== 'timeline'}>
+      <PeriodTimeline />
+    </div>
   </div>
 
-  <!-- Favourites View -->
-  <div class="view" class:hidden={ui.currentView !== 'favourites'}>
-    <FavouritesView
-      bind:source={ui.courseBrowserSource}
-    />
-  </div>
-
-  <!-- LEGO View -->
-  <div class="view" class:hidden={ui.currentView !== 'lego'}>
-    <LegoView />
-  </div>
-
-  <!-- Period Timeline View -->
-  <div class="view" class:hidden={ui.currentView !== 'timeline'}>
-    <PeriodTimeline />
-  </div>
-</div>
-
-<footer>
-  <p id="footer-text">© 2026 Sisukas. All rights reserved.</p>
-</footer>
+  <footer>
+    <p id="footer-text">© 2026 Sisukas. All rights reserved.</p>
+  </footer>
+</main>
 
 <style>
   :global(body) {

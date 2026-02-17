@@ -153,7 +153,7 @@
 
 <style>
   :root {
-    --primary: #4a90e2;
+    --primary: #2f7fd6;
     --primary-hover: #2980f1;
     --text-main: #1e293b;
     --border: #e2e8f0;

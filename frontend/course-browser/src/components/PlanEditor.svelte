@@ -308,13 +308,13 @@
   }
 
   .icon-btn:hover:not(:disabled) {
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     background: #f1f5f9;
   }
 
   .icon-btn:focus:not(:disabled) {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
@@ -324,11 +324,11 @@
   }
 
   .edit-btn {
-    color: #4a90e2;
+    color: #2f7fd6;
   }
 
   .edit-btn:hover:not(:disabled) {
-    background-color: #4a90e2;
+    background-color: #2f7fd6;
     color: white;
     border-color: white;
   }
@@ -366,7 +366,7 @@
 
   .plan-input:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
@@ -506,7 +506,7 @@
   }
 
   .btn-primary {
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
   }
 
@@ -515,7 +515,7 @@
   }
 
   .btn-primary:focus:not(:disabled) {
-    outline: 2px solid #4a90e2;
+    outline: 2px solid #2f7fd6;
     outline-offset: 2px;
   }
 
@@ -526,13 +526,13 @@
   }
 
   .btn-secondary:hover:not(:disabled) {
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     background: #f8fafc;
   }
 
   .btn-secondary:focus:not(:disabled) {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 

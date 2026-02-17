@@ -273,7 +273,7 @@
 
   .plan-input:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
@@ -318,12 +318,12 @@
   }
 
   .plan-select:hover {
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
   }
 
   .plan-select:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
@@ -365,7 +365,7 @@
   }
 
   .btn-primary {
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
   }
 
@@ -374,7 +374,7 @@
   }
 
   .btn-primary:focus:not(:disabled) {
-    outline: 2px solid #4a90e2;
+    outline: 2px solid #2f7fd6;
     outline-offset: 2px;
   }
 
@@ -385,13 +385,13 @@
   }
 
   .btn-secondary:hover:not(:disabled) {
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     background: #f8fafc;
   }
 
   .btn-secondary:focus:not(:disabled) {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
@@ -413,13 +413,13 @@
   }
 
   .icon-button:hover:not(:disabled) {
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     background: #f8fafc;
   }
 
   .icon-button:focus:not(:disabled) {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #2f7fd6;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 

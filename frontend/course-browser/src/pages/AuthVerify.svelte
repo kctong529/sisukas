@@ -80,7 +80,7 @@
     max-width: 400px;
   }
   .verify-btn {
-    background: #4a90e2;
+    background: #2f7fd6;
     color: white;
     border: none;
     padding: 0.8rem 2rem;

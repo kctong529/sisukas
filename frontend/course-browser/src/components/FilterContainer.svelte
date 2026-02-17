@@ -236,7 +236,7 @@
 
 <style>
   :root {
-    --primary: #4a90e2;
+    --primary: #2f7fd6;
     --primary-hover: #2980f1;
     --bg: #f8fafc;
     --card-bg: #ffffff;

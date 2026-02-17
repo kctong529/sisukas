@@ -320,7 +320,7 @@
 
 <style>
   :root {
-    --primary: #4a90e2;
+    --primary: #2f7fd6;
     --bg: #f8fafc;
     --card-bg: #ffffff;
     --text-main: #1e293b;
