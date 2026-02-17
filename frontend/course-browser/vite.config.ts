@@ -20,7 +20,11 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,json}'],
         ignoreURLParametersMatching: [/.*/],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /^\/health(\.json)?$/,
+          /^\/version\.json$/,
+        ],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
