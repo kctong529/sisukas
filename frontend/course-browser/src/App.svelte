@@ -330,10 +330,6 @@
   });
 </script>
 
-<svelte:head>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" />
-</svelte:head>
-
 <Navigation
   currentView={ui.currentView}
   {isSignedIn}

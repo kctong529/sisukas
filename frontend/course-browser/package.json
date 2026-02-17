@@ -1,7 +1,7 @@
 {
   "name": "course-browser",
   "private": true,
-  "version": "0.8.0",
+  "version": "0.8.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -32,6 +32,7 @@
     "typescript": "5.9.3",
     "typescript-eslint": "^8.52.0",
     "vite": "7.1.12",
+    "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.0.16",
     "yaml": "2.8.1"
   },
@@ -40,6 +41,7 @@
   },
   "dependencies": {
     "better-auth": "^1.4.10",
+    "bootstrap-icons": "^1.13.1",
     "pdfjs-dist": "^5.4.530"
   }
 }

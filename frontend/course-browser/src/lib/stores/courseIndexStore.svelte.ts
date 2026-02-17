@@ -120,18 +120,24 @@ export const courseIndexStore = (() => {
     state.error = null;
 
     try {
+      // 1) Base historical: REQUIRED
       const historicalCourses = await loadHistoricalCoursesWithCache();
       const historical = buildIndexes(historicalCourses);
 
-      // base historical first
       state.historicalByInstanceId = historical.byInstanceId;
       state.historicalInstanceIdsByCode = historical.instanceIdsByCode;
       state.historicalReady = true;
 
-      // then append snapshots (into historical)
-      const mergedSnapshots = await SnapshotHistoricalMerge.mergeAllLiveSnapshots();
+      // 2) Snapshots: BEST-EFFORT
+      let mergedSnapshots: SnapshotMergeStats = ZERO_SNAPSHOTS;
+      try {
+        mergedSnapshots = await SnapshotHistoricalMerge.mergeAllLiveSnapshots();
+      } catch (e) {
+        console.warn("Snapshot merge failed (continuing with base historical):", e);
+        // keep mergedSnapshots as ZERO_SNAPSHOTS
+      }
 
-      // one-time: remove overlaps + dedupe
+      // 3) Prune overlaps (safe even if snapshots failed)
       const pruned = pruneHistoricalAgainstActive(
         state.historicalByInstanceId,
         state.historicalInstanceIdsByCode,
@@ -140,11 +146,10 @@ export const courseIndexStore = (() => {
 
       state.historicalByInstanceId = pruned.byId;
       state.historicalInstanceIdsByCode = pruned.idsByCode;
-      // optional debug:
-      console.log("Pruned historical overlaps:", pruned.pruned);
 
       return { historicalCount: historicalCourses.length, mergedSnapshots };
     } catch (err) {
+      // only base historical load failures should land here
       state.historicalByInstanceId = new Map();
       state.historicalInstanceIdsByCode = new Map();
       state.historicalReady = false;
