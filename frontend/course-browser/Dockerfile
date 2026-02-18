@@ -37,6 +37,13 @@ EOF
 
 RUN printf '{ "commit": "%s" }\n' "${COMMIT_SHA}" > /version.json
 
+# Generate robots.txt based on environment
+RUN if [ "$ENVIRONMENT" = "production" ]; then \
+      printf "User-agent: *\nAllow: /\n" > /robots.txt; \
+    else \
+      printf "User-agent: *\nDisallow: /\n" > /robots.txt; \
+    fi
+
 # Serve the static files with GoStatic
 FROM pierrezemb/gostatic
 
@@ -44,6 +51,7 @@ COPY ./dist /srv/http
 COPY --from=buildmeta /health.json /srv/http/health.json
 COPY --from=buildmeta /health.json /srv/http/health
 COPY --from=buildmeta /version.json /srv/http/version.json
+COPY --from=buildmeta /robots.txt /srv/http/robots.txt
 
 EXPOSE 8080
 COPY headerConfig.json /config/headerConfig.json

@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => ({
           /^\/api\//,
           /^\/health(\.json)?$/,
           /^\/version\.json$/,
+          /^\/robots\.txt$/,
         ],
         cleanupOutdatedCaches: true,
         clientsClaim: true,

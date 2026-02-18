@@ -108,7 +108,6 @@
     // apply only when ready
     if (!ui.RuleBlueprints || !filterContainerRef) {
       ui.pendingFilterLoad = id;
-      (ui as any).pendingFilterData = data;
       return;
     }
 

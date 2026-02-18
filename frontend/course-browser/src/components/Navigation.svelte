@@ -34,57 +34,66 @@
   <div class="nav-container">
     <!-- Logo/Brand -->
     <div class="nav-brand">
-      <button class="brand-link" on:click={() => handleNavigation('courses')}>
-        <span class="brand-name" aria-label="Sisukas home">Sisukas</span>
+      <button class="brand-link" on:click={() => handleNavigation('courses')} aria-label="Sisukas home">
+        <span class="brand-name">Sisukas</span>
         <span class="brand-tagline">since 2025</span>
       </button>
     </div>
     
     <!-- Desktop Navigation -->
     <div class="nav-links">
-      <button 
-        class="nav-link" 
+      <button
+        class="nav-link"
         class:active={currentView === 'courses'}
         on:click={() => handleNavigation('courses')}
+        aria-label="Browse courses"
+        aria-current={currentView === 'courses' ? 'page' : undefined}
       >
-        <i class="bi bi-search"></i>
+        <i class="bi bi-search" aria-hidden="true"></i>
         <span>Browse</span>
       </button>
-      
-      <button 
-        class="nav-link" 
+
+      <button
+        class="nav-link"
         class:active={currentView === 'favourites'}
         on:click={() => handleNavigation('favourites')}
+        aria-label="Favourites"
+        aria-current={currentView === 'favourites' ? 'page' : undefined}
       >
-        <i class="bi bi-bookmark"></i>
+        <i class="bi bi-bookmark" aria-hidden="true"></i>
         <span>Favourites</span>
       </button>
 
-      <button 
-        class="nav-link" 
+      <button
+        class="nav-link"
         class:active={currentView === 'lego'}
         on:click={() => handleNavigation('lego')}
+        aria-label="LEGO view"
+        aria-current={currentView === 'lego' ? 'page' : undefined}
       >
-        <i class="bi bi-box"></i>
+        <i class="bi bi-box" aria-hidden="true"></i>
         <span>LEGO</span>
       </button>
-      
-      <button 
-        class="nav-link" 
+
+      <button
+        class="nav-link"
         class:active={currentView === 'timeline'}
         on:click={() => handleNavigation('timeline')}
+        aria-label="Timeline"
+        aria-current={currentView === 'timeline' ? 'page' : undefined}
       >
-        <i class="bi bi-calendar3"></i>
+        <i class="bi bi-calendar3" aria-hidden="true"></i>
         <span>Timeline</span>
       </button>
 
-      <a 
-        href="https://github.com/kctong529/sisukas" 
+      <a
+        href="https://github.com/kctong529/sisukas"
         target="_blank"
         rel="noopener noreferrer"
         class="nav-link"
+        aria-label="Open Sisukas on GitHub (opens in a new tab)"
       >
-        <i class="bi bi-github"></i>
+        <i class="bi bi-github" aria-hidden="true"></i>
         <span>GitHub</span>
       </a>
     </div>
@@ -93,18 +102,19 @@
     <div class="nav-user">
       {#if isSignedIn}
         <div class="user-menu">
-          <button class="nav-link user-link">
-            <i class="bi bi-person-circle"></i>
+          <button class="nav-link user-link" aria-label={`Signed in as ${userName}`}>
+            <i class="bi bi-person-circle" aria-hidden="true"></i>
             <span class="user-name">{userName}</span>
           </button>
-          <button class="sign-out-btn" on:click={handleSignOut}>
-            <i class="bi bi-box-arrow-right"></i>
+
+          <button class="sign-out-btn" on:click={handleSignOut} aria-label="Sign out">
+            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
             <span>Sign Out</span>
           </button>
         </div>
       {:else}
-        <button class="sign-in-btn" on:click={handleSignIn}>
-          <i class="bi bi-box-arrow-in-right"></i>
+        <button class="sign-in-btn" on:click={handleSignIn} aria-label="Sign in">
+          <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
           <span>Sign In</span>
         </button>
       {/if}
@@ -114,15 +124,17 @@
     <button
       class="mobile-menu-toggle"
       on:click={toggleMobileMenu}
-      aria-label="Toggle navigation menu"
+      aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+      aria-expanded={mobileMenuOpen}
+      aria-controls="mobile-menu"
     >
-      <i class="bi {mobileMenuOpen ? 'bi-x' : 'bi-list'}"></i>
+      <i class="bi {mobileMenuOpen ? 'bi-x' : 'bi-list'}" aria-hidden="true"></i>
     </button>
   </div>
   
   <!-- Mobile Menu -->
   {#if mobileMenuOpen}
-    <div class="mobile-menu">
+    <div class="mobile-menu" id="mobile-menu">
       <button 
         class="mobile-nav-link" 
         class:active={currentView === 'courses'}
