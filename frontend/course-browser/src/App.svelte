@@ -97,37 +97,38 @@
   // Filters
   // -----------------------------
 
-  async function loadFiltersFromUrl() {
-    const hashId = FiltersApiService.getHashFromUrl();
-    if (!hashId || !ui.RuleBlueprints) return;
+  async function loadFiltersFromUrl(hashId?: string) {
+    const id = hashId ?? FiltersApiService.getHashFromUrl();
+    if (!id) return;
 
-    if (!filterContainerRef) {
-      ui.pendingFilterLoad = hashId;
+    // fetch early
+    const data = await FiltersApiService.loadFilters(id);
+    if (!data) return;
+
+    // apply only when ready
+    if (!ui.RuleBlueprints || !filterContainerRef) {
+      ui.pendingFilterLoad = id;
+      (ui as any).pendingFilterData = data;
       return;
     }
 
-    const data = await FiltersApiService.loadFilters(hashId);
-    if (!data || !ui.RuleBlueprints) return;
-
     const configs = FilterSerializer.fromJSON(data, ui.RuleBlueprints);
     filterContainerRef.loadFilterConfigs(configs);
-
-    // Trigger search after loading
-    setTimeout(() => handleSearch(), 100);
+    queueMicrotask(handleSearch);
 
     NotificationService.success('Loaded filters from shared link');
-    ui.pendingFilterLoad = null;
   }
 
   // Pending filter load once FilterContainer ref is ready
   $effect(() => {
     if (!filterContainerRef) return;
+    if (!ui.RuleBlueprints) return;
     if (!ui.pendingFilterLoad) return;
 
     const hash = ui.pendingFilterLoad;
     ui.pendingFilterLoad = null;
 
-    void loadFiltersFromUrl().catch((e) => {
+    void loadFiltersFromUrl(hash).catch((e) => {
       console.error('Failed to load filters from URL:', e);
       ui.pendingFilterLoad = hash;
     });
@@ -292,8 +293,14 @@
       // Organizations (sync)
       const organizations = loadOrganizations();
 
+      const curriculaPromise = loadCurricula();
+
+      // Start filter loading immediately
+      const hashId = FiltersApiService.getHashFromUrl();
+      if (hashId) void loadFiltersFromUrl(hashId);
+
       // Curricula (async)
-      const curriculaMap = await loadCurricula();
+      const curriculaMap = await curriculaPromise;
 
       // Blueprints
       ui.RuleBlueprints = createRuleBlueprints({
@@ -308,9 +315,6 @@
       // Active required
       const { activeCount } = await courseIndexStore.actions.bootstrapActive();
       console.log('Active loaded:', activeCount);
-
-      // Load shared filters (if any)
-      await loadFiltersFromUrl();
 
       // Optional warm-up: preload historical even when starting in active
       void (async () => {
