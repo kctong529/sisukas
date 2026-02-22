@@ -70,7 +70,6 @@ router.get("/", async (req: Request, res: Response) => {
  */
 router.post("/resolve", async (req: Request, res: Response) => {
   try {
-    const userId = res.locals.user.id;
     const { courseCode } = req.body ?? {};
 
     if (!courseCode || typeof courseCode !== "string") {
@@ -102,7 +101,7 @@ router.post("/resolve", async (req: Request, res: Response) => {
 
     const resolve = await resp.json();
 
-    const snapshots = await CourseSnapshotsService.upsertFromResolveResponse(userId, resolve, {
+    const snapshots = await CourseSnapshotsService.upsertFromResolveResponse(resolve, {
       source: "user_request",
       ttlDays: 180,
     });

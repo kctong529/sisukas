@@ -74,7 +74,6 @@ export class CourseSnapshotsService {
    * Upserts by (courseCode, curId). Increments requestedCount and extends TTL.
    */
   static async upsertFromResolveResponse(
-    userId: string,
     resolve: ResolveResponse,
     opts?: { source?: "user_request" | "pipeline_backfill"; ttlDays?: number }
   ): Promise<CourseSnapshot[]> {
