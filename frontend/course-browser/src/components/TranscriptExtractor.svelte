@@ -1,6 +1,6 @@
 <!-- src/components/TranscriptExtractor.svelte -->
 <script lang="ts">
-  import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+  import * as pdfjsLib from "pdfjs-dist";
   import { createEventDispatcher } from "svelte";
   import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
@@ -16,6 +16,12 @@
   };
 
   const dispatch = createEventDispatcher<{ extracted: CourseRow[] }>();
+
+  const worker = new Worker(new URL("../pdfjs-worker.ts", import.meta.url), {
+    type: "module",
+  });
+
+  pdfjsLib.GlobalWorkerOptions.workerPort = worker;
 
   // PDF.js worker (Vite-safe)
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
