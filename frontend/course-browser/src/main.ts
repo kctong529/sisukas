@@ -1,4 +1,5 @@
 import { mount } from 'svelte'
+import "./polyfills";
 import { registerSW } from 'virtual:pwa-register'
 import App from './App.svelte'
 import AuthVerify from './pages/AuthVerify.svelte'
