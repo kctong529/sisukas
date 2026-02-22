@@ -86,7 +86,7 @@ jobs:
             CORS_ORIGINS=${{ inputs.cors_origins }}
             BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DATABASE_URL=${{ secrets.DATABASE_TEST_URL }}
             ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }}
             ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
 
