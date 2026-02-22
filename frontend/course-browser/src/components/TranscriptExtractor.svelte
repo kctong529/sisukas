@@ -1,6 +1,6 @@
 <!-- src/components/TranscriptExtractor.svelte -->
 <script lang="ts">
-  import * as pdfjsLib from "pdfjs-dist";
+  import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
   import { createEventDispatcher } from "svelte";
   import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
