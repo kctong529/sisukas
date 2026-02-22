@@ -76,6 +76,7 @@ jobs:
       cors_origins: ${{ inputs.cors_origins }}
       frontend_url: ${{ inputs.frontend_url }}
       backend_url: ${{ inputs.backend_url }}
+      sisu_wrapper_url: ${{ inputs.vite_wrapper_api }}
     secrets: inherit
 
   deploy_filters_api:

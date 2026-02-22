@@ -25,6 +25,9 @@ on:
       backend_url:
         required: true
         type: string
+      sisu_wrapper_url:
+        required: true
+        type: string
 
 jobs:
   deploy_backend_dev:
@@ -83,6 +86,7 @@ jobs:
             FRONTEND_URL=${{ inputs.frontend_url }}
             BACKEND_URL=${{ inputs.backend_url }}
             BETTER_AUTH_URL=${{ inputs.frontend_url }}
+            SISU_WRAPPER_BASE_URL=${{ inputs.sisu_wrapper_url }}
             CORS_ORIGINS=${{ inputs.cors_origins }}
             BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
@@ -152,6 +156,7 @@ jobs:
             FRONTEND_URL=${{ inputs.frontend_url }}
             BACKEND_URL=${{ inputs.backend_url }}
             BETTER_AUTH_URL=${{ inputs.frontend_url }}
+            SISU_WRAPPER_BASE_URL=${{ inputs.sisu_wrapper_url }}
             CORS_ORIGINS=${{ inputs.cors_origins }}
             BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
