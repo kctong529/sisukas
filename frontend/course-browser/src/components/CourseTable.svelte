@@ -84,10 +84,14 @@
   }
 
   const tableCourses = $derived.by(() => {
-    if (filteredInstanceIds && filteredInstanceIds.length > 0) {
-      return resolveIds(filteredInstanceIds);
+    if (filteredInstanceIds === null) {
+      return courseIndexStore.read.getAllCurrentCourses();
     }
-    return courseIndexStore.read.getAllCurrentCourses();
+    if (filteredInstanceIds.length === 0) {
+      return [];
+    }
+
+    return resolveIds(filteredInstanceIds);
   });
 
   // -----------------------------
