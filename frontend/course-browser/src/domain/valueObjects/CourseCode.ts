@@ -56,6 +56,15 @@ export class CourseCode {
       throw new Error(`Invalid Course Code format: "${trimmedCode}". Dots cannot be adjacent ('..').`);
     }
 
+    // Explicitly allow plain alphanumeric codes
+    if (dashCount === 0 && dotCount === 0) {
+      if (trimmedCode.length < 4 || trimmedCode.length > 16) {
+        throw new Error(
+          `Invalid Course Code format: "${trimmedCode}". Plain codes must be 4–16 characters.`,
+        );
+      }
+    }
+
     // Set value and normalize to uppercase
     this.value = trimmedCode.toUpperCase();
   }

@@ -1,6 +1,6 @@
 // src/domain/filters/blueprints/MembershipRuleBlueprint.ts
 import type { Course } from '../../models/Course';
-import type { CurriculaMap } from '../../models/Curriculum';
+import type { CurriculaMap, CurriculumType } from '../../models/Curriculum';
 import { 
   MembershipFilterRule, 
   type MembershipRelation,
@@ -83,54 +83,35 @@ class CurriculaMapDataSource implements MembershipDataSource<string> {
   constructor(private curriculaMap: CurriculaMap) {}
 
   getMembershipSet(category: string, identifier: string): Set<string> | undefined {
-    if (category === 'major') {
-      return this.curriculaMap.major[identifier]?.courses;
-    }
-    if (category === 'minor') {
-      return this.curriculaMap.minor[identifier]?.courses;
-    }
-    return undefined;
+    // category is 'major' | 'minor' | 'master' | ...
+    const bucket = (this.curriculaMap as Record<string, any>)[category];
+    return bucket?.[identifier]?.courses;
   }
 }
 
 /**
- * Blueprint for filtering by major curriculum
+ * Blueprint for filtering by various curriculum
  */
-export class MajorRuleBlueprint extends MembershipRuleBlueprint<string, Course> {
-  readonly field = 'major';
-  readonly label = 'Major';
+export class CurriculumMembershipRuleBlueprint
+  extends MembershipRuleBlueprint<string, Course> {
   readonly validRelations = ['isMemberOf', 'isNotMemberOf'] as const;
   readonly defaultRelation = 'isMemberOf' as const;
   readonly keySelector = (c: Course) => c.code.value;
+
   readonly availableSets: readonly string[];
   readonly setLabels: Record<string, string>;
 
-  constructor(curriculaMap: CurriculaMap) {
+  constructor(
+    readonly field: CurriculumType,
+    readonly label: string,
+    curriculaMap: CurriculaMap
+  ) {
     super(new CurriculaMapDataSource(curriculaMap));
-    this.availableSets = Object.keys(curriculaMap.major);
-    this.setLabels = Object.fromEntries(
-      Object.entries(curriculaMap.major).map(([id, data]) => [id, data.name])
-    );
-  }
-}
 
-/**
- * Blueprint for filtering by minor curriculum
- */
-export class MinorRuleBlueprint extends MembershipRuleBlueprint<string, Course> {
-  readonly field = 'minor';
-  readonly label = 'Minor';
-  readonly validRelations = ['isMemberOf', 'isNotMemberOf'] as const;
-  readonly defaultRelation = 'isMemberOf' as const;
-  readonly keySelector = (c: Course) => c.code.value;
-  readonly availableSets: readonly string[];
-  readonly setLabels: Record<string, string>;
-
-  constructor(curriculaMap: CurriculaMap) {
-    super(new CurriculaMapDataSource(curriculaMap));
-    this.availableSets = Object.keys(curriculaMap.minor);
+    const bucket = curriculaMap[field] ?? {};
+    this.availableSets = Object.keys(bucket);
     this.setLabels = Object.fromEntries(
-      Object.entries(curriculaMap.minor).map(([id, data]) => [id, data.name])
+      Object.entries(bucket).map(([id, data]) => [id, data.name])
     );
   }
 }

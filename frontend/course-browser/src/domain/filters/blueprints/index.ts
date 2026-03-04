@@ -14,7 +14,7 @@ import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprintRegistry';
 import { StartDateRuleBlueprint, EndDateRuleBlueprint } from './DateRuleBlueprintRegistry';
 import { EnrollmentRuleBlueprint } from './DateRangeRuleBlueprintRegistry';
 import { LevelRuleBlueprint, FormatRuleBlueprint, LanguagesRuleBlueprint, TeachersRuleBlueprint, TagsRuleBlueprint, OrganizationRuleBlueprint } from './CategoricalRuleBlueprintRegistry';
-import { MajorRuleBlueprint, MinorRuleBlueprint } from './MembershipRuleBlueprintRegistry';
+import { CurriculumMembershipRuleBlueprint } from './MembershipRuleBlueprintRegistry';
 import { PeriodRuleBlueprint } from './PeriodRuleBlueprint';
 import type { CurriculaMap } from '../../models/Curriculum';
 import type { AcademicPeriod } from '../../models/AcademicPeriod';
@@ -72,8 +72,9 @@ export function createRuleBlueprints(config: BlueprintsConfig) {
     period: new PeriodRuleBlueprint(periods),
     
     // Membership (require external data)
-    major: new MajorRuleBlueprint(curriculaMap),
-    minor: new MinorRuleBlueprint(curriculaMap),
+    major: new CurriculumMembershipRuleBlueprint('major', 'Major (Bachelor)', curriculaMap),
+    minor: new CurriculumMembershipRuleBlueprint('minor', 'Minor', curriculaMap),
+    master: new CurriculumMembershipRuleBlueprint('master', "Major (Master)", curriculaMap),
 
     // Future blueprints:
     // department: config.departmentsMap ? new DepartmentRuleBlueprint(config.departmentsMap) : undefined,

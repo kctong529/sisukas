@@ -1,13 +1,9 @@
 // src/domain/models/Curriculum.ts
-export type CurriculumType = 'major' | 'minor';
+export type CurriculumType = 'major' | 'minor' | 'master';
 
-export interface CurriculaMap {
-    major: Record<string, {
-        name: string;
-        courses: Set<string>;
-    }>;
-    minor: Record<string, {
-        name: string;
-        courses: Set<string>;
-    }>;
+export interface CurriculumEntry {
+  name: string;
+  courses: Set<string>;
 }
+
+export type CurriculaMap = Record<CurriculumType, Record<string, CurriculumEntry>>;

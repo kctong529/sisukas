@@ -1,5 +1,5 @@
 // src/domain/parsers/CurriculumParser.ts
-import type { CurriculaMap } from '../models/Curriculum';
+import type { CurriculaMap, CurriculumType } from '../models/Curriculum';
 import { CourseCode } from '../valueObjects/CourseCode';
 
 export interface RawCurriculumEntry {
@@ -15,10 +15,10 @@ export interface RawCurriculumData {
 // Helper to process an array of raw curriculum entries
 const processCurriculumEntries = (
   entries: RawCurriculumEntry[] | undefined,
-  targetMap: CurriculaMap['major'] | CurriculaMap['minor']
+  targetMap: Record<string, { name: string; courses: Set<string> }>
 ) => {
   if (!Array.isArray(entries)) {
-    console.warn('Curricula data missing expected array for major or minor programs.');
+    console.warn('Curricula data missing expected array.');
     return;
   }
 
@@ -35,7 +35,9 @@ const processCurriculumEntries = (
         const courseCodeVo = new CourseCode(rawCode);
         validatedCourseCodes.add(courseCodeVo.value);
       } catch (error) {
-        console.error(`Skipping invalid course code "${rawCode}" in curriculum "${entry.code}":`, error instanceof Error ? error.message : String(error));
+        console.error(`Skipping invalid course code "${rawCode}" in curriculum "${entry.code}":`,
+          error instanceof Error ? error.message : String(error)
+        );
       }
     }
 
@@ -46,25 +48,26 @@ const processCurriculumEntries = (
   }
 };
 
-/**
- * Parses raw curricula data objects (e.g., from YAML files) and transforms it
- * into the optimized CurriculaMap object required by the blueprints.
- *
- * @param majorData Raw data object containing major curricula.
- * @param minorData Raw data object containing minor curricula.
- * @returns A fully processed CurriculaMap instance.
- */
+function sortCurriculumMap(
+  map: Record<string, { name: string; courses: Set<string> }>
+): Record<string, { name: string; courses: Set<string> }> {
+  return Object.fromEntries(
+    Object.entries(map).sort(([, a], [, b]) =>
+      a.name.localeCompare(b.name)
+    )
+  );
+}
+
 export function parseCurricula(
-  majorData: RawCurriculumData,
-  minorData: RawCurriculumData): CurriculaMap {
+  rawByType: Record<CurriculumType, RawCurriculumData>
+): CurriculaMap {
+  const out = {} as CurriculaMap;
 
-  const curriculaMap: CurriculaMap = {
-    major: {},
-    minor: {},
-  };
+  for (const [type, raw] of Object.entries(rawByType) as Array<[CurriculumType, RawCurriculumData]>) {
+    const bucket: Record<string, { name: string; courses: Set<string> }> = {};
+    processCurriculumEntries(raw.curricula, bucket);
+    out[type] = sortCurriculumMap(bucket);
+  }
 
-  processCurriculumEntries(majorData.curricula, curriculaMap.major);
-  processCurriculumEntries(minorData.curricula, curriculaMap.minor);
-
-  return curriculaMap;
+  return out;
 }

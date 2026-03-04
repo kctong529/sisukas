@@ -10,6 +10,7 @@ export const BLUEPRINT_ORDER = [
   'startDate',
   'endDate',
   'major',
+  'master',
   'minor',
   'enrollment',
   'organization',

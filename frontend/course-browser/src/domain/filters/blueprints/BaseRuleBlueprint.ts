@@ -5,7 +5,7 @@ export abstract class BaseRuleBlueprint {
   abstract readonly label: string;
   
   abstract readonly validRelations: readonly string[];
-  abstract readonly defaultRelation: string;
+  abstract readonly defaultRelation?: string | undefined;
   
   readonly validValues?: readonly string[];
   readonly valueLabels?: Readonly<Record<string, string>>;

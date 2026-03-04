@@ -300,6 +300,7 @@
 
       // Curricula (async)
       const curriculaMap = await curriculaPromise;
+      console.log(curriculaMap);
 
       // Blueprints
       ui.RuleBlueprints = createRuleBlueprints({
