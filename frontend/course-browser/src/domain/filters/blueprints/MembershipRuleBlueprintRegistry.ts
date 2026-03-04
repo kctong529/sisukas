@@ -76,6 +76,14 @@ export abstract class MembershipRuleBlueprint<TKey, TEntity>
   }
 }
 
+function isCurriculumType(
+  category: string,
+  curriculaMap: CurriculaMap
+): category is CurriculumType {
+  // runtime check + type narrowing
+  return category in curriculaMap;
+}
+
 /**
  * Adapter to make CurriculaMap compatible with MembershipDataSource interface
  */
@@ -83,9 +91,8 @@ class CurriculaMapDataSource implements MembershipDataSource<string> {
   constructor(private curriculaMap: CurriculaMap) {}
 
   getMembershipSet(category: string, identifier: string): Set<string> | undefined {
-    // category is 'major' | 'minor' | 'master' | ...
-    const bucket = (this.curriculaMap as Record<string, any>)[category];
-    return bucket?.[identifier]?.courses;
+    if (!isCurriculumType(category, this.curriculaMap)) return undefined;
+    return this.curriculaMap[category]?.[identifier]?.courses;
   }
 }
 
