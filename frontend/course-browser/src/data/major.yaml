@@ -1,4 +1,32 @@
 curricula:
+  - code: DSD26
+    name: Digital Systems and Design (2026-2028)
+    courses:
+      - MS-A0111
+      - MS-A0011
+      - MS-A0211
+      - MS-A0311
+      - MS-A0503
+      - ELEC-A7200
+      - CS-A1110
+      - ELEC-A7100
+      - ELEC-C9801
+      - CS-A1140
+      - ELEC-C7222
+      - SCI-A1010
+      - ELEC-C5232
+      - LC-1117
+      - ELEC-C7420
+      - ELEC-C5220
+      - ELEC-C9620
+      - ELEC-C9822
+      - ELEC‐C8201
+      - ELEC-E7840
+      - ELEC-E8001
+      - CS-C3240
+      - ELEC-C9431
+      - ELEC‐C0302
+      - JOIN.bsc
   - code: DSD24
     name: Digital Systems and Design (2024-2026)
     courses:
