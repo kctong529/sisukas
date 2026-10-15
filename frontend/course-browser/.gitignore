@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# TypeScript generated output
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+
 # Editor directories and files
 .vscode/
 .idea

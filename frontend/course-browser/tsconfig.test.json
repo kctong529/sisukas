@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "types": [
+      "node",
+      "vitest/globals",
+      "vite/client",
+      "vite-plugin-pwa/client",
+      "@modyfi/vite-plugin-yaml/modules"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "tests/**/*.ts"
+  ]
+}
