@@ -26,7 +26,7 @@ periods:
     - period: "Period I"
       start_date: "2023-09-04"
       end_date: "2023-10-22"
-      week_numbers: "35-42"
+      week_numbers: "36-42"
     - period: "Period II"
       start_date: "2023-10-23"
       end_date: "2023-12-10"
