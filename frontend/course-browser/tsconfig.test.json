@@ -6,6 +6,8 @@
     "types": [
       "node",
       "vitest/globals",
+      "vite/client",
+      "vite-plugin-pwa/client",
       "@modyfi/vite-plugin-yaml/modules"
     ]
   },

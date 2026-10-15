@@ -24,9 +24,9 @@ describe('blockStore Domain Logic', () => {
   describe('Data Management', () => {
     it('should maintain blocks sorted by the "order" property', async () => {
       // We create them out of order
-      await blockStore.createBlock(courseA, 'Last', [], 10);
-      await blockStore.createBlock(courseA, 'First', [], 1);
-      await blockStore.createBlock(courseA, 'Middle', [], 5);
+      await blockStore.createBlock(courseA, 'Last', [], 10, 0);
+      await blockStore.createBlock(courseA, 'First', [], 1, 0);
+      await blockStore.createBlock(courseA, 'Middle', [], 5, 0);
 
       const blocks = get(blocksForInstance(courseA));
       
@@ -36,8 +36,8 @@ describe('blockStore Domain Logic', () => {
     });
 
     it('should isolate blocks between different course instances', async () => {
-      await blockStore.createBlock(courseA, 'Block A', [], 0);
-      await blockStore.createBlock(courseB, 'Block B', [], 0);
+      await blockStore.createBlock(courseA, 'Block A', [], 0, 0);
+      await blockStore.createBlock(courseB, 'Block B', [], 0, 0);
 
       const blocksA = get(blocksForInstance(courseA));
       const blocksB = get(blocksForInstance(courseB));
@@ -49,7 +49,7 @@ describe('blockStore Domain Logic', () => {
     });
 
     it('should remove a block from cache when deleted', async () => {
-      const b = await blockStore.createBlock(courseA, 'Delete Me', [], 0);
+      const b = await blockStore.createBlock(courseA, 'Delete Me', [], 0, 0);
       await blockStore.deleteBlock(b.id);
 
       const cached = get(blocksForInstance(courseA));
@@ -90,7 +90,7 @@ describe('blockStore Domain Logic', () => {
   // --- 3. REACTIVE UI STATES ---
   describe('UI Feedback States', () => {
     it('should track modification state for specific blocks', async () => {
-      const b = await blockStore.createBlock(courseA, 'Old', [], 0);
+      const b = await blockStore.createBlock(courseA, 'Old', [], 0, 0);
       
       mockBlocksService.configure({ mutationDelayMs: 50 });
       const modifying = isModifyingBlock(b.id);
@@ -108,7 +108,7 @@ describe('blockStore Domain Logic', () => {
     it('should capture error and then clear it on next success', async () => {
       // 1. Trigger failure
       mockBlocksService.configure({ errorRate: 1.0 });
-      try { await blockStore.createBlock(courseA, 'Fail', [], 0); } catch (e) {
+      try { await blockStore.createBlock(courseA, 'Fail', [], 0, 0); } catch (e) {
         console.log(e);
       }
       
