@@ -6,6 +6,7 @@
   import { courseIndexStore } from '../lib/stores/courseIndexStore.svelte';
   import type { Course } from '../domain/models/Course';
   import MissingCourseSubmit from './MissingCourseSubmit.svelte';
+  import CoursePeriodBadge from './CoursePeriodBadge.svelte';
   import { assertCourseCodeIsMissingEverywhere } from '../domain/services/CourseCodeGuard';
   import { NotificationService } from '../infrastructure/services/NotificationService';
   import { CourseSnapshotsService } from '../infrastructure/services/CourseSnapshotsService';
@@ -556,9 +557,7 @@
         {/if}
 
         <span class="card-code">{course.code.value}</span>
-        <span class="card-period">
-          {formatDate(course.courseDate.start)} – {formatDate(course.courseDate.end)}
-        </span>
+        <CoursePeriodBadge courseDate={course.courseDate} />
       </div>
 
       <a
@@ -902,14 +901,6 @@
     font-size: 0.8rem;
   }
   
-  .card-period {
-    background: #2f7fd6;
-    color: white;
-    padding: 0.1rem 0.4rem;
-    border-radius: 3px;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
 
   .favourite-btn-mobile {
     border: none;
