@@ -5,6 +5,15 @@ import svelteParser from 'svelte-eslint-parser';
 import globals from 'globals';
 
 export default [
+  {
+    ignores: [
+      'dist/**',
+      'src/**/*.js',
+      'src/**/*.js.map',
+      'src/**/*.d.ts',
+    ],
+  },
+  
   js.configs.recommended,
   ...ts.configs.recommended,
   ...svelte.configs['flat/recommended'],
