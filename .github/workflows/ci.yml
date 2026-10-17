@@ -40,6 +40,9 @@ jobs:
 
       - name: Type Check with TypeScript
         run: npm run type-check
+      
+      - name: Validate Curriculum Metadata
+        run: npm run validate:curricula -- --format-only
 
       - name: Run Unit Tests
         run: npm run test
