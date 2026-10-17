@@ -10,42 +10,89 @@ import { CourseCode } from '../src/domain/valueObjects/CourseCode';
 import { validateCurriculumMetadata } from '../src/domain/services/CurriculumMetadataValidator';
 
 type CliOptions =
-  | { mode: 'format-only' }
-  | { mode: 'full'; active: string; historical: string };
+  | {
+      mode: 'format-only';
+      curriculaDir: string;
+    }
+  | {
+      mode: 'full';
+      curriculaDir: string;
+      active: string;
+      historical: string;
+    };
 
 const TYPES = ['major', 'minor', 'master'] as const satisfies readonly CurriculumType[];
 const DATA_DIR = fileURLToPath(new URL('../src/data/', import.meta.url));
 
 function usage(): string {
-  return 'Usage: validate-curricula --format-only | --active courses.json --historical historical.json';
+  return [
+    'Usage:',
+    '  validate-curricula --format-only [--curricula-dir DIR]',
+    '  validate-curricula --active FILE --historical FILE',
+    '    [--curricula-dir DIR]',
+  ].join('\n');
 }
 
 function parseArgs(args: string[]): CliOptions {
-  if (args.length === 1 && args[0] === '--format-only') {
-    return { mode: 'format-only' };
-  }
+  let formatOnly = false;
+  const values = new Map<string, string>();
 
-  const options: Record<string, string> = {};
-  for (let i = 0; i < args.length; i += 2) {
+  for (let i = 0; i < args.length; i++) {
     const flag = args[i];
-    const value = args[i + 1];
-    if (!['--active', '--historical'].includes(flag) || !value || value.startsWith('--') || flag in options) {
+
+    if (flag === '--format-only') {
+      if (formatOnly) throw new Error(usage());
+      formatOnly = true;
+      continue;
+    }
+
+    if (
+      !['--active', '--historical', '--curricula-dir'].includes(flag)
+    ) {
       throw new Error(usage());
     }
-    options[flag] = value;
+
+    const value = args[++i];
+
+    if (!value || value.startsWith('--') || values.has(flag)) {
+      throw new Error(usage());
+    }
+
+    values.set(flag, value);
   }
-  if (Object.keys(options).length !== 2 || !options['--active'] || !options['--historical']) {
-    throw new Error(usage());
+
+  const curriculaDir = values.get('--curricula-dir') ?? DATA_DIR;
+  const active = values.get('--active');
+  const historical = values.get('--historical');
+
+  if (formatOnly && !active && !historical) {
+    return {
+      mode: 'format-only',
+      curriculaDir,
+    };
   }
-  return { mode: 'full', active: options['--active'], historical: options['--historical'] };
+
+  if (!formatOnly && active && historical) {
+    return {
+      mode: 'full',
+      curriculaDir,
+      active,
+      historical,
+    };
+  }
+
+  throw new Error(usage());
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-async function readCurriculum(type: CurriculumType): Promise<RawCurriculumData> {
-  const filename = path.join(DATA_DIR, `${type}.yaml`);
+async function readCurriculum(
+  type: CurriculumType,
+  dataDir: string,
+): Promise<RawCurriculumData> {
+  const filename = path.join(dataDir, `${type}.yaml`);
   const parsed: unknown = parseYaml(await readFile(filename, 'utf8'));
   if (!isRecord(parsed) || !Array.isArray(parsed.curricula)) {
     throw new Error(`${filename}: expected { curricula: [...] }`);
@@ -82,7 +129,9 @@ async function readCourseCodes(filename: string): Promise<Set<string>> {
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
   const curricula = {} as Record<CurriculumType, RawCurriculumData>;
-  for (const type of TYPES) curricula[type] = await readCurriculum(type);
+  for (const type of TYPES) {
+    curricula[type] = await readCurriculum(type, options.curriculaDir);
+  }
 
   const validation = options.mode === 'format-only'
     ? { mode: 'format-only' as const }
