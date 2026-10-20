@@ -1,6 +1,8 @@
 import json
 import sys
 import os
+from course_dates import normalize_enrolment_date
+
 
 def transform_course(c):
     """Return the reduced course object with only required fields."""
@@ -25,8 +27,12 @@ def transform_course(c):
         "courseUnitId": c.get("courseUnitId"),
         "languageOfInstructionCodes": c.get("languageOfInstructionCodes"),
         "teachers": c.get("teachers", []),
-        "enrolmentStartDate": c.get("enrolmentStartDate"),
-        "enrolmentEndDate": c.get("enrolmentEndDate"),
+        "enrolmentStartDate": normalize_enrolment_date(
+            c.get("enrolmentStartDate")
+        ),
+        "enrolmentEndDate": normalize_enrolment_date(
+            c.get("enrolmentEndDate")
+        ),
     }
 
 
