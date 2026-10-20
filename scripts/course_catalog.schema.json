@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sisukas.local/schemas/course-catalog.json",
+  "title": "SISUKAS transformed course catalog",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "$ref": "#/$defs/course"
+  },
+  "$defs": {
+    "localized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fi", "sv", "en"],
+      "properties": {
+        "fi": { "type": "string" },
+        "sv": { "type": "string" },
+        "en": { "type": "string" }
+      }
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "optionalDate": {
+      "anyOf": [
+        { "$ref": "#/$defs/date" },
+        { "type": "null" }
+      ]
+    },
+    "course": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "code",
+        "startDate",
+        "endDate",
+        "type",
+        "name",
+        "summary",
+        "organizationName",
+        "credits",
+        "courseUnitId",
+        "languageOfInstructionCodes",
+        "teachers",
+        "enrolmentStartDate",
+        "enrolmentEndDate"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "startDate": {
+          "$ref": "#/$defs/date"
+        },
+        "endDate": {
+          "$ref": "#/$defs/date"
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "$ref": "#/$defs/localized"
+        },
+        "summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["prerequisites", "level"],
+          "properties": {
+            "prerequisites": {
+              "$ref": "#/$defs/localized"
+            },
+            "level": {
+              "$ref": "#/$defs/localized"
+            }
+          }
+        },
+        "organizationName": {
+          "$ref": "#/$defs/localized"
+        },
+        "credits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["min", "max"],
+          "properties": {
+            "min": {
+              "type": "number",
+              "minimum": 0
+            },
+            "max": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "courseUnitId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "languageOfInstructionCodes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "teachers": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "enrolmentStartDate": {
+          "$ref": "#/$defs/optionalDate"
+        },
+        "enrolmentEndDate": {
+          "$ref": "#/$defs/optionalDate"
+        }
+      }
+    }
+  }
+}

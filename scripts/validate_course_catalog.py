@@ -1,81 +1,143 @@
 #!/usr/bin/env python3
-"""Validate transformed course catalog data before publication."""
+"""Validate every field and cross-field invariant in a transformed course catalog.
+
+Requires: jsonschema>=4.18
+"""
 
 import argparse
 import json
-import re
 from datetime import date
 from pathlib import Path
 
-DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-ENROLMENT_FIELDS = ("enrolmentStartDate", "enrolmentEndDate")
+from jsonschema import Draft202012Validator, FormatChecker
 
 
-def validate_courses(courses):
+SCHEMA_FILE = Path(__file__).with_name("course_catalog.schema.json")
+
+
+def validate_courses(courses, schema=None):
+    """Return a list of human-readable failures without changing input data."""
+    if schema is None:
+        schema = json.loads(SCHEMA_FILE.read_text(encoding="utf-8"))
+
+    validator = Draft202012Validator(
+        schema,
+        format_checker=FormatChecker(),
+    )
+
     errors = []
-    seen_ids = set()
+
+    for err in validator.iter_errors(courses):
+        path = "$" + "".join(
+            f"[{x}]" if isinstance(x, int) else f".{x}"
+            for x in err.absolute_path
+        )
+        errors.append(f"{path}: {err.message}")
 
     if not isinstance(courses, list):
-        return ["Catalog must be a JSON array"]
+        return sorted(errors)
 
-    if not courses:
-        return ["Catalog must not be empty"]
+    seen = set()
 
-    for index, course in enumerate(courses):
+    for i, course in enumerate(courses):
         if not isinstance(course, dict):
-            errors.append(f"Record {index}: expected an object")
             continue
 
-        course_id = course.get("id")
+        cid = course.get("id")
 
-        if not isinstance(course_id, str) or not course_id:
-            errors.append(f"Record {index}: missing or invalid ID")
-        elif course_id in seen_ids:
-            errors.append(f"Duplicate course ID: {course_id}")
-        else:
-            seen_ids.add(course_id)
+        if isinstance(cid, str) and cid:
+            if cid in seen:
+                errors.append(f"$[{i}].id: duplicate ID {cid!r}")
+            seen.add(cid)
 
-        for field in ENROLMENT_FIELDS:
+        def parsed(field):
             value = course.get(field)
 
-            if value is None:
-                continue
-
-            if not isinstance(value, str) or not DATE_PATTERN.fullmatch(value):
-                errors.append(
-                    f"{course_id}: invalid {field}: {value!r}"
-                )
-                continue
+            if not isinstance(value, str):
+                return None
 
             try:
-                date.fromisoformat(value)
+                if (
+                    len(value) == 10
+                    and value[4] == "-"
+                    and value[7] == "-"
+                ):
+                    return date.fromisoformat(value)
             except ValueError:
+                pass
+
+            return None
+
+        start = parsed("startDate")
+        end = parsed("endDate")
+
+        if start is not None and end is not None and start > end:
+            errors.append(
+                f"$[{i}]: startDate after endDate ({cid})"
+            )
+
+        enrol_start = course.get("enrolmentStartDate")
+        enrol_end = course.get("enrolmentEndDate")
+
+        if (enrol_start is None) != (enrol_end is None):
+            errors.append(
+                f"$[{i}]: enrolment dates must both be null "
+                f"or both be dates ({cid})"
+            )
+
+        es = parsed("enrolmentStartDate")
+        ee = parsed("enrolmentEndDate")
+
+        if es is not None and ee is not None and es > ee:
+            errors.append(
+                f"$[{i}]: enrolmentStartDate after "
+                f"enrolmentEndDate ({cid})"
+            )
+
+        credits = course.get("credits")
+
+        if isinstance(credits, dict):
+            low = credits.get("min")
+            high = credits.get("max")
+
+            if (
+                type(low) in (int, float)
+                and type(high) in (int, float)
+                and low > high
+            ):
                 errors.append(
-                    f"{course_id}: impossible {field}: {value!r}"
+                    f"$[{i}].credits: min greater than max ({cid})"
                 )
 
-    return errors
+    return sorted(errors)
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("catalog", type=Path)
+    parser.add_argument("--max-errors", type=int, default=30)
+
     args = parser.parse_args()
 
-    with args.catalog.open(encoding="utf-8") as file:
-        courses = json.load(file)
+    courses = json.loads(
+        args.catalog.read_text(encoding="utf-8")
+    )
 
     errors = validate_courses(courses)
 
     if errors:
-        print(f"Catalog validation failed: {len(errors)} error(s)")
-        for error in errors[:30]:
-            print(f"  - {error}")
+        print(f"FAILED: {len(errors)} validation error(s)")
+
+        for error in errors[:args.max_errors]:
+            print(" -", error)
+
         raise SystemExit(1)
 
-    print(f"Catalog validation passed: {len(courses)} records")
+    print(
+        f"PASS: {len(courses)} records, "
+        "all fields and cross-field invariants validated"
+    )
 
 
 if __name__ == "__main__":
     main()
-    

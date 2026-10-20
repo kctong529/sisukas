@@ -43,7 +43,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests "jsonschema>=4.18"
 
       - name: Create artifacts and logs directories
         run: mkdir -p artifacts logs
@@ -73,6 +73,10 @@ jobs:
       - name: Transform latest fetch
         run: |
           python scripts/transform_courses.py latest_fetch.json latest.json
+      
+      - name: Validate transformed course catalog
+        run: |
+          python3 scripts/validate_course_catalog.py latest.json
 
       - name: Check for changes (and write removed objects)
         id: check_changes
@@ -115,7 +119,12 @@ jobs:
           python scripts/merge_expired_into_historical.py \
             historical.json artifacts/expired_courses.json latest.json artifacts/historical.next.json
           echo "INFO: Prepared historical artifacts"
-
+      
+      - name: Validate merged historical catalog
+        if: steps.scope.outputs.update_historical == 'true'
+        run: |
+          python3 scripts/validate_course_catalog.py artifacts/historical.next.json
+      
       - name: Validate active/historical disjointness
         if: steps.check_changes.outputs.has_changes == 'true' && steps.scope.outputs.update_historical == 'true'
         run: |
