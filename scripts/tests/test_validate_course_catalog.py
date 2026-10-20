@@ -101,12 +101,13 @@ class TestCatalogValidation(unittest.TestCase):
             )
         )
 
-    def test_mismatched_null_dates(self):
-        self.check_bad(
-            lambda c: c.update(
-                enrolmentStartDate="2026-10-20"
-            )
-        )
+    def test_independently_nullable_enrolment_dates(self):
+      for field in ("enrolmentStartDate", "enrolmentEndDate"):
+          with self.subTest(field=field):
+              course = deepcopy(COURSE)
+              course[field] = "2026-10-20"
+
+              self.assertEqual(validate_courses([course]), [])
 
     def test_invalid_array_member(self):
         self.check_bad(

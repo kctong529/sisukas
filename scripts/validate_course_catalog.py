@@ -76,15 +76,6 @@ def validate_courses(courses, schema=None):
                 f"$[{i}]: startDate after endDate ({cid})"
             )
 
-        enrol_start = course.get("enrolmentStartDate")
-        enrol_end = course.get("enrolmentEndDate")
-
-        if (enrol_start is None) != (enrol_end is None):
-            errors.append(
-                f"$[{i}]: enrolment dates must both be null "
-                f"or both be dates ({cid})"
-            )
-
         es = parsed("enrolmentStartDate")
         ee = parsed("enrolmentEndDate")
 
