@@ -36,28 +36,28 @@ class TestReconcileActiveCourses(unittest.TestCase):
     def test_retains_implementation_ending_today(self):
         old = course("today", "2026-10-20")
 
-        active, archived, retained = self.reconcile([old], [])
+        active, archived, retained = self.reconcile([old], [course("baseline", "2027-12-31")])
 
-        self.assertEqual(ids(active), {"today"})
+        self.assertEqual(ids(active), {"today", "baseline"})
         self.assertEqual(ids(retained), {"today"})
         self.assertEqual(archived, [])
-        self.assertEqual(active[0], old)
+        self.assertEqual(active[-1], old)
 
     def test_retains_future_implementation(self):
         old = course("future", "2027-01-15")
 
-        active, archived, retained = self.reconcile([old], [])
+        active, archived, retained = self.reconcile([old], [course("baseline", "2027-12-31")])
 
-        self.assertEqual(ids(active), {"future"})
+        self.assertEqual(ids(active), {"future", "baseline"})
         self.assertEqual(ids(retained), {"future"})
         self.assertEqual(archived, [])
 
     def test_archives_implementation_ended_yesterday(self):
         old = course("expired", "2026-10-19")
 
-        active, archived, retained = self.reconcile([old], [])
+        active, archived, retained = self.reconcile([old], [course("baseline", "2027-12-31")])
 
-        self.assertEqual(active, [])
+        self.assertEqual(ids(active), {"baseline"})
         self.assertEqual(ids(archived), {"expired"})
         self.assertEqual(retained, [])
 
@@ -70,6 +70,27 @@ class TestReconcileActiveCourses(unittest.TestCase):
         self.assertEqual(active, [new])
         self.assertEqual(archived, [])
         self.assertEqual(retained, [])
+
+    def test_rejects_duplicate_previous_ids(self):
+        with self.assertRaisesRegex(ValueError, "duplicate id"):
+            self.reconcile([course("a", "2027-01-01"), course("a", "2027-01-01")],
+                           [course("b", "2027-01-01")])
+
+    def test_rejects_duplicate_latest_ids(self):
+        with self.assertRaisesRegex(ValueError, "duplicate id"):
+            self.reconcile([], [course("a", "2027-01-01"), course("a", "2027-01-01")])
+
+    def test_rejects_empty_latest_catalog(self):
+        with self.assertRaisesRegex(ValueError, "empty"):
+            self.reconcile([course("a", "2027-01-01")], [])
+
+    def test_rejects_non_array_input(self):
+        with self.assertRaisesRegex(ValueError, "JSON array"):
+            self.reconcile({"id": "a"}, [course("b", "2027-01-01")])
+
+    def test_rejects_missing_id(self):
+        with self.assertRaisesRegex(ValueError, "invalid id"):
+            self.reconcile([{"endDate": "2027-01-01"}], [course("b", "2027-01-01")])
 
     def test_includes_new_implementation(self):
         new = course("new", "2027-01-31")
@@ -116,7 +137,7 @@ class TestReconcileActiveCourses(unittest.TestCase):
         previous = [course("invalid", "not-a-date")]
 
         with self.assertRaises(ValueError):
-            self.reconcile(previous, [])
+            self.reconcile(previous, [course("baseline", "2027-12-31")])
 
     def test_does_not_mutate_inputs(self):
         previous = [course("future", "2027-01-01")]
