@@ -137,8 +137,6 @@ function snapshotPayloadToRawCourse(payload: Record<string, unknown>): RawCourse
     type,
     // optional
     tags: undefined,
-    // required by RawCourse
-    lastUpdated: new Date().toISOString(),
   };
 
   return raw;

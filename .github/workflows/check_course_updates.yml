@@ -2,6 +2,16 @@ name: Check Course Updates
 
 on:
   workflow_dispatch:
+    inputs:
+      allow_large_archive:
+        description: 'Approve an exceptional archive fraction after reviewing the candidate IDs'
+        type: boolean
+        required: true
+        default: false
+      expected_archive_candidates:
+        description: 'Exact reviewed number of archive candidates (required for override)'
+        type: string
+        required: false
   schedule:
     # Run daily at 6 AM UTC
     - cron: '0 6 * * *'
@@ -20,7 +30,7 @@ jobs:
       contents: 'read'
       id-token: 'write'
     outputs:
-      has_changes: ${{ steps.check_changes.outputs.has_changes }}
+      has_changes: ${{ steps.publish_scope.outputs.publish }}
       update_historical: ${{ steps.scope.outputs.update_historical }}
       gcs_bucket: ${{ steps.set_bucket.outputs.gcs_bucket }}
     steps:
@@ -43,22 +53,25 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests "jsonschema>=4.18"
 
       - name: Create artifacts and logs directories
         run: mkdir -p artifacts logs
 
-      - name: Fetch existing courses.json if available
+      # Established buckets must have readable baselines. Bootstrap is a separate procedure.
+      - name: Fetch previous active catalog (required)
         run: |
-          curl -fSL \
-          "https://storage.googleapis.com/${{ steps.set_bucket.outputs.gcs_bucket }}/courses.json" \
-          -o courses.json || echo "No existing courses.json"
+          curl --fail --show-error --silent --location --retry 3 \
+            "https://storage.googleapis.com/${{ steps.set_bucket.outputs.gcs_bucket }}/courses.json" \
+            -o courses.json
+          python scripts/validate_course_catalog.py courses.json
 
-      - name: Fetch existing historical.json if available
+      - name: Fetch previous historical catalog (required)
         run: |
-          curl -fSL \
-          "https://storage.googleapis.com/${{ steps.set_bucket.outputs.gcs_bucket }}/historical.json" \
-          -o historical.json || echo "No existing historical.json"
+          curl --fail --show-error --silent --location --retry 3 \
+            "https://storage.googleapis.com/${{ steps.set_bucket.outputs.gcs_bucket }}/historical.json" \
+            -o historical.json
+          python scripts/validate_course_catalog.py historical.json
         
       - name: Fetch latest courses
         env:
@@ -73,16 +86,50 @@ jobs:
       - name: Transform latest fetch
         run: |
           python scripts/transform_courses.py latest_fetch.json latest.json
+      
+      - name: Validate transformed course catalog
+        run: |
+          python3 scripts/validate_course_catalog.py latest.json
 
-      - name: Check for changes (and write removed objects)
+      - name: Reconcile latest response with previous active catalog
+        env:
+          # These inputs are populated only for a manual workflow_dispatch run.
+          ALLOW_LARGE_ARCHIVE: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_large_archive }}
+          EXPECTED_ARCHIVE_CANDIDATES: ${{ inputs.expected_archive_candidates }}
+        run: |
+          args=(
+            --previous courses.json --latest latest.json
+            --active-out artifacts/courses.next.json
+            --archive-out artifacts/archive_candidates.json
+            --retained-out artifacts/carried_forward.json
+            --max-archive-fraction 0.20
+          )
+          if [ "$ALLOW_LARGE_ARCHIVE" = "true" ]; then
+            if ! [[ "$EXPECTED_ARCHIVE_CANDIDATES" =~ ^[0-9]+$ ]]; then
+              echo "ERROR: manual override requires an exact nonnegative archive count" >&2
+              exit 1
+            fi
+            echo "WARNING: manually reviewed exceptional archive transition; expected candidates=$EXPECTED_ARCHIVE_CANDIDATES"
+            args+=(--allow-large-archive --expected-archive-count "$EXPECTED_ARCHIVE_CANDIDATES")
+          elif [ -n "$EXPECTED_ARCHIVE_CANDIDATES" ]; then
+            echo "ERROR: expected_archive_candidates supplied without allow_large_archive" >&2
+            exit 1
+          fi
+          python scripts/reconcile_active_courses.py "${args[@]}"
+
+      - name: Validate reconciled active catalog
+        run: python scripts/validate_course_catalog.py artifacts/courses.next.json
+
+      - name: Check effective active-catalog changes
         id: check_changes
         run: |
-          python scripts/report_course_changes.py --removed-out artifacts/expired_courses.json
+          python scripts/report_course_changes.py \
+            --old courses.json --new artifacts/courses.next.json
 
       - name: Count reactivated instances (historical ∩ latest)
         id: reactivated
         run: |
-          python scripts/report_reactivated.py --historical historical.json --active latest.json
+          python scripts/report_reactivated.py --historical historical.json --active artifacts/courses.next.json
 
       - name: Decide whether to update historical
         id: scope
@@ -103,41 +150,52 @@ jobs:
             echo "INFO: No changes to historical"
           fi
 
-      - name: Prepare active courses artifact
-        if: steps.check_changes.outputs.has_changes == 'true'
+      - name: Decide whether anything needs publication
+        id: publish_scope
+        env:
+          ACTIVE_CHANGED: ${{ steps.check_changes.outputs.has_changes }}
+          HISTORICAL_CHANGED: ${{ steps.scope.outputs.update_historical }}
         run: |
-          cp latest.json artifacts/courses.next.json
-          echo "INFO: Prepared active courses artifact"
+          if [ "$ACTIVE_CHANGED" = "true" ] || [ "$HISTORICAL_CHANGED" = "true" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Prepare historical artifacts
-        if: steps.check_changes.outputs.has_changes == 'true' && steps.scope.outputs.update_historical == 'true'
+      - name: Prepare merged historical artifact
+        if: steps.scope.outputs.update_historical == 'true'
         run: |
           python scripts/merge_expired_into_historical.py \
-            historical.json artifacts/expired_courses.json latest.json artifacts/historical.next.json
-          echo "INFO: Prepared historical artifacts"
+            historical.json artifacts/archive_candidates.json \
+            artifacts/courses.next.json artifacts/historical.next.json
 
-      - name: Validate active/historical disjointness
-        if: steps.check_changes.outputs.has_changes == 'true' && steps.scope.outputs.update_historical == 'true'
+      - name: Validate effective historical catalog
+        if: steps.publish_scope.outputs.publish == 'true'
         run: |
+          if [ "${{ steps.scope.outputs.update_historical }}" = "true" ]; then
+            HISTORICAL=artifacts/historical.next.json
+          else
+            HISTORICAL=historical.json
+          fi
+          python scripts/validate_course_catalog.py "$HISTORICAL"
           python scripts/validate_disjoint_datasets.py \
             --a artifacts/courses.next.json --label-a active \
-            --b artifacts/historical.next.json --label-b historical
-          echo "INFO: Validation passed - active and historical are disjoint"
+            --b "$HISTORICAL" --label-b historical
 
       - name: Generate hashes for active courses
-        if: steps.check_changes.outputs.has_changes == 'true'
+        if: steps.publish_scope.outputs.publish == 'true'
         run: |
           python scripts/generate_hash.py artifacts/courses.next.json artifacts/courses.hash.json
           echo "INFO: Generated hash for active courses"
 
       - name: Generate hashes for historical courses
-        if: steps.check_changes.outputs.has_changes == 'true' && steps.scope.outputs.update_historical == 'true'
+        if: steps.publish_scope.outputs.publish == 'true' && steps.scope.outputs.update_historical == 'true'
         run: |
           python scripts/generate_hash.py artifacts/historical.next.json artifacts/historical.hash.json
           echo "INFO: Generated hash for historical courses"
 
       - name: Compress artifacts
-        if: steps.check_changes.outputs.has_changes == 'true'
+        if: steps.publish_scope.outputs.publish == 'true'
         run: |
           gzip -c artifacts/courses.next.json > artifacts/courses.json.gz
           
@@ -148,7 +206,7 @@ jobs:
           echo "INFO: Compressed artifacts"
 
       - name: Copy latest change log
-        if: steps.check_changes.outputs.has_changes == 'true'
+        if: steps.publish_scope.outputs.publish == 'true'
         run: |
           LATEST_LOG=$(ls -1t logs/course_changes_*.json 2>/dev/null | head -n 1)
           if [ -n "$LATEST_LOG" ]; then
@@ -159,7 +217,7 @@ jobs:
           fi
 
       - name: Upload artifacts (internal)
-        if: steps.check_changes.outputs.has_changes == 'true'
+        if: steps.publish_scope.outputs.publish == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: courses-artifacts

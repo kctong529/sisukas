@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { VitePWA } from 'vite-plugin-pwa'
 import ViteYaml from '@modyfi/vite-plugin-yaml';
@@ -54,6 +54,9 @@ export default defineConfig(({ mode }) => ({
   test: {
     environment: 'jsdom',
   },
+  resolve: process.env.VITEST
+    ? { conditions: ['browser'] }
+    : undefined,
   server: mode === 'development' ? {
     ...(hasCerts ? {
       https: {

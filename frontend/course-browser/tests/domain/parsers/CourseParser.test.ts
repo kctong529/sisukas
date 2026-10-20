@@ -1,164 +1,350 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { parseRawCourse, type RawCourse } from '../../../src/domain/parsers/CourseParser';
 
-// Mock the Course and Prerequisites classes
-vi.mock('../../../src/domain/models/Course', () => {
-  const MockCourse = vi.fn();
-  return { Course: MockCourse };
-});
+import { describe, expect, it } from 'vitest';
 
-vi.mock('../../../src/domain/valueObjects/Prerequisites', () => {
-  const MockPrerequisites = vi.fn();
-  return { Prerequisites: MockPrerequisites };
-});
-
-import { Course } from '../../../src/domain/models/Course';
-import { Prerequisites } from '../../../src/domain/valueObjects/Prerequisites';
+import {
+  parseRawCourse,
+  type RawCourse,
+} from '../../../src/domain/parsers/CourseParser';
 
 const mockValidRawCourse: RawCourse = {
-  id: 'aalto-CUR-206094-3121874',
-  courseUnitId: 'aalto-CU-1150973072-20240801',
-  code: 'CS-A1120',
-  name: { en: 'Programming 2, Lecture', fi: 'Ohjelmointi 2, Luento-opetus', sv: 'Programmering 2, Föreläsning' },
-  startDate: '2026-02-23',
-  endDate: '2026-05-29',
+  id: 'aalto-CUR-test-123',
+  courseUnitId: 'aalto-CU-test-123',
+  code: 'CS-E1234',
+  name: {
+    fi: 'Esimerkkikurssi',
+    sv: 'Exempelkurs',
+    en: 'Example Course',
+  },
+
+  startDate: '2026-03-01',
+  endDate: '2026-05-31',
   enrolmentStartDate: '2026-01-26',
   enrolmentEndDate: '2026-03-02',
-  credits: { min: 5, max: 5 },
+
+  credits: {
+    min: 5,
+    max: 5,
+  },
+
   summary: {
-    prerequisites: {
-      en: "Recommended prerequisites: CS-A1110 Programming 1",
-      fi: "Suositellut esitiedot: CS-A1110 Ohjelmointi 1",
-      sv: "Rekommenderade förkunskaper: CS-A1110 Programmering 1"
-    },
     level: {
-      fi: "basic-studies",
-      sv: "basic-studies",
-      en: "basic-studies"
-    }
+      fi: 'advanced-studies',
+      sv: 'advanced-studies',
+      en: 'advanced-studies',
+    },
+    prerequisites: {
+      fi: '',
+      sv: '',
+      en: 'Basic programming knowledge',
+    },
   },
+
   organizationName: {
-    fi: "Tietotekniikan laitos",
-    sv: "Institutionen för datateknik",
-    en: "Department of Computer Science"
+    fi: 'Tietotekniikan laitos',
+    sv: 'Institutionen för datateknik',
+    en: 'Department of Computer Science',
   },
-  teachers: ['Johan Lukas Ahrenberg', 'Sanna Helena Suoranta'],
+
+  teachers: ['Example Teacher'],
   languageOfInstructionCodes: ['en'],
-  type: 'teaching-participation-lectures',
-  tags: ['programming', 'core'],
-  lastUpdated: '2024-10-01T10:00:00.000Z',
+  type: 'teaching-participation-contact',
 };
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
+function withChanges(
+  changes: Partial<RawCourse>,
+): RawCourse {
+  return {
+    ...mockValidRawCourse,
+    ...changes,
+  };
+}
 
-describe('parseRawCourse', () => {
+describe('CourseParser', () => {
+  describe('valid course records', () => {
+    it('parses a valid course', () => {
+      const course = parseRawCourse(mockValidRawCourse);
 
-  it('should correctly transform a fully populated, realistic raw object into a Course instance (happy path)', () => {
-    const rawData: RawCourse = { ...mockValidRawCourse };
-    parseRawCourse(rawData);
+      expect(course.id).toBe(mockValidRawCourse.id);
+      expect(course.code.value).toBe(mockValidRawCourse.code);
+      expect(course.unitId).toBe(mockValidRawCourse.courseUnitId);
+    });
 
-    expect(Course).toHaveBeenCalledTimes(1);
-    const courseParams = vi.mocked(Course).mock.calls[0][0];
+    it('parses primary course dates', () => {
+      const course = parseRawCourse(mockValidRawCourse);
 
-    // Check basic string/number fields
-    expect(courseParams.id).toBe(rawData.id);
-    expect(courseParams.code).toBe('CS-A1120');
-    expect(courseParams.organization).toBe('Department of Computer Science');
-    expect(courseParams.level).toBe('basic-studies');
-    expect(courseParams.languages).toEqual(['en']);
+      expect(course.courseDate.start.toISOString()).toBe(
+        '2026-03-01T00:00:00.000Z',
+      );
+      expect(course.courseDate.end.toISOString()).toBe(
+        '2026-05-31T00:00:00.000Z',
+      );
+    });
 
-    // Check Date objects
-    expect(courseParams.courseDate.start).toBeInstanceOf(Date);
-    expect(courseParams.courseDate.end).toBeInstanceOf(Date);
+    it('parses enrolment dates', () => {
+      const course = parseRawCourse(mockValidRawCourse);
 
-    // Check DateRange accuracy (using timestamps for precise equality)
-    expect(courseParams.courseDate.start.getTime()).toBe(new Date(rawData.startDate).getTime());
-    expect(courseParams.enrollmentDate.end.getTime()).toBe(new Date(rawData.enrolmentEndDate).getTime());
+      expect(course.enrollmentDate.start.toISOString()).toBe(
+        '2026-01-26T00:00:00.000Z',
+      );
+      expect(course.enrollmentDate.end.toISOString()).toBe(
+        '2026-03-02T00:00:00.000Z',
+      );
+    });
 
-    // Check Value Object wrapping (Prerequisites)
-    expect(Prerequisites).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(Prerequisites).mock.calls[0][0]).toEqual(rawData.summary.prerequisites);
+    it('preserves course metadata', () => {
+      const course = parseRawCourse(mockValidRawCourse);
+
+      expect(course.name).toEqual(mockValidRawCourse.name);
+      expect(course.credits).toEqual(mockValidRawCourse.credits);
+      expect(course.teachers).toEqual(mockValidRawCourse.teachers);
+    });
+
+    it('allows a course whose start and end dates are equal', () => {
+      const course = parseRawCourse(withChanges({
+        startDate: '2026-03-01',
+        endDate: '2026-03-01',
+      }));
+
+      expect(course.courseDate.start.getTime()).toBe(
+        course.courseDate.end.getTime(),
+      );
+    });
+
+    it('accepts leap-day dates', () => {
+      const course = parseRawCourse(withChanges({
+        startDate: '2028-02-29',
+        endDate: '2028-03-01',
+      }));
+
+      expect(course.courseDate.start.toISOString()).toBe(
+        '2028-02-29T00:00:00.000Z',
+      );
+    });
   });
 
-  it('should handle string prerequisites correctly (mapping to en: string)', () => {
-    const rawData: RawCourse = {
-      ...mockValidRawCourse,
-      id: 'STRING_PREREQ',
-      summary: {
-        ...mockValidRawCourse.summary,
-        prerequisites: 'Basic math skills required (string)',
+  describe('primary date validation', () => {
+    it.each([
+      ['invalid start date', { startDate: 'not-a-date' }],
+      ['invalid end date', { endDate: 'tomorrow' }],
+      ['impossible calendar date', { startDate: '2026-02-30' }],
+      ['invalid leap day', { startDate: '2027-02-29' }],
+      ['timestamp with periods', {
+        startDate: '2026-03-01T09.00.00',
+      }],
+      ['ISO datetime', {
+        startDate: '2026-03-01T09:00:00',
+      }],
+      ['empty date', { startDate: '' }],
+    ])('rejects %s', (_description, changes) => {
+      expect(() =>
+        parseRawCourse(withChanges(changes))
+      ).toThrow(/Invalid primary date/);
+    });
+
+    it('rejects reversed course date ranges', () => {
+      expect(() =>
+        parseRawCourse(withChanges({
+          startDate: '2026-06-01',
+          endDate: '2026-05-31',
+        }))
+      ).toThrow(/Invalid primary date range/);
+    });
+  });
+
+  describe('enrolment date validation', () => {
+    it.each([
+      ['invalid start date', {
+        enrolmentStartDate: 'not-a-date-at-all',
+      }],
+      ['invalid end date', {
+        enrolmentEndDate: 'tomorrow',
+      }],
+      ['upstream start timestamp', {
+        enrolmentStartDate: '2026-01-26T09.00.00',
+      }],
+      ['upstream end timestamp', {
+        enrolmentEndDate: '2026-03-02T11.59.00',
+      }],
+      ['ISO datetime', {
+        enrolmentStartDate: '2026-01-26T09:00:00',
+      }],
+      ['impossible calendar date', {
+        enrolmentStartDate: '2026-02-30',
+      }],
+      ['empty string', {
+        enrolmentStartDate: '',
+      }],
+    ])('rejects %s', (_description, changes) => {
+      expect(() =>
+        parseRawCourse(withChanges(changes))
+      ).toThrow(/Invalid enrolment date/);
+    });
+
+    it('accepts the normalized form of an upstream enrolment timestamp', () => {
+      const course = parseRawCourse(withChanges({
+        enrolmentStartDate: '2026-12-25',
+        enrolmentEndDate: '2027-02-16',
+      }));
+
+      expect(course.enrollmentDate.start.toISOString()).toBe(
+        '2026-12-25T00:00:00.000Z',
+      );
+
+      expect(course.enrollmentDate.end.toISOString()).toBe(
+        '2027-02-16T00:00:00.000Z',
+      );
+    });
+
+    it('rejects reversed enrolment date ranges', () => {
+      expect(() =>
+        parseRawCourse(withChanges({
+          enrolmentStartDate: '2026-03-03',
+          enrolmentEndDate: '2026-03-02',
+        }))
+      ).toThrow(/Invalid enrolment date range/);
+    });
+
+    it('falls back to course dates when both enrolment dates are null', () => {
+      const course = parseRawCourse(withChanges({
+        enrolmentStartDate: null,
+        enrolmentEndDate: null,
+      }));
+
+      expect(course.enrollmentDate.start.getTime()).toBe(
+        course.courseDate.start.getTime(),
+      );
+      expect(course.enrollmentDate.end.getTime()).toBe(
+        course.courseDate.end.getTime(),
+      );
+    });
+
+    it('falls back only for a missing start date', () => {
+      const course = parseRawCourse(withChanges({
+        enrolmentStartDate: null,
+        enrolmentEndDate: '2026-03-02',
+      }));
+
+      expect(course.enrollmentDate.start.getTime()).toBe(
+        course.courseDate.start.getTime(),
+      );
+      expect(course.enrollmentDate.end.toISOString()).toBe(
+        '2026-03-02T00:00:00.000Z',
+      );
+    });
+
+    it('falls back only for a missing end date', () => {
+      const course = parseRawCourse(withChanges({
+        enrolmentStartDate: '2026-01-26',
+        enrolmentEndDate: null,
+      }));
+
+      expect(course.enrollmentDate.start.toISOString()).toBe(
+        '2026-01-26T00:00:00.000Z',
+      );
+      expect(course.enrollmentDate.end.getTime()).toBe(
+        course.courseDate.end.getTime(),
+      );
+    });
+
+    it('does not interpret null as the Unix epoch', () => {
+      const course = parseRawCourse(withChanges({
+        enrolmentStartDate: null,
+        enrolmentEndDate: null,
+      }));
+
+      expect(course.enrollmentDate.start.getUTCFullYear()).toBe(2026);
+      expect(course.enrollmentDate.end.getUTCFullYear()).toBe(2026);
+    });
+  });
+
+  describe('course formats', () => {
+    it.each([
+      ['independent-work-project', 'other'],
+      ['teaching-participation-small-group', 'lecture'],
+      ['teaching-participation-distance', 'lecture'],
+      ['teaching-participation-seminar', 'lecture'],
+      ['exam-midterm', 'exam'],
+    ] as const)(
+      'normalizes %s to %s',
+      (type, expectedFormat) => {
+        const course = parseRawCourse(withChanges({ type }));
+
+        expect(course.format).toBe(expectedFormat);
       },
-    };
-
-    parseRawCourse(rawData);
-    expect(Prerequisites).toHaveBeenCalledTimes(1);
-
-    // Check that the string prerequisite was wrapped in LocalizedString format before being passed to Prerequisites constructor
-    expect(vi.mocked(Prerequisites).mock.calls[0][0]).toEqual({ en: rawData.summary.prerequisites });
-  });
-
-  it('should handle LocalizedString prerequisites correctly', () => {
-    const localizedPrereq = { en: 'Finnish 1', fi: 'Suomi 1' };
-    const rawData: RawCourse = {
-      ...mockValidRawCourse,
-      id: 'LOCALIZED_PREREQ',
-      summary: {
-        ...mockValidRawCourse.summary,
-        prerequisites: localizedPrereq,
-      },
-    };
-
-    parseRawCourse(rawData);
-
-    expect(Prerequisites).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(Prerequisites).mock.calls[0][0]).toEqual(localizedPrereq);
-  });
-
-  it('should handle missing optional fields (description, tags, prerequisites)', () => {
-    const rawData: RawCourse = {
-      ...mockValidRawCourse,
-      id: 'MISSING_FIELDS',
-      summary: {
-        ...mockValidRawCourse.summary,
-        prerequisites: undefined,
-      },
-      tags: undefined,
-    };
-
-    parseRawCourse(rawData);
-
-    const courseParams = vi.mocked(Course).mock.calls[0][0];
-
-    expect(courseParams.tags).toBeUndefined();
-    expect(courseParams.prerequisites).toBeUndefined();
-    expect(Prerequisites).not.toHaveBeenCalled();
-  });
-
-  it('should throw an error for invalid primary dates (startDate or endDate)', () => {
-    const rawInvalidStartDate: RawCourse = { ...mockValidRawCourse, id: 'INVALID_START', startDate: 'not-a-date' };
-    const rawInvalidEndDate: RawCourse = { ...mockValidRawCourse, id: 'INVALID_END', endDate: 'bad-format' };
-
-    expect(() => parseRawCourse(rawInvalidStartDate)).toThrowError(
-      `Invalid primary date found for course ID ${rawInvalidStartDate.id}`
-    );
-    expect(() => parseRawCourse(rawInvalidEndDate)).toThrowError(
-      `Invalid primary date found for course ID ${rawInvalidEndDate.id}`
     );
   });
 
-  it('should throw an error for invalid enrolment dates', () => {
-    // 1. Arrange
-    const rawInvalidEnrolStart: RawCourse = { ...mockValidRawCourse, id: 'INVALID_ENROL_START', enrolmentStartDate: 'not-a-date-at-all' };
-    const rawInvalidEnrolEnd: RawCourse = { ...mockValidRawCourse, id: 'INVALID_ENROL_END', enrolmentEndDate: 'tomorrow' };
+  describe('language handling', () => {
+    it('preserves supported language codes', () => {
+      const course = parseRawCourse(withChanges({
+        languageOfInstructionCodes: ['en', 'fi', 'sv'],
+      }));
 
-    // 2. Act & Assert
-    expect(() => parseRawCourse(rawInvalidEnrolStart)).toThrowError(
-      `Invalid enrolment date found for course ID ${rawInvalidEnrolStart.id}`
-    );
-    expect(() => parseRawCourse(rawInvalidEnrolEnd)).toThrowError(
-      `Invalid enrolment date found for course ID ${rawInvalidEnrolEnd.id}`
-    );
+      expect(course.languages).toEqual(['en', 'fi', 'sv']);
+    });
+
+    it('filters unsupported language codes', () => {
+      const course = parseRawCourse(withChanges({
+        languageOfInstructionCodes: [
+          'en', 'de', 'fi', 'zh', '99', '',
+        ],
+      }));
+
+      expect(course.languages).toEqual(['en', 'fi']);
+    });
+
+    it('allows no supported language codes', () => {
+      const course = parseRawCourse(withChanges({
+        languageOfInstructionCodes: ['de', 'fr'],
+      }));
+
+      expect(course.languages).toEqual([]);
+    });
+  });
+
+  describe('optional metadata', () => {
+    it('accepts courses without prerequisites', () => {
+      const course = parseRawCourse(withChanges({
+        summary: {
+          level: mockValidRawCourse.summary.level,
+        },
+      }));
+
+      expect(course.prerequisites).toBeUndefined();
+    });
+
+    it('accepts string prerequisites', () => {
+      expect(() =>
+        parseRawCourse(withChanges({
+          summary: {
+            level: mockValidRawCourse.summary.level,
+            prerequisites: 'Basic programming knowledge',
+          },
+        }))
+      ).not.toThrow();
+    });
+
+    it('accepts localized prerequisites', () => {
+      expect(() =>
+        parseRawCourse(withChanges({
+          summary: {
+            level: mockValidRawCourse.summary.level,
+            prerequisites: {
+              fi: 'Ohjelmoinnin perusteet',
+              sv: 'Grundläggande programmering',
+              en: 'Basic programming',
+            },
+          },
+        }))
+      ).not.toThrow();
+    });
+
+    it('preserves optional tags', () => {
+      const course = parseRawCourse(withChanges({
+        tags: ['robotics', 'programming'],
+      }));
+
+      expect(course.tags).toEqual(['robotics', 'programming']);
+    });
   });
 });

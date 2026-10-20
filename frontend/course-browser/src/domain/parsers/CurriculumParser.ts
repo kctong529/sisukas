@@ -1,10 +1,19 @@
 // src/domain/parsers/CurriculumParser.ts
-import type { CurriculaMap, CurriculumType } from '../models/Curriculum';
+import type {
+  CurriculaMap,
+  CurriculumEntry,
+  CurriculumType,
+} from '../models/Curriculum';
 import { CourseCode } from '../valueObjects/CourseCode';
 
 export interface RawCurriculumEntry {
   code: string;
   name: string;
+  name_en?: string;
+  official_code?: string;
+  basic_studies_code?: string;
+  curriculum_period?: string;
+  source_url?: string;
   courses: string[];
 }
 
@@ -15,7 +24,7 @@ export interface RawCurriculumData {
 // Helper to process an array of raw curriculum entries
 const processCurriculumEntries = (
   entries: RawCurriculumEntry[] | undefined,
-  targetMap: Record<string, { name: string; courses: Set<string> }>
+  targetMap: Record<string, CurriculumEntry>
 ) => {
   if (!Array.isArray(entries)) {
     console.warn('Curricula data missing expected array.');
@@ -43,14 +52,19 @@ const processCurriculumEntries = (
 
     targetMap[entry.code] = {
       name: entry.name,
+      nameEn: entry.name_en,
+      officialCode: entry.official_code,
+      basicStudiesCode: entry.basic_studies_code,
+      curriculumPeriod: entry.curriculum_period,
+      sourceUrl: entry.source_url,
       courses: validatedCourseCodes,
     };
   }
 };
 
 function sortCurriculumMap(
-  map: Record<string, { name: string; courses: Set<string> }>
-): Record<string, { name: string; courses: Set<string> }> {
+  map: Record<string, CurriculumEntry>
+): Record<string, CurriculumEntry> {
   return Object.fromEntries(
     Object.entries(map).sort(([, a], [, b]) =>
       a.name.localeCompare(b.name)
@@ -64,7 +78,7 @@ export function parseCurricula(
   const out = {} as CurriculaMap;
 
   for (const [type, raw] of Object.entries(rawByType) as Array<[CurriculumType, RawCurriculumData]>) {
-    const bucket: Record<string, { name: string; courses: Set<string> }> = {};
+    const bucket: Record<string, CurriculumEntry> = {};
     processCurriculumEntries(raw.curricula, bucket);
     out[type] = sortCurriculumMap(bucket);
   }
