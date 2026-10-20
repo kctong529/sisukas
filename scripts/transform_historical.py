@@ -3,7 +3,7 @@ import sys
 import os
 from datetime import date
 from typing import Any, Dict, List, Optional
-from course_dates import normalize_enrolment_date
+from course_dates import normalize_course_date
 
 
 def transform_course(c: Dict[str, Any]) -> Dict[str, Any]:
@@ -14,8 +14,8 @@ def transform_course(c: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "id": c.get("id"),
         "code": c.get("code"),
-        "startDate": c.get("startDate"),
-        "endDate": c.get("endDate"),
+        "startDate": normalize_course_date(c.get("startDate")),
+        "endDate": normalize_course_date(c.get("endDate")),
         "type": c.get("type"),
         "name": c.get("name", {}),
 
@@ -29,11 +29,11 @@ def transform_course(c: Dict[str, Any]) -> Dict[str, Any]:
         "courseUnitId": c.get("courseUnitId"),
         "languageOfInstructionCodes": c.get("languageOfInstructionCodes"),
         "teachers": c.get("teachers", []),
-        "enrolmentStartDate": normalize_enrolment_date(
-            c.get("enrolmentStartDate")
+        "enrolmentStartDate": normalize_course_date(
+            c.get("enrolmentStartDate"), nullable=True
         ),
-        "enrolmentEndDate": normalize_enrolment_date(
-            c.get("enrolmentEndDate")
+        "enrolmentEndDate": normalize_course_date(
+            c.get("enrolmentEndDate"), nullable=True
         ),
     }
 
