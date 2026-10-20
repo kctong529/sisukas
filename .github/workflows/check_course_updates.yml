@@ -2,6 +2,16 @@ name: Check Course Updates
 
 on:
   workflow_dispatch:
+    inputs:
+      allow_large_archive:
+        description: 'Approve an exceptional archive fraction after reviewing the candidate IDs'
+        type: boolean
+        required: true
+        default: false
+      expected_archive_candidates:
+        description: 'Exact reviewed number of archive candidates (required for override)'
+        type: string
+        required: false
   schedule:
     # Run daily at 6 AM UTC
     - cron: '0 6 * * *'
@@ -82,15 +92,30 @@ jobs:
           python3 scripts/validate_course_catalog.py latest.json
 
       - name: Reconcile latest response with previous active catalog
+        env:
+          # These inputs are populated only for a manual workflow_dispatch run.
+          ALLOW_LARGE_ARCHIVE: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_large_archive }}
+          EXPECTED_ARCHIVE_CANDIDATES: ${{ inputs.expected_archive_candidates }}
         run: |
-          # Routine publishing is blocked if more than 20% of the prior active
-          # catalog would be archived. Exceptional recovery must be reviewed separately.
-          python scripts/reconcile_active_courses.py \
-            --previous courses.json --latest latest.json \
-            --active-out artifacts/courses.next.json \
-            --archive-out artifacts/archive_candidates.json \
-            --retained-out artifacts/carried_forward.json \
+          args=(
+            --previous courses.json --latest latest.json
+            --active-out artifacts/courses.next.json
+            --archive-out artifacts/archive_candidates.json
+            --retained-out artifacts/carried_forward.json
             --max-archive-fraction 0.20
+          )
+          if [ "$ALLOW_LARGE_ARCHIVE" = "true" ]; then
+            if ! [[ "$EXPECTED_ARCHIVE_CANDIDATES" =~ ^[0-9]+$ ]]; then
+              echo "ERROR: manual override requires an exact nonnegative archive count" >&2
+              exit 1
+            fi
+            echo "WARNING: manually reviewed exceptional archive transition; expected candidates=$EXPECTED_ARCHIVE_CANDIDATES"
+            args+=(--allow-large-archive --expected-archive-count "$EXPECTED_ARCHIVE_CANDIDATES")
+          elif [ -n "$EXPECTED_ARCHIVE_CANDIDATES" ]; then
+            echo "ERROR: expected_archive_candidates supplied without allow_large_archive" >&2
+            exit 1
+          fi
+          python scripts/reconcile_active_courses.py "${args[@]}"
 
       - name: Validate reconciled active catalog
         run: python scripts/validate_course_catalog.py artifacts/courses.next.json

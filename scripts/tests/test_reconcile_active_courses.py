@@ -1,4 +1,7 @@
 import sys
+import json
+import subprocess
+import tempfile
 import unittest
 from copy import deepcopy
 from datetime import date
@@ -138,6 +141,48 @@ class TestReconcileActiveCourses(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.reconcile(previous, [course("baseline", "2027-12-31")])
+
+    def test_cli_override_requires_exact_count(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            prev = root / "previous.json"
+            latest = root / "latest.json"
+            prev.write_text(json.dumps([course("old", "2026-10-19"),
+                                        course("current", "2026-10-20")]))
+            latest.write_text(json.dumps([course("new", "2027-01-01")]))
+            paths = [root / f"out-{name}.json" for name in ("active", "archive", "retained")]
+            base = [sys.executable, str(Path(__file__).resolve().parents[1] / "reconcile_active_courses.py"),
+                    "--previous", str(prev), "--latest", str(latest), "--as-of", "2026-10-20",
+                    "--active-out", str(paths[0]), "--archive-out", str(paths[1]),
+                    "--retained-out", str(paths[2]), "--max-archive-fraction", "0.20"]
+            refused = subprocess.run(base, capture_output=True, text=True)
+            self.assertNotEqual(refused.returncode, 0)
+            self.assertIn("limit is 20.0%", refused.stderr)
+            self.assertTrue(all(not path.exists() for path in paths))
+
+            wrong = subprocess.run(base + ["--allow-large-archive", "--expected-archive-count", "2"],
+                                   capture_output=True, text=True)
+            self.assertNotEqual(wrong.returncode, 0)
+            self.assertIn("expected 2", wrong.stderr)
+            self.assertTrue(all(not path.exists() for path in paths))
+
+            approved = subprocess.run(base + ["--allow-large-archive", "--expected-archive-count", "1"],
+                                      capture_output=True, text=True)
+            self.assertEqual(approved.returncode, 0, approved.stderr)
+            self.assertIn("reviewed override", approved.stdout)
+            self.assertTrue(all(path.exists() for path in paths))
+            self.assertEqual({c["id"] for c in json.loads(paths[0].read_text())},
+                             {"current", "new"})
+
+    def test_cli_rejects_override_without_count(self):
+        result = subprocess.run(
+            [sys.executable, str(Path(__file__).resolve().parents[1] / "reconcile_active_courses.py"),
+             "--previous", "p.json", "--latest", "l.json",
+             "--active-out", "a.json", "--archive-out", "b.json", "--retained-out", "c.json",
+             "--allow-large-archive"], capture_output=True, text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("requires --expected-archive-count", result.stderr)
 
     def test_does_not_mutate_inputs(self):
         previous = [course("future", "2027-01-01")]

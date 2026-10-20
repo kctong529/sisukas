@@ -1,5 +1,25 @@
 #!/usr/bin/env python3
-"""Reconcile a previous active catalog with a newly transformed catalog."""
+"""Build an effective active catalog from previous and newly fetched records.
+
+Missing implementations are retained while their previous endDate is on or after
+--as-of (UTC today by default); older missing records become archive candidates.
+The tool does not publish data, modify its inputs, or determine whether an
+upstream omission represents a genuine cancellation.
+
+Examples (run from the repository root)::
+
+    python3 scripts/reconcile_active_courses.py --help
+    python3 scripts/reconcile_active_courses.py \
+        --previous courses.json --latest latest.json \
+        --active-out artifacts/courses.next.json \
+        --archive-out artifacts/archive_candidates.json \
+        --retained-out artifacts/carried_forward.json \
+        --max-archive-fraction 0.20
+
+Exceptional *reviewed* transitions can exceed the threshold with
+--allow-large-archive --expected-archive-count N. The exact candidate count
+must match; this is not proof that any particular candidate should be archived.
+"""
 import argparse
 import json
 import os
@@ -78,16 +98,33 @@ def _write_staged(outputs):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--previous", type=Path, required=True)
-    parser.add_argument("--latest", type=Path, required=True)
+    parser = argparse.ArgumentParser(
+        description="Reconcile normalized active catalogs without publishing them.",
+        epilog=(
+            "Records missing upstream are carried forward if their previous "
+            "endDate is on/after --as-of. See scripts/README.md for examples "
+            "and safe publication guidance."
+        ),
+    )
+    parser.add_argument("--previous", type=Path, required=True,
+                        help="Previously published normalized active courses.json")
+    parser.add_argument("--latest", type=Path, required=True,
+                        help="Newly transformed and validated upstream latest.json")
     parser.add_argument("--as-of", type=date.fromisoformat,
-                        default=datetime.now(timezone.utc).date())
-    parser.add_argument("--active-out", type=Path, required=True)
-    parser.add_argument("--archive-out", type=Path, required=True)
-    parser.add_argument("--retained-out", type=Path, required=True)
+                        default=datetime.now(timezone.utc).date(),
+                        help="Expiration boundary YYYY-MM-DD (default: current UTC date)")
+    parser.add_argument("--active-out", type=Path, required=True,
+                        help="Effective active catalog: latest plus retained missing records")
+    parser.add_argument("--archive-out", type=Path, required=True,
+                        help="Missing records whose previous endDate is before --as-of")
+    parser.add_argument("--retained-out", type=Path, required=True,
+                        help="Missing records retained in active; diagnostic artifact")
     parser.add_argument("--max-archive-fraction", type=float, default=None,
-                        help="Fail when archive candidates exceed this fraction of previous active")
+                        help="Reject if archive candidates exceed this share of previous active records (e.g. 0.20)")
+    parser.add_argument("--allow-large-archive", action="store_true",
+                        help="Override archive fraction ONLY with --expected-archive-count after review")
+    parser.add_argument("--expected-archive-count", type=int, metavar="N",
+                        help="Exact number of archive candidates approved for this exceptional run")
     args = parser.parse_args()
 
     inputs_and_outputs = [args.previous, args.latest, args.active_out,
@@ -96,6 +133,12 @@ def main():
         parser.error("input/output paths must be distinct")
     if args.max_archive_fraction is not None and not 0 <= args.max_archive_fraction <= 1:
         parser.error("--max-archive-fraction must be in [0, 1]")
+    if args.allow_large_archive and args.expected_archive_count is None:
+        parser.error("--allow-large-archive requires --expected-archive-count N")
+    if not args.allow_large_archive and args.expected_archive_count is not None:
+        parser.error("--expected-archive-count requires --allow-large-archive")
+    if args.expected_archive_count is not None and args.expected_archive_count < 0:
+        parser.error("--expected-archive-count must be nonnegative")
 
     try:
         with args.previous.open(encoding="utf-8") as handle:
@@ -104,10 +147,21 @@ def main():
             latest = json.load(handle)
         active, archive, retained = reconcile_active_courses(previous, latest, args.as_of)
         fraction = len(archive) / len(previous) if previous else 0
-        if args.max_archive_fraction is not None and fraction > args.max_archive_fraction:
+        if args.allow_large_archive and len(archive) != args.expected_archive_count:
             raise ValueError(
-                f"{len(archive)}/{len(previous)} ({fraction:.1%}) archive candidates; "
-                f"limit is {args.max_archive_fraction:.1%}. Review before publishing."
+                f"override expected {args.expected_archive_count} archive candidates, "
+                f"but found {len(archive)}; review the new transition before proceeding"
+            )
+        if args.max_archive_fraction is not None and fraction > args.max_archive_fraction:
+            if not args.allow_large_archive:
+                raise ValueError(
+                    f"{len(archive)}/{len(previous)} ({fraction:.1%}) archive candidates; "
+                    f"limit is {args.max_archive_fraction:.1%}. Review before publishing."
+                )
+            print(
+                f"WARNING: reviewed override permits {len(archive)}/{len(previous)} "
+                f"({fraction:.1%}) archive candidates above "
+                f"{args.max_archive_fraction:.1%} limit"
             )
         _write_staged({
             args.active_out: active,
