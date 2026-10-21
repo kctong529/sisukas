@@ -16,20 +16,36 @@
 
 <div class="search-controls">
   <div class="button-group">
-    <button class="btn btn-secondary" on:click={() => dispatch('addRule')} title="Add a new search rule">
-      <i class="bi bi-plus-circle"></i>
+    <button
+      class="btn btn-secondary"
+      on:click={() => dispatch('addRule')}
+      aria-label="Add Rule"
+      title="Add a new search rule"
+    >
+      <i class="bi bi-plus-circle" aria-hidden="true"></i>
       <span class="button-text">Add Rule</span>
     </button>
     
-    <button class="btn btn-primary" on:click={() => dispatch('search')} title="Execute search">
-      <i class="bi bi-search"></i>
+    <button
+      class="btn btn-primary"
+      on:click={() => dispatch('search')}
+      aria-label="Search"
+      title="Execute search"
+    >
+      <i class="bi bi-search" aria-hidden="true"></i>
       <span class="button-text">Search</span>
     </button>
   </div>
 
   <div class="options-group">
     <label class="checkbox-wrapper">
-      <input type="checkbox" id="uniqueToggle" bind:checked={showUnique} on:change={() => dispatch('search')} />
+      <input
+        type="checkbox"
+        id="uniqueToggle"
+        bind:checked={showUnique}
+        aria-label="Unique courses"
+        on:change={() => dispatch('search')}
+      />
       <span class="checkbox-label">Unique</span>
     </label>
 
@@ -37,6 +53,7 @@
       class="btn btn-secondary"
       on:click={toggleSource}
       class:active={source === "all"}
+      aria-label={source === 'active' ? 'See Older' : 'See Active'}
       aria-pressed={source === "all"}
       title={source === "all" ? 'Showing historical course instances' : 'Showing active course instances'}
     >
@@ -46,13 +63,23 @@
       </span>
     </button>
     
-    <button class="btn btn-secondary" on:click={() => dispatch('save')} title="Save current search">
-      <i class="bi bi-floppy"></i>
+    <button
+      class="btn btn-secondary"
+      on:click={() => dispatch('save')}
+      aria-label="Save"
+      title="Save current search"
+    >
+      <i class="bi bi-floppy" aria-hidden="true"></i>
       <span class="button-text">Save</span>
     </button>
-    
-    <button class="btn btn-secondary" on:click={() => dispatch('load')} title="Load a saved search">
-      <i class="bi bi-folder"></i>
+
+    <button
+      class="btn btn-secondary"
+      on:click={() => dispatch('load')}
+      aria-label="Load"
+      title="Load a saved search"
+    >
+      <i class="bi bi-folder" aria-hidden="true"></i>
       <span class="button-text">Load</span>
     </button>
   </div>
