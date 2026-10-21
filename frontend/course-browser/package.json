@@ -19,7 +19,8 @@
     "test:e2e": "playwright test",
     "test:e2e:list": "playwright test --list",
     "test:e2e:smoke": "playwright test guest.spec.ts pwa.spec.ts",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:auth:setup": "node scripts/capture-auth-state.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
