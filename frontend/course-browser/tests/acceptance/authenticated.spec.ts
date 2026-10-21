@@ -32,14 +32,3 @@ test('authenticated users can open LEGO and timeline without sign-in prompts', a
   await expect(page.locator('.period-timeline')).toBeVisible();
   await expect(page.locator('.period-timeline').getByRole('heading', { name: 'Sign in to view timeline' })).toHaveCount(0);
 });
-
-test('sign-out removes authenticated access in the current browser context', async ({ page }) => {
-  await expectSignedIn(page);
-  await navigation(page).getByRole('button', { name: 'Sign out' }).click();
-  await expect(navigation(page).getByRole('button', { name: 'Sign in' })).toBeVisible();
-
-  await navigation(page).getByRole('button', { name: 'Favourites' }).click();
-  await expect(page.getByRole('heading', { name: 'Sign in to save favourites' })).toBeVisible();
-  await page.reload();
-  await expect(navigation(page).getByRole('button', { name: 'Sign in' })).toBeVisible();
-});

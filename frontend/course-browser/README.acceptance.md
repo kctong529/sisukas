@@ -17,10 +17,10 @@ Commit both `package.json` and `package-lock.json` if installing Playwright chan
 ## Running tests
 
 ```bash
-npm run test:e2e:smoke                     # guest browsing and PWA (no account)
-npx playwright test authenticated.spec.ts  # authenticated checks (session required)
-npm run test:e2e                           # all acceptance specs
-npm run test:e2e:report                    # open the most recent HTML report
+npm run test:e2e:smoke        # Guest and PWA smoke tests
+npm run test:e2e              # Regular suite; sign-out skipped
+npm run test:e2e:sign-out     # Explicit sign-out; invalidates session
+npm run test:e2e:report       # View Playwright report
 ```
 
 The default target is `https://test.sisukas.eu`. Set `SISUKAS_BASE_URL=https://...` to test another deployment. Playwright does not start Vite or Docker Compose; the target must already be running.
@@ -55,18 +55,35 @@ The authenticated suite checks session persistence, access to Favourites/LEGO/Ti
 
 ### Reusing authenticated sessions
 
-The authenticated test suite currently includes a sign-out test that invalidates the saved server-side session.
+The saved Playwright authentication state can be reused across multiple runs of the regular acceptance suite.
 
-Consequently, `playwright/.auth/test-user.json` is effectively **single-use when running the complete authenticated suite**. To run all three tests again, capture a fresh session:
+The default authenticated tests are read-only and do not intentionally invalidate the session:
 
 ```bash
-node scripts/capture-auth-state.mjs
-npx playwright test authenticated.spec.ts
+npm run test:e2e
 ```
 
-Running the session-persistence and protected-view tests without the sign-out scenario does not intentionally invalidate the session.
+The session may still expire or be invalidated externally, in which case it must be captured again.
 
-**Planned improvement:** Isolate the sign-out test so ordinary authenticated regression tests can reuse the saved session across multiple runs. Sign-out testing will require a disposable session or an explicit opt-in.
+### Testing sign-out
+
+Sign-out is tested separately because logging out invalidates the server-side session associated with the saved browser state.
+
+To execute the sign-out test:
+
+```bash
+npm run test:e2e:sign-out
+```
+
+This test is excluded from normal execution unless explicitly enabled. **Running it consumes the saved authentication session.**
+
+Afterward, capture a fresh session before running authenticated tests again:
+
+```bash
+npm run test:e2e:auth:setup
+```
+
+Use a dedicated test account and never commit or share `playwright/.auth/test-user.json`.
 
 ## Session security and test isolation
 
