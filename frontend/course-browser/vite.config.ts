@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { VitePWA } from 'vite-plugin-pwa'
 import ViteYaml from '@modyfi/vite-plugin-yaml';
@@ -53,6 +53,11 @@ export default defineConfig(({ mode }) => ({
   ],
   test: {
     environment: 'jsdom',
+    include: ['tests/**/*.test.ts'],
+    exclude: [
+      ...configDefaults.exclude,
+      'tests/acceptance/**',
+    ],
   },
   resolve: process.env.VITEST
     ? { conditions: ['browser'] }
