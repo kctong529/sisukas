@@ -30,3 +30,8 @@ src/**/*.d.ts
 # Local HTTPS dev certs
 localhost.pem
 localhost-key.pem
+
+# Playwright generated and sensitive state
+playwright/.auth/
+playwright-report/
+test-results/
