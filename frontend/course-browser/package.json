@@ -43,7 +43,7 @@
     "js-yaml": "4.1.1"
   },
   "dependencies": {
-    "better-auth": "^1.4.10",
+    "better-auth": "^1.7.12",
     "bootstrap-icons": "^1.13.1",
     "pdfjs-dist": "^5.4.530"
   }
