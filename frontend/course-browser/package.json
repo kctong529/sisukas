@@ -29,7 +29,7 @@
     "globals": "^17.0.0",
     "jsdom": "^27.4.0",
     "svelte": "^5.57.2",
-    "svelte-check": "4.3.3",
+    "svelte-check": "^4.3.3",
     "svelte-eslint-parser": "^1.4.1",
     "tsx": "^4.23.15",
     "typescript": "5.9.3",
@@ -40,7 +40,8 @@
     "yaml": "^2.9.1"
   },
   "overrides": {
-    "js-yaml": "4.1.1"
+    "js-yaml": "^4.3.2",
+    "@rollup/pluginutils": "^5.4.0"
   },
   "dependencies": {
     "better-auth": "^1.7.12",
