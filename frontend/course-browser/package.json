@@ -15,11 +15,16 @@
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
     "compile-metadata": "node compile-metadata.js",
     "dev:mkcert": "mkcert -install && mkcert localhost 127.0.0.1 ::1",
-    "validate:curricula": "tsx scripts/validate-curricula.ts"
+    "validate:curricula": "tsx scripts/validate-curricula.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:list": "playwright test --list",
+    "test:e2e:smoke": "playwright test guest.spec.ts pwa.spec.ts",
+    "test:e2e:report": "playwright show-report"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@modyfi/vite-plugin-yaml": "1.1.1",
+    "@playwright/test": "^1.64.1",
     "@sveltejs/vite-plugin-svelte": "6.2.1",
     "@tsconfig/svelte": "5.0.5",
     "@types/node": "24.10.0",
