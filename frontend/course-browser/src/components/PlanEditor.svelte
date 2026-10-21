@@ -18,13 +18,13 @@
   let previouslyFocused = $state<HTMLElement | null>(null);
 
   let isEditing = $state(false);
-  let editingName = $state(plan?.name);
+  let editingName = $state<string | undefined>();
   let isRemoving = $state(false);
   let isSaving = $state(false);
 
   function startEditing() {
-    isEditing = true;
     editingName = plan?.name;
+    isEditing = true;
   }
 
   function cancelEditing() {
