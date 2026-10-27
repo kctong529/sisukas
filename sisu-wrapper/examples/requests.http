@@ -93,3 +93,74 @@ Accept: application/json
 ### Verify the current wrapper's comma-separated ID format
 GET {{baseUrl}}/study-events?id={{studyEventId}},{{anotherStudyEventId}}
 Accept: application/json
+
+# ============================================================================
+# SISUKAS SISU-WRAPPER FASTAPI — LOCAL SMOKE TESTS (#89)
+# ============================================================================
+# Start locally from sisu-wrapper/:
+#   python3 -m uvicorn api.main:app --app-dir api --port 8001
+# Change wrapperUrl to https://sisu-wrapper-api-test.sisukas.eu after deployment.
+# These requests use real published SISU IDs; they may change upstream.
+# The GET routes fetch live SISU data. Batch body uses `requests` with
+# `course_unit_id` and `course_offering_id` keys.
+
+@wrapperUrl = http://127.0.0.1:8001
+@courseUnitId = aalto-CU-1151000764-20260801
+@courseOfferingId = aalto-cur-P-c235941a-0fd6-11f1-8c99-0050569455c9
+
+### A. Health and deployment metadata
+GET {{wrapperUrl}}/health
+Accept: application/json
+
+### B. OpenAPI specification (inspect resolve_locations on both routes)
+GET {{wrapperUrl}}/openapi.json
+Accept: application/json
+
+### C. Study groups — default, no extra location lookups
+# Expected: series_id and location_ids populated; locations remains [].
+GET {{wrapperUrl}}/api/courses/study-groups?course_unit_id={{courseUnitId}}&course_offering_id={{courseOfferingId}}
+Accept: application/json
+
+### D. Study groups — resolve rooms and buildings
+# Expected: same groups and occurrences as C, with locations enriched.
+# For lecture aalto-TILA-457, expect TU1 Saab Auditorium - 1017.
+# Also inspect exam subgroup for aalto-TILA-488 (AS2 - 2006).
+GET {{wrapperUrl}}/api/courses/study-groups?course_unit_id={{courseUnitId}}&course_offering_id={{courseOfferingId}}&resolve_locations=true
+Accept: application/json
+
+### E. Batch study groups — default (unresolved)
+POST {{wrapperUrl}}/api/courses/batch/study-groups
+Accept: application/json
+Content-Type: application/json
+
+{
+  "requests": [
+    {
+      "course_unit_id": "{{courseUnitId}}",
+      "course_offering_id": "{{courseOfferingId}}"
+    }
+  ]
+}
+
+### F. Batch study groups — resolve locations
+# Expected: results keyed by "course_unit_id:course_offering_id".
+POST {{wrapperUrl}}/api/courses/batch/study-groups?resolve_locations=true
+Accept: application/json
+Content-Type: application/json
+
+{
+  "requests": [
+    {
+      "course_unit_id": "{{courseUnitId}}",
+      "course_offering_id": "{{courseOfferingId}}"
+    }
+  ]
+}
+
+### G. Invalid Boolean — expect 422
+GET {{wrapperUrl}}/api/courses/study-groups?course_unit_id={{courseUnitId}}&course_offering_id={{courseOfferingId}}&resolve_locations=invalid
+Accept: application/json
+
+### H. Missing required identifier — expect 422
+GET {{wrapperUrl}}/api/courses/study-groups?course_offering_id={{courseOfferingId}}
+Accept: application/json
