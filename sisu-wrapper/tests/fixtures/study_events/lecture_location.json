@@ -1,0 +1,21 @@
+{
+  "id": "aalto-TILA-457",
+  "name": {
+    "fi": "TU1 Saab Auditorium - 1017"
+  },
+  "capacity": 150,
+  "buildingId": "aalto-RAKENNUS-R037",
+  "building": {
+    "id": "aalto-RAKENNUS-R037",
+    "name": {
+      "en": "Maarintie 8",
+      "fi": "Maarintie 8",
+      "sv": "Maarintie 8"
+    },
+    "address": {
+      "streetAddress": "Maarintie 8, 02150 Espoo",
+      "postalCode": "02150",
+      "city": "Espoo"
+    }
+  }
+}
