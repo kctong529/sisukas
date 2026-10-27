@@ -196,11 +196,22 @@ async def get_study_groups(
         ...,
         min_length=1,
         description="The ID of the specific course offering"
-    )
+    ),
+    resolve_locations: bool = Query(
+        False,
+        description="Optionally resolve room and building details via SISU"
+    ),
 ):
-    """Fetch study groups for a course offering"""
+    """Fetch study groups, optionally enriching events with room metadata."""
     try:
-        groups = _service.fetch_study_groups(course_unit_id, course_offering_id)
+        if resolve_locations:
+            groups = _service.fetch_study_groups_with_locations(
+                course_unit_id, course_offering_id
+            )
+        else:
+            groups = _service.fetch_study_groups(
+                course_unit_id, course_offering_id
+            )
         return StudyGroupsResponse(
             course_unit_id=course_unit_id,
             course_offering_id=course_offering_id,
@@ -226,14 +237,25 @@ async def get_study_groups(
     response_model=BatchStudyGroupsResponse,
     responses=BATCH_STUDY_GROUPS_RESPONSES
 )
-async def batch_get_study_groups(body: BatchStudyGroupsRequest):
-    """Batch fetch study groups for multiple course offerings"""
+async def batch_get_study_groups(
+    body: BatchStudyGroupsRequest,
+    resolve_locations: bool = Query(
+        False,
+        description="Optionally resolve room and building details via SISU"
+    ),
+):
+    """Batch fetch study groups, optionally resolving room metadata."""
     try:
         batch_requests = [
             (req.course_unit_id, req.course_offering_id)
             for req in body.requests
         ]
         results = _service.fetch_study_groups_batch(batch_requests)
+        if resolve_locations:
+            results = {
+                key: _service.resolve_study_group_locations(groups)
+                for key, groups in results.items()
+            }
 
         return BatchStudyGroupsResponse(
             results={
