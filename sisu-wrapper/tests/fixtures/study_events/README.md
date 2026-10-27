@@ -17,3 +17,11 @@ The tests document the observed shape and current client retrieval; they do
 not validate live SISU responses or future transformation behavior.
 
 The unversioned study-event endpoint supports both comma-separated IDs and repeated `id` parameters for the tested records. The existing wrapper uses the comma-separated format, which was verified successfully on 27 October 2026.
+
+## Exceptional cases in tests
+
+The exceptional-occurrence tests modify copies of `weekly_lecture.json` at
+runtime. These cases are **synthetic** and do not claim to be captured from
+SISU: mixed cancelled/excluded occurrences, notices, non-null room overrides
+and empty room overrides. Real exceptions and rescheduling behavior remain
+unverified. See the [contract documentation](https://github.com/kctong529/sisukas-docs/blob/main/content/dev-guide/study-event-contract.md).

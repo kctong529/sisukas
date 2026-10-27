@@ -150,9 +150,24 @@ http://localhost:8001/redoc
 * `sisu_wrapper/models_historical.py` – Historical data models
 * `sisu_wrapper/__main__.py` – CLI entry point for historical crawling
 
+## Study-event metadata and rooms (unreleased #89)
+
+Study events now preserve their source series ID, expanded occurrence times,
+status (`cancelled`, `excluded`, `notice`) and effective location IDs.
+Room and building enrichment is **opt-in**: by default it adds no extra SISU
+requests. Both single and batch study-group REST endpoints accept
+`resolve_locations=true`; Python consumers can use
+`fetch_study_groups_with_locations()` or `resolve_study_group_locations()`.
+Failure to resolve a room does not remove the scheduled event.
+
+See the [study-event and location contract](https://github.com/kctong529/sisukas-docs/blob/main/content/dev-guide/study-event-contract.md) for
+identity limitations, timezone assumptions, example payload semantics and
+verified versus provisional behavior. Manual API examples are in
+[`examples/requests.http`](examples/requests.http).
+
 ## Limitations
 
-* **Location data not yet exposed**: Venue/room information *is available* through the public API, but is not currently parsed or exposed by `sisu-wrapper`. Support for this is planned for a future release.
+* **Room metadata is optional**: Source location IDs are preserved, but resolved room/building details require opting in and depend on public SISU lookups.
 * **Live vs historical split**: Published Sisu endpoints only return recent offerings.
 * **Read-only**: This wrapper does not modify data.
 * **Rate limiting**: No built-in rate limiting; be respectful of upstream APIs.
