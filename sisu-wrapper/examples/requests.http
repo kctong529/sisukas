@@ -1,0 +1,84 @@
+# sisukas #89 — SISU Kori API: study-event identity and locations
+#
+# For VS Code REST Client (humao.rest-client) or another .http-compatible client.
+# Fill in the IDs below using actual Aalto SISU records.
+# Run requests in order: realisation -> study event -> location -> building.
+# Some documented Kori endpoints may be unavailable or require authorization
+# on Aalto's installation. Keep 401/403/404 responses as investigation results.
+#
+# Reference schema: https://sisu.helsinki.fi/kori/docs/index.html
+# No authentication header is provided intentionally: this probes public access.
+
+@baseUrl = https://sisu.aalto.fi/kori/api
+@realisationId = aalto-cur-P-c235941a-0fd6-11f1-8c99-0050569455c9
+@studyEventId = aalto-SE-ASIO-9000815-7339722
+@anotherStudyEventId = aalto-SE-ASIO-9000816-7339890
+@locationId = aalto-TILA-457
+@alternateLocationId = aalto-TILA-488
+@buildingId = aalto-RAKENNUS-R037
+
+### 1. Course-unit realisation — inspect studyGroupSets, subgroups and studyEventIds
+# Documented Kori v1 endpoint.
+GET {{baseUrl}}/course-unit-realisations/v1/{{realisationId}}
+Accept: application/json
+
+### 2. Course-unit realisation — verified unversioned endpoint
+# Returns the same realisation data as the versioned endpoint
+# for the investigated course.
+GET {{baseUrl}}/course-unit-realisations/{{realisationId}}
+Accept: application/json
+
+### 3. Study events — verified unversioned batch endpoint
+# Returns an array of study-event records, including expanded occurrences.
+# The investigated record matches the versioned endpoint.
+GET {{baseUrl}}/study-events?id={{studyEventId}}
+Accept: application/json
+
+### 4. Study event — documented versioned endpoint
+# Inspect id, locationIds, events, recurring rules, exceptions,
+# cancellations, and per-occurrence overrides.
+GET {{baseUrl}}/study-events/v1/{{studyEventId}}
+Accept: application/json
+
+### 5. Another study event — contrast ordinary class vs exam/exception
+GET {{baseUrl}}/study-events/v1/{{anotherStudyEventId}}
+Accept: application/json
+
+### 6. Study events — verified batch lookup with repeated IDs
+# Confirmed on Aalto SISU: returns an array containing both records.
+GET {{baseUrl}}/study-events?id={{studyEventId}}&id={{anotherStudyEventId}}
+Accept: application/json
+
+### 7. Location — room and building information
+# Inspect id, localized name, capacity, buildingId, and embedded building.
+# Verified example: TU1 Saab Auditorium - 1017, Maarintie 8.
+GET {{baseUrl}}/locations/v1/{{locationId}}
+Accept: application/json
+
+### 8. Alternate location — exam room
+# Verified example: AS2 - 2006, Maarintie 8.
+# This is a different series-level location, not an irregularLocationIds
+# override. Occurrence-level relocation remains to be investigated.
+GET {{baseUrl}}/locations/v1/{{alternateLocationId}}
+Accept: application/json
+
+### 9. Building — optional standalone lookup
+# Use buildingId from request 7 or 8.
+# Location responses may already embed building names and addresses.
+GET {{baseUrl}}/buildings/v1/{{buildingId}}
+Accept: application/json
+
+### 10. Location export — restricted discovery endpoint (optional)
+# Returned 401 Unauthorized without credentials on 2026-10-27.
+GET {{baseUrl}}/locations/v1/export?since=0&limit=5
+Accept: application/json
+
+### 11. Building export — restricted discovery endpoint (optional)
+# Returned 401 Unauthorized without credentials on 2026-10-27.
+GET {{baseUrl}}/buildings/v1/export?since=0&limit=5
+Accept: application/json
+
+### 12. Study-event export — restricted discovery endpoint (optional)
+# Returned 401 Unauthorized without credentials on 2026-10-27.
+GET {{baseUrl}}/study-events/v1/export?since=0&limit=5
+Accept: application/json
