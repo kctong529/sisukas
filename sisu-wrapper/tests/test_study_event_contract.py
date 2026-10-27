@@ -74,7 +74,7 @@ def test_location_embeds_building_and_address(filename, room, capacity):
     assert "en" not in location["name"]
 
 
-def test_existing_client_retrieves_unversioned_study_event_batch():
+def test_existing_client_retrieves_study_event():
     """No network: ensure the wrapper still requests the observed endpoint."""
     event = load_fixture("weekly_lecture.json")
     with patch.object(SisuClient, "get_json", return_value=[event]) as get:

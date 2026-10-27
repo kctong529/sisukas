@@ -1,7 +1,7 @@
 # Observed SISU study-event API fixtures
 
 Reduced JSON bodies derived from successful, unauthenticated Aalto Kori API
-requests on **2026-10-27** (see `sisu-wrapper/requests.http`). They preserve
+requests on **2026-10-27** (see `sisu-wrapper/examples/requests.http`). They preserve
 fields relevant to #89, not complete upstream schemas. No HTTP headers,
 cookies, or user data are stored.
 
