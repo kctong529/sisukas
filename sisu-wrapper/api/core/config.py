@@ -44,7 +44,7 @@ if ENV == "production":
 # Exposed for /health and debugging (matches what CORSMiddleware enforces)
 CORS_ORIGINS_EFFECTIVE = CORS_ORIGINS
 
-API_VERSION = "0.4.1"
+API_VERSION = "0.5.0"
 API_TITLE = "Sisu Wrapper API"
 
 API_DESCRIPTION = (

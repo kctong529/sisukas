@@ -1,6 +1,6 @@
-# Sisu Wrapper (v0.3.0)
+# Sisu Wrapper (v0.5.0)
 
-A Python library and REST API for the Aalto University Sisu system. Access course data, schedules, and study groups programmatically or via HTTP endpoints.
+A Python library and REST API for Aalto University's SISU system. Access course data, teaching schedules, study groups, and room information programmatically or through HTTP endpoints.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -9,85 +9,121 @@ A Python library and REST API for the Aalto University Sisu system. Access cours
 
 **Sisu Wrapper** provides three ways to interact with Aalto University's course data:
 
-1. **Python Library** – Import and use directly in your Python projects
-2. **REST API** – Run as a web service with FastAPI for HTTP access
-3. **Historical crawl utility (CLI)** – Build a historical course realisation dataset (resumable)
+1. **Python library** – Access SISU data directly from Python.
+2. **REST API** – Expose course and teaching-event information through FastAPI.
+3. **Historical crawl utility** – Collect historical course realisations using a resumable CLI.
 
-All components share the same robust core, providing clean access to course units, realisations, and study schedules.
+The components share a common client and domain models.
 
 ## Features
 
-### Core Functionality
+### Core functionality
 
-* Fetch course units, offerings, and study groups
-* Access lecture and exercise schedules
-* Batch operations for efficient multi-course queries
-* Connection pooling for efficient API usage
-* Robust error handling
-* Modern Python with type hints
+- Fetch course units, offerings, and study groups.
+- Retrieve expanded teaching-event occurrences and their source series IDs.
+- Preserve occurrence timestamps, cancellation status, and location references.
+- Optionally resolve room names, building names, and addresses.
+- Support batch requests and connection pooling.
+- Handle upstream API errors through dedicated exceptions.
 
-### Python Library
+### Historical records
 
-* Zero dependencies except `requests`
-* Clean, intuitive API
-* Context manager support
-* Comprehensive data models
-* Batch request support
-
-### Historical Records (New in v0.3.0)
-
-* Fetch historical course unit realisations using the **unfiltered** Sisu endpoint
-* Fetch detailed historical realisation records via Aalto Course API (API key via env var)
-* **Append-only JSONL output** suitable for long-running crawls
-* **Resumable crawling** with checkpoint state file
-* Output designed for **downstream deduplication and normalization**
-
-### REST API
-
-* Fast and async with FastAPI
-* Auto-generated interactive documentation
-* Request validation with Pydantic
-* Structured error responses with proper HTTP codes
-* Easy to deploy and integrate
+- Discover historical course realisations through the unfiltered SISU endpoint.
+- Retrieve historical details using the Aalto Course API.
+- Export append-only JSONL datasets.
+- Resume interrupted crawls using checkpoint files.
 
 ## Quick Start
 
-### As a Python Library
+### Python library
+
+Install the package in your environment:
+
+```bash
+pip install -e .
+```
+
+Fetch a course offering:
 
 ```python
 from sisu_wrapper import SisuClient, SisuService
 
 with SisuClient(timeout=15) as client:
     service = SisuService(client)
+
     offering = service.fetch_course_offering(
-        course_unit_id="aalto-OPINKOHD-1125839311-20210801",
-        offering_id="aalto-CUR-206690-3122470"
+        course_unit_id="aalto-CU-1151000764-20260801",
+        offering_id="aalto-cur-P-c235941a-0fd6-11f1-8c99-0050569455c9",
     )
+
     print(offering.name)
 ```
 
-### As a REST API
+Location resolution is optional:
+
+```python
+groups = service.fetch_study_groups_with_locations(
+    course_unit_id="aalto-CU-1151000764-20260801",
+    offering_id="aalto-cur-P-c235941a-0fd6-11f1-8c99-0050569455c9",
+)
+
+for group in groups:
+    for event in group.study_events:
+        print(event.start, event.locations)
+```
+
+Unresolved study events retain their source location IDs. Failed location lookups do not prevent schedule retrieval.
+
+### REST API
+
+Install the optional API dependencies:
 
 ```bash
-uvicorn api.main:app --reload
-open http://localhost:8000/docs
+pip install -e ".[api,dev]"
 ```
+
+Start the API from the `sisu-wrapper/` directory:
+
+```bash
+python -m uvicorn api.main:app --app-dir api --port 8001
+```
+
+Interactive documentation:
+
+- Swagger UI: http://localhost:8001/docs
+- ReDoc: http://localhost:8001/redoc
+
+Fetch study groups:
+
+```http
+GET /api/courses/study-groups?course_unit_id=<id>&course_offering_id=<id>
+```
+
+Include room/building metadata:
+
+```http
+GET /api/courses/study-groups?course_unit_id=<id>&course_offering_id=<id>&resolve_locations=true
+```
+
+Both single and batch study-group endpoints support `resolve_locations`.
+
+The parameter defaults to `false` to preserve existing behavior and avoid unnecessary upstream requests.
 
 ## Historical Records CLI
 
-The historical crawl exists to support features such as the **year timeline**, where users want to view and keep track of **past courses they have taken**. Sisu’s published APIs focus on current and upcoming teaching, and older course implementations may no longer be returned.
+The historical crawler supports features such as the year timeline, where users may need course implementations that are no longer available through SISU's published-offering endpoints.
 
-### Prerequisite: Course API key
+### Prerequisite
 
-Historical realisation details are fetched from Aalto Course API.
+Historical realisation details are fetched through the Aalto Course API:
 
 ```bash
 export AALTO_COURSE_API_KEY="..."
 ```
 
-### Crawl historical realisations (resumable)
+### Crawl historical realisations
 
-From the `sisu-wrapper/` directory:
+From `sisu-wrapper/`:
 
 ```bash
 python -m sisu_wrapper \
@@ -96,9 +132,7 @@ python -m sisu_wrapper \
   --state ../historical_state.json
 ```
 
-If interrupted with Ctrl+C, progress is saved automatically.
-
-Resume later:
+Resume an interrupted crawl:
 
 ```bash
 python -m sisu_wrapper \
@@ -108,97 +142,77 @@ python -m sisu_wrapper \
   --resume
 ```
 
-### Output format
-
-* The crawl produces **JSONL** (one record per line).
-* Output is **append-only** by design.
-* Duplicate records may appear if a crawl is resumed.
-
-Deduplication and normalization are intentionally handled **outside of `sisu-wrapper`**, as downstream processing steps.
-
-## REST API
-
-### Running the API
-
-```bash
-uv run fastapi dev api/main.py --port 8001
-```
-
-### Example endpoint
-
-```
-GET /api/courses/study-groups?course_unit_id=<id>&course_offering_id=<id>
-```
-
-Interactive docs:
-
-```
-http://localhost:8001/docs
-http://localhost:8001/redoc
-```
+The crawler writes append-only JSONL records. Duplicate records may occur after resuming; downstream processing is responsible for deduplication and normalization.
 
 ## Development
 
-### Architecture Overview
+### Project structure
 
-* `sisu_wrapper/client.py` – Low-level HTTP client for Sisu API
-* `sisu_wrapper/service.py` – Business logic and orchestration
-* `sisu_wrapper/models.py` – Domain dataclasses
-* `sisu_wrapper/aalto_api_client.py` – Aalto Course API client (API key via env var)
-* `sisu_wrapper/historical.py` – Historical discovery logic
-* `sisu_wrapper/historical_parsing.py` – Typed parsing helpers
-* `sisu_wrapper/models_historical.py` – Historical data models
-* `sisu_wrapper/__main__.py` – CLI entry point for historical crawling
+- `sisu_wrapper/client.py` – Low-level SISU HTTP client.
+- `sisu_wrapper/service.py` – Data transformation and orchestration.
+- `sisu_wrapper/models.py` – Domain models.
+- `sisu_wrapper/aalto_api_client.py` – Aalto Course API client.
+- `sisu_wrapper/historical.py` – Historical realisation discovery.
+- `sisu_wrapper/historical_parsing.py` – Historical data parsing.
+- `sisu_wrapper/models_historical.py` – Historical models.
+- `sisu_wrapper/__main__.py` – Historical crawler CLI.
+- `api/` – FastAPI application and routers.
+- `tests/` – Unit, contract, and API integration tests.
+- `examples/requests.http` – Reproducible SISU and wrapper API requests.
 
-## Study-event metadata and rooms (unreleased #89)
+### Testing
 
-Study events now preserve their source series ID, expanded occurrence times,
-status (`cancelled`, `excluded`, `notice`) and effective location IDs.
-Room and building enrichment is **opt-in**: by default it adds no extra SISU
-requests. Both single and batch study-group REST endpoints accept
-`resolve_locations=true`; Python consumers can use
-`fetch_study_groups_with_locations()` or `resolve_study_group_locations()`.
-Failure to resolve a room does not remove the scheduled event.
+```bash
+python -m pytest tests/ -v
+```
 
-See the [study-event and location contract](https://github.com/kctong529/sisukas-docs/blob/main/content/dev-guide/study-event-contract.md) for
-identity limitations, timezone assumptions, example payload semantics and
-verified versus provisional behavior. Manual API examples are in
-[`examples/requests.http`](examples/requests.http).
+### Documentation
+
+Detailed API contracts, event identity semantics, location behavior, and known limitations are maintained in the [sisukas documentation repository](https://github.com/kctong529/sisukas-docs).
 
 ## Limitations
 
-* **Room metadata is optional**: Source location IDs are preserved, but resolved room/building details require opting in and depend on public SISU lookups.
-* **Live vs historical split**: Published Sisu endpoints only return recent offerings.
-* **Read-only**: This wrapper does not modify data.
-* **Rate limiting**: No built-in rate limiting; be respectful of upstream APIs.
+- **Occurrence identity:** SISU provides study-event series IDs, but individual occurrence IDs were not present in the examined responses. Rescheduling may affect derived occurrence keys.
+- **Exceptional occurrences:** Cancellation and location-override fields are preserved, but some semantics remain unverified against real exceptional records.
+- **Timezone handling:** Naive event timestamps are interpreted as Europe/Helsinki local time. Ambiguous daylight-saving transitions are not explicitly resolved.
+- **Location availability:** Room/building resolution is best-effort and requires additional SISU requests.
+- **Historical coverage:** Published-offering endpoints do not provide complete historical course coverage.
+- **Read-only access:** The wrapper does not modify SISU data.
+- **Rate limiting:** No built-in request rate limiter is provided.
 
 ## Requirements
 
-* Python 3.10+
-* requests >= 2.32.5
+- Python 3.10+
+- `requests >= 2.32.5`
 
-### Optional extras
-
-```bash
-uv pip install "sisu-wrapper[api]"
-```
+Optional API and development dependencies are available through package extras.
 
 ## Version History
 
-### v0.3.0
+### v0.5.0 — Study-event metadata and location resolution
 
-* ✨ **New**: Historical course realisation crawling via `python -m sisu_wrapper`
-* ✨ **New**: Aalto Course API client (API key via `AALTO_COURSE_API_KEY`)
-* ✨ **New**: Unfiltered realisations fetch (`/course-unit-realisations`)
-* ✨ **New**: Resumable, append-only JSONL crawl output
-* 🔧 **Improved**: StudyEvent datetime parsing with Helsinki timezone fallback
+- Preserve source study-event series IDs and occurrence status.
+- Preserve effective location references for individual occurrences.
+- Add optional room and building resolution using the SISU Kori API.
+- Support `resolve_locations` on single and batch study-group endpoints.
+- Preserve backward-compatible default behavior.
+- Add API contract fixtures, exceptional-occurrence tests, and FastAPI integration tests.
+- Document event identity, location semantics, and timezone limitations.
 
-### v0.2.0
+### v0.3.0 — Historical course realisations
 
-* ✨ **New**: Batch request support
-* 🔧 **Refactor**: Router-based API architecture
-* 📝 **Breaking**: `/api/courses/` namespace introduced
+- Add historical realisation crawling through `python -m sisu_wrapper`.
+- Add the Aalto Course API client.
+- Support unfiltered realisation discovery.
+- Add resumable, append-only JSONL output.
+- Improve `StudyEvent` datetime parsing with Helsinki timezone fallback.
+
+### v0.2.0 — Batch operations
+
+- Add batch request support.
+- Refactor API into routers.
+- Introduce the `/api/courses/` namespace.
 
 ## License
 
-MIT License. See the [LICENSE](LICENSE) file for details.
+MIT License. See [LICENSE](LICENSE) for details.
