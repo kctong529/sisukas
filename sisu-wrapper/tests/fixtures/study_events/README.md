@@ -16,8 +16,4 @@ rescheduling, exclusions, cancellations, or occurrence identity stability.
 The tests document the observed shape and current client retrieval; they do
 not validate live SISU responses or future transformation behavior.
 
-**Follow-up:** The currently implemented `SisuClient.fetch_study_events()`
-uses a comma-joined `id` query value for multiple IDs, while the manually
-verified batch request used repeated `id` query parameters. Check whether
-comma-separated IDs are supported before relying on batching; don't silently
-change the client based on these fixtures alone.
+The unversioned study-event endpoint supports both comma-separated IDs and repeated `id` parameters for the tested records. The existing wrapper uses the comma-separated format, which was verified successfully on 27 October 2026.

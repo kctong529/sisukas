@@ -44,9 +44,16 @@ Accept: application/json
 GET {{baseUrl}}/study-events/v1/{{anotherStudyEventId}}
 Accept: application/json
 
-### 6. Study events — verified batch lookup with repeated IDs
+### 6a. Study events — verified batch lookup with repeated IDs
 # Confirmed on Aalto SISU: returns an array containing both records.
 GET {{baseUrl}}/study-events?id={{studyEventId}}&id={{anotherStudyEventId}}
+Accept: application/json
+
+### 6b. Study events — comma-separated batch lookup
+# Verified on 2026-10-27: returns both requested study-event records.
+# This is the format currently used by SisuClient.fetch_study_events().
+# Both comma-separated and repeated id parameters work for the tested IDs.
+GET {{baseUrl}}/study-events?id={{studyEventId}},{{anotherStudyEventId}}
 Accept: application/json
 
 ### 7. Location — room and building information
@@ -81,4 +88,8 @@ Accept: application/json
 ### 12. Study-event export — restricted discovery endpoint (optional)
 # Returned 401 Unauthorized without credentials on 2026-10-27.
 GET {{baseUrl}}/study-events/v1/export?since=0&limit=5
+Accept: application/json
+
+### Verify the current wrapper's comma-separated ID format
+GET {{baseUrl}}/study-events?id={{studyEventId}},{{anotherStudyEventId}}
 Accept: application/json
