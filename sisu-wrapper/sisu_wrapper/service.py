@@ -7,16 +7,32 @@ course data into domain objects.
 
 import logging
 from datetime import date
+from dataclasses import replace
 from typing import List, Dict, Any, Tuple, Optional
 from functools import lru_cache
 
-from .models import CourseOffering, StudyGroup, StudyEvent
+from .models import CourseOffering, StudyGroup, StudyEvent, StudyLocation
 from .client import SisuClient
+from .exceptions import SisuAPIError
 from .aalto_api_client import AaltoCourseApiClient
 from .historical import DateRange, extract_historical_realisation_ids_for_assessment_items
 from .historical_parsing import parse_course_unit_assessment_index
 
 logger = logging.getLogger(__name__)
+
+def _localized_name(values: dict | None) -> str | None:
+    """Choose a non-empty translation, preferring English when available."""
+    if not isinstance(values, dict):
+        return None
+    for language in ("en", "fi", "sv"):
+        value = values.get(language)
+        if isinstance(value, str) and value.strip():
+            return value
+    return next(
+        (value for value in values.values()
+         if isinstance(value, str) and value.strip()),
+        None,
+    )
 
 
 class SisuService:
@@ -241,6 +257,63 @@ class SisuService:
             )
 
         return groups
+
+    @staticmethod
+    def _parse_location(data: dict) -> StudyLocation:
+        """Normalize a location response; building details may be absent."""
+        building = data.get("building") or {}
+
+        return StudyLocation(
+            id=data["id"],
+            name=_localized_name(data.get("name")),
+            building_id=data.get("buildingId"),
+            building_name=_localized_name(building.get("name")),
+            address=(building.get("address") or {}).get("streetAddress"),
+        )
+
+    def resolve_study_group_locations(
+        self, groups: list[StudyGroup]
+    ) -> list[StudyGroup]:
+        """Return copies of groups with best-effort resolved room metadata.
+
+        Each distinct location is fetched at most once per call. A failed
+        lookup leaves the occurrence intact with its original location IDs.
+        Cached offerings and caller-owned objects are never mutated.
+        """
+        cache: dict[str, StudyLocation | None] = {}
+        resolved_groups: list[StudyGroup] = []
+
+        for group in groups:
+            resolved_events: list[StudyEvent] = []
+            for event in group.study_events:
+                locations: list[StudyLocation] = []
+                for location_id in event.location_ids:
+                    if location_id not in cache:
+                        try:
+                            raw = self.client.fetch_location(location_id)
+                            location = self._parse_location(raw)
+                            if location.id != location_id:
+                                raise ValueError("Mismatched location ID")
+                            cache[location_id] = location
+                        except (SisuAPIError, KeyError, TypeError, ValueError) as exc:
+                            logger.warning(
+                                "Unable to resolve SISU location %s: %s",
+                                location_id, exc,
+                            )
+                            cache[location_id] = None
+                    if cache[location_id] is not None:
+                        locations.append(cache[location_id])
+                resolved_events.append(replace(event, locations=locations))
+            resolved_groups.append(replace(group, study_events=resolved_events))
+
+        return resolved_groups
+
+    def fetch_study_groups_with_locations(
+        self, course_unit_id: str, course_offering_id: str
+    ) -> list[StudyGroup]:
+        """Fetch study groups with best-effort resolved location metadata."""
+        groups = self.fetch_study_groups(course_unit_id, course_offering_id)
+        return self.resolve_study_group_locations(groups)
 
     def resolve_course_snapshots_by_code(
         self,

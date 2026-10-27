@@ -5,7 +5,8 @@ These dataclasses represent the domain objects returned by the Sisu API,
 providing a clean interface for working with course data.
 
 Study events include source series IDs, occurrence status, and location IDs.
-Room and building details require separate location lookups.
+Resolved room and building details are optional; source location IDs remain
+available when lookups fail.
 """
 
 from dataclasses import dataclass, field
@@ -15,6 +16,16 @@ from zoneinfo import ZoneInfo
 HELSINKI = ZoneInfo("Europe/Helsinki")
 
 
+@dataclass(frozen=True)
+class StudyLocation:
+    """Resolved SISU room and its optional building details."""
+    id: str
+    name: str | None = None
+    building_id: str | None = None
+    building_name: str | None = None
+    address: str | None = None
+
+
 @dataclass
 class StudyEvent:
     """
@@ -22,8 +33,8 @@ class StudyEvent:
 
     series_id identifies the source series, not an individual occurrence.
     location_ids contains the effective room IDs, using any occurrence-
-    level override instead of the series defaults. Room details are not yet
-    resolved. Naive timestamps are interpreted as Europe/Helsinki local time.
+    level override instead of the series defaults. locations holds optional
+    resolved room metadata. Naive timestamps use Europe/Helsinki local time.
     """
     start: str
     end: str
@@ -34,6 +45,7 @@ class StudyEvent:
     excluded: bool = False
     notice: str | None = None
     location_ids: list[str] = field(default_factory=list)
+    locations: list[StudyLocation] = field(default_factory=list)
 
     @staticmethod
     def _parse(s: str) -> datetime:
@@ -112,3 +124,4 @@ class CourseOffering:
 
     def __repr__(self) -> str:
         return f"{self.name} ({len(self.study_groups)} groups)"
+
