@@ -1,44 +1,37 @@
+
 """
-Aalto University Sisu API Wrapper
+Python wrapper for Aalto University's SISU APIs.
 
-A lightweight Python wrapper for fetching course data from the Aalto
-University Sisu API.
+Provides access to course offerings, study groups, expanded teaching
+events, and optional room/building resolution.
 
-Limitations:
-    - Location/venue information is not available through the public API
-    - Only published, upcoming/recent course realisations are included
-    - Historical realisations require different endpoints
-
-Example:
-    >>> from sisu_wrapper import SisuClient, SisuService
-    >>> with SisuClient() as client:
-    ...     service = SisuService(client)
-    ...     groups = service.fetch_study_groups(
-    ...         "aalto-OPINKOHD-1125839311-20210801",
-    ...         "aalto-CUR-206690-3122470"
-    ...     )
+Historical course realisations require separate API endpoints.
 """
 
 import logging
 
 from .client import SisuClient
-from .service import SisuService
-from .models import StudyEvent, StudyGroup, CourseOffering
 from .exceptions import (
-    SisuAPIError, SisuHTTPError, SisuTimeoutError, 
-    SisuConnectionError, SisuNotFoundError, SisuBatchError)
+    SisuAPIError,
+    SisuBatchError,
+    SisuConnectionError,
+    SisuHTTPError,
+    SisuNotFoundError,
+    SisuTimeoutError,
+)
+from .models import CourseOffering, StudyEvent, StudyGroup, StudyLocation
+from .service import SisuService
 
-__version__ = "0.1.0"
-
+__version__ = "0.5.0"
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
-
 
 __all__ = [
     "SisuClient",
     "SisuService",
     "StudyEvent",
     "StudyGroup",
+    "StudyLocation",
     "CourseOffering",
     "SisuAPIError",
     "SisuHTTPError",

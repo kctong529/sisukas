@@ -1,0 +1,51 @@
+{
+  "id": "aalto-cur-P-c235941a-0fd6-11f1-8c99-0050569455c9",
+  "studyGroupSets": [
+    {
+      "name": {
+        "en": "Lecture"
+      },
+      "studySubGroups": [
+        {
+          "id": "aalto-ssg-4523-211095-1-01",
+          "name": {
+            "en": "L01"
+          },
+          "studyEventIds": [
+            "aalto-SE-ASIO-9000815-7339722",
+            "aalto-SE-ASIO-9000815-7339799",
+            "aalto-SE-ASIO-9000815-7339806",
+            "aalto-SE-ASIO-9000815-7339813",
+            "aalto-SE-ASIO-9000815-7339736",
+            "aalto-SE-ASIO-9000815-7339827"
+          ]
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Exam"
+      },
+      "studySubGroups": [
+        {
+          "id": "aalto-ssg-4523-211096-5-01",
+          "name": {
+            "en": "VK2"
+          },
+          "studyEventIds": [
+            "aalto-SE-ASIO-9000816-7339890"
+          ]
+        },
+        {
+          "id": "aalto-ssg-4523-219850-5-01",
+          "name": {
+            "en": "VK1"
+          },
+          "studyEventIds": [
+            "aalto-SE-ASIO-3356242-7339883"
+          ]
+        }
+      ]
+    }
+  ]
+}

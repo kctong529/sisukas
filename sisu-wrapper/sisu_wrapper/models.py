@@ -4,51 +4,69 @@ Data models for Sisu API entities
 These dataclasses represent the domain objects returned by the Sisu API,
 providing a clean interface for working with course data.
 
-Limitations:
-    - Location/venue information is not available through the public API
-    - Multiple events with identical times typically indicate different venues
+Study events include source series IDs, occurrence status, and location IDs.
+Resolved room and building details are optional; source location IDs remain
+available when lookups fail.
 """
 
 from dataclasses import dataclass, field
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from typing import List
 
 HELSINKI = ZoneInfo("Europe/Helsinki")
+
+
+@dataclass(frozen=True)
+class StudyLocation:
+    """Resolved SISU room and its optional building details."""
+    id: str
+    name: str | None = None
+    building_id: str | None = None
+    building_name: str | None = None
+    address: str | None = None
+
 
 @dataclass
 class StudyEvent:
     """
-    Represents a single study event with start and end times
+    One expanded occurrence belonging to a SISU study-event series.
 
-    Note: Location/venue information is not available through the public
-    Sisu API endpoints. Multiple events with identical times typically
-    indicate different venues for the same session (e.g. exam halls).
+    series_id identifies the source series, not an individual occurrence.
+    location_ids contains the effective room IDs, using any occurrence-
+    level override instead of the series defaults. locations holds optional
+    resolved room metadata. Naive timestamps use Europe/Helsinki local time.
     """
     start: str
     end: str
     start_iso: str | None = None
     end_iso: str | None = None
+    series_id: str | None = None
+    cancelled: bool = False
+    excluded: bool = False
+    notice: str | None = None
+    location_ids: list[str] = field(default_factory=list)
+    locations: list[StudyLocation] = field(default_factory=list)
 
-    def _parse(self, s: str) -> datetime:
+    @staticmethod
+    def _parse(s: str) -> datetime:
         dt = datetime.fromisoformat(s)
-        # If tz missing, assume Helsinki local time
+        # SISU event timestamps are local when no offset is supplied.
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=HELSINKI)
         return dt
 
     @property
     def start_datetime(self) -> datetime:
-        """Get start time as datetime object"""
+        """Return the timezone-aware occurrence start."""
         return self._parse(self.start)
 
     @property
     def end_datetime(self) -> datetime:
-        """Get end time as datetime object"""
+        """Return the timezone-aware occurrence end."""
         return self._parse(self.end)
-    
-    def __post_init__(self):
-        # Populate canonical ISO strings if not provided
+
+    def __post_init__(self) -> None:
+        # Preserve explicitly supplied ISO values for existing consumers.
         if self.start_iso is None:
             self.start_iso = self.start_datetime.isoformat()
         if self.end_iso is None:
@@ -64,15 +82,15 @@ class StudyGroup:
         group_id: Unique ID of the study group
         name: Name of the group (e.g. 'L01', 'H02')
         type: Group type (e.g. 'Lecture', 'Exercise', 'Exam')
-        study_events: List of study events in this group
+        study_events: Expanded occurrences in this group
     """
     group_id: str
     name: str
     type: str
-    study_events: List[StudyEvent] = field(default_factory=list)
+    study_events: list[StudyEvent] = field(default_factory=list)
 
     @property
-    def sorted_events(self) -> List[StudyEvent]:
+    def sorted_events(self) -> list[StudyEvent]:
         """Return study events sorted by start time"""
         return sorted(self.study_events, key=lambda e: e.start_datetime)
 
@@ -89,10 +107,10 @@ class CourseOffering:
     course_unit_id: str
     offering_id: str
     name: str
-    assessment_items: List[str] = field(default_factory=list)
-    study_groups: List[StudyGroup] = field(default_factory=list)
+    assessment_items: list[str] = field(default_factory=list)
+    study_groups: list[StudyGroup] = field(default_factory=list)
 
-    def get_groups_by_type(self, group_type: str) -> List[StudyGroup]:
+    def get_groups_by_type(self, group_type: str) -> list[StudyGroup]:
         """
         Get all study groups of a specific type
 
@@ -106,3 +124,4 @@ class CourseOffering:
 
     def __repr__(self) -> str:
         return f"{self.name} ({len(self.study_groups)} groups)"
+
