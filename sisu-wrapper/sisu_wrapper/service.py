@@ -189,63 +189,59 @@ class SisuService:
 
         return results
 
-    def _parse_study_groups(self, group_set_data: Dict[str, Any]
-                            ) -> List[StudyGroup]:
-        """
-        Convert a group set with subgroups into a list of StudyGroup instances
+    @staticmethod
+    def _parse_event_records(event_records: List[Dict[str, Any]]) -> List[StudyEvent]:
+        """Flatten SISU series into occurrences without losing metadata.
 
-        Args:
-            group_set_data: Raw API data for a study group set
-
-        Returns:
-            List of parsed StudyGroup objects
+        A non-null ``irregularLocationIds`` overrides the series locations.
+        This follows the intended field interpretation; real relocation
+        examples have not yet been verified against Aalto SISU.
         """
-        flattened_groups: List[StudyGroup] = []
+        study_events: List[StudyEvent] = []
+
+        for record in event_records:
+            default_locations = record.get("locationIds") or []
+            for occurrence in record.get("events", []):
+                override = occurrence.get("irregularLocationIds")
+                locations = default_locations if override is None else override
+                study_events.append(
+                    StudyEvent(
+                        start=occurrence["start"],
+                        end=occurrence["end"],
+                        series_id=record.get("id"),
+                        cancelled=occurrence.get("cancelled", False),
+                        excluded=occurrence.get("excluded", False),
+                        notice=occurrence.get("notice"),
+                        location_ids=list(locations),
+                    )
+                )
+
+        return study_events
+
+    def _parse_study_groups(
+        self, group_set_data: Dict[str, Any]
+    ) -> List[StudyGroup]:
+        """Convert SISU subgroups into flat groups of expanded occurrences."""
+        groups: List[StudyGroup] = []
         group_type = group_set_data.get("name", {}).get("en", "Unknown")
 
-        for sub_group_data in group_set_data.get("studySubGroups", []):
-            study_event_ids = sub_group_data.get("studyEventIds", [])
-
-            if not study_event_ids:
+        for subgroup in group_set_data.get("studySubGroups", []):
+            event_ids = subgroup.get("studyEventIds", [])
+            if not event_ids:
                 continue
 
-            event_records = self.client.fetch_study_events(study_event_ids)
-            
-            study_events = []
-            for record in event_records:
-                series_id = record.get("id")
-                default_locations = record.get("locationIds") or []
-
-                for occurrence in record.get("events", []):
-                    irregular_locations = occurrence.get("irregularLocationIds")
-
-                    study_events.append(
-                        StudyEvent(
-                            start=occurrence["start"],
-                            end=occurrence["end"],
-                            series_id=series_id,
-                            cancelled=occurrence.get("cancelled", False),
-                            excluded=occurrence.get("excluded", False),
-                            notice=occurrence.get("notice"),
-                            location_ids=(
-                                irregular_locations
-                                if irregular_locations is not None
-                                else default_locations.copy()
-                            ),
-                        )
-                    )
-
-            flattened_groups.append(
+            event_records = self.client.fetch_study_events(event_ids)
+            groups.append(
                 StudyGroup(
-                    group_id=sub_group_data.get("id", ""),
-                    name=sub_group_data.get("name", {}).get("en", ""),
+                    group_id=subgroup.get("id", ""),
+                    name=subgroup.get("name", {}).get("en", ""),
                     type=group_type,
-                    study_events=study_events
+                    study_events=self._parse_event_records(event_records),
                 )
             )
 
-        return flattened_groups
-    
+        return groups
+
     def resolve_course_snapshots_by_code(
         self,
         course_code: str,
