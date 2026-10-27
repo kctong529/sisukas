@@ -29,6 +29,11 @@ class StudyEvent:
     end: str
     start_iso: str | None = None
     end_iso: str | None = None
+    series_id: str | None = None
+    cancelled: bool = False
+    excluded: bool = False
+    notice: str | None = None
+    location_ids: list[str] = field(default_factory=list)
 
     def _parse(self, s: str) -> datetime:
         dt = datetime.fromisoformat(s)

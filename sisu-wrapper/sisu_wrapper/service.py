@@ -210,11 +210,30 @@ class SisuService:
                 continue
 
             event_records = self.client.fetch_study_events(study_event_ids)
-            study_events = [
-                StudyEvent(start=event["start"], end=event["end"])
-                for record in event_records
-                for event in record.get("events", [])
-            ]
+            
+            study_events = []
+            for record in event_records:
+                series_id = record.get("id")
+                default_locations = record.get("locationIds") or []
+
+                for occurrence in record.get("events", []):
+                    irregular_locations = occurrence.get("irregularLocationIds")
+
+                    study_events.append(
+                        StudyEvent(
+                            start=occurrence["start"],
+                            end=occurrence["end"],
+                            series_id=series_id,
+                            cancelled=occurrence.get("cancelled", False),
+                            excluded=occurrence.get("excluded", False),
+                            notice=occurrence.get("notice"),
+                            location_ids=(
+                                irregular_locations
+                                if irregular_locations is not None
+                                else default_locations.copy()
+                            ),
+                        )
+                    )
 
             flattened_groups.append(
                 StudyGroup(
