@@ -9,9 +9,11 @@
  * - POST /api/courses/batch/offerings         (offerings + embedded study groups)
  *
  * Notes:
- * - Study events inside a group are de-duplicated by identical (start,end) time slot.
- *   If multiple events share the same time slot, their locations are merged.
- * - Batch fetch accepts many requests; we de-dupe inputs, chunk, and run with limited
+ * - Normalization preserves every upstream occurrence, including events sharing
+ *   the same time slot, together with identity, status, and location metadata.
+ * - Scheduling-specific time-slot aggregation belongs to analytics consumers,
+ *   not this shared API adapter.
+ * - Batch requests are deduplicated, chunked, and processed with limited
  *   concurrency to keep the UI responsive.
  */
 
@@ -20,11 +22,27 @@ import type { StudyEvent } from '../../domain/models/StudyEvent';
 
 // ========== API Response Types ==========
 
+interface SisuStudyLocation {
+  id: string;
+  name: string;
+  building_id?: string | null;
+  building_name?: string | null;
+  address?: string | null;
+}
+
 interface SisuStudyEvent {
   start: string;
   end: string;
-  start_iso?: string; // preferred
-  end_iso?: string;   // preferred
+  start_iso?: string | null;
+  end_iso?: string | null;
+  series_id?: string | null;
+  cancelled?: boolean;
+  excluded?: boolean;
+  notice?: string | null;
+  location_ids?: string[];
+  locations?: SisuStudyLocation[];
+
+  // Retained for compatibility with older responses.
   location?: string;
 }
 
@@ -92,16 +110,15 @@ export interface CourseOfferingData {
 }
 
 /**
- * Service for fetching and transforming study group data from the SISU wrapper API.
- * Handles three endpoints:
- * 1. Single study groups fetch: GET /api/courses/study-groups
- * 2. Batch study groups fetch: POST /api/courses/batch/study-groups
- * 3. Batch course offerings fetch: POST /api/courses/batch/offerings
- * 
- * Event Deduplication:
- * When multiple study events in the same group have identical time slots (start/end),
- * they are deduplicated and their locations are merged into a comma-separated string.
- * This reduces noise in schedules where the same lecture/exercise is offered in multiple locations.
+ * Fetches study groups and converts wrapper responses into domain models.
+ *
+ * The single study-group, batch study-group, and batch offering endpoints all
+ * use the same source-preserving normalization. In particular, events with
+ * equal time ranges remain separate, so calendar consumers can distinguish
+ * source series, cancellation notices, and resolved locations.
+ *
+ * Scheduling analytics can aggregate equal time slots downstream without
+ * altering the data shared with other consumers.
  */
 export class StudyGroupService {
   private wrapperApiUrl: string;
@@ -223,7 +240,7 @@ export class StudyGroupService {
           if (i >= total) return;
 
           const res = await this.fetchStudyGroupsBatchOnce(chunks[i]);
-          
+
           // emit partial results immediately
           opts?.onChunk?.(res);
 
@@ -252,7 +269,7 @@ export class StudyGroupService {
   /**
    * Batch fetch complete course offerings including study groups (POST endpoint)
    * Returns full CourseOffering data with study groups included.
-   * 
+   *
    * @param requests Array of course references (max 100)
    * @returns Map with key format "unitId:offeringId" -> CourseOfferingData
    */
@@ -269,7 +286,7 @@ export class StudyGroupService {
       }
 
       const url = new URL(`${this.wrapperApiUrl}/api/courses/batch/offerings`);
-      
+
       const payload = {
         requests: requests.map(req => ({
           course_unit_id: req.courseUnitId,
@@ -297,7 +314,7 @@ export class StudyGroupService {
           offeringId: offering.offering_id,
           name: offering.name,
           assessmentItems: offering.assessment_items,
-          studyGroups: offering.study_groups 
+          studyGroups: offering.study_groups
             ? this.transformStudyGroups(offering.study_groups)
             : [],
         });
@@ -313,85 +330,74 @@ export class StudyGroupService {
   // ========== Transform Methods ==========
 
   /**
-   * Transform SISU API response to domain models.
-   * 
-   * For each study group, deduplicates study events by time slot:
-   * - Events with identical start/end times are merged
-   * - Their locations are combined into a comma-separated string
+   * Converts wrapper study groups into frontend domain models.
+   *
+   * Each group retains its source identifier, name, and activity type. Its
+   * study events are normalized individually without time-slot deduplication.
    */
   private transformStudyGroups(sisuGroups: SisuStudyGroup[]): StudyGroup[] {
     return sisuGroups.map(group => ({
       groupId: group.group_id,
       name: group.name,
       type: group.type,
-      studyEvents: this.deduplicateAndTransformStudyEvents(group.study_events, group.group_id),
+      studyEvents: this.transformStudyEvents(
+        group.study_events,
+        group.group_id
+      ),
     }));
   }
 
   /**
-   * Deduplicates study events by time slot and transforms to domain model.
-   * 
-   * Algorithm:
-   * 1. Group events by their (start, end) time slot
-   * 2. For each time slot, merge locations into a single comma-separated string
-   * 3. Create one StudyEvent per unique time slot
-   * 
-   * Example:
-   * Input:
-   *   - Event 1: 10:00-11:00, Location A
-   *   - Event 2: 10:00-11:00, Location B
-   *   - Event 3: 11:00-12:00, Location C
-   * 
-   * Output:
-   *   - Event 1: 10:00-11:00, "Location A, Location B"
-   *   - Event 2: 11:00-12:00, "Location C"
+   * Transforms SISU study events into frontend domain models.
+   *
+   * Unlike the previous time-slot deduplication, this transformation preserves
+   * every source occurrence, including events with identical start/end times.
+   * This ensures that distinct series, cancellations, and location metadata
+   * remain available to calendar consumers.
+   *
+   * Transformation:
+   * 1. Preserve source event order and individual occurrences.
+   * 2. Map source identity, timestamps, status flags, and notices.
+   * 3. Convert resolved location metadata to camelCase.
+   * 4. Retain a display-friendly location string for existing consumers.
+   * 5. Apply defaults for optional fields omitted by older API responses.
+   *
+   * The generated ID is a compatibility identifier, not a stable SISU
+   * occurrence identity. Canonical calendar identity is handled separately.
    */
-  private deduplicateAndTransformStudyEvents(
+  private transformStudyEvents(
     sisuEvents: SisuStudyEvent[],
     groupId: string
   ): StudyEvent[] {
-    // Group events by time slot (start/end combination)
-    const timeSlotMap = new Map<string, SisuStudyEvent[]>();
+    return sisuEvents.map((event, index) => {
+      const locations = (event.locations ?? []).map(loc => ({
+        id: loc.id,
+        name: loc.name,
+        buildingId: loc.building_id ?? null,
+        buildingName: loc.building_name ?? null,
+        address: loc.address ?? null,
+      }));
 
-    for (const event of sisuEvents) {
-      // Use (start,end) as a composite key to identify identical time slots
-      const key = `${event.start}:${event.end}`;
-      if (!timeSlotMap.has(key)) {
-        timeSlotMap.set(key, []);
-      }
-      timeSlotMap.get(key)!.push(event);
-    }
+      const location =
+        event.location?.trim() ||
+        locations.map(loc => loc.name).join(', ') ||
+        undefined;
 
-    // Transform each unique time slot into a StudyEvent
-    const dedupedEvents: StudyEvent[] = [];
-    let eventIndex = 0;
-
-    for (const eventsInSlot of timeSlotMap.values()) {
-      // Merge locations for identical time slots into a single string
-      const locations = eventsInSlot
-        .map(e => e.location?.trim() || '')
-        .filter(Boolean); // Remove empty strings
-      
-      const mergedLocation = locations.length > 0 
-        ? locations.join(', ')
-        : undefined;
-
-      // Use the first event as the canonical source (all share start/end)
-      const sourceEvent = eventsInSlot[0];
-
-      dedupedEvents.push({
-        id: `${groupId}:${eventIndex}`,
-        start: sourceEvent.start,
-        end: sourceEvent.end,
-        startIso: sourceEvent.start_iso ?? undefined,
-        endIso: sourceEvent.end_iso ?? undefined,
-        location: mergedLocation,
-      });
-
-      eventIndex++;
-    }
-
-    return dedupedEvents;
+      return {
+        id: `${groupId}:${index}`,
+        start: event.start,
+        end: event.end,
+        startIso: event.start_iso ?? undefined,
+        endIso: event.end_iso ?? undefined,
+        seriesId: event.series_id ?? null,
+        cancelled: event.cancelled ?? false,
+        excluded: event.excluded ?? false,
+        notice: event.notice ?? null,
+        locationIds: [...(event.location_ids ?? [])],
+        locations,
+        location,
+      };
+    });
   }
 
   // ========== Error Handling ==========

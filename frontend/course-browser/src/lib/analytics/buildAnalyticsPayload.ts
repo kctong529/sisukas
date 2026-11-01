@@ -3,6 +3,7 @@
 import type { Course } from "../../domain/models/Course";
 import type { Block } from "../../domain/models/Block";
 import type { StudyGroup } from "../../domain/models/StudyGroup";
+import { aggregateStudyEventsByTimeSlot } from "./aggregateStudyEventsByTimeSlot";
 
 /* ========= Backend request DTO ========= */
 
@@ -89,7 +90,6 @@ export function buildAnalyticsPayload(params: {
     const course = getCourseForInstance(instanceId);
     if (!course) continue;
 
-    // NOTE: your store key is unitId:offeringId, so use those.
     const allStudyGroups = getStudyGroupsForInstance(course.unitId, instanceId) ?? [];
     const blocks = getBlocksForInstance(instanceId);
 
@@ -101,7 +101,9 @@ export function buildAnalyticsPayload(params: {
       const studyGroupsInput: StudyGroupInput[] = groupsInBlock.map((sg) => ({
         studyGroupId: sg.groupId,
         name: sg.name,
-        events: sg.studyEvents.map((ev, i) => ({
+        events: aggregateStudyEventsByTimeSlot(
+          sg.studyEvents
+        ).map((ev, i) => ({
           eventId: `${sg.groupId}:${i}`,
           start: ev.startIso ?? ev.start,
           end: ev.endIso ?? ev.end,
