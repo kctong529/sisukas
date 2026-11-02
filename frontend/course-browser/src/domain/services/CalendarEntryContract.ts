@@ -52,3 +52,14 @@ export function compareCalendarEntries(a: CalendarEntry, b: CalendarEntry): numb
     a.source.courseOfferingId.localeCompare(b.source.courseOfferingId) ||
     a.source.studyGroupId.localeCompare(b.source.studyGroupId);
 }
+
+/**
+ * Only active fixed occurrences occupy conflict time. Candidate groups remain
+ * eligible: eligibility says nothing about confirmed attendance.
+ * Flexible windows and cancelled or excluded occurrences never occupy time.
+ */
+export function isConflictEligible(entry: CalendarEntry): boolean {
+  return entry.kind === "fixed" &&
+    !entry.source.event.cancelled &&
+    !entry.source.event.excluded;
+}
