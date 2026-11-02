@@ -4,6 +4,11 @@ import type { StudyGroup } from "../models/StudyGroup";
 import type { CalendarEntry } from "../models/CalendarEntry";
 import type { CalendarDiagnostic } from "../models/CalendarDiagnostic";
 
+import type { CalendarOccurrenceCandidate } from "./CalendarOccurrenceIdentity";
+import { identifyCalendarOccurrences } from "./CalendarOccurrenceIdentity";
+import { resolveCalendarTime } from "./CalendarTime";
+import { defineFixedCalendarOccurrence, compareCalendarEntries } from "./CalendarEntryContract";
+
 /** Explicit availability supplied by the caller, never inferred from [] groups. */
 export type StudyGroupAvailability =
   | "available"
@@ -82,4 +87,85 @@ export function summarizeCalendarCompleteness(
   }
   if (result.availableCourses !== result.totalCourses) result.status = "partial";
   return result;
+}
+
+
+/**
+ * Projects the current plan into fixed calendar occurrences using cached data.
+ *
+ * Stage 2 is deliberately limited to traversal, source time validation and
+ * identity derivation. The selection, exclusion, duplicate-reference and
+ * flexible-classification policies are introduced in Stage 3. Thus this
+ * function currently projects every group returned by a usable snapshot.
+ *
+ * No request, store read, persistence operation or input mutation occurs here.
+ */
+export function projectActivePlan(
+  input: CalendarProjectionInput,
+): CalendarProjectionResult {
+  const entries: CalendarEntry[] = [];
+  const diagnostics: CalendarDiagnostic[] = [];
+  const availability: StudyGroupAvailability[] = [];
+  const candidates: CalendarOccurrenceCandidate[] = [];
+
+  // A plan is a set of course offering IDs, even if legacy data contains repeats.
+  for (const courseOfferingId of new Set(input.plan.instanceIds)) {
+    const source = { courseOfferingId };
+    const course = input.getCourseForOffering(courseOfferingId);
+    if (!course) {
+      availability.push("missing");
+      diagnostics.push({
+        severity: "error", code: "missing_course_offering", source,
+        message: "Course offering is not available in the course index",
+      });
+      continue;
+    }
+    const snapshot = input.getStudyGroups(course.unitId, courseOfferingId);
+    const usable = snapshot.availability === "available" || snapshot.availability === "stale";
+    if (!usable || snapshot.groups === null) {
+      const state = usable ? "missing" : snapshot.availability;
+      availability.push(state);
+      diagnostics.push({
+        severity: state === "stale" ? "warning" : "error",
+        code: state === "loading" ? "study_groups_loading" :
+          state === "failed" ? "study_groups_failed" : "study_groups_missing",
+        source, message: `Full study-group data unavailable (${state})`,
+      });
+      continue;
+    }
+    availability.push(snapshot.availability);
+    if (snapshot.availability === "stale") {
+      diagnostics.push({
+        severity: "warning", code: "study_groups_stale", source,
+        message: "Using stale study-group data",
+      });
+    }
+    for (const group of snapshot.groups) {
+      const groupSource = { courseOfferingId, studyGroupId: group.groupId };
+      for (const event of group.studyEvents) {
+        const eventSource = { ...groupSource, seriesId: event.seriesId ?? null };
+        const result = resolveCalendarTime(event, eventSource);
+        diagnostics.push(...result.diagnostics);
+        if (!result.interval) continue;
+        candidates.push({
+          courseOfferingId,
+          studyGroupId: group.groupId,
+          event,
+          interval: result.interval,
+        });
+      }
+    }
+  }
+
+  const identified = identifyCalendarOccurrences(candidates);
+  diagnostics.push(...identified.diagnostics);
+  for (const occurrence of identified.occurrences) {
+    entries.push(defineFixedCalendarOccurrence(occurrence));
+  }
+  entries.sort(compareCalendarEntries);
+  return {
+    entries,
+    diagnostics,
+    completeness: summarizeCalendarCompleteness(availability),
+  };
 }

@@ -13,7 +13,12 @@ export type CalendarDiagnosticCode =
   | "local_timestamp_mismatch"
   | "invalid_local_timestamp"
   | "missing_series_identity"
-  | "occurrence_key_collision";
+  | "occurrence_key_collision"
+  | "missing_course_offering"
+  | "study_groups_missing"
+  | "study_groups_loading"
+  | "study_groups_failed"
+  | "study_groups_stale";
 
 export interface CalendarDiagnostic {
   severity: "error" | "warning";
