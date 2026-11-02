@@ -69,7 +69,7 @@ describe("resolveCalendarTime", () => {
   });
 
   it("keeps authoritative instants when local source time disagrees", () => {
-    const source = { courseInstanceId: "offering", studyGroupId: "L01" };
+    const source = { courseOfferingId: "offering", studyGroupId: "L01" };
     const result = resolveCalendarTime({ ...valid, start: "2026-11-02T11:15:00" }, source);
     expect(result.interval).not.toBeNull();
     expect(result.diagnostics).toEqual([expect.objectContaining({

@@ -1,4 +1,8 @@
 // src/domain/valueObjects/DateRange.ts
+
+/** Inclusive Date-based range for course and enrolment dates.
+ * CalendarInterval instead models half-open absolute event-time intervals.
+ */
 export interface DateRange {
   start: Date;
   end: Date;

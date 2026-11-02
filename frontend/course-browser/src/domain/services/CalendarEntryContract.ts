@@ -20,7 +20,7 @@ export function defineFixedCalendarOccurrence(
     occurrenceKey,
     interval: { ...candidate.interval },
     source: {
-      courseInstanceId: candidate.courseInstanceId,
+      courseOfferingId: candidate.courseOfferingId,
       studyGroupId: candidate.studyGroupId,
       seriesId: candidate.event.seriesId ?? null,
       event: candidate.event,
@@ -49,6 +49,6 @@ export function compareCalendarEntries(a: CalendarEntry, b: CalendarEntry): numb
   return a.interval.startMs - b.interval.startMs ||
     a.interval.endMs - b.interval.endMs ||
     (a.occurrenceKey ?? "").localeCompare(b.occurrenceKey ?? "") ||
-    a.source.courseInstanceId.localeCompare(b.source.courseInstanceId) ||
+    a.source.courseOfferingId.localeCompare(b.source.courseOfferingId) ||
     a.source.studyGroupId.localeCompare(b.source.studyGroupId);
 }

@@ -7,6 +7,11 @@ import type { Language, StudyLevel, RawCourseFormat, CourseFormat } from '../val
 import { normalizeCourseFormat } from '../valueObjects/CourseTypes';
 import { Prerequisites } from '../valueObjects/Prerequisites';
 
+/**
+ * A course offering in Sisukas. id is its courseOfferingId; unitId
+ * identifies the underlying course unit. Legacy field names are retained
+ * for compatibility with existing loaders and stores.
+ */
 export class Course {
   readonly id: string;
   readonly unitId: string;

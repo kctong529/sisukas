@@ -7,7 +7,7 @@ import type { CalendarInterval } from "./CalendarTime";
 
 /** The context which scopes a source event to one offering and study group. */
 export interface CalendarOccurrenceCandidate {
-  courseInstanceId: string;
+  courseOfferingId: string;
   studyGroupId: string;
   event: StudyEvent;
   /** Validated absolute times, obtained from resolveCalendarTime(). */
@@ -27,7 +27,7 @@ export interface CalendarIdentityResult {
 
 function sourceOf(candidate: CalendarOccurrenceCandidate): CalendarSourceContext {
   return {
-    courseInstanceId: candidate.courseInstanceId,
+    courseOfferingId: candidate.courseOfferingId,
     studyGroupId: candidate.studyGroupId,
     seriesId: candidate.event.seriesId ?? null,
   };
@@ -37,7 +37,7 @@ function sourceOf(candidate: CalendarOccurrenceCandidate): CalendarSourceContext
  * Builds a deterministic snapshot-scoped key from a validated event.
  *
  * Identity:
- * 1. Scope the key to the course instance and study group.
+ * 1. Scope the key to the course offering and study group.
  * 2. Prefer the source series ID and authoritative occurrence start instant.
  * 3. Without a source series ID, use a namespaced fallback composed of the
  *    authoritative interval, sorted room IDs, status and source notice.
@@ -50,8 +50,8 @@ function sourceOf(candidate: CalendarOccurrenceCandidate): CalendarSourceContext
 export function deriveCalendarOccurrenceKey(
   candidate: CalendarOccurrenceCandidate,
 ): string {
-  const { courseInstanceId, studyGroupId, event, interval } = candidate;
-  const context = [courseInstanceId, studyGroupId];
+  const { courseOfferingId, studyGroupId, event, interval } = candidate;
+  const context = [courseOfferingId, studyGroupId];
   if (event.seriesId) {
     return JSON.stringify(["series", ...context, event.seriesId, interval.startMs]);
   }

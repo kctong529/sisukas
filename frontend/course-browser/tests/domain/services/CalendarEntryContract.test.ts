@@ -29,7 +29,7 @@ function identified(
   return {
     occurrenceKey: key,
     candidate: {
-      courseInstanceId: "offering-1",
+      courseOfferingId: "offering-1",
       studyGroupId: "group-1",
       event,
       interval: { startMs: 1000, endMs: 2000 },
@@ -49,7 +49,7 @@ describe("CalendarEntry contracts", () => {
     const result = defineFixedCalendarOccurrence(input);
     expect(result).toMatchObject({
       kind: "fixed", occurrenceKey: "unique", interval: { startMs: 1000, endMs: 2000 },
-      source: { courseInstanceId: "offering-1", studyGroupId: "group-1", seriesId: "series-1",
+      source: { courseOfferingId: "offering-1", studyGroupId: "group-1", seriesId: "series-1",
         event: { cancelled: true, excluded: true, notice: "Changed", locationIds: ["room-1"] } },
     });
     expect(result.source.event).toBe(input.candidate.event);

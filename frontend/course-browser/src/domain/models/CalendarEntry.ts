@@ -1,9 +1,11 @@
 import type { StudyEvent } from "./StudyEvent";
 import type { CalendarInterval } from "../services/CalendarTime";
 
-/** Source association carried by every calendar entry. */
+/** Source association carried by every calendar entry.
+ * courseOfferingId refers to Course.id and Plan.instanceIds entries.
+ */
 export interface CalendarEntrySource {
-  courseInstanceId: string;
+  courseOfferingId: string;
   studyGroupId: string;
   /** Source-series identity; not a unique expanded-occurrence identifier. */
   seriesId: string | null;

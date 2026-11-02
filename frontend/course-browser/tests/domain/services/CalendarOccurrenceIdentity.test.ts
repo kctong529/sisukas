@@ -18,7 +18,7 @@ function candidate(
   overrides: Partial<CalendarOccurrenceCandidate> = {},
 ): CalendarOccurrenceCandidate {
   return {
-    courseInstanceId: "offering-1", studyGroupId: "group-1",
+    courseOfferingId: "offering-1", studyGroupId: "group-1",
     event: event(), interval: { startMs: 1000, endMs: 2000 }, ...overrides,
   };
 }
@@ -36,7 +36,7 @@ describe("deriveCalendarOccurrenceKey", () => {
   it("distinguishes offerings, groups, series and occurrence starts", () => {
     const baseline = deriveCalendarOccurrenceKey(candidate());
     const variants = [
-      candidate({ courseInstanceId: "offering-2" }),
+      candidate({ courseOfferingId: "offering-2" }),
       candidate({ studyGroupId: "group-2" }),
       candidate({ event: event({ seriesId: "series-2" }) }),
       candidate({ interval: { startMs: 1001, endMs: 2000 } }),
@@ -46,8 +46,8 @@ describe("deriveCalendarOccurrenceKey", () => {
     }
   });
   it("does not confuse ambiguous delimiter-containing identifiers", () => {
-    const a = candidate({ courseInstanceId: "a:b", studyGroupId: "c" });
-    const b = candidate({ courseInstanceId: "a", studyGroupId: "b:c" });
+    const a = candidate({ courseOfferingId: "a:b", studyGroupId: "c" });
+    const b = candidate({ courseOfferingId: "a", studyGroupId: "b:c" });
     expect(deriveCalendarOccurrenceKey(a)).not.toBe(deriveCalendarOccurrenceKey(b));
   });
   it("uses explicit fallback namespace for absent series IDs", () => {
@@ -98,7 +98,7 @@ describe("identifyCalendarOccurrences", () => {
     expect(result.occurrences[0].occurrenceKey).not.toBeNull();
     expect(result.diagnostics).toMatchObject([{
       code: "missing_series_identity", severity: "warning",
-      source: {courseInstanceId: "offering-1", studyGroupId: "group-1", seriesId: null},
+      source: {courseOfferingId: "offering-1", studyGroupId: "group-1", seriesId: null},
     }]);
   });
   it("reports colliding source series keys without merging or positional IDs", () => {
