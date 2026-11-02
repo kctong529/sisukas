@@ -94,7 +94,7 @@ export function summarizeCalendarCompleteness(
  * Projects the current plan into fixed calendar occurrences using cached data.
  *
  * Explicit selections restrict groups; absent selections retain all candidates.
- * Excluded events and repeated object references within a group are omitted.
+ * Excluded events and repeated object references within an association are omitted.
  * Distinct source records are preserved even when their identities collide.
  * Flexible classification is deliberately deferred pending verified evidence.
  *
@@ -157,16 +157,29 @@ export function projectActivePlan(
       }
     }
 
-    // Prevent repeated group associations while retaining distinct groups.
-    const visitedGroups = new Set<string>();
+    // A duplicate group ID is inconsistent source data, not a reason to drop
+    // distinct occurrences. Share reference tracking across all records of
+    // the same offering/group association.
+    const seenByGroup = new Map<string, Set<StudyGroup["studyEvents"][number]>>();
     for (const group of snapshot.groups) {
       if (selectedIds !== null && !selectedIds.has(group.groupId)) continue;
-      if (visitedGroups.has(group.groupId)) continue;
-      visitedGroups.add(group.groupId);
 
       const groupSource = { courseOfferingId, studyGroupId: group.groupId };
-      const seenReferences = new Set<typeof group.studyEvents[number]>();
+      let seenReferences = seenByGroup.get(group.groupId);
+      if (seenReferences) {
+        diagnostics.push({
+          severity: "warning", code: "duplicate_study_group_id", source: groupSource,
+          message: "Duplicate study-group ID in snapshot; preserving distinct source occurrences",
+        });
+      } else {
+        seenReferences = new Set<StudyGroup["studyEvents"][number]>();
+        seenByGroup.set(group.groupId, seenReferences);
+      }
       for (const event of group.studyEvents) {
+        // Reference identity, not value equality: never silently merge
+        // distinct upstream records, including excluded occurrences.
+        if (seenReferences.has(event)) continue;
+        seenReferences.add(event);
         const eventSource = { ...groupSource, seriesId: event.seriesId ?? null };
         if (event.excluded) {
           diagnostics.push({
@@ -175,10 +188,6 @@ export function projectActivePlan(
           });
           continue;
         }
-        // A duplicate reference is distinguishable from two distinct source
-        // records with identical attributes. Never merge the latter here.
-        if (seenReferences.has(event)) continue;
-        seenReferences.add(event);
         const result = resolveCalendarTime(event, eventSource);
         diagnostics.push(...result.diagnostics);
         if (!result.interval) continue;

@@ -19,6 +19,7 @@ export type CalendarDiagnosticCode =
   | "study_groups_loading"
   | "study_groups_failed"
   | "study_groups_stale"
+  | "duplicate_study_group_id"
   | "selected_study_group_missing"
   | "excluded_occurrence";
 

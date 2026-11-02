@@ -218,6 +218,67 @@ describe("projectActivePlan stage 3 policies", () => {
     expect(result.diagnostics.filter(d => d.code === "occurrence_key_collision")).toHaveLength(2);
   });
 
+  it("preserves distinct occurrences from duplicate group IDs and diagnoses them", () => {
+    const first = event({ seriesId: "series-1" });
+    const second = event({ seriesId: "series-2" });
+    const result = withSelection([
+      group("L01", [first]), group("L01", [second]),
+    ], null);
+    expect(result.entries).toHaveLength(2);
+    expect(result.entries.map(e => e.source.event)).toEqual([first, second]);
+    expect(result.diagnostics).toContainEqual(expect.objectContaining({
+      severity: "warning", code: "duplicate_study_group_id",
+      source: { courseOfferingId: "off-1", studyGroupId: "L01" },
+    }));
+    expect(result.completeness.status).toBe("complete");
+  });
+
+  it("deduplicates event references across duplicate group objects", () => {
+    const source = event();
+    const result = withSelection([
+      group("L01", [source]), group("L01", [source]),
+    ], null);
+    expect(result.entries).toHaveLength(1);
+    expect(result.entries[0].occurrenceKey).not.toBeNull();
+    expect(result.diagnostics.filter(d => d.code === "duplicate_study_group_id")).toHaveLength(1);
+    expect(result.diagnostics.filter(d => d.code === "occurrence_key_collision")).toHaveLength(0);
+  });
+
+  it("preserves distinct colliding records across duplicate group objects", () => {
+    const result = withSelection([
+      group("L01", [event()]), group("L01", [event({ id: "another-id" })]),
+    ], null);
+    expect(result.entries).toHaveLength(2);
+    expect(result.entries.every(e => e.occurrenceKey === null)).toBe(true);
+    expect(result.diagnostics.filter(d => d.code === "occurrence_key_collision")).toHaveLength(2);
+  });
+
+  it("emits one exclusion diagnostic for a repeated event reference", () => {
+    const excluded = event({ excluded: true });
+    const result = withSelection([group("L01", [excluded, excluded])], null);
+    expect(result.entries).toEqual([]);
+    expect(result.diagnostics.filter(d => d.code === "excluded_occurrence")).toHaveLength(1);
+  });
+
+  it("does not repeat exclusion diagnostics across duplicate group objects", () => {
+    const excluded = event({ excluded: true });
+    const result = withSelection([
+      group("L01", [excluded]), group("L01", [excluded]),
+    ], null);
+    expect(result.entries).toEqual([]);
+    expect(result.diagnostics.filter(d => d.code === "excluded_occurrence")).toHaveLength(1);
+    expect(result.diagnostics.filter(d => d.code === "duplicate_study_group_id")).toHaveLength(1);
+  });
+
+  it("does not emit duplicate-group warnings for unselected groups", () => {
+    const result = withSelection([
+      group("L01", [event()]), group("L01", [event()]), group("L02", [event()]),
+    ], { studyGroupIds: ["L02"] });
+    expect(result.entries).toHaveLength(1);
+    expect(result.entries[0].source.studyGroupId).toBe("L02");
+    expect(result.diagnostics.filter(d => d.code === "duplicate_study_group_id")).toHaveLength(0);
+  });
+
   it("does not mutate frozen selections or events", () => {
     const source = Object.freeze(event());
     const selection = Object.freeze({ studyGroupIds: Object.freeze(["L01"]) });
