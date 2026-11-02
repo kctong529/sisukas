@@ -18,7 +18,9 @@ export type CalendarDiagnosticCode =
   | "study_groups_missing"
   | "study_groups_loading"
   | "study_groups_failed"
-  | "study_groups_stale";
+  | "study_groups_stale"
+  | "selected_study_group_missing"
+  | "excluded_occurrence";
 
 export interface CalendarDiagnostic {
   severity: "error" | "warning";

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { projectActivePlan, type StudyGroupSnapshot } from
+import { projectActivePlan, type StudyGroupSnapshot, type StudyGroupSelection } from
   "../../../src/domain/services/CalendarProjection";
 import type { Plan } from "../../../src/domain/models/Plan";
 import type { Course } from "../../../src/domain/models/Course";
@@ -124,5 +124,105 @@ describe("projectActivePlan stage 2", () => {
     expect(result.entries).toHaveLength(2);
     expect(result.entries.every(entry => entry.occurrenceKey === null)).toBe(true);
     expect(result.diagnostics.filter(d => d.code === "occurrence_key_collision")).toHaveLength(2);
+  });
+});
+
+
+describe("projectActivePlan stage 3 policies", () => {
+  const withSelection = (
+    groups: StudyGroup[],
+    selection: StudyGroupSelection | null | undefined,
+  ) => projectActivePlan({
+    plan: plan(["off-1"]),
+    getCourseForOffering: () => course("off-1"),
+    getStudyGroups: () => available(groups),
+    ...(selection === undefined ? {} : { getSelection: () => selection }),
+  });
+
+  it("uses all groups as candidates when selection is absent or null", () => {
+    const groups = [group("L01", [event()]), group("L02", [event()])];
+    expect(withSelection(groups, undefined).entries).toHaveLength(2);
+    expect(withSelection(groups, null).entries).toHaveLength(2);
+  });
+
+  it("restricts projection to explicitly selected groups", () => {
+    const result = withSelection([
+      group("L01", [event()]), group("L02", [event()]),
+    ], { studyGroupIds: ["L02"] });
+    expect(result.entries.map(e => e.source.studyGroupId)).toEqual(["L02"]);
+    expect(result.completeness.status).toBe("complete");
+  });
+
+  it("treats explicit empty selection differently from absent selection", () => {
+    const result = withSelection([group("L01", [event()])], { studyGroupIds: [] });
+    expect(result.entries).toEqual([]);
+    expect(result.completeness.availableCourses).toBe(1);
+    expect(result.diagnostics).toEqual([]);
+  });
+
+  it("reports unknown selected groups without falling back", () => {
+    const result = withSelection([group("L01", [event()])], { studyGroupIds: ["L99"] });
+    expect(result.entries).toEqual([]);
+    expect(result.diagnostics).toContainEqual(expect.objectContaining({
+      code: "selected_study_group_missing",
+      source: { courseOfferingId: "off-1", studyGroupId: "L99" },
+    }));
+  });
+
+  it("does not duplicate repeated selected IDs", () => {
+    const result = withSelection([group("L01", [event()])], { studyGroupIds: ["L01", "L01"] });
+    expect(result.entries).toHaveLength(1);
+  });
+
+  it("retains cancelled occurrences, which cannot occupy conflict time", () => {
+    const result = withSelection([group("L01", [event({ cancelled: true })])], null);
+    expect(result.entries).toHaveLength(1);
+    expect(result.entries[0].source.event.cancelled).toBe(true);
+  });
+
+  it("omits excluded occurrences and records a trace diagnostic", () => {
+    const result = withSelection([group("L01", [event({ excluded: true })])], null);
+    expect(result.entries).toEqual([]);
+    expect(result.diagnostics).toContainEqual(expect.objectContaining({
+      severity: "warning", code: "excluded_occurrence",
+      source: { courseOfferingId: "off-1", studyGroupId: "L01", seriesId: "series-1" },
+    }));
+    expect(result.completeness.status).toBe("complete");
+  });
+
+  it("gives exclusion precedence over cancellation and invalid timestamps", () => {
+    const result = withSelection([group("L01", [event({ cancelled: true, excluded: true, startIso: undefined })])], null);
+    expect(result.entries).toEqual([]);
+    expect(result.diagnostics.map(d => d.code)).toEqual(["excluded_occurrence"]);
+  });
+
+  it("deduplicates repeated event object references inside one association", () => {
+    const source = event();
+    const result = withSelection([group("L01", [source, source])], null);
+    expect(result.entries).toHaveLength(1);
+    expect(result.entries[0].occurrenceKey).not.toBeNull();
+    expect(result.diagnostics.filter(d => d.code === "occurrence_key_collision")).toHaveLength(0);
+  });
+
+  it("preserves the same event across distinct study groups", () => {
+    const source = event();
+    const result = withSelection([group("L01", [source]), group("L02", [source])], null);
+    expect(result.entries).toHaveLength(2);
+    expect(result.entries.map(e => e.source.studyGroupId)).toEqual(["L01", "L02"]);
+  });
+
+  it("keeps distinct records with colliding keys unresolved", () => {
+    const result = withSelection([group("L01", [event(), event({ id: "different-legacy-id" })])], null);
+    expect(result.entries).toHaveLength(2);
+    expect(result.entries.every(e => e.occurrenceKey === null)).toBe(true);
+    expect(result.diagnostics.filter(d => d.code === "occurrence_key_collision")).toHaveLength(2);
+  });
+
+  it("does not mutate frozen selections or events", () => {
+    const source = Object.freeze(event());
+    const selection = Object.freeze({ studyGroupIds: Object.freeze(["L01"]) });
+    const result = withSelection([group("L01", [source])], selection);
+    expect(result.entries).toHaveLength(1);
+    expect(selection.studyGroupIds).toEqual(["L01"]);
   });
 });

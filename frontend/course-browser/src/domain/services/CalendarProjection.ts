@@ -93,10 +93,10 @@ export function summarizeCalendarCompleteness(
 /**
  * Projects the current plan into fixed calendar occurrences using cached data.
  *
- * Stage 2 is deliberately limited to traversal, source time validation and
- * identity derivation. The selection, exclusion, duplicate-reference and
- * flexible-classification policies are introduced in Stage 3. Thus this
- * function currently projects every group returned by a usable snapshot.
+ * Explicit selections restrict groups; absent selections retain all candidates.
+ * Excluded events and repeated object references within a group are omitted.
+ * Distinct source records are preserved even when their identities collide.
+ * Flexible classification is deliberately deferred pending verified evidence.
  *
  * No request, store read, persistence operation or input mutation occurs here.
  */
@@ -140,10 +140,45 @@ export function projectActivePlan(
         message: "Using stale study-group data",
       });
     }
+    // Explicitly empty selections are meaningful: they select no groups.
+    // Null or an absent lookup means there is no explicit selection.
+    const selection = input.getSelection?.(courseOfferingId) ?? null;
+    const selectedIds = selection === null ? null : new Set(selection.studyGroupIds);
+    if (selectedIds !== null) {
+      const knownIds = new Set(snapshot.groups.map(group => group.groupId));
+      for (const studyGroupId of selectedIds) {
+        if (!knownIds.has(studyGroupId)) {
+          diagnostics.push({
+            severity: "warning", code: "selected_study_group_missing",
+            source: { courseOfferingId, studyGroupId },
+            message: "Explicitly selected study group is not in the available snapshot",
+          });
+        }
+      }
+    }
+
+    // Prevent repeated group associations while retaining distinct groups.
+    const visitedGroups = new Set<string>();
     for (const group of snapshot.groups) {
+      if (selectedIds !== null && !selectedIds.has(group.groupId)) continue;
+      if (visitedGroups.has(group.groupId)) continue;
+      visitedGroups.add(group.groupId);
+
       const groupSource = { courseOfferingId, studyGroupId: group.groupId };
+      const seenReferences = new Set<typeof group.studyEvents[number]>();
       for (const event of group.studyEvents) {
         const eventSource = { ...groupSource, seriesId: event.seriesId ?? null };
+        if (event.excluded) {
+          diagnostics.push({
+            severity: "warning", code: "excluded_occurrence", source: eventSource,
+            message: "Source occurrence excluded from active calendar projection",
+          });
+          continue;
+        }
+        // A duplicate reference is distinguishable from two distinct source
+        // records with identical attributes. Never merge the latter here.
+        if (seenReferences.has(event)) continue;
+        seenReferences.add(event);
         const result = resolveCalendarTime(event, eventSource);
         diagnostics.push(...result.diagnostics);
         if (!result.interval) continue;
