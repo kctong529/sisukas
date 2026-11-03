@@ -58,10 +58,6 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: npm ci --ignore-scripts
 
-      - name: Compile Metadata
-        working-directory: ${{ env.WORKING_DIR }}
-        run: npm run compile-metadata
-      
       - name: Read frontend version
         id: frontend_version
         working-directory: ${{ env.WORKING_DIR }}
