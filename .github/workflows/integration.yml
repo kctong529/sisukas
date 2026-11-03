@@ -122,6 +122,14 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           version: ${{ env.UV_VERSION }}
+      
+      - name: Inspect compilation environment
+        run: |
+          uv --version
+          uv python find
+          python3 --version
+          uname -m
+          env | sort | grep -E '^(UV_|VIRTUAL_ENV|PYTHON)' || true
 
       - name: Compile requirements
         run: make compile-requirements
