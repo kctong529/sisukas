@@ -1,4 +1,4 @@
-// tests/domain/loaders/AcademicPeriods.test.ts
+// tests/infrastructure/loaders/AcademicPeriods.test.ts
 import { describe, it, expect } from 'vitest';
 import { loadAcademicPeriods } from '../../../src/infrastructure/loaders/AcademicPeriodLoader';
 import type { AcademicPeriod } from '../../../src/domain/models/AcademicPeriod';
