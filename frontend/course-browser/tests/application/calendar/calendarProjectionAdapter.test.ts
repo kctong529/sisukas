@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { projectPlanFromSources, readStudyGroupSnapshot, type CalendarProjectionSources } from "../../src/lib/calendarProjectionAdapter";
-import type { Plan } from "../../src/domain/models/Plan";
-import type { Course } from "../../src/domain/models/Course";
-import type { StudyGroup } from "../../src/domain/models/StudyGroup";
+import {
+  projectPlanFromSources,
+  readStudyGroupSnapshot,
+  type CalendarProjectionSources,
+} from "../../../src/application/calendar/calendarProjectionAdapter";
+import type { Plan } from "../../../src/domain/models/Plan";
+import type { Course } from "../../../src/domain/models/Course";
+import type { StudyGroup } from "../../../src/domain/models/StudyGroup";
 
 const plan: Plan = {
   id: "p", userId: "u", name: "Plan", isActive: true,

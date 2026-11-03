@@ -1,11 +1,11 @@
-import type { Plan } from "../domain/models/Plan";
-import type { Course } from "../domain/models/Course";
-import type { StudyGroup } from "../domain/models/StudyGroup";
+import type { Plan } from "../../domain/models/Plan";
+import type { Course } from "../../domain/models/Course";
+import type { StudyGroup } from "../../domain/models/StudyGroup";
 import {
   projectActivePlan,
   type CalendarProjectionResult,
   type StudyGroupSnapshot,
-} from "../domain/services/CalendarProjection";
+} from "../../domain/services/CalendarProjection";
 
 /** Store reads are injected so the adapter can be tested without Svelte state. */
 export interface CalendarProjectionSources {

@@ -1,7 +1,10 @@
 import { plansStore } from "./plansStore.svelte";
 import { courseIndexStore } from "./courseIndexStore.svelte";
 import { studyGroupStore } from "./studyGroupStore.svelte";
-import { projectPlanFromSources, type CalendarProjectionSources } from "../calendarProjectionAdapter";
+import {
+  projectPlanFromSources,
+  type CalendarProjectionSources,
+} from "../../application/calendar/calendarProjectionAdapter";
 import type { CalendarProjectionResult } from "../../domain/services/CalendarProjection";
 
 const sources: CalendarProjectionSources = {
