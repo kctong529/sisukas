@@ -1,4 +1,4 @@
-// tests/domain/stores/blockStore.test.ts
+// tests/lib/stores/blockStore.test.ts
 import { describe, it, expect, beforeEach } from 'vitest';
 import { get } from 'svelte/store';
 import { 

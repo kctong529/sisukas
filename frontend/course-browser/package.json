@@ -13,7 +13,6 @@
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
-    "compile-metadata": "node compile-metadata.js",
     "dev:mkcert": "mkcert -install && mkcert localhost 127.0.0.1 ::1",
     "validate:curricula": "tsx scripts/validate-curricula.ts",
     "test:e2e": "playwright test",
