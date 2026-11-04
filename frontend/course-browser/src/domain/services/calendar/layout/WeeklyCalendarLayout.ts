@@ -1,4 +1,4 @@
-import type { CalendarEntry } from "../models/CalendarEntry";
+import type { CalendarEntry } from "@domain/models/CalendarEntry";
 import { resolveHelsinkiWeek } from "./WeeklyCalendarTime";
 import { segmentWeek } from "./WeeklyCalendarSegmentation";
 import { assignOverlapLanes } from "./WeeklyCalendarOverlap";

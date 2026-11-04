@@ -1,12 +1,12 @@
 import { describe, expect, it, expectTypeOf } from "vitest";
-import type { StudyEvent } from "../../../src/domain/models/StudyEvent";
-import type { CalendarEntry } from "../../../src/domain/models/CalendarEntry";
-import type { CalendarIdentifiedOccurrence } from "../../../src/domain/services/CalendarOccurrenceIdentity";
+import type { StudyEvent } from "@domain/models/StudyEvent";
+import type { CalendarEntry } from "@domain/models/CalendarEntry";
+import type { CalendarIdentifiedOccurrence } from "@domain/services/calendar/CalendarOccurrenceIdentity";
 import {
   compareCalendarEntries,
   defineFixedCalendarOccurrence,
   defineFlexibleCalendarWindow,
-} from "../../../src/domain/services/CalendarEntryContract";
+} from "@domain/services/calendar/CalendarEntryContract";
 
 function identified(
   key: string | null = "key-1",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { summarizeCalendarCompleteness } from "../../../src/domain/services/CalendarProjection";
-import type { StudyGroupSnapshot } from "../../../src/domain/services/CalendarProjection";
+import { summarizeCalendarCompleteness } from "@domain/services/calendar/CalendarProjection";
+import type { StudyGroupSnapshot } from "@domain/services/calendar/CalendarProjection";
 
 describe("calendar projection completeness", () => {
   it("treats an empty active plan as complete", () => {

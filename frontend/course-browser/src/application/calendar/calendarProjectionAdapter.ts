@@ -5,7 +5,7 @@ import {
   projectActivePlan,
   type CalendarProjectionResult,
   type StudyGroupSnapshot,
-} from "@domain/services/CalendarProjection";
+} from "@domain/services/calendar/CalendarProjection";
 
 /** Store reads are injected so the adapter can be tested without Svelte state. */
 export interface CalendarProjectionSources {

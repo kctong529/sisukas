@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { CalendarEntry, FixedCalendarOccurrence } from "../../../src/domain/models/CalendarEntry";
-import { parseOffsetInstant } from "../../../src/domain/services/CalendarTime";
-import { layoutCalendarWeek } from "../../../src/domain/services/WeeklyCalendarLayout";
+import type { CalendarEntry, FixedCalendarOccurrence } from "@domain/models/CalendarEntry";
+import { parseOffsetInstant } from "@domain/services/calendar/CalendarTime";
+import { layoutCalendarWeek } from "@domain/services/calendar/layout/WeeklyCalendarLayout";
 
 function fixed(
   key: string | null,

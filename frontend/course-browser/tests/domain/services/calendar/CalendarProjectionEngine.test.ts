@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { projectActivePlan, type StudyGroupSnapshot, type StudyGroupSelection } from
-  "../../../src/domain/services/CalendarProjection";
-import type { Plan } from "../../../src/domain/models/Plan";
-import type { Course } from "../../../src/domain/models/Course";
-import type { StudyGroup } from "../../../src/domain/models/StudyGroup";
-import type { StudyEvent } from "../../../src/domain/models/StudyEvent";
+  "@domain/services/calendar/CalendarProjection";
+import type { Plan } from "@domain/models/Plan";
+import type { Course } from "@domain/models/Course";
+import type { StudyGroup } from "@domain/models/StudyGroup";
+import type { StudyEvent } from "@domain/models/StudyEvent";
 
 const plan = (ids: string[]): Plan => ({
   id: "plan", userId: "user", name: "Plan", isActive: true,

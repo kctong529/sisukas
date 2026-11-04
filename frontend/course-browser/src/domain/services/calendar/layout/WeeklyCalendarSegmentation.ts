@@ -1,5 +1,5 @@
-import type { CalendarEntry, FixedCalendarOccurrence } from "../models/CalendarEntry";
-import { isConflictEligible } from "./CalendarEntryContract";
+import type { CalendarEntry, FixedCalendarOccurrence } from "@domain/models/CalendarEntry";
+import { isConflictEligible } from "../CalendarEntryContract";
 import { helsinkiOffsetMinutes, localMinute, splitAtOffsetTransitions } from "./WeeklyCalendarTime";
 import type { WeeklyCalendarSegment, WeeklyCalendarLayoutDiagnostic } from "./WeeklyCalendarLayoutTypes";
 

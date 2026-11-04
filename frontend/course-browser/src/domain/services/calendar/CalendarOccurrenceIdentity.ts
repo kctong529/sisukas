@@ -1,8 +1,8 @@
-import type { StudyEvent } from "../models/StudyEvent";
+import type { StudyEvent } from "@domain/models/StudyEvent";
 import type {
   CalendarDiagnostic,
   CalendarSourceContext,
-} from "../models/CalendarDiagnostic";
+} from "@domain/models/CalendarDiagnostic";
 import type { CalendarInterval } from "./CalendarTime";
 
 /** The context which scopes a source event to one offering and study group. */

@@ -1,4 +1,4 @@
-import { CALENDAR_DISPLAY_TIME_ZONE, formatHelsinkiLocal, type CalendarInterval } from "./CalendarTime";
+import { CALENDAR_DISPLAY_TIME_ZONE, formatHelsinkiLocal, type CalendarInterval } from "../CalendarTime";
 
 const DAY_MS = 86_400_000;
 const MINUTE_MS = 60_000;

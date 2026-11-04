@@ -3,7 +3,7 @@ import type {
   FixedCalendarOccurrence,
   FlexibleCalendarWindow,
   FlexibleWindowEvidence,
-} from "../models/CalendarEntry";
+} from "@domain/models/CalendarEntry";
 import type { CalendarIdentifiedOccurrence } from "./CalendarOccurrenceIdentity";
 
 /**
