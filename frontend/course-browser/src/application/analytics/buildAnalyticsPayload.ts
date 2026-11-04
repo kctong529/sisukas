@@ -1,9 +1,9 @@
-// src/lib/analytics/buildAnalyticsPayload.ts
+// src/application/analytics/buildAnalyticsPayload.ts
 
-import type { Course } from "../../domain/models/Course";
-import type { Block } from "../../domain/models/Block";
-import type { StudyGroup } from "../../domain/models/StudyGroup";
-import { aggregateStudyEventsByTimeSlot } from "./aggregateStudyEventsByTimeSlot";
+import type { Course } from "@domain/models/Course";
+import type { Block } from "@domain/models/Block";
+import type { StudyGroup } from "@domain/models/StudyGroup";
+import { aggregateStudyEventsByTimeSlot } from "@lib/analytics/aggregateStudyEventsByTimeSlot";
 
 /* ========= Backend request DTO ========= */
 

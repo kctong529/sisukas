@@ -12,10 +12,10 @@
   import AnalyticsResults from "./AnalyticsResults.svelte";
 
   import type { Course } from "../domain/models/Course";
-  import { buildAnalyticsPayload } from "../lib/analytics/buildAnalyticsPayload";
+import { buildAnalyticsPayload } from "@application/analytics/buildAnalyticsPayload";
   import { fetchTopKSchedulePairs } from "../infrastructure/services/AnalyticsService";
   import type { AnalyticsResponse } from "../lib/types/analytics";
-  import { normalizeComputeSchedulePairsResponse } from "../lib/analytics/normalizeComputeSchedulePairs";
+import { normalizeComputeSchedulePairsResponse } from "@application/analytics/normalizeComputeSchedulePairs";
 
   // ---- Session (runes) ----
   const session = useSession();

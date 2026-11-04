@@ -1,5 +1,9 @@
-import type { ComputeSchedulePairsResponse } from "../../infrastructure/services/AnalyticsService";
-import type { AnalyticsResponse, ScheduleCandidate, Segment } from "../types/analytics";
+import type { ComputeSchedulePairsResponse } from "@infrastructure/services/AnalyticsService";
+import type {
+  AnalyticsResponse,
+  ScheduleCandidate,
+  Segment,
+} from "@lib/types/analytics";
 
 type UiWarning = AnalyticsResponse["warnings"][number];
 type UiWarningCode = UiWarning["code"];

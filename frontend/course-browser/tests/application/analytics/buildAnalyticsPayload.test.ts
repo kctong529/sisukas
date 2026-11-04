@@ -1,15 +1,9 @@
-
 import { describe, expect, it } from "vitest";
 
-import { buildAnalyticsPayload } from
-  "../../../src/lib/analytics/buildAnalyticsPayload";
-
-import type { Course } from
-  "../../../src/domain/models/Course";
-import type { Block } from
-  "../../../src/domain/models/Block";
-import type { StudyGroup } from
-  "../../../src/domain/models/StudyGroup";
+import { buildAnalyticsPayload } from "@application/analytics/buildAnalyticsPayload";
+import type { Course } from "@domain/models/Course";
+import type { Block } from "@domain/models/Block";
+import type { StudyGroup } from "@domain/models/StudyGroup";
 
 describe("buildAnalyticsPayload", () => {
   it("aggregates equal-time source events for scheduling", () => {
