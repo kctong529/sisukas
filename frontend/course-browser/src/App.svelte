@@ -347,7 +347,7 @@
   <DebugPanels />
 
   {#if ui.showAuthModal}
-    <AuthModal on:close={() => (ui.showAuthModal = false)} />
+    <AuthModal onclose={() => (ui.showAuthModal = false)} />
   {/if}
 
   <NotificationContainer />

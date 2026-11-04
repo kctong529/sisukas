@@ -1,55 +1,83 @@
-<!-- src/components/AuthModal.svelte -->
+<!-- src/components/auth/AuthModal.svelte -->
 <script lang="ts">
-  import { createEventDispatcher, onMount } from "svelte";
+  import { onMount } from "svelte";
   import { useSession, authClient } from "../../lib/authClient";
-  
-  const dispatch = createEventDispatcher();
+
+  type Props = {
+    onclose?: () => void;
+  };
+
+  let { onclose }: Props = $props();
+
   const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
   const session = useSession();
 
-  let email = "";
-  let message = "";
-  let loading = false;
+  let email = $state("");
+  let message = $state("");
+  let messageType = $state<"success" | "error" | null>(null);
+  let loading = $state(false);
   let dialog: HTMLDialogElement;
 
   onMount(() => {
-    dialog.showModal();
+    if (!dialog.open) dialog.showModal();
   });
 
-  $: if ($session.data?.user) {
-    closeModal();
-  }
+  $effect(() => {
+    if ($session.data?.user && dialog?.open) {
+      closeModal();
+    }
+  });
 
   function closeModal() {
-    dialog.close();
-    dispatch("close");
+    if (dialog?.open) dialog.close();
   }
 
-  async function handleMagicLink() {
+  function handleDialogClose() {
+    onclose?.();
+  }
+
+  async function handleMagicLink(event: SubmitEvent) {
+    event.preventDefault();
+    if (loading || !email.trim()) return;
+
     loading = true;
     message = "";
-    
-    const { error } = await authClient.signIn.magicLink({
-      email,
-      callbackURL: `${FRONTEND_URL}/`,
-    });
+    messageType = null;
 
-    if (error && error.message) {
-      message = error.message;
-    } else {
-      message = "Check your email for the sign-in link ✉️";
+    try {
+      const { error } = await authClient.signIn.magicLink({
+        email,
+        callbackURL: `${FRONTEND_URL}/`,
+      });
+
+      if (error) {
+        message = error.message ?? "Failed to send sign-in link.";
+        messageType = "error";
+      } else {
+        message = "Check your email for the sign-in link ✉️";
+        messageType = "success";
+      }
+    } catch {
+      message = "Failed to send sign-in link.";
+      messageType = "error";
+    } finally {
+      loading = false;
     }
-    loading = false;
   }
 </script>
 
 <dialog
   bind:this={dialog}
-  on:click|self={closeModal}
+  onclick={(event) => {
+    if (event.target === event.currentTarget) {
+      closeModal();
+    }
+  }}
+  onclose={handleDialogClose}
   aria-labelledby="modal-title"
 >
   <div class="modal-content">
-    <button class="close-btn" on:click={closeModal} aria-label="Close">
+    <button class="close-btn" onclick={closeModal} aria-label="Close">
       <i class="bi bi-x"></i>
     </button>
 
@@ -61,17 +89,24 @@
       <p class="subtitle">Enter your email to receive a magic link</p>
     </div>
 
-    <div class="form-group">
+    <form class="form-group" onsubmit={handleMagicLink}>
       <div class="input-wrapper">
         <i class="bi bi-envelope"></i>
         <input
           type="email"
+          required
+          autocomplete="email"
+          aria-label="Email address"
           placeholder="you@aalto.fi"
           bind:value={email}
         />
       </div>
 
-      <button class="submit-btn" on:click={handleMagicLink} disabled={loading || !email}>
+      <button
+        class="submit-btn"
+        type="submit"
+        disabled={loading || !email.trim()}
+      >
         {#if loading}
           <span class="spinner"></span>
           Sending...
@@ -80,11 +115,11 @@
           Send magic link
         {/if}
       </button>
-    </div>
+    </form>
 
     {#if message}
-      <div class="message" class:success={!message.includes('error')}>
-        <i class="bi {message.includes('✉️') ? 'bi-check-circle' : 'bi-exclamation-circle'}"></i>
+      <div class="message" class:success={messageType === "success"} role={messageType === "error" ? "alert" : "status"}>
+        <i class:bi-check-circle={messageType === "success"} class:bi-exclamation-circle={messageType === "error"} class="bi" aria-hidden="true"></i>
         {message}
       </div>
     {/if}
