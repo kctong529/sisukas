@@ -12,8 +12,11 @@
   import { tick } from "svelte";
   import { computeYearStats, formatAvg } from '../lib/periodTimeline/yearStats';
   import TranscriptExtractor from "./TranscriptExtractor.svelte";
-  import { importTranscript } from "../lib/transcript/importTranscript";
-  import type { TranscriptRow, ImportTranscriptResult } from "../lib/transcript/importTranscript";
+  import {
+    importTranscript,
+    type TranscriptRow,
+    type ImportTranscriptResult,
+  } from "@application/transcript/importTranscript";
   import { NotificationService } from '../infrastructure/services/NotificationService';
 
   const session = useSession();
