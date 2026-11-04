@@ -1,16 +1,16 @@
-<!-- src/components/FilterContainer.svelte -->
+<!-- src/components/filters/FilterContainer.svelte -->
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import FilterRule from './FilterRule.svelte';
   import PeriodSelector from './PeriodSelector.svelte';
-  import { getBuilderFor } from '../domain/filters/builders/getBuilderFor';
-  import { ValueParser } from '../domain/filters/helpers/ValueParser';
-  import { DefaultValueInitializer } from '../domain/filters/helpers/DefaultValueInitializer';
-  import type { FilterConfig, FilterRuleGroups } from '../domain/filters/FilterTypes';
-  import type { Course } from '../domain/models/Course';
-  import type { AcademicPeriod } from '../domain/models/AcademicPeriod';
-  import type { FilterRule as Rule } from '../domain/filters/core/FilterRule';
-  import type { BaseRuleBlueprint } from '../domain/filters/blueprints/BaseRuleBlueprint';
+  import { getBuilderFor } from '@domain/filters/builders/getBuilderFor';
+  import { ValueParser } from '@domain/filters/helpers/ValueParser';
+  import { DefaultValueInitializer } from '@domain/filters/helpers/DefaultValueInitializer';
+  import type { FilterConfig, FilterRuleGroups } from '@domain/filters/FilterTypes';
+  import type { Course } from '@domain/models/Course';
+  import type { AcademicPeriod } from '@domain/models/AcademicPeriod';
+  import type { FilterRule as Rule } from '@domain/filters/core/FilterRule';
+  import type { BaseRuleBlueprint } from '@domain/filters/blueprints/BaseRuleBlueprint';
 
   interface FilterRuleBuilder {
     isComplete(): boolean;

@@ -1,11 +1,11 @@
-<!-- src/components/FilterRule.svelte -->
+<!-- src/components/filters/FilterRule.svelte -->
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { formatRelationLabel } from '../domain/filters/helpers/RelationLabels';
-  import { BLUEPRINT_ORDER } from '../domain/filters/config/BlueprintOrder';
-  import { DefaultValueInitializer } from '../domain/filters/helpers/DefaultValueInitializer';
-  import type { FilterConfig } from '../domain/filters/FilterTypes';
-  import type { BaseRuleBlueprint } from '../domain/filters/blueprints/BaseRuleBlueprint';
+  import { formatRelationLabel } from '@domain/filters/helpers/RelationLabels';
+  import { BLUEPRINT_ORDER } from '@domain/filters/config/BlueprintOrder';
+  import { DefaultValueInitializer } from '@domain/filters/helpers/DefaultValueInitializer';
+  import type { FilterConfig } from '@domain/filters/FilterTypes';
+  import type { BaseRuleBlueprint } from '@domain/filters/blueprints/BaseRuleBlueprint';
 
   export let blueprints: Record<string, BaseRuleBlueprint>;
   export let config: FilterConfig;

@@ -2,9 +2,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Navigation from "./components/layout/Navigation.svelte";
-  import FilterContainer from './components/FilterContainer.svelte';
+  import FilterContainer from './components/filters/FilterContainer.svelte';
   import CourseTable from './components/courses/CourseTable.svelte';
-  import SearchControls from './components/SearchControls.svelte';
+  import SearchControls from './components/filters/SearchControls.svelte';
   import NotificationContainer from "./components/notifications/NotificationContainer.svelte";
   import AuthModal from "./components/auth/AuthModal.svelte";
   import FavouritesView from "./components/favourites/FavouritesView.svelte";

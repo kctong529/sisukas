@@ -1,4 +1,4 @@
-<!-- src/components/SearchControls.svelte -->
+<!-- src/components/filters/SearchControls.svelte -->
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   
