@@ -1,23 +1,23 @@
 <!-- src/components/PeriodTimeline.svelte -->
 <script lang="ts">
-  import { periodTimelineStore } from '../lib/stores/periodTimelineStore.svelte';
-  import { academicPeriodStore } from '../lib/stores/academicPeriodStore';
-  import { periodTimelineYearStore } from '../lib/stores/periodTimelineYearStore';
-  import { courseGradeStore } from "../lib/stores/courseGradeStore";
-  import { AcademicPeriodVisibility } from '../domain/services/AcademicPeriodVisibility';
-  import type { PeriodTimelineChip } from '../domain/viewModels/PeriodTimelineModel';
-  import PlanManager from './planning/PlanManager.svelte';
-  import { useSession } from '../lib/authClient';
-  import { COURSE_PREFIX_RGB } from "../lib/coursePrefixColors";
+  import { periodTimelineStore } from '../../lib/stores/periodTimelineStore.svelte';
+  import { academicPeriodStore } from '../../lib/stores/academicPeriodStore';
+  import { periodTimelineYearStore } from '../../lib/stores/periodTimelineYearStore';
+  import { courseGradeStore } from "../../lib/stores/courseGradeStore";
+  import { AcademicPeriodVisibility } from '@domain/services/AcademicPeriodVisibility';
+  import type { PeriodTimelineChip } from '@domain/viewModels/PeriodTimelineModel';
+  import PlanManager from './../planning/PlanManager.svelte';
+  import { useSession } from '../../lib/authClient';
+  import { COURSE_PREFIX_RGB } from "../../lib/coursePrefixColors";
   import { tick } from "svelte";
-  import { computeYearStats, formatAvg } from '../lib/periodTimeline/yearStats';
+  import { computeYearStats, formatAvg } from '../../lib/periodTimeline/yearStats';
   import TranscriptExtractor from "./TranscriptExtractor.svelte";
   import {
     importTranscript,
     type TranscriptRow,
     type ImportTranscriptResult,
   } from "@application/transcript/importTranscript";
-  import { NotificationService } from '../infrastructure/services/NotificationService';
+  import { NotificationService } from '@infrastructure/services/NotificationService';
 
   const session = useSession();
   let isSignedIn = $derived(!!$session.data?.user);

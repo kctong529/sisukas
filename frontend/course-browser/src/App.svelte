@@ -9,7 +9,7 @@
   import AuthModal from "./components/auth/AuthModal.svelte";
   import FavouritesView from "./components/favourites/FavouritesView.svelte";
   import LegoView from './components/planning/LegoView.svelte';
-  import PeriodTimeline from './components/PeriodTimeline.svelte';
+  import PeriodTimeline from './components/period-timeline/PeriodTimeline.svelte';
   import { authClient, useSession } from "./lib/authClient";
   import { createRuleBlueprints, type RuleBlueprintKey } from './domain/filters/blueprints';
   import type { BaseRuleBlueprint } from './domain/filters/blueprints';
