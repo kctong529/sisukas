@@ -1,31 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { CalendarEntry, FixedCalendarOccurrence } from "@domain/models/CalendarEntry";
-import { parseOffsetInstant } from "@domain/services/calendar/CalendarTime";
+import type { CalendarEntry } from "@domain/models/CalendarEntry";
 import { layoutCalendarWeek } from "@domain/services/calendar/layout/WeeklyCalendarLayout";
+import { fixed, NORMAL_WEEK } from "./fixtures";
 
-function fixed(
-  key: string | null,
-  start: string,
-  end: string,
-  overrides: { cancelled?: boolean; excluded?: boolean; group?: string } = {},
-): FixedCalendarOccurrence {
-  const startMs = parseOffsetInstant(start);
-  const endMs = parseOffsetInstant(end);
-  if (startMs === null || endMs === null) throw new Error("Bad test timestamp");
-  return {
-    kind: "fixed", occurrenceKey: key, interval: { startMs, endMs },
-    source: {
-      courseOfferingId: "course", studyGroupId: overrides.group ?? "group", seriesId: "series",
-      event: {
-        id: key ?? "collision", start, end, startIso: start, endIso: end,
-        cancelled: overrides.cancelled ?? false, excluded: overrides.excluded ?? false,
-        locationIds: [], locations: [],
-      },
-    },
-  };
-}
-
-const WEEK = "2026-11-02";
+const WEEK = NORMAL_WEEK;
 
 describe("WeeklyCalendarLayout", () => {
   it("positions Helsinki-local entries without modifying source timestamps", () => {
