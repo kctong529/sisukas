@@ -51,4 +51,3 @@ export interface WeeklyCalendarLayoutResult {
   overlapGroups: WeeklyCalendarOverlapGroup[];
   diagnostics: WeeklyCalendarLayoutDiagnostic[];
 }
-
