@@ -3,10 +3,10 @@ import {
   projectPlanFromSources,
   readStudyGroupSnapshot,
   type CalendarProjectionSources,
-} from "../../../src/application/calendar/calendarProjectionAdapter";
-import type { Plan } from "../../../src/domain/models/Plan";
-import type { Course } from "../../../src/domain/models/Course";
-import type { StudyGroup } from "../../../src/domain/models/StudyGroup";
+} from "@application/calendar/calendarProjectionAdapter";
+import type { Plan } from "@domain/models/Plan";
+import type { Course } from "@domain/models/Course";
+import type { StudyGroup } from "@domain/models/StudyGroup";
 
 const plan: Plan = {
   id: "p", userId: "u", name: "Plan", isActive: true,

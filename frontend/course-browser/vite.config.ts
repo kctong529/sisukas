@@ -1,5 +1,6 @@
 import { configDefaults, defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte'
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { VitePWA } from 'vite-plugin-pwa'
 import ViteYaml from '@modyfi/vite-plugin-yaml';
 import fs from 'fs'
@@ -13,6 +14,7 @@ export default defineConfig(({ mode }) => ({
   base: "/",
   plugins: [
     svelte(),
+    tsconfigPaths(),
     ViteYaml(),
     VitePWA({
       registerType: 'autoUpdate',
