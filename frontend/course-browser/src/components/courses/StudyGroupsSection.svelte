@@ -5,7 +5,12 @@
   import type { StudyGroupSummary } from "../../lib/stores/studyGroupStore.svelte";
   import { formatStudyEventSchedule, formatStudyEventTime } from "../../lib/studyGroups/studyGroupFormatters";
 
-  const { course, isExpanded } = $props<{ course: Course; isExpanded: boolean }>();
+  type Props = {
+    course: Course;
+    isExpanded: boolean;
+  };
+
+  let { course, isExpanded }: Props = $props();
 
   const status = $derived.by(() => {
     if (!course) {

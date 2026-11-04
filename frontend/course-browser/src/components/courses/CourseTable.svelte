@@ -14,13 +14,15 @@
   // -----------------------------
   // Props (runes mode)
   // -----------------------------
-  const props = $props<{
+  type Props = {
     filteredInstanceIds?: string[] | null;
     source?: 'active' | 'all';
-  }>();
+  };
 
-  const filteredInstanceIds = $derived.by(() => props.filteredInstanceIds ?? null);
-  const source = $derived.by(() => props.source ?? 'active');
+  let {
+    filteredInstanceIds = null,
+    source = 'active',
+  }: Props = $props();
 
   // -----------------------------
   // Local state (runes)
