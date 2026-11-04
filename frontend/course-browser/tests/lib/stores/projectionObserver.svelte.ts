@@ -1,6 +1,6 @@
 import { flushSync } from "svelte";
-import { calendarProjectionStore } from "../../../src/lib/stores/calendarProjectionStore.svelte";
-import type { CalendarProjectionResult } from "../../../src/domain/services/CalendarProjection";
+import { calendarProjectionStore } from "@lib/stores/calendarProjectionStore.svelte";
+import type { CalendarProjectionResult } from "@domain/services/calendar/CalendarProjection";
 
 /** Mounts an actual Svelte effect, not just an imperative getter assertion. */
 export function observeProjection() {

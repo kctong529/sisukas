@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatHelsinkiLocal, intervalsOverlap, parseOffsetInstant, resolveCalendarTime,
-} from "../../../src/domain/services/CalendarTime";
+} from "@domain/services/calendar/CalendarTime";
 
 const valid = {
   startIso: "2026-11-02T10:15:00+02:00",

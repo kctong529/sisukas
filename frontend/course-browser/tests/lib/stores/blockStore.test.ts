@@ -6,8 +6,8 @@ import {
   blocksForInstance, 
   isModifyingBlock, 
   isLoadingInstance 
-} from '../../../src/lib/stores/blockStore';
-import { mockBlocksService } from '../../../src/infrastructure/services/BlockService.mock';
+} from '@lib/stores/blockStore';
+import { mockBlocksService } from '@infrastructure/services/BlockService.mock';
 
 describe('blockStore Domain Logic', () => {
   const courseA = 'CS-101';

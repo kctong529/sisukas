@@ -1,8 +1,8 @@
-import type { Plan } from "../models/Plan";
-import type { Course } from "../models/Course";
-import type { StudyGroup } from "../models/StudyGroup";
-import type { CalendarEntry } from "../models/CalendarEntry";
-import type { CalendarDiagnostic } from "../models/CalendarDiagnostic";
+import type { Plan } from "@domain/models/Plan";
+import type { Course } from "@domain/models/Course";
+import type { StudyGroup } from "@domain/models/StudyGroup";
+import type { CalendarEntry } from "@domain/models/CalendarEntry";
+import type { CalendarDiagnostic } from "@domain/models/CalendarDiagnostic";
 
 import type { CalendarOccurrenceCandidate } from "./CalendarOccurrenceIdentity";
 import { identifyCalendarOccurrences } from "./CalendarOccurrenceIdentity";

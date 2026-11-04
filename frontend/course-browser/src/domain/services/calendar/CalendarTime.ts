@@ -1,7 +1,7 @@
 import type {
   CalendarDiagnostic,
   CalendarSourceContext,
-} from "../models/CalendarDiagnostic";
+} from "@domain/models/CalendarDiagnostic";
 
 export const CALENDAR_DISPLAY_TIME_ZONE = "Europe/Helsinki" as const;
 

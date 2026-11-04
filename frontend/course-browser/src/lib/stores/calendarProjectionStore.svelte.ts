@@ -5,7 +5,7 @@ import {
   projectPlanFromSources,
   type CalendarProjectionSources,
 } from "@application/calendar/calendarProjectionAdapter";
-import type { CalendarProjectionResult } from "@domain/services/CalendarProjection";
+import type { CalendarProjectionResult } from "@domain/services/calendar/CalendarProjection";
 
 const sources: CalendarProjectionSources = {
   resolveCourse: (id) => courseIndexStore.read.resolveByInstanceId(id),
