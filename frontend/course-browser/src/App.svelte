@@ -1,15 +1,15 @@
 <!-- src/App.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Navigation from './components/Navigation.svelte';
-  import FilterContainer from './components/FilterContainer.svelte';
-  import CourseTable from './components/CourseTable.svelte';
-  import SearchControls from './components/SearchControls.svelte';
-  import NotificationContainer from './components/NotificationContainer.svelte';
-  import AuthModal from "./components/AuthModal.svelte";
-  import FavouritesView from "./components/FavouritesView.svelte";
-  import LegoView from './components/LegoView.svelte';
-  import PeriodTimeline from './components/PeriodTimeline.svelte';
+  import Navigation from "./components/layout/Navigation.svelte";
+  import FilterContainer from './components/filters/FilterContainer.svelte';
+  import CourseTable from './components/courses/CourseTable.svelte';
+  import SearchControls from './components/filters/SearchControls.svelte';
+  import NotificationContainer from "./components/notifications/NotificationContainer.svelte";
+  import AuthModal from "./components/auth/AuthModal.svelte";
+  import FavouritesView from "./components/favourites/FavouritesView.svelte";
+  import LegoView from './components/planning/LegoView.svelte';
+  import PeriodTimeline from './components/period-timeline/PeriodTimeline.svelte';
   import { authClient, useSession } from "./lib/authClient";
   import { createRuleBlueprints, type RuleBlueprintKey } from './domain/filters/blueprints';
   import type { BaseRuleBlueprint } from './domain/filters/blueprints';
@@ -347,7 +347,7 @@
   <DebugPanels />
 
   {#if ui.showAuthModal}
-    <AuthModal on:close={() => (ui.showAuthModal = false)} />
+    <AuthModal onclose={() => (ui.showAuthModal = false)} />
   {/if}
 
   <NotificationContainer />

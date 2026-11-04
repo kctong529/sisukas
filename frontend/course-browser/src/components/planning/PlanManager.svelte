@@ -1,7 +1,7 @@
-<!-- src/components/PlanManager.svelte -->
+<!-- src/components/planning/PlanManager.svelte -->
 <script lang="ts">
-  import { plansStore } from '../lib/stores/plansStore.svelte';
-  import { NotificationService } from '../infrastructure/services/NotificationService';
+  import { plansStore } from '../../lib/stores/plansStore.svelte';
+  import { NotificationService } from '@infrastructure/services/NotificationService';
 
   interface PlanManagerProps {
     onPlanSelect?: (planId: string) => void;

@@ -1,34 +1,32 @@
-<!-- src/components/MissingCourseSubmit.svelte -->
+<!-- src/components/courses/MissingCourseSubmit.svelte -->
 <script lang="ts">
-  import { createEventDispatcher } from "svelte";
-  import { NotificationService } from "../infrastructure/services/NotificationService";
-  import { assertCourseCodeIsMissingEverywhere } from "../domain/services/CourseCodeGuard";
-  import { CourseSnapshotsService } from "../infrastructure/services/CourseSnapshotsService";
-  import { SnapshotHistoricalMerge } from "../infrastructure/loaders/SnapshotHistoricalMerge";
+  import { NotificationService } from "@infrastructure/services/NotificationService";
+  import { assertCourseCodeIsMissingEverywhere } from "@domain/services/CourseCodeGuard";
+  import { CourseSnapshotsService } from "@infrastructure/services/CourseSnapshotsService";
+  import { SnapshotHistoricalMerge } from "@infrastructure/loaders/SnapshotHistoricalMerge";
 
   type ResolveMissingCourseResponse = {
     courseCode: string;
     snapshots: unknown[];
   };
 
-  /**
-   * Props:
-   * - resolveMissingCourseCode: the App-level function you already export
-   *   (so this component stays dumb and doesn't duplicate logic)
-   */
-  export let resolveMissingCourseCode: (
-    courseCode: string
-  ) => Promise<ResolveMissingCourseResponse | null>;
+  type MergeResult = { fetched: number; merged: number; skipped: number };
+  type ResolvedResult = { courseCode: string; storedCount: number };
 
-  const dispatch = createEventDispatcher<{
-    resolved: { courseCode: string; storedCount: number };
-    merged: { fetched: number; merged: number; skipped: number };
-  }>();
+  type Props = {
+    resolveMissingCourseCode: (
+      courseCode: string
+    ) => Promise<ResolveMissingCourseResponse | null>;
+    onresolved?: (result: ResolvedResult) => void;
+    onmerged?: (result: MergeResult) => void;
+  };
 
-  let input = "";
-  let busy = false;
-  let lastStoredCount: number | null = null;
-  let lastMerge: { fetched: number; merged: number; skipped: number } | null = null;
+  let { resolveMissingCourseCode, onresolved, onmerged }: Props = $props();
+
+  let input = $state("");
+  let busy = $state(false);
+  let lastStoredCount = $state<number | null>(null);
+  let lastMerge = $state<MergeResult | null>(null);
 
   function normalizeCourseCode(code: string): string {
     return code.trim().toUpperCase();
@@ -57,12 +55,12 @@
       const storedCount = res.snapshots.length;
 
       lastStoredCount = storedCount;
-      dispatch("resolved", { courseCode, storedCount });
+      onresolved?.({ courseCode, storedCount });
       NotificationService.success(`Stored ${storedCount} snapshot(s) for ${courseCode}`);
 
       const merge = await SnapshotHistoricalMerge.mergeAllLiveSnapshots();
       lastMerge = merge;
-      dispatch("merged", merge);
+      onmerged?.(merge);
 
       NotificationService.success(
         `Merged ${merge.merged} snapshot course(s) into historical index`
@@ -74,6 +72,35 @@
       NotificationService.error(err instanceof Error ? err.message : "Failed to submit course code");
     } finally {
       busy = false;
+    }
+  }
+  async function mergeLiveSnapshots() {
+    if (busy) return;
+    busy = true;
+    try {
+      const merge = await SnapshotHistoricalMerge.mergeAllLiveSnapshots();
+      lastMerge = merge;
+      onmerged?.(merge);
+      NotificationService.success(`Merged ${merge.merged} snapshot course(s) into historical index`);
+    } catch (error) {
+      console.error(error);
+      NotificationService.error(error instanceof Error ? error.message : "Merge failed");
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function checkSnapshotStatus() {
+    if (busy || !input.trim()) return;
+    const code = normalizeCourseCode(input);
+    try {
+      const status = await CourseSnapshotsService.getStatus(code);
+      NotificationService.success(
+        `${code}: hasAny=${status.hasAny}, hasLive=${status.hasLive}, live=${status.liveCount}/${status.totalCount}`
+      );
+    } catch (error) {
+      console.error(error);
+      NotificationService.error("Failed to check snapshot status");
     }
   }
 </script>
@@ -90,10 +117,11 @@
   </p>
 </div>
 
-<form class="row" on:submit|preventDefault={onSubmit}>
+<form class="row" onsubmit={(event) => { event.preventDefault(); void onSubmit(); }}>
   <input
     class="input"
     placeholder="e.g. CS-E4675"
+    aria-label="Missing course code"
     bind:value={input}
     disabled={busy}
     autocomplete="off"
@@ -129,21 +157,7 @@
       class="btn secondary"
       type="button"
       disabled={busy}
-      on:click={async () => {
-        if (busy) return;
-        busy = true;
-        try {
-          const merge = await SnapshotHistoricalMerge.mergeAllLiveSnapshots();
-          lastMerge = merge;
-          dispatch("merged", merge);
-          NotificationService.success(`Merged ${merge.merged} snapshot course(s) into historical index`);
-        } catch (e) {
-          console.error(e);
-          NotificationService.error(e instanceof Error ? e.message : "Merge failed");
-        } finally {
-          busy = false;
-        }
-      }}
+      onclick={mergeLiveSnapshots}
     >
       Merge live snapshots now
     </button>
@@ -152,18 +166,7 @@
       class="btn secondary"
       type="button"
       disabled={busy || !input.trim()}
-      on:click={async () => {
-        const code = normalizeCourseCode(input);
-        try {
-          const status = await CourseSnapshotsService.getStatus(code);
-          NotificationService.success(
-            `${code}: hasAny=${status.hasAny}, hasLive=${status.hasLive}, live=${status.liveCount}/${status.totalCount}`
-          );
-        } catch (e) {
-          console.error(e);
-          NotificationService.error("Failed to check snapshot status");
-        }
-      }}
+      onclick={checkSnapshotStatus}
     >
       Check snapshot status
     </button>

@@ -1,26 +1,28 @@
-<!-- src/components/CourseTable.svelte -->
+<!-- src/components/courses/CourseTable.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { useSession } from '../lib/authClient';
-  import { favouritesStore } from '../lib/stores/favouritesStore';
-  import { courseIndexStore } from '../lib/stores/courseIndexStore.svelte';
-  import type { Course } from '../domain/models/Course';
+  import { useSession } from '../../lib/authClient';
+  import { favouritesStore } from '../../lib/stores/favouritesStore';
+  import { courseIndexStore } from '../../lib/stores/courseIndexStore.svelte';
+  import type { Course } from '@domain/models/Course';
   import MissingCourseSubmit from './MissingCourseSubmit.svelte';
   import CoursePeriodBadge from './CoursePeriodBadge.svelte';
-  import { assertCourseCodeIsMissingEverywhere } from '../domain/services/CourseCodeGuard';
-  import { NotificationService } from '../infrastructure/services/NotificationService';
-  import { CourseSnapshotsService } from '../infrastructure/services/CourseSnapshotsService';
+  import { assertCourseCodeIsMissingEverywhere } from '@domain/services/CourseCodeGuard';
+  import { NotificationService } from '@infrastructure/services/NotificationService';
+  import { CourseSnapshotsService } from '@infrastructure/services/CourseSnapshotsService';
 
   // -----------------------------
   // Props (runes mode)
   // -----------------------------
-  const props = $props<{
+  type Props = {
     filteredInstanceIds?: string[] | null;
     source?: 'active' | 'all';
-  }>();
+  };
 
-  const filteredInstanceIds = $derived.by(() => props.filteredInstanceIds ?? null);
-  const source = $derived.by(() => props.source ?? 'active');
+  let {
+    filteredInstanceIds = null,
+    source = 'active',
+  }: Props = $props();
 
   // -----------------------------
   // Local state (runes)

@@ -1,7 +1,7 @@
-<!-- src/components/AnalyticsResults.svelte -->
+<!-- src/components/analytics/AnalyticsResults.svelte -->
 <script lang="ts">
   import { SvelteMap } from 'svelte/reactivity';
-  import type { AnalyticsResponse, ScheduleCandidate, Segment } from '../lib/types/analytics';
+  import type { AnalyticsResponse, ScheduleCandidate, Segment } from '../../lib/types/analytics';
   import ScheduleHeatmap from './ScheduleHeatmap.svelte';
 
   export let data: AnalyticsResponse | null = null;

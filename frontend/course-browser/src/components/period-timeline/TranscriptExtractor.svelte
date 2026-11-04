@@ -17,7 +17,7 @@
 
   const dispatch = createEventDispatcher<{ extracted: CourseRow[] }>();
 
-  const worker = new Worker(new URL("../pdfjs-worker.ts", import.meta.url), {
+  const worker = new Worker(new URL("../../pdfjs-worker.ts", import.meta.url), {
     type: "module",
   });
 

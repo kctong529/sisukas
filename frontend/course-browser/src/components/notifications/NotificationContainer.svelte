@@ -1,6 +1,6 @@
 <!-- src/components/NotificationContainer.svelte -->
 <script lang="ts">
-  import { notifications } from '../infrastructure/services/NotificationService';
+  import { notifications } from "../../infrastructure/services/NotificationService";
 </script>
 
 <div id="notification-container">
