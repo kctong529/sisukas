@@ -1,12 +1,12 @@
 <!-- src/App.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Navigation from './components/Navigation.svelte';
+  import Navigation from "./components/layout/Navigation.svelte";
   import FilterContainer from './components/FilterContainer.svelte';
   import CourseTable from './components/CourseTable.svelte';
   import SearchControls from './components/SearchControls.svelte';
-  import NotificationContainer from './components/NotificationContainer.svelte';
-  import AuthModal from "./components/AuthModal.svelte";
+  import NotificationContainer from "./components/notifications/NotificationContainer.svelte";
+  import AuthModal from "./components/auth/AuthModal.svelte";
   import FavouritesView from "./components/FavouritesView.svelte";
   import LegoView from './components/LegoView.svelte';
   import PeriodTimeline from './components/PeriodTimeline.svelte';
