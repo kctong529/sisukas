@@ -3,7 +3,7 @@
   import { onMount } from 'svelte';
   import Navigation from "./components/layout/Navigation.svelte";
   import FilterContainer from './components/FilterContainer.svelte';
-  import CourseTable from './components/CourseTable.svelte';
+  import CourseTable from './components/courses/CourseTable.svelte';
   import SearchControls from './components/SearchControls.svelte';
   import NotificationContainer from "./components/notifications/NotificationContainer.svelte";
   import AuthModal from "./components/auth/AuthModal.svelte";

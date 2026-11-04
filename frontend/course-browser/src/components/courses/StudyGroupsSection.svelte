@@ -1,9 +1,9 @@
-<!-- src/components/StudyGroupsSection.svelte -->
+<!-- src/components/courses/StudyGroupsSection.svelte -->
 <script lang="ts">
-  import type { Course } from "../domain/models/Course";
-  import { studyGroupStore } from "../lib/stores/studyGroupStore.svelte";
-  import type { StudyGroupSummary } from "../lib/stores/studyGroupStore.svelte";
-  import { formatStudyEventSchedule, formatStudyEventTime } from "../lib/studyGroups/studyGroupFormatters";
+  import type { Course } from "@domain/models/Course";
+  import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
+  import type { StudyGroupSummary } from "../../lib/stores/studyGroupStore.svelte";
+  import { formatStudyEventSchedule, formatStudyEventTime } from "../../lib/studyGroups/studyGroupFormatters";
 
   const { course, isExpanded } = $props<{ course: Course; isExpanded: boolean }>();
 

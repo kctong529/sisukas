@@ -1,10 +1,10 @@
-<!-- src/components/MissingCourseSubmit.svelte -->
+<!-- src/components/courses/MissingCourseSubmit.svelte -->
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
-  import { NotificationService } from "../infrastructure/services/NotificationService";
-  import { assertCourseCodeIsMissingEverywhere } from "../domain/services/CourseCodeGuard";
-  import { CourseSnapshotsService } from "../infrastructure/services/CourseSnapshotsService";
-  import { SnapshotHistoricalMerge } from "../infrastructure/loaders/SnapshotHistoricalMerge";
+  import { NotificationService } from "@infrastructure/services/NotificationService";
+  import { assertCourseCodeIsMissingEverywhere } from "@domain/services/CourseCodeGuard";
+  import { CourseSnapshotsService } from "@infrastructure/services/CourseSnapshotsService";
+  import { SnapshotHistoricalMerge } from "@infrastructure/loaders/SnapshotHistoricalMerge";
 
   type ResolveMissingCourseResponse = {
     courseCode: string;

@@ -7,7 +7,7 @@
   import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
   import { courseGradeStore } from '../../lib/stores/courseGradeStore';
   import { NotificationService } from '@infrastructure/services/NotificationService';
-  import StudyGroupsSection from "../StudyGroupsSection.svelte";
+  import StudyGroupsSection from "../courses/StudyGroupsSection.svelte";
   import type { Course } from '@domain/models/Course';
   import PlanManager from "../PlanManager.svelte";
   import type { Favourite } from '@infrastructure/services/FavouritesService';
