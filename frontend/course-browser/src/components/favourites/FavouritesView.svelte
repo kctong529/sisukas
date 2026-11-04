@@ -9,9 +9,9 @@
   import { NotificationService } from '@infrastructure/services/NotificationService';
   import StudyGroupsSection from "../courses/StudyGroupsSection.svelte";
   import type { Course } from '@domain/models/Course';
-  import PlanManager from "../PlanManager.svelte";
+  import PlanManager from "../planning/PlanManager.svelte";
   import type { Favourite } from '@infrastructure/services/FavouritesService';
-  import PlanEditor from "../PlanEditor.svelte";
+  import PlanEditor from "../planning/PlanEditor.svelte";
 
   type Props = {
     source?: "active" | "all";

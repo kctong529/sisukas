@@ -6,7 +6,7 @@
   import { courseGradeStore } from "../lib/stores/courseGradeStore";
   import { AcademicPeriodVisibility } from '../domain/services/AcademicPeriodVisibility';
   import type { PeriodTimelineChip } from '../domain/viewModels/PeriodTimelineModel';
-  import PlanManager from './PlanManager.svelte';
+  import PlanManager from './planning/PlanManager.svelte';
   import { useSession } from '../lib/authClient';
   import { COURSE_PREFIX_RGB } from "../lib/coursePrefixColors";
   import { tick } from "svelte";

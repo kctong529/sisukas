@@ -8,7 +8,7 @@
   import NotificationContainer from "./components/notifications/NotificationContainer.svelte";
   import AuthModal from "./components/auth/AuthModal.svelte";
   import FavouritesView from "./components/favourites/FavouritesView.svelte";
-  import LegoView from './components/LegoView.svelte';
+  import LegoView from './components/planning/LegoView.svelte';
   import PeriodTimeline from './components/PeriodTimeline.svelte';
   import { authClient, useSession } from "./lib/authClient";
   import { createRuleBlueprints, type RuleBlueprintKey } from './domain/filters/blueprints';
