@@ -1,12 +1,14 @@
-// src/lib/transcript/importTranscript.ts
-import { favouritesStore } from "../stores/favouritesStore";
-import { plansStore } from "../stores/plansStore.svelte";
-import { courseIndexStore } from "../stores/courseIndexStore.svelte";
-import { courseGradeStore } from "../stores/courseGradeStore";
-import { transcriptService } from "../../infrastructure/services/TranscriptService";
-import type { Course } from "../../domain/models/Course";
-import { CourseSnapshotsService } from "../../infrastructure/services/CourseSnapshotsService";
-import { SnapshotHistoricalMerge } from "../../infrastructure/loaders/SnapshotHistoricalMerge";
+// src/application/transcript/importTranscript.ts
+import { favouritesStore } from "@lib/stores/favouritesStore";
+import { plansStore } from "@lib/stores/plansStore.svelte";
+import { courseIndexStore } from "@lib/stores/courseIndexStore.svelte";
+import { courseGradeStore } from "@lib/stores/courseGradeStore";
+
+import { transcriptService } from "@infrastructure/services/TranscriptService";
+import { CourseSnapshotsService } from "@infrastructure/services/CourseSnapshotsService";
+import { SnapshotHistoricalMerge } from "@infrastructure/loaders/SnapshotHistoricalMerge";
+
+import type { Course } from "@domain/models/Course";
 
 export type TranscriptGrade = "Pass" | "Fail" | "0" | "1" | "2" | "3" | "4" | "5" | string;
 
