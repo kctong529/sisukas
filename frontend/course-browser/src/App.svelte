@@ -7,7 +7,7 @@
   import SearchControls from './components/SearchControls.svelte';
   import NotificationContainer from "./components/notifications/NotificationContainer.svelte";
   import AuthModal from "./components/auth/AuthModal.svelte";
-  import FavouritesView from "./components/FavouritesView.svelte";
+  import FavouritesView from "./components/favourites/FavouritesView.svelte";
   import LegoView from './components/LegoView.svelte';
   import PeriodTimeline from './components/PeriodTimeline.svelte';
   import { authClient, useSession } from "./lib/authClient";

@@ -9,7 +9,7 @@
 
   import PlanManager from "./PlanManager.svelte";
   import BlocksGrid from "./BlocksGrid.svelte";
-  import AnalyticsResults from "./AnalyticsResults.svelte";
+  import AnalyticsResults from "./analytics/AnalyticsResults.svelte";
 
   import type { Course } from "../domain/models/Course";
   import { buildAnalyticsPayload } from "@application/analytics/buildAnalyticsPayload";
