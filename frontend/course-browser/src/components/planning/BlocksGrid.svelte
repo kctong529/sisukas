@@ -6,7 +6,11 @@
   import type { Block } from "@domain/models/Block";
   import type { Course } from "@domain/models/Course";
 
-  const { course } = $props<{ course: Course }>();
+  type Props = {
+    course: Course;
+  };
+
+  let { course }: Props = $props();
 
   // ---- Minimal derived: template needs groups to render ----
   const studyGroups = $derived.by(() =>
