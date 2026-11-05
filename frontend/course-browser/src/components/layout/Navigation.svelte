@@ -77,12 +77,23 @@
 
       <button
         class="nav-link"
+        class:active={currentView === 'calendar'}
+        on:click={() => handleNavigation('calendar')}
+        aria-label="Weekly calendar"
+        aria-current={currentView === 'calendar' ? 'page' : undefined}
+      >
+        <i class="bi bi-calendar3" aria-hidden="true"></i>
+        <span>Calendar</span>
+      </button>
+
+      <button
+        class="nav-link"
         class:active={currentView === 'timeline'}
         on:click={() => handleNavigation('timeline')}
         aria-label="Timeline"
         aria-current={currentView === 'timeline' ? 'page' : undefined}
       >
-        <i class="bi bi-calendar3" aria-hidden="true"></i>
+        <i class="bi bi-bar-chart-steps" aria-hidden="true"></i>
         <span>Timeline</span>
       </button>
 
@@ -181,6 +192,16 @@
         <span>GitHub</span>
       </a>
       
+      <button
+        class="mobile-nav-link"
+        class:active={currentView === 'calendar'}
+        aria-current={currentView === 'calendar' ? 'page' : undefined}
+        on:click={() => handleNavigation('calendar')}
+      >
+        <i class="bi bi-calendar-week" aria-hidden="true"></i>
+        <span>Calendar</span>
+      </button>
+
       <div class="mobile-divider"></div>
       
       {#if isSignedIn}
