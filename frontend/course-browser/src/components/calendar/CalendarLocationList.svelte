@@ -13,7 +13,7 @@
 <section class="locations" aria-labelledby="calendar-listed-locations">
   <h4 id="calendar-listed-locations">Listed locations</h4>
   <p class="count">
-    {members.length} source events · {summary.roomCount} listed rooms · {summary.buildingCount} buildings
+    {members.length} events · {summary.roomCount} rooms · {summary.buildingCount} {summary.buildingCount === 1 ? 'building' : 'buildings'}
   </p>
   <p class="note">Listed locations from SISU. Room assignment is not determined by Sisukas.</p>
 

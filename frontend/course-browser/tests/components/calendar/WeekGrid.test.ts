@@ -335,9 +335,17 @@ describe('WeekGrid aggregated room details', () => {
     expect(target.querySelector('.cluster')).toBeNull();
     target.querySelector<HTMLButtonElement>('.calendar-event')?.click();
     flushSync();
-    expect(target.querySelector('.listed-rooms')?.textContent).toContain('3 source events · 3 listed rooms');
+    const locations = target.querySelector(
+      'section[aria-labelledby="calendar-listed-locations"]',
+    );
+
+    expect(locations).not.toBeNull();
+    expect(locations?.textContent).toContain(
+      '3 events · 3 rooms · 1 building',
+    );
+
     for (const room of ['U157', 'Y122', 'Y202a']) {
-      expect(target.querySelector('.listed-rooms')?.textContent).toContain(room);
+      expect(locations?.textContent).toContain(room);
     }
   });
 });
