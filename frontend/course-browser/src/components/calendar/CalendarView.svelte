@@ -6,6 +6,7 @@
   import { layoutCalendarWeek } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import { calendarEventPresentation } from '@application/calendar/calendarPresentation';
+  import { aggregateCalendarDisplayEntries, displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
   import { currentHelsinkiWeek } from '@application/calendar/currentHelsinkiWeek';
   import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
   import WeekNavigation from './WeekNavigation.svelte';
@@ -18,7 +19,12 @@
   let plansReady = $state(false);
   const activePlan = $derived(plansStore.read.getActive());
   const projection = $derived(calendarProjectionStore.projection);
-  const layout = $derived(projection ? layoutCalendarWeek(projection.entries, weekStart) : null);
+  const display = $derived(projection ? aggregateCalendarDisplayEntries(projection.entries) : null);
+  const layout = $derived(display ? layoutCalendarWeek(display.entries, weekStart) : null);
+
+  function membersForSegment(segment: WeeklyCalendarSegment) {
+    return display?.membersByEntry.get(segment.entry) ?? [segment.entry];
+  }
 
   onMount(() => {
     void plansStore.actions.ensureLoaded()
@@ -45,7 +51,10 @@
   function presentationForSegment(segment: WeeklyCalendarSegment) {
     const offeringId = segment.entry.source.courseOfferingId;
     const course = courseIndexStore.read.resolveByInstanceId(offeringId);
-    return calendarEventPresentation(segment.entry.source, course);
+    const info = calendarEventPresentation(segment.entry.source, course);
+    const members = membersForSegment(segment);
+    if (members.length < 2) return info;
+    return { ...info, locationLabel: `${displayEntryLocations(members).length} listed rooms` };
   }
 </script>
 
@@ -81,7 +90,7 @@
       <p>No fixed events in this week for the active plan.</p>
     {/if}
 
-    <WeekGrid {layout} {presentationForSegment} {groupsForSegment} />
+    <WeekGrid {layout} {presentationForSegment} {groupsForSegment} {membersForSegment} />
   {/if}
 </section>
 

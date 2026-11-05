@@ -10,14 +10,16 @@
   import CalendarTimetable from './CalendarTimetable.svelte';
   import DenseOverlapDialog from './DenseOverlapDialog.svelte';
   import type { StudyGroup } from '@domain/models/StudyGroup';
+  import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import { calendarGroupAlternatives } from '@application/calendar/calendarGroupAlternatives';
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
     groupsForSegment?: (segment: WeeklyCalendarSegment) => readonly StudyGroup[] | null;
+    membersForSegment?: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
   }
-  let { layout, presentationForSegment, groupsForSegment = () => null }: Props = $props();
+  let { layout, presentationForSegment, groupsForSegment = () => null, membersForSegment = segment => [segment.entry] }: Props = $props();
 
   const presentation = $derived(denseOverlapPresentation(layout));
   // A preview never changes the plan. A pinned event remains when hover ends.
@@ -117,6 +119,7 @@
       presentation={displayedSegment ? presentationForSegment(displayedSegment) : null}
       date={displayedSegment ? layout.days[displayedSegment.dayIndex] : null}
       isPinned={pinnedSegment !== null}
+      members={displayedSegment ? membersForSegment(displayedSegment) : []}
       onClear={() => { pinnedId = null; previewId = null; hoveredAlternativeId = null; retainedAlternativeId = null; }}
       {alternatives}
       {previewGroupId}
@@ -132,6 +135,7 @@
   group={selectedGroup}
   {layout}
   {presentationForSegment}
+  {membersForSegment}
   onClose={() => { selectedGroup = null; }}
 />
 

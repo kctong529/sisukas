@@ -3,15 +3,18 @@
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import type { WeeklyCalendarLayoutResult, WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
+  import type { CalendarEntry } from '@domain/models/CalendarEntry';
+  import { displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
 
   interface Props {
     group: DenseOverlapDisplay | null;
     layout: WeeklyCalendarLayoutResult;
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
     onClose: () => void;
+    membersForSegment?: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
   }
 
-  let { group: selectedGroup, layout, presentationForSegment, onClose }: Props = $props();
+  let { group: selectedGroup, layout, presentationForSegment, onClose, membersForSegment = segment => [segment.entry] }: Props = $props();
   let dialogElement: HTMLDialogElement;
 
   export function showModal(): void {
@@ -27,7 +30,7 @@
   {#if selectedGroup}
     <header>
       <div>
-        <h2>{selectedGroup.segments.length} events in busy period</h2>
+        <h2>{selectedGroup.segments.length} calendar items in busy period</h2>
         <p>{layout.days[selectedGroup.group.dayIndex]} · {formatCalendarMinute(selectedGroup.startMinute)}–{formatCalendarMinute(selectedGroup.endMinute)} · Europe/Helsinki</p>
       </div>
       <form method="dialog"><button class="close" type="submit">Close</button></form>
@@ -35,11 +38,18 @@
     <ul>
       {#each selectedGroup.segments as segment (segment.id)}
         {@const info = presentationForSegment(segment)}
+        {@const members = membersForSegment(segment)}
+        {@const locations = members.length > 1 ? displayEntryLocations(members) : []}
         <li>
           <strong>{info.courseCode ? `${info.courseCode} · ` : ''}{info.courseTitle}</strong>
           {#if info.groupLabel}<span>{info.groupLabel}</span>{/if}
           <span>{formatCalendarMinute(segment.startMinute)}–{formatCalendarMinute(segment.endMinute)}</span>
           {#if info.locationLabel}<span>{info.locationLabel}</span>{/if}
+          {#if members.length > 1}
+            <details><summary>{members.length} source events · Show listed rooms</summary>
+              <ul class="rooms">{#each locations as room (room)}<li>{room}</li>{/each}</ul>
+            </details>
+          {/if}
         </li>
       {/each}
     </ul>
@@ -57,5 +67,7 @@
   .event-details ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
   .event-details li { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: #f1f5f9; border-radius: 6px; font-size: 0.85rem; }
   .event-details li strong { overflow-wrap: anywhere; }
+  .event-details .rooms { list-style: disc; padding-left: 20px; margin-top: 6px; }
+  .event-details .rooms li { display: list-item; padding: 0; background: transparent; }
   .event-details li span { color: #475569; font-variant-numeric: tabular-nums; }
 </style>

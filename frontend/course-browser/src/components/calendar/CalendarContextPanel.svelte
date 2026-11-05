@@ -3,7 +3,9 @@
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import type { CalendarGroupAlternative } from '@application/calendar/calendarGroupAlternatives';
+  import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import CalendarGroupAlternatives from './CalendarGroupAlternatives.svelte';
+  import CalendarLocationList from './CalendarLocationList.svelte';
 
   interface Props {
     segment: WeeklyCalendarSegment | null;
@@ -11,6 +13,7 @@
     date: string | null;
     isPinned: boolean;
     onClear: () => void;
+    members?: readonly CalendarEntry[];
     alternatives?: readonly CalendarGroupAlternative[];
     previewGroupId?: string | null;
     retainedGroupId?: string | null;
@@ -18,7 +21,7 @@
     onAlternativeToggle?: (id: string) => void;
   }
   let {
-    segment, presentation, date, isPinned, onClear,
+    segment, presentation, date, isPinned, onClear, members = [],
     alternatives = [], previewGroupId = null, retainedGroupId = null,
     onAlternativePreview = () => {}, onAlternativeToggle = () => {},
   }: Props = $props();
@@ -49,6 +52,9 @@
           <dt>Notice</dt><dd>{segment.entry.source.event.notice}</dd>
         {/if}
       </dl>
+      {#if members.length > 1}
+        <CalendarLocationList {members} />
+      {/if}
       {#if segment.continuesBefore || segment.continuesAfter}
         <p class="continuation">This occurrence continues beyond the visible day.</p>
       {/if}

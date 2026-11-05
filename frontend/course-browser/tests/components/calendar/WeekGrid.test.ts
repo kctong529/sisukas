@@ -5,6 +5,7 @@ import WeekGrid from '../../../src/components/calendar/WeekGrid.svelte';
 import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';
 import type { StudyGroup } from '../../../src/domain/models/StudyGroup';
+import { aggregateCalendarDisplayEntries } from '../../../src/application/calendar/calendarDisplayAggregation';
 
 const mounted: Array<ReturnType<typeof mount>> = [];
 const targetElements: HTMLElement[] = [];
@@ -290,5 +291,53 @@ describe('WeekGrid alternative study-group previews', () => {
     target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
     flushSync();
     expect(target.querySelector('.alternatives')).toBeNull();
+  });
+});
+
+
+describe('WeekGrid aggregated room details', () => {
+  it('shows one calendar card with all room assignments in the context panel', () => {
+    const entries = ['U157', 'Y122', 'Y202a'].map((room, index) => {
+      const entry = event(`room-${index}`, 10, 11);
+      return {
+        ...entry,
+        source: {
+          ...entry.source,
+          courseOfferingId: 'math',
+          studyGroupId: 'exam',
+          seriesId: `series-${index}`,
+          event: {
+            ...entry.source.event,
+            locations: [{ id: room, name: room, buildingName: 'Undergraduate Centre' }],
+            locationIds: [room],
+          },
+        },
+      };
+    });
+    const display = aggregateCalendarDisplayEntries(entries);
+    const layout = layoutCalendarWeek(display.entries, '2026-11-02');
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    targetElements.push(target);
+    mounted.push(mount(WeekGrid, {
+      target,
+      props: {
+        layout,
+        membersForSegment: segment => display.membersByEntry.get(segment.entry) ?? [segment.entry],
+        presentationForSegment: () => ({
+          courseCode: 'MS-A0001', courseTitle: 'Matrix Algebra',
+          groupLabel: 'Exam KT', locationLabel: '3 listed rooms',
+        }),
+      },
+    }));
+    flushSync();
+    expect(target.querySelectorAll('.event')).toHaveLength(1);
+    expect(target.querySelector('.cluster')).toBeNull();
+    target.querySelector<HTMLButtonElement>('.calendar-event')?.click();
+    flushSync();
+    expect(target.querySelector('.listed-rooms')?.textContent).toContain('3 source events · 3 listed rooms');
+    for (const room of ['U157', 'Y122', 'Y202a']) {
+      expect(target.querySelector('.listed-rooms')?.textContent).toContain(room);
+    }
   });
 });
