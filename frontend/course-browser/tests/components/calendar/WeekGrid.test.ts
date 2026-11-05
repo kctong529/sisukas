@@ -42,6 +42,13 @@ describe('WeekGrid dense overlap disclosure', () => {
   it('renders seven day columns even for an empty week', () => {
     const target = render([]);
     expect(target.querySelectorAll('.day-column')).toHaveLength(7);
+    const headings = [...target.querySelectorAll('.day-heading')];
+    expect(headings).toHaveLength(7);
+    expect(headings[0].textContent).toContain('Mon');
+    expect(headings[0].textContent).toContain('2 Nov');
+    expect(headings[6].getAttribute('aria-label')).toBe('Sunday, 8 November 2026');
+    expect(target.querySelector('.week-scroll')?.getAttribute('tabindex')).toBe('0');
+    expect((target.querySelector('.week-scroll') as HTMLElement).scrollTop).toBe(480);
     expect(target.querySelectorAll('.event')).toHaveLength(0);
   });
 

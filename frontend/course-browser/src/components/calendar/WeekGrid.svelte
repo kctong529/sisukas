@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import { calendarDayHeading } from '@application/calendar/calendarDayHeading';
   import type {
     WeeklyCalendarLayoutResult,
     WeeklyCalendarSegment,
@@ -16,6 +18,15 @@
   let { layout, labelForSegment }: Props = $props();
 
   const hours = Array.from({ length: 25 }, (_, i) => i);
+  const HOUR_HEIGHT_PX = 60;
+  const FIRST_VISIBLE_HOUR = 8;
+  let scrollViewport: HTMLDivElement;
+
+  // Set an initial viewport without restricting the actual 00:00–24:00 grid.
+  // Do this only on mount: changing weeks should preserve the user's scroll.
+  onMount(() => {
+    scrollViewport.scrollTop = FIRST_VISIBLE_HOUR * HOUR_HEIGHT_PX;
+  });
   const presentation = $derived(denseOverlapPresentation(layout));
   const denseGroups = $derived(presentation.displays);
   const segmentsByDay = $derived(
@@ -51,11 +62,24 @@
   }
 </script>
 
-<div class="week-scroll" aria-label="Weekly calendar">
+<p class="small-screen-hint">Scroll sideways to see the other days.</p>
+<!-- The scrollable timetable must be keyboard-focusable. -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<div
+  class="week-scroll"
+  bind:this={scrollViewport}
+  role="region"
+  tabindex="0"
+  aria-label="Weekly calendar timetable"
+>
   <div class="week-grid">
     <div class="corner" aria-hidden="true"></div>
     {#each layout.days as date (date)}
-      <div class="day-heading">{date}</div>
+      {@const heading = calendarDayHeading(date)}
+      <div class="day-heading" aria-label={heading.fullDate}>
+        <span class="day-name">{heading.weekday}</span>
+        <span class="day-date">{heading.date}</span>
+      </div>
     {/each}
 
     <div class="time-axis" aria-hidden="true">
@@ -111,13 +135,75 @@
 </dialog>
 
 <style>
-  .week-scroll { overflow-x: auto; border: 1px solid #dce4ee; border-radius: 8px; background: #fff; }
-  .week-grid { display: grid; grid-template-columns: 60px repeat(7, minmax(145px, 1fr)); min-width: 1075px; }
-  .corner, .day-heading { position: sticky; top: 0; background: #f1f5f9; z-index: 2; border-bottom: 1px solid #cbd5e1; }
-  .day-heading { padding: 12px 4px; text-align: center; font-size: 0.85rem; font-weight: 600; border-left: 1px solid #e2e8f0; }
-  .time-axis, .day-column { height: 960px; position: relative; }
-  .time-axis span { position: absolute; right: 8px; font-size: 0.7rem; color: #64748b; transform: translateY(-45%); }
-  .day-column { border-left: 1px solid #e2e8f0; background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(100% / 24 - 1px), #e2e8f0 calc(100% / 24 - 1px), #e2e8f0 calc(100% / 24)); }
+  /* Keep every hour available, but show a useful teaching-day viewport first. */
+  .week-scroll {
+    max-height: min(75vh, 760px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid #dce4ee;
+    border-radius: 8px;
+    background: #fff;
+  }
+  .week-scroll:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+  .week-grid {
+    display: grid;
+    grid-template-columns: 60px repeat(7, minmax(160px, 1fr));
+    min-width: 1180px;
+  }
+  .corner, .day-heading {
+    position: sticky;
+    top: 0;
+    background: #f1f5f9;
+    z-index: 4;
+    border-bottom: 1px solid #cbd5e1;
+  }
+  .corner { left: 0; z-index: 6; }
+  .day-heading {
+    min-height: 45px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 4px;
+    text-align: center;
+    border-left: 1px solid #e2e8f0;
+  }
+  .day-name { font-size: 0.85rem; font-weight: 700; }
+  .day-date { font-size: 0.75rem; color: #475569; }
+  .time-axis, .day-column { height: 1440px; position: relative; }
+  .time-axis { position: sticky; left: 0; z-index: 3; background: #fff; }
+  .time-axis span {
+    position: absolute;
+    right: 8px;
+    font-size: 0.7rem;
+    color: #64748b;
+    transform: translateY(-45%);
+  }
+  .day-column {
+    border-left: 1px solid #e2e8f0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(100% / 24 - 1px),
+      #e2e8f0 calc(100% / 24 - 1px),
+      #e2e8f0 calc(100% / 24)
+    );
+  }
+  .small-screen-hint { display: none; }
+  @media (max-width: 700px) {
+    .week-scroll { max-height: min(70vh, 640px); }
+    .week-grid {
+      grid-template-columns: 52px repeat(7, minmax(175px, 1fr));
+      min-width: 1277px;
+    }
+    .small-screen-hint {
+      display: block;
+      font-size: 0.8rem;
+      color: #475569;
+      margin: 0 0 0.4rem;
+    }
+  }
   .event, .cluster { position: absolute; box-sizing: border-box; overflow: hidden; border-radius: 4px; }
   .event { container: calendar-card / inline-size; border: 1px solid #1d4ed8; background: #dbeafe; color: #1e3a8a; font-size: 0.68rem; line-height: 1.25; }
   .event.inactive { border-style: dashed; border-color: #94a3b8; background: #f1f5f9; color: #475569; }
