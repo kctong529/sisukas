@@ -2,7 +2,9 @@
   import type {
     WeeklyCalendarLayoutResult,
     WeeklyCalendarSegment,
-  } from "@domain/services/calendar/layout/WeeklyCalendarLayout";
+  } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
+  import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
+  import CalendarEvent from './CalendarEvent.svelte';
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;
@@ -15,13 +17,7 @@
     layout.days.map((_, dayIndex) => layout.segments.filter(s => s.dayIndex === dayIndex))
   );
 
-  function timeLabel(minute: number): string {
-    const totalMinutes = Math.floor(minute);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-  }
-
+  /** Percentage geometry is derived only from the domain layout result. */
   function segmentStyle(segment: WeeklyCalendarSegment): string {
     const top = segment.startMinute / 1440 * 100;
     const height = Math.max(0, segment.endMinute - segment.startMinute) / 1440 * 100;
@@ -40,7 +36,7 @@
 
     <div class="time-axis" aria-hidden="true">
       {#each hours as hour (hour)}
-        <span style={`top:${hour / 24 * 100}%`}>{timeLabel(hour * 60)}</span>
+        <span style={`top:${hour / 24 * 100}%`}>{formatCalendarMinute(hour * 60)}</span>
       {/each}
     </div>
 
@@ -48,14 +44,13 @@
       <div class="day-column" aria-label={date}>
         {#each segmentsByDay[dayIndex] as segment (segment.id)}
           <div
-            class:inactive={!segment.conflictEligible}
             class="event"
+            class:inactive={!segment.conflictEligible}
+            class:cancelled={segment.entry.source.event.cancelled}
             style={segmentStyle(segment)}
-            title={`${labelForSegment(segment)} (${timeLabel(segment.startMinute)}–${timeLabel(segment.endMinute)})`}
             data-segment-id={segment.id}
           >
-            <span class="event-title">{labelForSegment(segment)}</span>
-            <span class="event-time">{timeLabel(segment.startMinute)}–{timeLabel(segment.endMinute)}</span>
+            <CalendarEvent {segment} label={labelForSegment(segment)} />
           </div>
         {/each}
       </div>
@@ -71,8 +66,7 @@
   .time-axis, .day-column { height: 960px; position: relative; }
   .time-axis span { position: absolute; right: 8px; font-size: 0.7rem; color: #64748b; transform: translateY(-45%); }
   .day-column { border-left: 1px solid #e2e8f0; background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(100% / 24 - 1px), #e2e8f0 calc(100% / 24 - 1px), #e2e8f0 calc(100% / 24)); }
-  .event { position: absolute; box-sizing: border-box; overflow: hidden; padding: 2px 3px; border: 1px solid #1d4ed8; border-radius: 3px; background: #dbeafe; color: #1e3a8a; font-size: 0.68rem; line-height: 1.25; }
-  .event.inactive { border-style: dashed; border-color: #94a3b8; background: #f1f5f9; color: #64748b; }
-  .event-title { display: block; font-weight: 600; overflow-wrap: anywhere; }
-  .event-time { display: block; }
+  .event { container: calendar-card / inline-size; position: absolute; box-sizing: border-box; overflow: hidden; border: 1px solid #1d4ed8; border-radius: 4px; background: #dbeafe; color: #1e3a8a; font-size: 0.68rem; line-height: 1.25; }
+  .event.inactive { border-style: dashed; border-color: #94a3b8; background: #f1f5f9; color: #475569; }
+  .event.cancelled { border-color: #b91c1c; background: #fee2e2; color: #7f1d1d; }
 </style>

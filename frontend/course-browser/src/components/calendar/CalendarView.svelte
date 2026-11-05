@@ -38,8 +38,9 @@
     const offeringId = segment.entry.source.courseOfferingId;
     const course = courseIndexStore.read.resolveByInstanceId(offeringId);
     const name = course?.name.en || course?.code.value || offeringId;
-    const group = segment.entry.source.studyGroupId;
-    return `${name} · ${group}`;
+    // The source group ID is technical metadata, not a useful event-card label.
+    // Keep it available in CalendarEvent's full description instead.
+    return name;
   }
 </script>
 

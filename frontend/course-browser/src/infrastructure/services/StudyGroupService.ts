@@ -170,6 +170,7 @@ export class StudyGroupService {
     if (requests.length === 0) return new Map();
 
     const url = new URL(`${this.wrapperApiUrl}/api/courses/batch/study-groups`);
+    url.searchParams.set('resolve_locations', 'true');
 
     const payload = {
       requests: requests.map((req) => ({
