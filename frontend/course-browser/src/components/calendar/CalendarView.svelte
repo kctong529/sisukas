@@ -6,9 +6,12 @@
   import { layoutCalendarWeek } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import { currentHelsinkiWeek } from '@application/calendar/currentHelsinkiWeek';
+  import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
+  import WeekNavigation from './WeekNavigation.svelte';
   import WeekGrid from './WeekGrid.svelte';
 
-  const weekStart = currentHelsinkiWeek(); // Fixed initial week; navigation is the next slice.
+  let weekStart = $state(currentHelsinkiWeek());
+  const todayWeek = currentHelsinkiWeek;
   let loadError = $state<string | null>(null);
   let plansReady = $state(false);
   const activePlan = $derived(plansStore.read.getActive());
@@ -42,7 +45,12 @@
 
 <section class="calendar-view" aria-labelledby="calendar-title">
   <h1 id="calendar-title">Weekly calendar</h1>
-  <p class="week-label">Week of {weekStart} · Europe/Helsinki</p>
+  <WeekNavigation
+    {weekStart}
+    onPrevious={() => { weekStart = shiftHelsinkiWeek(weekStart, -1); }}
+    onNext={() => { weekStart = shiftHelsinkiWeek(weekStart, 1); }}
+    onToday={() => { weekStart = todayWeek(); }}
+  />
 
   {#if loadError}
     <p role="alert">Unable to load study plans: {loadError}</p>
@@ -74,7 +82,6 @@
 <style>
   .calendar-view { margin: 1rem auto; padding: 1rem; max-width: 1500px; }
   h1 { font-size: 1.45rem; margin: 0 0 0.3rem; }
-  .week-label { color: #64748b; font-size: 0.9rem; margin: 0 0 1rem; }
   [role='status'] {
     color: #475569;
     font-size: 0.9rem;
