@@ -1,0 +1,57 @@
+// @vitest-environment jsdom
+import { afterEach, describe, expect, it } from 'vitest';
+import { flushSync, mount, unmount } from 'svelte';
+import CalendarEvent from '../../../src/components/calendar/CalendarEvent.svelte';
+import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
+import { fixed } from '../../domain/services/calendar/layout/fixtures';
+
+const mounted: Array<ReturnType<typeof mount>> = [];
+const targets: HTMLElement[] = [];
+function render(start: string, end: string, options: { cancelled?: boolean; excluded?: boolean } = {}) {
+  const entry = fixed('a', start, end, options);
+  entry.source.event.location = 'Room A';
+  const segments = layoutCalendarWeek([entry], '2026-11-02').segments;
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  targets.push(target);
+  mounted.push(mount(CalendarEvent, { target, props: { segment: segments[0], label: 'Course A · Lecture' } }));
+  flushSync();
+  return target;
+}
+
+afterEach(async () => {
+  for (const component of mounted.splice(0)) await unmount(component);
+  for (const target of targets.splice(0)) target.remove();
+});
+
+describe('CalendarEvent presentation', () => {
+  it('shows source title, time and location for a normal event', () => {
+    const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00');
+    expect(target.textContent).toContain('Course A · Lecture');
+    expect(target.querySelector('[role="group"]')?.getAttribute('aria-label')).toContain('Study group');
+    expect(target.textContent).toContain('10:00–11:00');
+    expect(target.textContent).toContain('Room A');
+  });
+  it('preserves technical group identity without showing it as card text', () => {
+    const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00');
+    const description = target.querySelector('.calendar-event')?.getAttribute('aria-label') ?? '';
+    expect(description).toContain('Study group');
+    expect(target.querySelector('.event-title')?.textContent?.trim()).toBe('Course A · Lecture');
+  });
+  it('keeps short events compact without losing their accessible label', () => {
+    const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T10:15:00+02:00');
+    expect(target.querySelector('[data-compact="true"]')).not.toBeNull();
+    expect(target.querySelector('.event-time')).toBeNull();
+    expect(target.querySelector('[aria-label]')?.getAttribute('aria-label')).toContain('10:00–10:15');
+  });
+  it('marks cancelled events explicitly', () => {
+    const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00', { cancelled: true });
+    expect(target.querySelector('.event-status')?.textContent).toContain('Cancelled');
+    expect(target.querySelector('[aria-label]')?.getAttribute('aria-label')).toContain('Cancelled');
+  });
+  it('indicates midnight continuation rather than changing the source interval', () => {
+    const target = render('2026-11-02T23:00:00+02:00', '2026-11-03T01:00:00+02:00');
+    expect(target.textContent).toContain('↦');
+    expect(target.querySelector('[aria-label]')?.getAttribute('aria-label')).toContain('Continues later');
+  });
+});

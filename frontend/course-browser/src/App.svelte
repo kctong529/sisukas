@@ -25,6 +25,7 @@
   import { courseIndexStore } from './lib/stores/courseIndexStore.svelte';
   import type { CourseIndexMode } from './lib/stores/courseIndexStore.svelte';
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
+  import CalendarView from "./components/calendar/CalendarView.svelte";
   import DebugPanels from './components/debug/DebugPanels.svelte';
 
   // -----------------------------
@@ -32,7 +33,7 @@
   // -----------------------------
 
   const ui = $state({
-    currentView: 'courses' as 'courses' | 'favourites' | 'lego' | 'timeline',
+    currentView: 'courses' as 'courses' | 'favourites' | 'lego' | 'timeline' | 'calendar',
     showAuthModal: false,
 
     filteredInstanceIds: null as string[] | null,
@@ -406,6 +407,11 @@
     <div class="view" class:hidden={ui.currentView !== 'lego'}>
       <LegoView />
     </div>
+
+    <!-- Calendar mounts only while selected, avoiding background requests. -->
+    {#if ui.currentView === 'calendar'}
+      <CalendarView />
+    {/if}
 
     <!-- Period Timeline View -->
     <div class="view" class:hidden={ui.currentView !== 'timeline'}>
