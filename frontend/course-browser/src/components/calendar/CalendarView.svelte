@@ -10,6 +10,7 @@
   import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
   import WeekNavigation from './WeekNavigation.svelte';
   import WeekGrid from './WeekGrid.svelte';
+  import { studyGroupStore } from '@lib/stores/studyGroupStore.svelte';
 
   let weekStart = $state(currentHelsinkiWeek());
   const todayWeek = currentHelsinkiWeek;
@@ -34,6 +35,12 @@
     if (offerings.length === 0 || indexedCourses === 0) return;
     calendarProjectionStore.ensureActivePlanGroups();
   });
+
+  function groupsForSegment(segment: WeeklyCalendarSegment) {
+    const offeringId = segment.entry.source.courseOfferingId;
+    const course = courseIndexStore.read.resolveByInstanceId(offeringId);
+    return course ? studyGroupStore.read.getCached(course.unitId, offeringId) : null;
+  }
 
   function presentationForSegment(segment: WeeklyCalendarSegment) {
     const offeringId = segment.entry.source.courseOfferingId;
@@ -74,7 +81,7 @@
       <p>No fixed events in this week for the active plan.</p>
     {/if}
 
-    <WeekGrid {layout} {presentationForSegment} />
+    <WeekGrid {layout} {presentationForSegment} {groupsForSegment} />
   {/if}
 </section>
 

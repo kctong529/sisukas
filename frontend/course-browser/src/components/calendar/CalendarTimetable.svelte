@@ -17,9 +17,15 @@
     onPreviewEnd: (id: string) => void;
     onInspect: (id: string) => void;
     onOpenGroup: (group: DenseOverlapDisplay) => void;
+    previewGroupId?: string | null;
+    previewOfferingId?: string | null;
   }
 
-  let { layout, visibleSegments, denseGroups, presentationForSegment, onPreview, onPreviewEnd, onInspect, onOpenGroup }: Props = $props();
+  let {
+    layout, visibleSegments, denseGroups, presentationForSegment,
+    onPreview, onPreviewEnd, onInspect, onOpenGroup,
+    previewGroupId = null, previewOfferingId = null,
+  }: Props = $props();
 
   const hours = Array.from({ length: 25 }, (_, i) => i);
   const HOUR_HEIGHT_PX = 60;
@@ -85,6 +91,12 @@
             class="event"
             class:inactive={!segment.conflictEligible}
             class:cancelled={segment.entry.source.event.cancelled}
+            class:alternative-highlight={previewGroupId !== null &&
+              segment.entry.source.courseOfferingId === previewOfferingId &&
+              segment.entry.source.studyGroupId === previewGroupId}
+            class:alternative-dim={previewGroupId !== null &&
+              segment.entry.source.courseOfferingId === previewOfferingId &&
+              segment.entry.source.studyGroupId !== previewGroupId}
             style={segmentStyle(segment)}
             data-segment-id={segment.id}
           >
@@ -179,6 +191,8 @@
   }
   .event, .cluster { position: absolute; box-sizing: border-box; overflow: hidden; border-radius: 4px; }
   .event { container: calendar-card / inline-size; border: 1px solid #1d4ed8; background: #dbeafe; color: #1e3a8a; font-size: 0.68rem; line-height: 1.25; }
+  .event.alternative-highlight { outline: 3px solid #0f766e; outline-offset: -2px; z-index: 2; }
+  .event.alternative-dim { opacity: .38; }
   .event:hover, .event:focus-within { outline: 2px solid #1d4ed8; outline-offset: 1px; z-index: 2; }
   .event.inactive { border-style: dashed; border-color: #94a3b8; background: #f1f5f9; color: #475569; }
   .event.cancelled { border-color: #b91c1c; background: #fee2e2; color: #7f1d1d; }

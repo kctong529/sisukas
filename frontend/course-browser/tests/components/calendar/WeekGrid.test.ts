@@ -4,6 +4,7 @@ import { flushSync, mount, unmount } from 'svelte';
 import WeekGrid from '../../../src/components/calendar/WeekGrid.svelte';
 import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';
+import type { StudyGroup } from '../../../src/domain/models/StudyGroup';
 
 const mounted: Array<ReturnType<typeof mount>> = [];
 const targetElements: HTMLElement[] = [];
@@ -11,14 +12,14 @@ const at = (hour: number) => `2026-11-02T${String(hour).padStart(2, '0')}:00:00+
 const event = (id: string, start = 10, end = 11) =>
   fixed(id, at(start), at(end), { group: `Group ${id}` });
 
-function render(entries: ReturnType<typeof fixed>[]) {
+function render(entries: ReturnType<typeof fixed>[], groups: StudyGroup[] | null = null) {
   const target = document.createElement('div');
   document.body.appendChild(target);
   targetElements.push(target);
   const layout = layoutCalendarWeek(entries, '2026-11-02');
   mounted.push(mount(WeekGrid, {
     target,
-    props: { layout, presentationForSegment: (segment) => ({
+    props: { layout, groupsForSegment: () => groups, presentationForSegment: (segment) => ({
       courseCode: null, courseTitle: segment.entry.source.studyGroupId,
       groupLabel: 'Exercise H02', locationLabel: null,
     }) },
@@ -232,5 +233,62 @@ describe('WeekGrid contextual event inspection', () => {
 
     // Escape is reserved for the native dialog while it is open.
     expect(panel.querySelector<HTMLButtonElement>('.clear')?.disabled).toBe(false);
+  });
+});
+
+
+describe('WeekGrid alternative study-group previews', () => {
+  const groups: StudyGroup[] = [
+    { groupId: 'Group a', name: 'H01', type: 'Exercise', studyEvents: [] },
+    { groupId: 'Group b', name: 'H02', type: 'Exercise', studyEvents: [] },
+    { groupId: 'Group c', name: 'L01', type: 'Lecture', studyEvents: [] },
+  ];
+
+  it('discovers only same-type alternatives after inspecting an event', () => {
+    const target = render([event('a', 10, 11), event('b', 12, 13), event('c', 14, 15)], groups);
+    target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
+    flushSync();
+    const section = target.querySelector('.alternatives')!;
+    expect(section.textContent).toContain('Exercise H02');
+    expect(section.textContent).not.toContain('Lecture L01');
+    expect(section.textContent).toContain('not a study-plan selection');
+  });
+
+  it('temporarily highlights alternative occurrences and restores on pointer exit', () => {
+    const target = render([event('a', 10, 11), event('b', 12, 13)], groups);
+    target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
+    flushSync();
+    const choice = target.querySelector<HTMLButtonElement>('.alternatives button')!;
+    choice.dispatchEvent(new Event('pointerenter'));
+    flushSync();
+    const cards = [...target.querySelectorAll<HTMLElement>('.event')];
+    expect(cards[0].classList.contains('alternative-dim')).toBe(true);
+    expect(cards[1].classList.contains('alternative-highlight')).toBe(true);
+    choice.dispatchEvent(new Event('pointerleave'));
+    flushSync();
+    expect(target.querySelectorAll('.alternative-highlight')).toHaveLength(0);
+    expect(target.querySelectorAll('.alternative-dim')).toHaveLength(0);
+  });
+
+  it('supports click-to-hold read-only highlights and clears them with Escape', () => {
+    const target = render([event('a', 10, 11), event('b', 12, 13)], groups);
+    target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
+    flushSync();
+    const choice = target.querySelector<HTMLButtonElement>('.alternatives button')!;
+    choice.click();
+    flushSync();
+    expect(choice.getAttribute('aria-pressed')).toBe('true');
+    expect(target.querySelectorAll('.alternative-highlight')).toHaveLength(1);
+    choice.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    flushSync();
+    expect(target.querySelectorAll('.alternative-highlight')).toHaveLength(0);
+    expect(target.querySelector('.context-panel')?.textContent).toContain('Hover over an event');
+  });
+
+  it('does not offer alternatives when full source data is unavailable', () => {
+    const target = render([event('a')]);
+    target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
+    flushSync();
+    expect(target.querySelector('.alternatives')).toBeNull();
   });
 });

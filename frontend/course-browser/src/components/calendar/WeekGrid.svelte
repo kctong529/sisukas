@@ -9,12 +9,15 @@
   import CalendarContextPanel from './CalendarContextPanel.svelte';
   import CalendarTimetable from './CalendarTimetable.svelte';
   import DenseOverlapDialog from './DenseOverlapDialog.svelte';
+  import type { StudyGroup } from '@domain/models/StudyGroup';
+  import { calendarGroupAlternatives } from '@application/calendar/calendarGroupAlternatives';
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
+    groupsForSegment?: (segment: WeeklyCalendarSegment) => readonly StudyGroup[] | null;
   }
-  let { layout, presentationForSegment }: Props = $props();
+  let { layout, presentationForSegment, groupsForSegment = () => null }: Props = $props();
 
   const presentation = $derived(denseOverlapPresentation(layout));
   // A preview never changes the plan. A pinned event remains when hover ends.
@@ -25,6 +28,31 @@
   const previewSegment = $derived(layout.segments.find(segment => segment.id === previewId) ?? null);
   const pinnedSegment = $derived(layout.segments.find(segment => segment.id === pinnedId) ?? null);
   const displayedSegment = $derived(previewSegment ?? pinnedSegment);
+  const alternatives = $derived(displayedSegment
+    ? calendarGroupAlternatives(groupsForSegment(displayedSegment), displayedSegment.entry.source.studyGroupId)
+    : []);
+  // A clicked alternative retains a read-only highlight; it does not select a group.
+  let hoveredAlternativeId = $state<string | null>(null);
+  let retainedAlternativeId = $state<string | null>(null);
+  let retainedAlternativeContext = $state<string | null>(null);
+  const alternativeContext = $derived(displayedSegment
+    ? `${displayedSegment.entry.source.courseOfferingId}\u0000${displayedSegment.entry.source.studyGroupId}`
+    : null);
+  const requestedAlternativeId = $derived(hoveredAlternativeId ?? (
+    retainedAlternativeContext === alternativeContext ? retainedAlternativeId : null));
+  const retainedGroupId = $derived(retainedAlternativeContext === alternativeContext ? retainedAlternativeId : null);
+  const previewGroupId = $derived(alternatives.some(group => group.groupId === requestedAlternativeId)
+    ? requestedAlternativeId : null);
+  const previewOfferingId = $derived(previewGroupId ? displayedSegment?.entry.source.courseOfferingId ?? null : null);
+  function toggleAlternative(id: string): void {
+    if (retainedAlternativeContext === alternativeContext && retainedAlternativeId === id) {
+      retainedAlternativeId = null;
+      retainedAlternativeContext = null;
+    } else {
+      retainedAlternativeContext = alternativeContext;
+      retainedAlternativeId = id;
+    }
+  }
   let selectedGroup = $state<DenseOverlapDisplay | null>(null);
   let detailsDialog: DenseOverlapDialog;
   let workspaceElement: HTMLDivElement;
@@ -49,6 +77,8 @@
     if (pinnedId !== null || previewId !== null) {
       pinnedId = null;
       previewId = null;
+      hoveredAlternativeId = null;
+      retainedAlternativeId = null;
       event.preventDefault();
     }
   }
@@ -77,6 +107,8 @@
       onPreviewEnd={id => { if (previewId === id) previewId = null; }}
       onInspect={id => { pinnedId = id; }}
       onOpenGroup={openGroup}
+      {previewGroupId}
+      {previewOfferingId}
     />
   </div>
   <div class="calendar-panel-pane">
@@ -85,7 +117,12 @@
       presentation={displayedSegment ? presentationForSegment(displayedSegment) : null}
       date={displayedSegment ? layout.days[displayedSegment.dayIndex] : null}
       isPinned={pinnedSegment !== null}
-      onClear={() => { pinnedId = null; previewId = null; }}
+      onClear={() => { pinnedId = null; previewId = null; hoveredAlternativeId = null; retainedAlternativeId = null; }}
+      {alternatives}
+      {previewGroupId}
+      {retainedGroupId}
+      onAlternativePreview={id => { hoveredAlternativeId = id; }}
+      onAlternativeToggle={toggleAlternative}
     />
   </div>
 </div>

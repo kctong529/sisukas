@@ -2,6 +2,8 @@
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
+  import type { CalendarGroupAlternative } from '@application/calendar/calendarGroupAlternatives';
+  import CalendarGroupAlternatives from './CalendarGroupAlternatives.svelte';
 
   interface Props {
     segment: WeeklyCalendarSegment | null;
@@ -9,8 +11,17 @@
     date: string | null;
     isPinned: boolean;
     onClear: () => void;
+    alternatives?: readonly CalendarGroupAlternative[];
+    previewGroupId?: string | null;
+    retainedGroupId?: string | null;
+    onAlternativePreview?: (id: string | null) => void;
+    onAlternativeToggle?: (id: string) => void;
   }
-  let { segment, presentation, date, isPinned, onClear }: Props = $props();
+  let {
+    segment, presentation, date, isPinned, onClear,
+    alternatives = [], previewGroupId = null, retainedGroupId = null,
+    onAlternativePreview = () => {}, onAlternativeToggle = () => {},
+  }: Props = $props();
   const range = $derived(segment
     ? `${formatCalendarMinute(segment.startMinute)}–${formatCalendarMinute(segment.endMinute)}`
     : null);
@@ -42,6 +53,13 @@
         <p class="continuation">This occurrence continues beyond the visible day.</p>
       {/if}
       {#if !isPinned}<p class="hint">Previewing · Select the event to keep its details here.</p>{/if}
+      <CalendarGroupAlternatives
+        {alternatives}
+        {previewGroupId}
+        {retainedGroupId}
+        onPreview={onAlternativePreview}
+        onTogglePreview={onAlternativeToggle}
+      />
     </div>
   {:else}
     <p class="empty">Hover over an event, use Tab to focus one, or select it to keep its details here.</p>
