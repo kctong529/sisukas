@@ -22,6 +22,8 @@ export function defineFixedCalendarOccurrence(
     source: {
       courseOfferingId: candidate.courseOfferingId,
       studyGroupId: candidate.studyGroupId,
+      studyGroupName: candidate.studyGroupName,
+      studyGroupType: candidate.studyGroupType,
       seriesId: candidate.event.seriesId ?? null,
       event: candidate.event,
     },

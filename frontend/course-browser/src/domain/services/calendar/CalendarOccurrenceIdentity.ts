@@ -9,6 +9,9 @@ import type { CalendarInterval } from "./CalendarTime";
 export interface CalendarOccurrenceCandidate {
   courseOfferingId: string;
   studyGroupId: string;
+  /** Optional for independently constructed candidates and legacy fixtures. */
+  studyGroupName?: string;
+  studyGroupType?: string;
   event: StudyEvent;
   /** Validated absolute times, obtained from resolveCalendarTime(). */
   interval: CalendarInterval;

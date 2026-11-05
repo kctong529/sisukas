@@ -49,7 +49,7 @@ describe("projectActivePlan stage 2", () => {
     expect(result.entries).toHaveLength(1);
     expect(result.entries[0]).toMatchObject({
       kind: "fixed", occurrenceKey: expect.any(String),
-      source: { courseOfferingId: "off-1", studyGroupId: "L01", seriesId: "series-1", event: source },
+      source: { courseOfferingId: "off-1", studyGroupId: "L01", studyGroupName: "L01", studyGroupType: "Lecture", seriesId: "series-1", event: source },
     });
     expect(result.entries[0].interval).toEqual({
       startMs: Date.parse("2026-11-02T08:00:00Z"),

@@ -1,16 +1,17 @@
 <script lang="ts">
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
-  import { formatCalendarMinute, displayEventLocation } from '@application/calendar/calendarPresentation';
+  import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
+  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
 
   interface Props {
     segment: WeeklyCalendarSegment;
-    label: string;
+    presentation: CalendarEventPresentation;
   }
 
-  let { segment, label }: Props = $props();
+  let { segment, presentation }: Props = $props();
   const cancelled = $derived(segment.entry.source.event.cancelled);
   const excluded = $derived(segment.entry.source.event.excluded);
-  const location = $derived(displayEventLocation(segment.entry.source.event));
+  const location = $derived(presentation.locationLabel);
   const range = $derived(`${formatCalendarMinute(segment.startMinute)}–${formatCalendarMinute(segment.endMinute)}`);
   const compact = $derived(segment.endMinute - segment.startMinute < 45);
   const continuation = $derived([
@@ -18,7 +19,7 @@
     segment.continuesAfter ? 'Continues later' : null,
   ].filter(Boolean).join('; '));
   const accessibleText = $derived([
-    label, `Study group ${segment.entry.source.studyGroupId}`, range,
+    presentation.courseCode, presentation.courseTitle, presentation.groupLabel, range,
     cancelled ? 'Cancelled' : excluded ? 'Excluded' : null,
     location, continuation,
   ].filter(Boolean).join(', '));
@@ -34,9 +35,13 @@
   aria-label={accessibleText}
   data-compact={compact}
 >
+  <span class="event-heading">
+    {#if presentation.courseCode}<span class="event-code">{presentation.courseCode}</span>{/if}
+    {#if presentation.groupLabel}<span class="event-group">{presentation.groupLabel}</span>{/if}
+  </span>
   <span class="event-title">
     {#if segment.continuesBefore}<span class="continuation" aria-hidden="true">↤ </span>{/if}
-    {label}
+    {presentation.courseTitle}
     {#if segment.continuesAfter}<span class="continuation" aria-hidden="true"> ↦</span>{/if}
   </span>
   {#if !compact}
@@ -64,6 +69,16 @@
     overflow: hidden;
   }
   .calendar-event.compact { padding: 1px 4px; }
+  .event-heading {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px 5px;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.9em;
+  }
+  .event-code { font-weight: 750; }
+  .event-group { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .event-title {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -74,6 +89,7 @@
     overflow-wrap: normal;
     word-break: normal;
   }
+  .compact .event-heading { display: none; }
   .compact .event-title {
     display: block;
     white-space: nowrap;
@@ -93,5 +109,7 @@
   /* Small lanes need a concise label, not several unreadable metadata rows. */
   @container calendar-card (max-width: 125px) {
     .event-time, .event-location { display: none; }
+    .event-heading { display: block; }
+    .event-group { display: none; }
   }
 </style>

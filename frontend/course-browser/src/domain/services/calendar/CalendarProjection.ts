@@ -194,6 +194,8 @@ export function projectActivePlan(
         candidates.push({
           courseOfferingId,
           studyGroupId: group.groupId,
+          studyGroupName: group.name,
+          studyGroupType: group.type,
           event,
           interval: result.interval,
         });

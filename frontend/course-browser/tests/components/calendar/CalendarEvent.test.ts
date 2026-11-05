@@ -14,7 +14,7 @@ function render(start: string, end: string, options: { cancelled?: boolean; excl
   const target = document.createElement('div');
   document.body.appendChild(target);
   targets.push(target);
-  mounted.push(mount(CalendarEvent, { target, props: { segment: segments[0], label: 'Course A · Lecture' } }));
+  mounted.push(mount(CalendarEvent, { target, props: { segment: segments[0], presentation: { courseCode: 'CS-E1234', courseTitle: 'Course A', groupLabel: 'Lecture L01', locationLabel: 'Room A' } } }));
   flushSync();
   return target;
 }
@@ -27,16 +27,19 @@ afterEach(async () => {
 describe('CalendarEvent presentation', () => {
   it('shows source title, time and location for a normal event', () => {
     const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00');
-    expect(target.textContent).toContain('Course A · Lecture');
-    expect(target.querySelector('[role="group"]')?.getAttribute('aria-label')).toContain('Study group');
+    expect(target.textContent).toContain('CS-E1234');
+    expect(target.textContent).toContain('Course A');
+    expect(target.textContent).toContain('Lecture L01');
+    expect(target.querySelector('[role="group"]')?.getAttribute('aria-label')).toContain('Lecture L01');
     expect(target.textContent).toContain('10:00–11:00');
     expect(target.textContent).toContain('Room A');
   });
   it('preserves technical group identity without showing it as card text', () => {
     const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00');
     const description = target.querySelector('.calendar-event')?.getAttribute('aria-label') ?? '';
-    expect(description).toContain('Study group');
-    expect(target.querySelector('.event-title')?.textContent?.trim()).toBe('Course A · Lecture');
+    expect(description).toContain('Lecture L01');
+    expect(description).not.toContain('aalto-ssg-');
+    expect(target.querySelector('.event-title')?.textContent?.trim()).toBe('Course A');
   });
   it('keeps short events compact without losing their accessible label', () => {
     const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T10:15:00+02:00');

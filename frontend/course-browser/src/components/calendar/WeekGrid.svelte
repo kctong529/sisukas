@@ -5,7 +5,8 @@
     WeeklyCalendarLayoutResult,
     WeeklyCalendarSegment,
   } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
-  import { formatCalendarMinute, displayEventLocation } from '@application/calendar/calendarPresentation';
+  import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
+  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import { denseOverlapPresentation } from '@application/calendar/denseOverlapPresentation';
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
   import CalendarEvent from './CalendarEvent.svelte';
@@ -13,9 +14,9 @@
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;
-    labelForSegment: (segment: WeeklyCalendarSegment) => string;
+    presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
   }
-  let { layout, labelForSegment }: Props = $props();
+  let { layout, presentationForSegment }: Props = $props();
 
   const hours = Array.from({ length: 25 }, (_, i) => i);
   const HOUR_HEIGHT_PX = 60;
@@ -98,7 +99,7 @@
             style={segmentStyle(segment)}
             data-segment-id={segment.id}
           >
-            <CalendarEvent {segment} label={labelForSegment(segment)} />
+            <CalendarEvent {segment} presentation={presentationForSegment(segment)} />
           </div>
         {/each}
         {#each denseByDay[dayIndex] as display (display.id)}
@@ -122,12 +123,12 @@
     </header>
     <ul>
       {#each selectedGroup.segments as segment (segment.id)}
+        {@const info = presentationForSegment(segment)}
         <li>
-          <strong>{labelForSegment(segment)}</strong>
+          <strong>{info.courseCode ? `${info.courseCode} · ` : ''}{info.courseTitle}</strong>
+          {#if info.groupLabel}<span>{info.groupLabel}</span>{/if}
           <span>{formatCalendarMinute(segment.startMinute)}–{formatCalendarMinute(segment.endMinute)}</span>
-          {#if displayEventLocation(segment.entry.source.event)}
-            <span>{displayEventLocation(segment.entry.source.event)}</span>
-          {/if}
+          {#if info.locationLabel}<span>{info.locationLabel}</span>{/if}
         </li>
       {/each}
     </ul>

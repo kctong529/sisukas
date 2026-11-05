@@ -18,7 +18,10 @@ function render(entries: ReturnType<typeof fixed>[]) {
   const layout = layoutCalendarWeek(entries, '2026-11-02');
   mounted.push(mount(WeekGrid, {
     target,
-    props: { layout, labelForSegment: (segment) => segment.entry.source.studyGroupId },
+    props: { layout, presentationForSegment: (segment) => ({
+      courseCode: null, courseTitle: segment.entry.source.studyGroupId,
+      groupLabel: 'Exercise H02', locationLabel: null,
+    }) },
   }));
   flushSync();
   return target;

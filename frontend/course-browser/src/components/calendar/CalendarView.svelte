@@ -5,6 +5,7 @@
   import { courseIndexStore } from '@lib/stores/courseIndexStore.svelte';
   import { layoutCalendarWeek } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
+  import { calendarEventPresentation } from '@application/calendar/calendarPresentation';
   import { currentHelsinkiWeek } from '@application/calendar/currentHelsinkiWeek';
   import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
   import WeekNavigation from './WeekNavigation.svelte';
@@ -34,13 +35,10 @@
     calendarProjectionStore.ensureActivePlanGroups();
   });
 
-  function labelForSegment(segment: WeeklyCalendarSegment): string {
+  function presentationForSegment(segment: WeeklyCalendarSegment) {
     const offeringId = segment.entry.source.courseOfferingId;
     const course = courseIndexStore.read.resolveByInstanceId(offeringId);
-    const name = course?.name.en || course?.code.value || offeringId;
-    // The source group ID is technical metadata, not a useful event-card label.
-    // Keep it available in CalendarEvent's full description instead.
-    return name;
+    return calendarEventPresentation(segment.entry.source, course);
   }
 </script>
 
@@ -76,7 +74,7 @@
       <p>No fixed events in this week for the active plan.</p>
     {/if}
 
-    <WeekGrid {layout} {labelForSegment} />
+    <WeekGrid {layout} {presentationForSegment} />
   {/if}
 </section>
 
