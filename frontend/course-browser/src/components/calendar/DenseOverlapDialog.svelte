@@ -1,0 +1,61 @@
+<script lang="ts">
+  import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
+  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
+  import type { WeeklyCalendarLayoutResult, WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
+  import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
+
+  interface Props {
+    group: DenseOverlapDisplay | null;
+    layout: WeeklyCalendarLayoutResult;
+    presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
+    onClose: () => void;
+  }
+
+  let { group: selectedGroup, layout, presentationForSegment, onClose }: Props = $props();
+  let dialogElement: HTMLDialogElement;
+
+  export function showModal(): void {
+    dialogElement.showModal();
+  }
+
+  export function isOpen(): boolean {
+    return dialogElement?.open ?? false;
+  }
+</script>
+
+<dialog bind:this={dialogElement} onclose={onClose} aria-label="Overlapping calendar events" class="event-details">
+  {#if selectedGroup}
+    <header>
+      <div>
+        <h2>{selectedGroup.segments.length} events in busy period</h2>
+        <p>{layout.days[selectedGroup.group.dayIndex]} · {formatCalendarMinute(selectedGroup.startMinute)}–{formatCalendarMinute(selectedGroup.endMinute)} · Europe/Helsinki</p>
+      </div>
+      <form method="dialog"><button class="close" type="submit">Close</button></form>
+    </header>
+    <ul>
+      {#each selectedGroup.segments as segment (segment.id)}
+        {@const info = presentationForSegment(segment)}
+        <li>
+          <strong>{info.courseCode ? `${info.courseCode} · ` : ''}{info.courseTitle}</strong>
+          {#if info.groupLabel}<span>{info.groupLabel}</span>{/if}
+          <span>{formatCalendarMinute(segment.startMinute)}–{formatCalendarMinute(segment.endMinute)}</span>
+          {#if info.locationLabel}<span>{info.locationLabel}</span>{/if}
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</dialog>
+
+<style>
+  .event-details { border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px; max-width: min(560px, calc(100vw - 32px)); width: 100%; max-height: min(75vh, 650px); color: #0f172a; background: #fff; box-shadow: 0 16px 42px #0f172a40; }
+  .event-details::backdrop { background: #0f172a80; }
+  .event-details header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+  .event-details h2 { font-size: 1.1rem; margin: 0 0 4px; }
+  .event-details p { margin: 0; font-size: 0.82rem; color: #475569; }
+  .event-details .close { border: 1px solid #94a3b8; border-radius: 5px; background: #fff; padding: 5px 10px; cursor: pointer; }
+  .event-details .close:focus-visible { outline: 3px solid #1d4ed8; }
+  .event-details ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .event-details li { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: #f1f5f9; border-radius: 6px; font-size: 0.85rem; }
+  .event-details li strong { overflow-wrap: anywhere; }
+  .event-details li span { color: #475569; font-variant-numeric: tabular-nums; }
+</style>
