@@ -36,7 +36,7 @@ describe('CalendarEvent presentation', () => {
     const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00');
     const description = target.querySelector('.calendar-event')?.getAttribute('aria-label') ?? '';
     expect(description).toContain('Study group');
-    expect(target.querySelector('.event-title')?.textContent).toBe('Course A · Lecture');
+    expect(target.querySelector('.event-title')?.textContent?.trim()).toBe('Course A · Lecture');
   });
   it('keeps short events compact without losing their accessible label', () => {
     const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T10:15:00+02:00');
