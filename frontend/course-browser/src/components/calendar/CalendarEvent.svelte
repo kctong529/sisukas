@@ -6,9 +6,12 @@
   interface Props {
     segment: WeeklyCalendarSegment;
     presentation: CalendarEventPresentation;
+    onPreview?: () => void;
+    onPreviewEnd?: () => void;
+    onInspect?: () => void;
   }
 
-  let { segment, presentation }: Props = $props();
+  let { segment, presentation, onPreview, onPreviewEnd, onInspect }: Props = $props();
   const cancelled = $derived(segment.entry.source.event.cancelled);
   const excluded = $derived(segment.entry.source.event.excluded);
   const location = $derived(presentation.locationLabel);
@@ -25,13 +28,18 @@
   ].filter(Boolean).join(', '));
 </script>
 
-<div
+<button
+  type="button"
   class="calendar-event"
+  onpointerenter={() => onPreview?.()}
+  onpointerleave={() => onPreviewEnd?.()}
+  onfocus={() => onPreview?.()}
+  onblur={() => onPreviewEnd?.()}
+  onclick={() => onInspect?.()}
   class:compact
   class:cancelled
   class:excluded
   title={accessibleText}
-  role="group"
   aria-label={accessibleText}
   data-compact={compact}
 >
@@ -53,11 +61,19 @@
     {/if}
     {#if location}<span class="event-location">{location}</span>{/if}
   {/if}
-</div>
+</button>
 
 <style>
   .calendar-event {
     box-sizing: border-box;
+    appearance: none;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -68,6 +84,7 @@
     padding: 4px 6px;
     overflow: hidden;
   }
+  .calendar-event:focus-visible { outline: 3px solid #1d4ed8; outline-offset: -3px; }
   .calendar-event.compact { padding: 1px 4px; }
   .event-heading {
     display: flex;

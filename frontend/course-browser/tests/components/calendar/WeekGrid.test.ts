@@ -53,6 +53,8 @@ describe('WeekGrid dense overlap disclosure', () => {
     expect(target.querySelector('.week-scroll')?.getAttribute('tabindex')).toBe('0');
     expect((target.querySelector('.week-scroll') as HTMLElement).scrollTop).toBe(480);
     expect(target.querySelectorAll('.event')).toHaveLength(0);
+    expect(target.querySelector('.calendar-workspace')?.getAttribute('data-panel-side')).toBe('left');
+    expect(target.querySelector<HTMLButtonElement>('.context-panel .clear')?.disabled).toBe(true);
   });
 
   it('keeps three concurrent source associations in separate columns', () => {
@@ -112,5 +114,123 @@ describe('WeekGrid dense overlap disclosure', () => {
     expect(target.querySelectorAll('.event')).toHaveLength(2);
     expect(target.textContent).toContain('Group a');
     expect(target.textContent).toContain('Group b');
+  });
+});
+
+
+describe('WeekGrid contextual event inspection', () => {
+  it('defaults to a left panel and lets the user switch sides', () => {
+    const target = render([]);
+    const workspace = target.querySelector<HTMLElement>('.calendar-workspace')!;
+    const toggle = target.querySelector<HTMLButtonElement>('.panel-position-button')!;
+    expect(workspace.getAttribute('data-panel-side')).toBe('left');
+    expect(toggle.getAttribute('aria-label')).toBe('Move event details panel to the right');
+    toggle.click();
+    flushSync();
+    expect(workspace.getAttribute('data-panel-side')).toBe('right');
+    expect(toggle.getAttribute('aria-label')).toBe('Move event details panel to the left');
+    toggle.click();
+    flushSync();
+    expect(workspace.getAttribute('data-panel-side')).toBe('left');
+  });
+
+  it('previews on pointer hover and restores the pinned event afterward', () => {
+    const target = render([event('a', 10, 11), event('b', 12, 13)]);
+    const cards = [...target.querySelectorAll<HTMLButtonElement>('.calendar-event')];
+    const panel = target.querySelector<HTMLElement>('.context-panel')!;
+    expect(panel.textContent).toContain('Hover over an event');
+
+    cards[0].dispatchEvent(new Event('pointerenter'));
+    flushSync();
+    expect(panel.textContent).toContain('Group a');
+    expect(panel.textContent).toContain('Previewing');
+    cards[0].click();
+    flushSync();
+    expect(panel.querySelector<HTMLButtonElement>('.clear')?.disabled).toBe(false);
+    cards[0].dispatchEvent(new Event('pointerleave'));
+    flushSync();
+    expect(panel.textContent).toContain('Group a');
+
+    cards[1].dispatchEvent(new Event('pointerenter'));
+    flushSync();
+    expect(panel.textContent).toContain('Group b');
+    cards[1].dispatchEvent(new Event('pointerleave'));
+    flushSync();
+    expect(panel.textContent).toContain('Group a');
+
+    panel.querySelector<HTMLButtonElement>('.clear')?.click();
+    flushSync();
+    expect(panel.textContent).toContain('Hover over an event');
+    expect(panel.querySelector<HTMLButtonElement>('.clear')?.disabled).toBe(true);
+  });
+
+  it('previews keyboard focus and reverts on blur', () => {
+    const target = render([event('focus')]);
+    const card = target.querySelector<HTMLButtonElement>('.calendar-event')!;
+    const panel = target.querySelector<HTMLElement>('.context-panel')!;
+    card.dispatchEvent(new Event('focus'));
+    flushSync();
+    expect(panel.textContent).toContain('Group focus');
+    card.dispatchEvent(new Event('blur'));
+    flushSync();
+    expect(panel.textContent).toContain('Hover over an event');
+    expect(card.getAttribute('type')).toBe('button');
+  });
+
+  it('clears the retained event when Escape is pressed', () => {
+    const target = render([event('a', 10, 11)]);
+    const card = target.querySelector<HTMLButtonElement>('.calendar-event')!;
+    const panel = target.querySelector<HTMLElement>('.context-panel')!;
+
+    card.click();
+    flushSync();
+
+    expect(panel.textContent).toContain('Group a');
+    expect(panel.querySelector<HTMLButtonElement>('.clear')?.disabled).toBe(false);
+
+    card.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+      }),
+    );
+    flushSync();
+
+    expect(panel.textContent).toContain('Hover over an event');
+    expect(panel.querySelector<HTMLButtonElement>('.clear')?.disabled).toBe(true);
+  });
+
+  it('does not clear retained event details when the overlap dialog is open', () => {
+    const target = render([
+      event('a', 10, 11),
+      event('b', 10, 11),
+      event('c', 10, 11),
+      event('d', 10, 11),
+    ]);
+
+    const card = target.querySelector<HTMLButtonElement>('.calendar-event')!;
+    const panel = target.querySelector<HTMLElement>('.context-panel')!;
+    const overlapButton = target.querySelector<HTMLButtonElement>('.cluster button')!;
+
+    card.click();
+    flushSync();
+
+    expect(panel.querySelector<HTMLButtonElement>('.clear')?.disabled).toBe(false);
+
+    overlapButton.click();
+    flushSync();
+
+    expect(target.querySelector('dialog')?.open).toBe(true);
+
+    overlapButton.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+      }),
+    );
+    flushSync();
+
+    // Escape is reserved for the native dialog while it is open.
+    expect(panel.querySelector<HTMLButtonElement>('.clear')?.disabled).toBe(false);
   });
 });

@@ -30,7 +30,7 @@ describe('CalendarEvent presentation', () => {
     expect(target.textContent).toContain('CS-E1234');
     expect(target.textContent).toContain('Course A');
     expect(target.textContent).toContain('Lecture L01');
-    expect(target.querySelector('[role="group"]')?.getAttribute('aria-label')).toContain('Lecture L01');
+    expect(target.querySelector('.calendar-event')?.getAttribute('aria-label')).toContain('Lecture L01');
     expect(target.textContent).toContain('10:00–11:00');
     expect(target.textContent).toContain('Room A');
   });

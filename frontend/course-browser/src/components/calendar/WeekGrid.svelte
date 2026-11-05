@@ -11,6 +11,7 @@
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
   import CalendarEvent from './CalendarEvent.svelte';
   import DenseOverlapCard from './DenseOverlapCard.svelte';
+  import CalendarContextPanel from './CalendarContextPanel.svelte';
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;
@@ -39,6 +40,14 @@
     layout.days.map((_, dayIndex) => denseGroups.filter(display => display.group.dayIndex === dayIndex))
   );
 
+  // A preview never changes the plan. A pinned event remains when hover ends.
+  // Resolve stored IDs against the current layout so week changes cannot show stale data.
+  let previewId = $state<string | null>(null);
+  let pinnedId = $state<string | null>(null);
+  let panelSide = $state<'left' | 'right'>('left');
+  const previewSegment = $derived(layout.segments.find(segment => segment.id === previewId) ?? null);
+  const pinnedSegment = $derived(layout.segments.find(segment => segment.id === pinnedId) ?? null);
+  const displayedSegment = $derived(previewSegment ?? pinnedSegment);
   let selectedGroup = $state<DenseOverlapDisplay | null>(null);
   let detailsDialog: HTMLDialogElement;
 
@@ -61,9 +70,43 @@
     const top = group.startMinute / 1440 * 100;
     return `top:${top}%;`;
   }
+
+  function handleCalendarKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
+
+    // Let the existing modal handle Escape.
+    if (detailsDialog?.open) return;
+
+    // Ignore keyboard events outside the calendar.
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+
+    const workspace = scrollViewport?.closest('.calendar-workspace');
+    if (!workspace?.contains(target)) return;
+
+    if (pinnedId !== null || previewId !== null) {
+      pinnedId = null;
+      previewId = null;
+      event.preventDefault();
+    }
+  }
 </script>
 
-<p class="small-screen-hint">Scroll sideways to see the other days.</p>
+<svelte:window onkeydown={handleCalendarKeydown} />
+
+<div class="calendar-panel-controls">
+  <button
+    type="button"
+    class="panel-position-button"
+    onclick={() => { panelSide = panelSide === 'left' ? 'right' : 'left'; }}
+    aria-label={panelSide === 'left' ? 'Move event details panel to the right' : 'Move event details panel to the left'}
+  >
+    {panelSide === 'left' ? 'Move panel right' : 'Move panel left'}
+  </button>
+</div>
+<div class="calendar-workspace" class:panel-right={panelSide === 'right'} data-panel-side={panelSide}>
+  <div class="calendar-grid-pane">
+    <p class="small-screen-hint">Scroll sideways to see the other days.</p>
 <!-- The scrollable timetable must be keyboard-focusable. -->
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 <div
@@ -99,7 +142,13 @@
             style={segmentStyle(segment)}
             data-segment-id={segment.id}
           >
-            <CalendarEvent {segment} presentation={presentationForSegment(segment)} />
+            <CalendarEvent
+              {segment}
+              presentation={presentationForSegment(segment)}
+              onPreview={() => { previewId = segment.id; }}
+              onPreviewEnd={() => { if (previewId === segment.id) previewId = null; }}
+              onInspect={() => { pinnedId = segment.id; }}
+            />
           </div>
         {/each}
         {#each denseByDay[dayIndex] as display (display.id)}
@@ -110,6 +159,17 @@
       </div>
     {/each}
   </div>
+</div>
+</div>
+<div class="calendar-panel-pane">
+  <CalendarContextPanel
+    segment={displayedSegment}
+    presentation={displayedSegment ? presentationForSegment(displayedSegment) : null}
+    date={displayedSegment ? layout.days[displayedSegment.dayIndex] : null}
+    isPinned={pinnedSegment !== null}
+    onClear={() => { pinnedId = null; previewId = null; }}
+  />
+</div>
 </div>
 
 <dialog bind:this={detailsDialog} onclose={() => { selectedGroup = null; }} aria-label="Overlapping calendar events" class="event-details">
@@ -136,6 +196,36 @@
 </dialog>
 
 <style>
+  .calendar-panel-controls { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+  .panel-position-button { border: 1px solid #94a3b8; background: #fff; color: #0f172a; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: .8rem; }
+  .panel-position-button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+  .calendar-workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 14px; align-items: start; }
+  .calendar-grid-pane { min-width: 0; order: 2; }
+  .calendar-panel-pane { min-width: 0; order: 1; }
+  .calendar-workspace.panel-right { grid-template-columns: minmax(0, 1fr) 300px; }
+  .calendar-workspace.panel-right .calendar-grid-pane { order: 1; }
+  .calendar-workspace.panel-right .calendar-panel-pane { order: 2; }
+  @media (max-width: 1000px) {
+    .calendar-workspace,
+    .calendar-workspace.panel-right {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .calendar-grid-pane,
+    .calendar-workspace.panel-right .calendar-grid-pane {
+      order: 1;
+    }
+
+    .calendar-panel-pane,
+    .calendar-workspace.panel-right .calendar-panel-pane {
+      order: 2;
+    }
+
+    /* Left/right positioning is not applicable to the stacked layout. */
+    .calendar-panel-controls {
+      display: none;
+    }
+  }
   /* Keep every hour available, but show a useful teaching-day viewport first. */
   .week-scroll {
     max-height: min(75vh, 760px);
@@ -207,6 +297,7 @@
   }
   .event, .cluster { position: absolute; box-sizing: border-box; overflow: hidden; border-radius: 4px; }
   .event { container: calendar-card / inline-size; border: 1px solid #1d4ed8; background: #dbeafe; color: #1e3a8a; font-size: 0.68rem; line-height: 1.25; }
+  .event:hover, .event:focus-within { outline: 2px solid #1d4ed8; outline-offset: 1px; z-index: 2; }
   .event.inactive { border-style: dashed; border-color: #94a3b8; background: #f1f5f9; color: #475569; }
   .event.cancelled { border-color: #b91c1c; background: #fee2e2; color: #7f1d1d; }
   .cluster {
