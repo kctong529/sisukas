@@ -5,6 +5,7 @@
   import type { CalendarGroupAlternative } from '@application/calendar/calendarGroupAlternatives';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import CalendarGroupAlternatives from './CalendarGroupAlternatives.svelte';
+  import CalendarDetailsHeading from './CalendarDetailsHeading.svelte';
   import CalendarLocationList from './CalendarLocationList.svelte';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
@@ -16,6 +17,10 @@
     isPinned: boolean;
     selection?: CalendarGroupSelection;
     onClear: () => void;
+    onShowCourse?: () => void;
+    onHideGroup?: () => void;
+    onHideOccurrence?: () => void;
+    canHideOccurrence?: boolean;
     members?: readonly CalendarEntry[];
     alternatives?: readonly CalendarGroupAlternative[];
     previewGroupId?: string | null;
@@ -24,7 +29,8 @@
     onAlternativeToggle?: (id: string) => void;
   }
   let {
-    segment, presentation, date, isPinned, selection = 'candidate', onClear, members = [],
+    segment, presentation, date, isPinned, selection = 'candidate', onClear, onShowCourse = () => {}, members = [],
+    onHideGroup = () => {}, onHideOccurrence = () => {}, canHideOccurrence = true,
     alternatives = [], previewGroupId = null, retainedGroupId = null,
     onAlternativePreview = () => {}, onAlternativeToggle = () => {},
   }: Props = $props();
@@ -34,14 +40,10 @@
 </script>
 
 <aside class="context-panel" aria-labelledby="calendar-context-title">
-  <header>
-    <h2 id="calendar-context-title">Event details</h2>
-    <button type="button" class="clear" onclick={onClear} disabled={!isPinned}>Clear details</button>
-  </header>
   {#if segment && presentation}
+    <CalendarDetailsHeading kind="Event" titleId="calendar-context-title"
+      code={presentation.courseCode} title={presentation.courseTitle} {isPinned} {onClear} />
     <div class="event-information" aria-live="off">
-      {#if presentation.courseCode}<p class="code">{presentation.courseCode}</p>{/if}
-      <h3>{presentation.courseTitle}</h3>
       {#if presentation.groupLabel}<p class="group">{presentation.groupLabel}</p>{/if}
       <dl>
         <dt>Date</dt><dd>{date}</dd>
@@ -63,6 +65,11 @@
         <p class="continuation">This occurrence continues beyond the visible day.</p>
       {/if}
       {#if !isPinned}<p class="hint">Previewing · Click the event to pin its details here.</p>{/if}
+      <div class="visibility-actions" aria-label="Calendar visibility">
+        <button type="button" onclick={onShowCourse}>Course overview and visibility</button>
+        <button type="button" onclick={onHideGroup}>Hide teaching group</button>
+        <button type="button" onclick={onHideOccurrence} disabled={!canHideOccurrence} title={canHideOccurrence ? undefined : 'This event has no unambiguous source identity'}>Hide this event</button>
+      </div>
       <CalendarGroupAlternatives
         {alternatives}
         {previewGroupId}
@@ -72,20 +79,18 @@
       />
     </div>
   {:else}
+    <CalendarDetailsHeading kind="Event" titleId="calendar-context-title" code={null}
+      title="" {isPinned} {onClear} />
     <p class="empty">Hover over an event, use Tab to focus one, or click it to pin its details here.</p>
   {/if}
 </aside>
 
 <style>
+  .visibility-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
+  .visibility-actions button { border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 6px; background: var(--calendar-card, #fff); color: var(--calendar-primary, #2f7fd6); padding: 0.4rem 0.6rem; font: inherit; font-size: 0.75rem; cursor: pointer; }
+  .visibility-actions button:disabled { opacity: .55; cursor: not-allowed; }
+  .visibility-actions button:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
   .context-panel { box-sizing: border-box; min-width: 0; padding: 1rem; border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 8px; background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); }
-  header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; }
-  h2 { font-size: 1rem; font-weight: 600; margin: 0; }
-  h3 { font-size: 0.95rem; margin: 0.25rem 0 0.75rem; overflow-wrap: anywhere; }
-  .clear { border: 1px solid var(--calendar-border, #e2e8f0); background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); border-radius: 6px; padding: 0.4rem 0.7rem; cursor: pointer; font: inherit; font-size: 0.75rem; }
-  .clear:hover:not(:disabled) { border-color: var(--calendar-primary, #2f7fd6); background: #f1f5f9; }
-  .clear:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
-  .clear:disabled { opacity: .55; cursor: not-allowed; }
-  .code { font-size: 0.85rem; font-weight: 700; color: var(--calendar-primary, #2f7fd6); margin: 0; }
   .group { font-weight: 600; font-size: 0.85rem; margin: 0 0 0.75rem; }
   dl { display: grid; grid-template-columns: 65px minmax(0, 1fr); gap: 0.6rem; font-size: 0.8rem; margin: 0; }
   dt { color: var(--calendar-muted, #64748b); }

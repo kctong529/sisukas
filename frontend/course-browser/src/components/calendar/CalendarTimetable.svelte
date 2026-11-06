@@ -13,6 +13,7 @@
     layout: WeeklyCalendarLayoutResult;
     colorByOffering: Readonly<Record<string, number>>;
     visibleSegments: WeeklyCalendarSegment[];
+    previewOnlySegments?: readonly WeeklyCalendarSegment[];
     denseGroups: DenseOverlapDisplay[];
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
     selectionForSegment: (segment: WeeklyCalendarSegment) => CalendarGroupSelection;
@@ -22,12 +23,14 @@
     onOpenGroup: (group: DenseOverlapDisplay) => void;
     previewGroupId?: string | null;
     previewOfferingId?: string | null;
+    previewCourseId?: string | null;
+    previewOccurrenceId?: string | null;
   }
 
   let {
-    layout, colorByOffering, visibleSegments, denseGroups, presentationForSegment, selectionForSegment,
+    layout, colorByOffering, visibleSegments, previewOnlySegments = [], denseGroups, presentationForSegment, selectionForSegment,
     onPreview, onPreviewEnd, onInspect, onOpenGroup,
-    previewGroupId = null, previewOfferingId = null,
+    previewGroupId = null, previewOfferingId = null, previewCourseId = null, previewOccurrenceId = null,
   }: Props = $props();
 
   const hours = Array.from({ length: 25 }, (_, i) => i);
@@ -44,6 +47,8 @@
     visibleSegments.filter(segment => segment.dayIndex === dayIndex)));
   const denseByDay = $derived(layout.days.map((_, dayIndex) =>
     denseGroups.filter(display => display.group.dayIndex === dayIndex)));
+  const previewOnlyByDay = $derived(layout.days.map((_, dayIndex) =>
+    previewOnlySegments.filter(segment => segment.dayIndex === dayIndex)));
 
   /** Geometry comes from the domain layout; this component only renders it. */
   function segmentStyle(segment: WeeklyCalendarSegment): string {
@@ -89,15 +94,26 @@
 
     {#each layout.days as date, dayIndex (date)}
       <div class="day-column" role="group" aria-label={date}>
+        {#each previewOnlyByDay[dayIndex] as segment (segment.id)}
+          <!-- Ephemeral placement guide only: no click, conflict, or planning semantics. -->
+          <div class="hidden-preview" style={segmentStyle(segment)}
+            data-preview-segment-id={segment.id} aria-hidden="true">
+            <span>{segment.entry.source.studyGroupName || segment.entry.source.studyGroupId}</span>
+          </div>
+        {/each}
         {#each segmentsByDay[dayIndex] as segment (segment.id)}
           <div
             class="event"
+            class:occurrence-highlight={previewOccurrenceId !== null && segment.id === previewOccurrenceId}
+            class:occurrence-dim={previewOccurrenceId !== null && segment.id !== previewOccurrenceId}
+            class:course-highlight={previewOccurrenceId === null && previewGroupId === null && previewCourseId !== null && segment.entry.source.courseOfferingId === previewCourseId}
+            class:course-dim={previewOccurrenceId === null && previewGroupId === null && previewCourseId !== null && segment.entry.source.courseOfferingId !== previewCourseId}
             class:inactive={!segment.conflictEligible}
             class:cancelled={segment.entry.source.event.cancelled}
-            class:alternative-highlight={previewGroupId !== null &&
+            class:alternative-highlight={previewOccurrenceId === null && previewGroupId !== null &&
               segment.entry.source.courseOfferingId === previewOfferingId &&
               segment.entry.source.studyGroupId === previewGroupId}
-            class:alternative-dim={previewGroupId !== null &&
+            class:alternative-dim={previewOccurrenceId === null && previewGroupId !== null &&
               segment.entry.source.courseOfferingId === previewOfferingId &&
               segment.entry.source.studyGroupId !== previewGroupId}
             style={segmentStyle(segment)}
@@ -194,7 +210,22 @@
       margin: 0 0 0.4rem;
     }
   }
-  .event, .cluster { position: absolute; box-sizing: border-box; overflow: hidden; border-radius: 4px; }
+  .event, .cluster, .hidden-preview { position: absolute; box-sizing: border-box; overflow: hidden; border-radius: 4px; }
+  /* A visibility-hidden event is shown only as a noninteractive location guide.
+     It is deliberately distinct from a normal scheduled event. */
+  .hidden-preview {
+    z-index: 2;
+    pointer-events: none;
+    border: 2px dashed #0f766e;
+    background: repeating-linear-gradient(135deg, #ccfbf1b0 0 5px, #f0fdfaab 5px 10px);
+    color: #115e59;
+    font-size: .67rem;
+    line-height: 1.25;
+    padding: .25rem;
+    min-width: 0;
+  }
+  .hidden-preview span { font-weight: 600; overflow-wrap: anywhere; }
+
   /* Preserve contrasting event states and dense-lane readability. */
   /* First six hues are LEGO's block colors; the remaining six extend the palette. */
   .event[data-offering-color="0"] { --event-rgb: 234, 88, 12; }
@@ -210,6 +241,10 @@
   .event[data-offering-color="10"] { --event-rgb: 180, 83, 9; }
   .event[data-offering-color="11"] { --event-rgb: 8, 145, 178; }
   .event { container: calendar-card / inline-size; border: 1px solid rgb(var(--event-rgb, 47, 127, 214)); background: color-mix(in srgb, rgb(var(--event-rgb, 47, 127, 214)) 14%, white); color: #0f172a; font-size: 0.68rem; line-height: 1.25; }
+  .event.occurrence-highlight { outline: 3px solid #0f766e; outline-offset: -2px; z-index: 2; }
+  .event.occurrence-dim { opacity: .35; }
+  .event.course-highlight { outline: 3px solid var(--calendar-primary, #2f7fd6); outline-offset: -2px; z-index: 2; }
+  .event.course-dim { opacity: .28; }
   .event.alternative-highlight { outline: 3px solid #0f766e; outline-offset: -2px; z-index: 2; }
   .event.alternative-dim { opacity: .38; }
   .event:hover, .event:focus-within { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 1px; z-index: 2; }

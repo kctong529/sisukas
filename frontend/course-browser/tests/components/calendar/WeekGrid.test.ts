@@ -471,3 +471,235 @@ describe('WeekGrid selection presentation', () => {
     expect(target.querySelectorAll('dialog [data-selection="candidate"]')).toHaveLength(4);
   });
 });
+
+describe('WeekGrid visibility actions (#92)', () => {
+  it('offers separate group and occurrence controls without changing planning state', () => {
+    const hideGroup = vi.fn();
+    const hideOccurrence = vi.fn();
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    targetElements.push(target);
+    mounted.push(mount(WeekGrid, {
+      target,
+      props: {
+        layout: layoutCalendarWeek([event('a')], '2026-11-02'),
+        hideGroup,
+        hideOccurrence,
+        presentationForSegment: () => ({
+          courseCode: 'CS-A1111', courseTitle: 'Course', groupLabel: 'Exercise H01', locationLabel: null,
+        }),
+      },
+    }));
+    flushSync();
+    target.querySelector<HTMLButtonElement>('.calendar-event')?.click();
+    flushSync();
+    const buttons = [...target.querySelectorAll<HTMLButtonElement>('.visibility-actions button')];
+    expect(buttons.map(button => button.textContent?.trim())).toEqual([
+      'Course overview and visibility', 'Hide teaching group', 'Hide this event',
+    ]);
+    const hideEventButton = buttons.find(button => button.textContent?.trim() === 'Hide this event');
+    expect(hideEventButton).toBeDefined();
+    hideEventButton!.click();
+    flushSync();
+    expect(hideOccurrence).toHaveBeenCalledTimes(1);
+    expect(hideGroup).not.toHaveBeenCalled();
+    expect(target.textContent).toContain('Candidate');
+  });
+
+  it('does not expose an unsafe per-occurrence operation for unresolved identities', () => {
+    const target = render([event('a')]);
+    // The fixture has a stable key, so the event control is enabled.
+    target.querySelector<HTMLButtonElement>('.calendar-event')?.click();
+    flushSync();
+    expect(target.querySelector<HTMLButtonElement>('.visibility-actions button:last-child')?.disabled).toBe(false);
+  });
+});
+
+
+describe('WeekGrid course context navigation', () => {
+  it('previews a course on hover, pins on click, and restores pinned details after preview', () => {
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    targetElements.push(target);
+    const entry = event('one');
+    const layout = layoutCalendarWeek([entry], '2026-11-02');
+    const course = (id: string) => ({ offeringId: id, code: id, title: `${id} title`, course: {} as import('../../../src/application/calendar/calendarCoursesForWeek').CalendarWeekCourse['course'] });
+    mounted.push(mount(WeekGrid, { target, props: {
+      layout,
+      unfilteredSegments: layout.segments,
+      weekCourses: [course('offering'), course('other')],
+      presentationForSegment: segment => ({ courseCode: null, courseTitle: segment.entry.source.studyGroupId, groupLabel: null, locationLabel: null }),
+    } }));
+    flushSync();
+    const buttons = target.querySelectorAll<HTMLButtonElement>('.course-bar button');
+    buttons[0].dispatchEvent(new Event('pointerenter'));
+    flushSync();
+    expect(target.querySelector('.course-context')?.textContent).toContain('offering title');
+    buttons[0].click();
+    flushSync();
+    expect(target.querySelector<HTMLButtonElement>('.course-context button.clear')?.disabled).toBe(false);
+    buttons[1].dispatchEvent(new Event('pointerenter'));
+    flushSync();
+    expect(target.querySelector('.course-context')?.textContent).toContain('other title');
+    buttons[1].dispatchEvent(new Event('pointerleave'));
+    flushSync();
+    expect(target.querySelector('.course-context')?.textContent).toContain('offering title');
+  });
+
+  it('clears a pinned course with Escape while the course button retains focus', () => {
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    targetElements.push(target);
+    const layout = layoutCalendarWeek([], '2026-11-02');
+    mounted.push(mount(WeekGrid, { target, props: {
+      layout,
+      weekCourses: [{ offeringId: 'offering', code: 'CS-1000', title: 'Example', course: {} as import('../../../src/application/calendar/calendarCoursesForWeek').CalendarWeekCourse['course'] }],
+      presentationForSegment: () => ({ courseCode: null, courseTitle: '', groupLabel: null, locationLabel: null }),
+    } }));
+    flushSync();
+    const courseButton = target.querySelector<HTMLButtonElement>('.course-bar button')!;
+    courseButton.focus();
+    courseButton.click();
+    flushSync();
+    expect(target.querySelector('.course-context')).not.toBeNull();
+    courseButton.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    flushSync();
+    expect(target.querySelector('.course-context')).toBeNull();
+    expect(courseButton.getAttribute('aria-pressed')).toBe('false');
+  });
+});
+
+describe('WeekGrid pinned course and temporary event inspection', () => {
+  it('previews an event above a pinned course and restores the pinned course on pointer exit', () => {
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    targetElements.push(target);
+    const layout = layoutCalendarWeek([event('one')], '2026-11-02');
+    mounted.push(mount(WeekGrid, { target, props: {
+      layout,
+      unfilteredSegments: layout.segments,
+      weekCourses: [{ offeringId: 'offering', code: 'CS-1000', title: 'Pinned course', course: {} as import('../../../src/application/calendar/calendarCoursesForWeek').CalendarWeekCourse['course'] }],
+      presentationForSegment: () => ({ courseCode: 'CS-1000', courseTitle: 'Event course', groupLabel: 'Exercise', locationLabel: null }),
+    } }));
+    flushSync();
+    target.querySelector<HTMLButtonElement>('.course-bar button')?.click();
+    flushSync();
+    expect(target.querySelector('.course-context')?.textContent).toContain('Pinned course');
+    const eventButton = target.querySelector<HTMLButtonElement>('.calendar-event')!;
+    eventButton.dispatchEvent(new Event('pointerenter'));
+    flushSync();
+    expect(target.querySelector('.course-context')).toBeNull();
+    expect(target.querySelector('.context-panel h2')?.textContent).toBe('Event details');
+    expect(target.querySelector('.context-panel .course-identity .code')?.textContent).toBe('CS-1000');
+    eventButton.dispatchEvent(new Event('pointerleave'));
+    flushSync();
+    expect(target.querySelector('.course-context')?.textContent).toContain('Pinned course');
+    expect(target.querySelector<HTMLButtonElement>('.course-bar button')?.getAttribute('aria-pressed')).toBe('true');
+  });
+});
+
+describe('WeekGrid hidden visibility previews (#92)', () => {
+  function renderFiltered(
+    visible: ReturnType<typeof fixed>[],
+    all: ReturnType<typeof fixed>[],
+    options: { excludeGroup?: string; course?: boolean } = {},
+  ) {
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    targetElements.push(target);
+    const layout = layoutCalendarWeek(visible, '2026-11-02');
+    const full = layoutCalendarWeek(all, '2026-11-02');
+    const groups = all.map(entry => ({
+      groupId: entry.source.studyGroupId,
+      name: entry.source.studyGroupId,
+      type: 'Exercise',
+      studyEvents: [],
+    }));
+    const course = { offeringId: 'offering', code: 'TEST', title: 'Test course',
+      course: {} as import('../../../src/application/calendar/calendarCoursesForWeek').CalendarWeekCourse['course'] };
+    mounted.push(mount(WeekGrid, { target, props: {
+      layout,
+      unfilteredSegments: full.segments,
+      weekCourses: options.course ? [course] : [],
+      groupsForCourse: () => groups,
+      groupsForSegment: () => groups,
+      selectionForSegment: segment => segment.entry.source.studyGroupId === options.excludeGroup ? 'excluded' : 'candidate',
+      presentationForSegment: segment => ({ courseCode: 'TEST', courseTitle: 'Test course',
+        groupLabel: segment.entry.source.studyGroupId, locationLabel: null }),
+    } }));
+    flushSync();
+    return target;
+  }
+
+  it('previews a visibility-hidden occurrence from course details without restoring its visibility', () => {
+    const hidden = event('hidden', 12, 14);
+    const target = renderFiltered([], [hidden], { course: true });
+    target.querySelector<HTMLButtonElement>('.course-bar button')!.click();
+    flushSync();
+    const card = target.querySelector<HTMLElement>('.course-context .group')!;
+    card.dispatchEvent(new Event('pointerenter'));
+    flushSync();
+    expect(target.querySelectorAll('.hidden-preview')).toHaveLength(1);
+    expect(target.querySelectorAll('.event')).toHaveLength(0);
+    expect(target.querySelector('.hidden-preview')?.getAttribute('aria-hidden')).toBe('true');
+    const chip = target.querySelector<HTMLButtonElement>('.course-context button.occurrence')!;
+    chip.dispatchEvent(new Event('pointerenter'));
+    flushSync();
+    expect(target.querySelectorAll('.hidden-preview')).toHaveLength(1);
+    chip.dispatchEvent(new Event('pointerleave'));
+    flushSync();
+    expect(target.querySelectorAll('.hidden-preview')).toHaveLength(1);
+    card.dispatchEvent(new Event('pointerleave'));
+    flushSync();
+    expect(target.querySelectorAll('.hidden-preview')).toHaveLength(0);
+  });
+
+  it('reflows visible neighbors alongside a hidden group preview and restores their lanes afterward', () => {
+    const a = event('a', 10, 12);
+    const b = event('b', 11, 13);
+    const hidden = event('hidden', 11, 12);
+    const target = renderFiltered([a, b], [a, b, hidden], { course: true });
+    target.querySelector<HTMLButtonElement>('.course-bar button')!.click();
+    flushSync();
+    const before = [...target.querySelectorAll<HTMLElement>('.event')].map(element => element.style.width);
+    expect(before).toEqual(['50%', '50%']);
+    const group = [...target.querySelectorAll<HTMLElement>('.course-context .group')]
+      .find(element => element.getAttribute('aria-label')?.includes('Group hidden'))!;
+    group.dispatchEvent(new Event('pointerenter'));
+    flushSync();
+    expect([...target.querySelectorAll<HTMLElement>('.event')].map(element => parseFloat(element.style.width)))
+      .toEqual([100 / 3, 100 / 3]);
+    expect(parseFloat(target.querySelector<HTMLElement>('.hidden-preview')!.style.width)).toBe(100 / 3);
+    group.dispatchEvent(new Event('pointerleave'));
+    flushSync();
+    expect([...target.querySelectorAll<HTMLElement>('.event')].map(element => element.style.width)).toEqual(before);
+  });
+
+  it('shows hidden alternative group placement from event details without creating interactive events', () => {
+    const a = event('a', 10, 11);
+    const b = event('b', 12, 13);
+    const target = renderFiltered([a], [a, b]);
+    target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
+    flushSync();
+    const alternative = target.querySelector<HTMLButtonElement>('.alternatives button')!;
+    alternative.dispatchEvent(new Event('pointerenter'));
+    flushSync();
+    expect(target.querySelectorAll('.hidden-preview')).toHaveLength(1);
+    expect(target.querySelectorAll('.event')).toHaveLength(1);
+    alternative.dispatchEvent(new Event('pointerleave'));
+    flushSync();
+    expect(target.querySelectorAll('.hidden-preview')).toHaveLength(0);
+  });
+
+  it('never previews a group excluded by a planning choice', () => {
+    const a = event('a', 10, 11);
+    const b = event('b', 12, 13);
+    const target = renderFiltered([a], [a, b], { excludeGroup: 'Group b' });
+    target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
+    flushSync();
+    target.querySelector<HTMLButtonElement>('.alternatives button')!
+      .dispatchEvent(new Event('pointerenter'));
+    flushSync();
+    expect(target.querySelectorAll('.hidden-preview')).toHaveLength(0);
+  });
+});

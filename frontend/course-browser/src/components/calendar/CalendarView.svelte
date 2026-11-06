@@ -15,6 +15,13 @@
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
   import { studyGroupStore } from '@lib/stores/studyGroupStore.svelte';
   import { weekAwareOfferingColorIndices } from '@application/calendar/calendarOfferingColors';
+  import { calendarVisibilitySessionStore } from '@lib/stores/calendarVisibilitySessionStore.svelte';
+  import { calendarCoursesForWeek } from '@application/calendar/calendarCoursesForWeek';
+  import {
+    calendarEntryVisible,
+    setCalendarGroupHidden, setCalendarOccurrenceVisibility,
+    type CalendarVisibility,
+  } from '@application/calendar/calendarVisibility';
 
   let weekStart = $state(currentHelsinkiWeek());
   const todayWeek = currentHelsinkiWeek;
@@ -22,8 +29,43 @@
   let plansReady = $state(false);
   const activePlan = $derived(plansStore.read.getActive());
   const projection = $derived(calendarProjectionStore.projection);
+  // Session-scoped and keyed by plan: survives view remounts and A -> B -> A switching.
+  // Deliberately not persisted across reloads (#93).
+  const visibility = $derived(calendarVisibilitySessionStore.forPlan(activePlan?.id));
   const display = $derived(projection ? aggregateCalendarDisplayEntries(projection.entries) : null);
-  const layout = $derived(display ? layoutCalendarWeek(display.entries, weekStart) : null);
+  const visibleEntries = $derived(display ? display.entries.filter(entry =>
+    // A room-aggregated card is one visual occurrence; hiding it hides all its members.
+    (display.membersByEntry.get(entry) ?? [entry]).some(member => calendarEntryVisible(member, visibility))) : []);
+  const layout = $derived(display ? layoutCalendarWeek(visibleEntries, weekStart) : null);
+  const unfilteredLayout = $derived(display ? layoutCalendarWeek(display.entries, weekStart) : null);
+  const weekCourses = $derived(activePlan && unfilteredLayout
+    ? calendarCoursesForWeek(activePlan.instanceIds,
+        id => courseIndexStore.read.resolveByInstanceId(id), unfilteredLayout.days)
+    : []);
+  function groupsForCourse(offeringId: string) {
+    const course = courseIndexStore.read.resolveByInstanceId(offeringId);
+    return course ? studyGroupStore.read.getCached(course.unitId, offeringId) ?? [] : [];
+  }
+  function updateVisibility(next: CalendarVisibility): void {
+    if (!activePlan) return;
+    calendarVisibilitySessionStore.setForPlan(activePlan.id, next);
+  }
+  function toggleGroup(offeringId: string, groupId: string, hidden: boolean): void {
+    updateVisibility(setCalendarGroupHidden(visibility, offeringId, groupId, hidden));
+  }
+  function hideGroup(segment: WeeklyCalendarSegment): void {
+    const { courseOfferingId, studyGroupId } = segment.entry.source;
+    toggleGroup(courseOfferingId, studyGroupId, true);
+  }
+  function toggleOccurrence(segment: WeeklyCalendarSegment, state: 'hidden' | 'visible' | null): void {
+    const members = membersForSegment(segment);
+    const keys = members.map(member => member.occurrenceKey);
+    if (keys.some(key => key === null)) return;
+    updateVisibility(setCalendarOccurrenceVisibility(visibility, keys as string[], state));
+  }
+  function hideOccurrence(segment: WeeklyCalendarSegment): void {
+    toggleOccurrence(segment, 'hidden');
+  }
   // Depends on full projection, not weekStart; navigation only reads this map.
   const colorByOffering = $derived(activePlan && projection
     ? weekAwareOfferingColorIndices(activePlan.instanceIds, projection.entries)
@@ -100,7 +142,9 @@
         Retry unavailable study-group data
       </button>
     {/if}
-    {#if layout.segments.length === 0 && emptyMessage}
+    {#if layout.segments.length === 0 && unfilteredLayout && unfilteredLayout.segments.length > 0}
+      <p role="status">All events for this week are hidden. Select a course above to restore its teaching groups or events.</p>
+    {:else if layout.segments.length === 0 && emptyMessage}
       <p role="status">{emptyMessage}</p>
     {/if}
 
@@ -108,7 +152,11 @@
       <p role="status">{unresolvedSelections} explicit teaching-group choice reference(s) could not be found in the available source data.</p>
     {/if}
     <p class="selection-explanation">Candidate and selected labels describe Sisukas planning choices, not SISU registration.</p>
-    <WeekGrid {layout} {colorByOffering} {presentationForSegment} {groupsForSegment} {membersForSegment} {selectionForSegment} />
+    <WeekGrid {layout} {colorByOffering} {presentationForSegment} {groupsForSegment} {membersForSegment} {selectionForSegment}
+      {hideGroup} {hideOccurrence} {weekCourses} {groupsForCourse} {visibility}
+      unfilteredSegments={unfilteredLayout?.segments ?? []}
+      onToggleGroup={toggleGroup} onToggleOccurrence={toggleOccurrence} />
+
   {/if}
 </section>
 
