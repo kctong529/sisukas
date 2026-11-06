@@ -23,11 +23,13 @@
     groupsForSegment?: (segment: WeeklyCalendarSegment) => readonly StudyGroup[] | null;
     membersForSegment?: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
     selectionForSegment?: (segment: WeeklyCalendarSegment) => CalendarGroupSelection;
+    hideGroup?: (segment: WeeklyCalendarSegment) => void;
+    hideOccurrence?: (segment: WeeklyCalendarSegment) => void;
   }
   let {
     layout, offeringIds, colorByOffering: assignedColors, presentationForSegment, groupsForSegment = () => null,
     membersForSegment = segment => [segment.entry],
-    selectionForSegment = () => 'candidate',
+    selectionForSegment = () => 'candidate', hideGroup = () => {}, hideOccurrence = () => {},
   }: Props = $props();
 
   // Callers supply the whole active plan so colors do not change with the week.
@@ -153,6 +155,9 @@
       {retainedGroupId}
       onAlternativePreview={id => { hoveredAlternativeId = id; }}
       onAlternativeToggle={toggleAlternative}
+      onHideGroup={() => { if (displayedSegment) { hideGroup(displayedSegment); pinnedId = null; previewId = null; } }}
+      onHideOccurrence={() => { if (displayedSegment) { hideOccurrence(displayedSegment); pinnedId = null; previewId = null; } }}
+      canHideOccurrence={displayedSegment !== null && membersForSegment(displayedSegment).every(entry => entry.occurrenceKey !== null)}
     />
   </div>
 </div>

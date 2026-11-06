@@ -471,3 +471,42 @@ describe('WeekGrid selection presentation', () => {
     expect(target.querySelectorAll('dialog [data-selection="candidate"]')).toHaveLength(4);
   });
 });
+
+describe('WeekGrid visibility actions (#92)', () => {
+  it('offers separate group and occurrence controls without changing planning state', () => {
+    const hideGroup = vi.fn();
+    const hideOccurrence = vi.fn();
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    targetElements.push(target);
+    mounted.push(mount(WeekGrid, {
+      target,
+      props: {
+        layout: layoutCalendarWeek([event('a')], '2026-11-02'),
+        hideGroup,
+        hideOccurrence,
+        presentationForSegment: () => ({
+          courseCode: 'CS-A1111', courseTitle: 'Course', groupLabel: 'Exercise H01', locationLabel: null,
+        }),
+      },
+    }));
+    flushSync();
+    target.querySelector<HTMLButtonElement>('.calendar-event')?.click();
+    flushSync();
+    const buttons = [...target.querySelectorAll<HTMLButtonElement>('.visibility-actions button')];
+    expect(buttons.map(button => button.textContent?.trim())).toEqual(['Hide teaching group', 'Hide this event']);
+    buttons[1].click();
+    flushSync();
+    expect(hideOccurrence).toHaveBeenCalledTimes(1);
+    expect(hideGroup).not.toHaveBeenCalled();
+    expect(target.textContent).toContain('Candidate');
+  });
+
+  it('does not expose an unsafe per-occurrence operation for unresolved identities', () => {
+    const target = render([event('a')]);
+    // The fixture has a stable key, so the event control is enabled.
+    target.querySelector<HTMLButtonElement>('.calendar-event')?.click();
+    flushSync();
+    expect(target.querySelector<HTMLButtonElement>('.visibility-actions button:last-child')?.disabled).toBe(false);
+  });
+});

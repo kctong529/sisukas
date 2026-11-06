@@ -16,6 +16,9 @@
     isPinned: boolean;
     selection?: CalendarGroupSelection;
     onClear: () => void;
+    onHideGroup?: () => void;
+    onHideOccurrence?: () => void;
+    canHideOccurrence?: boolean;
     members?: readonly CalendarEntry[];
     alternatives?: readonly CalendarGroupAlternative[];
     previewGroupId?: string | null;
@@ -25,6 +28,7 @@
   }
   let {
     segment, presentation, date, isPinned, selection = 'candidate', onClear, members = [],
+    onHideGroup = () => {}, onHideOccurrence = () => {}, canHideOccurrence = true,
     alternatives = [], previewGroupId = null, retainedGroupId = null,
     onAlternativePreview = () => {}, onAlternativeToggle = () => {},
   }: Props = $props();
@@ -63,6 +67,10 @@
         <p class="continuation">This occurrence continues beyond the visible day.</p>
       {/if}
       {#if !isPinned}<p class="hint">Previewing · Click the event to pin its details here.</p>{/if}
+      <div class="visibility-actions" aria-label="Calendar visibility">
+        <button type="button" onclick={onHideGroup}>Hide teaching group</button>
+        <button type="button" onclick={onHideOccurrence} disabled={!canHideOccurrence} title={canHideOccurrence ? undefined : 'This event has no unambiguous source identity'}>Hide this event</button>
+      </div>
       <CalendarGroupAlternatives
         {alternatives}
         {previewGroupId}
@@ -77,6 +85,10 @@
 </aside>
 
 <style>
+  .visibility-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
+  .visibility-actions button { border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 6px; background: var(--calendar-card, #fff); color: var(--calendar-primary, #2f7fd6); padding: 0.4rem 0.6rem; font: inherit; font-size: 0.75rem; cursor: pointer; }
+  .visibility-actions button:disabled { opacity: .55; cursor: not-allowed; }
+  .visibility-actions button:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
   .context-panel { box-sizing: border-box; min-width: 0; padding: 1rem; border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 8px; background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); }
   header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; }
   h2 { font-size: 1rem; font-weight: 600; margin: 0; }
