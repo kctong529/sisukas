@@ -287,3 +287,40 @@ describe("projectActivePlan stage 3 policies", () => {
     expect(selection.studyGroupIds).toEqual(["L01"]);
   });
 });
+
+
+describe("Slice 4 — explicit plan-choice evidence", () => {
+  const input = (selection?: StudyGroupSelection | null) => projectActivePlan({
+    plan: plan(["off-1"]),
+    getCourseForOffering: () => course("off-1"),
+    getStudyGroups: () => available([
+      group("H01", [event({ seriesId: "one" })]),
+      group("H02", [event({ seriesId: "two" })]),
+    ]),
+    getSelection: selection === undefined ? undefined : () => selection,
+  });
+
+  it("keeps unselected groups as candidates when explicit selection is absent", () => {
+    const projected = input();
+    expect(projected.selectionByOffering["off-1"]).toBe("candidate");
+    expect(projected.entries).toHaveLength(2);
+  });
+
+  it("only marks explicitly selected groups as selected", () => {
+    const projected = input({ studyGroupIds: ["H02"] });
+    expect(projected.selectionByOffering["off-1"]).toBe("selected");
+    expect(projected.entries.map(e => e.source.studyGroupId)).toEqual(["H02"]);
+  });
+
+  it("distinguishes an explicitly empty selection from an absent one", () => {
+    const projected = input({ studyGroupIds: [] });
+    expect(projected.selectionByOffering["off-1"]).toBe("explicit-empty");
+    expect(projected.entries).toEqual([]);
+  });
+
+  it("reports unknown selected groups without presenting candidates as selected", () => {
+    const projected = input({ studyGroupIds: ["unknown"] });
+    expect(projected.entries).toEqual([]);
+    expect(projected.diagnostics.map(d => d.code)).toContain("selected_study_group_missing");
+  });
+});

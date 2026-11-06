@@ -40,6 +40,24 @@ describe("calendar projection store adapter", () => {
     const frozen = Object.freeze({...plan, instanceIds: Object.freeze(["offering"])}) as unknown as Plan;
     expect(projectPlanFromSources(frozen, sources(null)).completeness.missingCourses).toBe(1);
   });
+  it("forwards explicit selection without treating blocks as selection", () => {
+    const chosen = projectPlanFromSources(plan, {
+      ...sources([{
+        groupId: "H01", name: "H01", type: "Exercise",
+        studyEvents: [{
+          id: "event", seriesId: "series",
+          start: "2026-11-02T10:00:00", end: "2026-11-02T11:00:00",
+          startIso: "2026-11-02T10:00:00+02:00", endIso: "2026-11-02T11:00:00+02:00",
+          cancelled: false, excluded: false, locationIds: [], locations: [],
+        }],
+      }]),
+      readSelection: () => ({ studyGroupIds: ["H01"] }),
+    });
+    expect(chosen.selectionByOffering.offering).toBe("selected");
+    expect(chosen.entries).toHaveLength(1);
+    expect(projectPlanFromSources(plan, sources([])).selectionByOffering.offering).toBe("candidate");
+  });
+
   it("reports unresolved offerings as missing", () => {
     const unavailable = {...sources(null), resolveCourse: () => undefined};
     expect(projectPlanFromSources(plan, unavailable).diagnostics[0].code).toBe("missing_course_offering");

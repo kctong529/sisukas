@@ -12,14 +12,20 @@
   import type { StudyGroup } from '@domain/models/StudyGroup';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import { calendarGroupAlternatives } from '@application/calendar/calendarGroupAlternatives';
+  import type { CalendarOfferingSelection } from '@domain/services/calendar/CalendarProjection';
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
     groupsForSegment?: (segment: WeeklyCalendarSegment) => readonly StudyGroup[] | null;
     membersForSegment?: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
+    selectionForSegment?: (segment: WeeklyCalendarSegment) => CalendarOfferingSelection;
   }
-  let { layout, presentationForSegment, groupsForSegment = () => null, membersForSegment = segment => [segment.entry] }: Props = $props();
+  let {
+    layout, presentationForSegment, groupsForSegment = () => null,
+    membersForSegment = segment => [segment.entry],
+    selectionForSegment = () => 'candidate',
+  }: Props = $props();
 
   const presentation = $derived(denseOverlapPresentation(layout));
   // A preview never changes the plan. A pinned event remains when hover ends.
@@ -105,6 +111,7 @@
       visibleSegments={presentation.visibleSegments}
       denseGroups={presentation.displays}
       {presentationForSegment}
+      {selectionForSegment}
       onPreview={id => { previewId = id; }}
       onPreviewEnd={id => { if (previewId === id) previewId = null; }}
       onInspect={id => { pinnedId = id; }}
@@ -119,6 +126,7 @@
       presentation={displayedSegment ? presentationForSegment(displayedSegment) : null}
       date={displayedSegment ? layout.days[displayedSegment.dayIndex] : null}
       isPinned={pinnedSegment !== null}
+      selection={displayedSegment ? selectionForSegment(displayedSegment) : 'candidate'}
       members={displayedSegment ? membersForSegment(displayedSegment) : []}
       onClear={() => { pinnedId = null; previewId = null; hoveredAlternativeId = null; retainedAlternativeId = null; }}
       {alternatives}
@@ -136,6 +144,7 @@
   {layout}
   {presentationForSegment}
   {membersForSegment}
+  {selectionForSegment}
   onClose={() => { selectedGroup = null; }}
 />
 

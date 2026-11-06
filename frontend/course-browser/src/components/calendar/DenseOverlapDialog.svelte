@@ -5,6 +5,8 @@
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import { displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
+  import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
+  import type { CalendarOfferingSelection } from '@domain/services/calendar/CalendarProjection';
 
   interface Props {
     group: DenseOverlapDisplay | null;
@@ -12,9 +14,10 @@
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
     onClose: () => void;
     membersForSegment?: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
+    selectionForSegment?: (segment: WeeklyCalendarSegment) => CalendarOfferingSelection;
   }
 
-  let { group: selectedGroup, layout, presentationForSegment, onClose, membersForSegment = segment => [segment.entry] }: Props = $props();
+  let { group: selectedGroup, layout, presentationForSegment, onClose, membersForSegment = segment => [segment.entry], selectionForSegment = () => 'candidate' }: Props = $props();
   let dialogElement: HTMLDialogElement;
 
   export function showModal(): void {
@@ -43,6 +46,7 @@
         <li>
           <strong>{info.courseCode ? `${info.courseCode} · ` : ''}{info.courseTitle}</strong>
           {#if info.groupLabel}<span>{info.groupLabel}</span>{/if}
+          <span data-selection={selectionForSegment(segment)}>{calendarSelectionLabel(selectionForSegment(segment))}</span>
           <span>{formatCalendarMinute(segment.startMinute)}–{formatCalendarMinute(segment.endMinute)}</span>
           {#if info.locationLabel}<span>{info.locationLabel}</span>{/if}
           {#if members.length > 1}

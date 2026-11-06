@@ -7,14 +7,14 @@ import { fixed } from '../../domain/services/calendar/layout/fixtures';
 
 const mounted: Array<ReturnType<typeof mount>> = [];
 const targets: HTMLElement[] = [];
-function render(start: string, end: string, options: { cancelled?: boolean; excluded?: boolean } = {}) {
+function render(start: string, end: string, options: { cancelled?: boolean; excluded?: boolean; selection?: "selected" | "candidate" } = {}) {
   const entry = fixed('a', start, end, options);
   entry.source.event.location = 'Room A';
   const segments = layoutCalendarWeek([entry], '2026-11-02').segments;
   const target = document.createElement('div');
   document.body.appendChild(target);
   targets.push(target);
-  mounted.push(mount(CalendarEvent, { target, props: { segment: segments[0], presentation: { courseCode: 'CS-E1234', courseTitle: 'Course A', groupLabel: 'Lecture L01', locationLabel: 'Room A' } } }));
+  mounted.push(mount(CalendarEvent, { target, props: { segment: segments[0], selection: options.selection, presentation: { courseCode: 'CS-E1234', courseTitle: 'Course A', groupLabel: 'Lecture L01', locationLabel: 'Room A' } } }));
   flushSync();
   return target;
 }
@@ -46,6 +46,18 @@ describe('CalendarEvent presentation', () => {
     expect(target.querySelector('[data-compact="true"]')).not.toBeNull();
     expect(target.querySelector('.event-time')).toBeNull();
     expect(target.querySelector('[aria-label]')?.getAttribute('aria-label')).toContain('10:00–10:15');
+  });
+  it('labels candidate events without suggesting a confirmed selection', () => {
+    const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00');
+    expect(target.querySelector('[data-selection="candidate"]')).not.toBeNull();
+    expect(target.textContent).toContain('Candidate · not selected in Sisukas');
+    expect(target.querySelector('.calendar-event')?.getAttribute('aria-label')).toContain('Candidate');
+  });
+  it('labels explicit Sisukas choices but does not claim SISU registration', () => {
+    const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00', { selection: 'selected' });
+    expect(target.querySelector('[data-selection="selected"]')).not.toBeNull();
+    expect(target.textContent).toContain('Selected in Sisukas');
+    expect(target.textContent).not.toContain('Registered');
   });
   it('marks cancelled events explicitly', () => {
     const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00', { cancelled: true });

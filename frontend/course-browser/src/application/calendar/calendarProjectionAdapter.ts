@@ -5,6 +5,7 @@ import {
   projectActivePlan,
   type CalendarProjectionResult,
   type StudyGroupSnapshot,
+  type StudyGroupSelection,
 } from "@domain/services/calendar/CalendarProjection";
 
 /** Store reads are injected so the adapter can be tested without Svelte state. */
@@ -13,6 +14,8 @@ export interface CalendarProjectionSources {
   readGroups(unitId: string, offeringId: string): readonly StudyGroup[] | null;
   isLoading(unitId: string, offeringId: string): boolean;
   isStale(unitId: string, offeringId: string): boolean;
+  /** Optional explicit choice; do not infer selection from LEGO blocks. */
+  readSelection?(offeringId: string): StudyGroupSelection | null;
 }
 
 export function readStudyGroupSnapshot(
@@ -38,5 +41,6 @@ export function projectPlanFromSources(
     plan,
     getCourseForOffering: (id) => sources.resolveCourse(id),
     getStudyGroups: (unitId, offeringId) => readStudyGroupSnapshot(sources, unitId, offeringId),
+    getSelection: sources.readSelection ? id => sources.readSelection!(id) : undefined,
   });
 }

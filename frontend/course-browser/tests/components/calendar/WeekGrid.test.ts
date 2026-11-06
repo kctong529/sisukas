@@ -349,3 +349,18 @@ describe('WeekGrid aggregated room details', () => {
     }
   });
 });
+
+
+describe('WeekGrid selection presentation', () => {
+  it('shows candidate states on cards, details and dense disclosures', () => {
+    const target = render([event('a'), event('b'), event('c'), event('d')]);
+    expect(target.querySelectorAll('[data-selection="candidate"].calendar-event')).toHaveLength(4);
+    target.querySelector<HTMLButtonElement>('.calendar-event')?.click();
+    flushSync();
+    expect(target.querySelector('.context-panel [data-selection="candidate"]')?.textContent)
+      .toContain('Candidate');
+    target.querySelector<HTMLButtonElement>('.cluster button')?.click();
+    flushSync();
+    expect(target.querySelectorAll('dialog [data-selection="candidate"]')).toHaveLength(4);
+  });
+});

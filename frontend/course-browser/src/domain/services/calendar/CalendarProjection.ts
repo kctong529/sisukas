@@ -50,7 +50,14 @@ export interface CalendarCompleteness {
 }
 
 /** The counts refer to distinct offering IDs, not event or study-group counts. */
+/** Evidence about Sisukas study-group choice for an offering.
+ * Candidate means no explicit choice is available, not a SISU registration status.
+ */
+export type CalendarOfferingSelection = "candidate" | "selected" | "explicit-empty";
+
 export interface CalendarProjectionResult {
+  /** Explicit selections are the only source of `selected`; keyed by offering ID. */
+  selectionByOffering: Readonly<Record<string, CalendarOfferingSelection>>;
   entries: CalendarEntry[];
   diagnostics: CalendarDiagnostic[];
   completeness: CalendarCompleteness;
@@ -104,6 +111,7 @@ export function projectActivePlan(
   input: CalendarProjectionInput,
 ): CalendarProjectionResult {
   const entries: CalendarEntry[] = [];
+  const selectionByOffering: Record<string, CalendarOfferingSelection> = {};
   const diagnostics: CalendarDiagnostic[] = [];
   const availability: StudyGroupAvailability[] = [];
   const candidates: CalendarOccurrenceCandidate[] = [];
@@ -144,6 +152,9 @@ export function projectActivePlan(
     // Null or an absent lookup means there is no explicit selection.
     const selection = input.getSelection?.(courseOfferingId) ?? null;
     const selectedIds = selection === null ? null : new Set(selection.studyGroupIds);
+    selectionByOffering[courseOfferingId] = selectedIds === null
+      ? "candidate"
+      : selectedIds.size === 0 ? "explicit-empty" : "selected";
     if (selectedIds !== null) {
       const knownIds = new Set(snapshot.groups.map(group => group.groupId));
       for (const studyGroupId of selectedIds) {
@@ -210,6 +221,7 @@ export function projectActivePlan(
   }
   entries.sort(compareCalendarEntries);
   return {
+    selectionByOffering,
     entries,
     diagnostics,
     completeness: summarizeCalendarCompleteness(availability),

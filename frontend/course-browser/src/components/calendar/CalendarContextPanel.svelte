@@ -6,12 +6,15 @@
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import CalendarGroupAlternatives from './CalendarGroupAlternatives.svelte';
   import CalendarLocationList from './CalendarLocationList.svelte';
+  import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
+  import type { CalendarOfferingSelection } from '@domain/services/calendar/CalendarProjection';
 
   interface Props {
     segment: WeeklyCalendarSegment | null;
     presentation: CalendarEventPresentation | null;
     date: string | null;
     isPinned: boolean;
+    selection?: CalendarOfferingSelection;
     onClear: () => void;
     members?: readonly CalendarEntry[];
     alternatives?: readonly CalendarGroupAlternative[];
@@ -21,7 +24,7 @@
     onAlternativeToggle?: (id: string) => void;
   }
   let {
-    segment, presentation, date, isPinned, onClear, members = [],
+    segment, presentation, date, isPinned, selection = 'candidate', onClear, members = [],
     alternatives = [], previewGroupId = null, retainedGroupId = null,
     onAlternativePreview = () => {}, onAlternativeToggle = () => {},
   }: Props = $props();
@@ -33,7 +36,7 @@
 <aside class="context-panel" aria-labelledby="calendar-context-title">
   <header>
     <h2 id="calendar-context-title">Event details</h2>
-    <button type="button" class="clear" onclick={onClear} disabled={!isPinned}>Clear selection</button>
+    <button type="button" class="clear" onclick={onClear} disabled={!isPinned}>Clear details</button>
   </header>
   {#if segment && presentation}
     <div class="event-information" aria-live="off">
@@ -46,6 +49,7 @@
         {#if presentation.locationLabel}
           <dt>Location</dt><dd>{presentation.locationLabel}</dd>
         {/if}
+        <dt>Plan choice</dt><dd data-selection={selection}>{calendarSelectionLabel(selection)}</dd>
         <dt>Status</dt>
         <dd>{segment.entry.source.event.cancelled ? 'Cancelled' : segment.entry.source.event.excluded ? 'Excluded' : 'Scheduled occurrence'}</dd>
         {#if segment.entry.source.event.notice}
@@ -58,7 +62,7 @@
       {#if segment.continuesBefore || segment.continuesAfter}
         <p class="continuation">This occurrence continues beyond the visible day.</p>
       {/if}
-      {#if !isPinned}<p class="hint">Previewing · Select the event to keep its details here.</p>{/if}
+      {#if !isPinned}<p class="hint">Previewing · Click the event to pin its details here.</p>{/if}
       <CalendarGroupAlternatives
         {alternatives}
         {previewGroupId}
@@ -68,7 +72,7 @@
       />
     </div>
   {:else}
-    <p class="empty">Hover over an event, use Tab to focus one, or select it to keep its details here.</p>
+    <p class="empty">Hover over an event, use Tab to focus one, or click it to pin its details here.</p>
   {/if}
 </aside>
 

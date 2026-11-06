@@ -2,16 +2,19 @@
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
+  import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
+  import type { CalendarOfferingSelection } from '@domain/services/calendar/CalendarProjection';
 
   interface Props {
     segment: WeeklyCalendarSegment;
     presentation: CalendarEventPresentation;
+    selection?: CalendarOfferingSelection;
     onPreview?: () => void;
     onPreviewEnd?: () => void;
     onInspect?: () => void;
   }
 
-  let { segment, presentation, onPreview, onPreviewEnd, onInspect }: Props = $props();
+  let { segment, presentation, selection = 'candidate', onPreview, onPreviewEnd, onInspect }: Props = $props();
   const cancelled = $derived(segment.entry.source.event.cancelled);
   const excluded = $derived(segment.entry.source.event.excluded);
   const location = $derived(presentation.locationLabel);
@@ -24,7 +27,7 @@
   const accessibleText = $derived([
     presentation.courseCode, presentation.courseTitle, presentation.groupLabel, range,
     cancelled ? 'Cancelled' : excluded ? 'Excluded' : null,
-    location, continuation,
+    calendarSelectionLabel(selection), location, continuation,
   ].filter(Boolean).join(', '));
 </script>
 
@@ -42,11 +45,15 @@
   title={accessibleText}
   aria-label={accessibleText}
   data-compact={compact}
+  data-selection={selection}
 >
   <span class="event-heading">
     {#if presentation.courseCode}<span class="event-code">{presentation.courseCode}</span>{/if}
     {#if presentation.groupLabel}<span class="event-group">{presentation.groupLabel}</span>{/if}
   </span>
+  {#if !compact}
+    <span class="selection-label" class:selected={selection === 'selected'}>{calendarSelectionLabel(selection)}</span>
+  {/if}
   <span class="event-title">
     {#if segment.continuesBefore}<span class="continuation" aria-hidden="true">↤ </span>{/if}
     {presentation.courseTitle}
@@ -94,6 +101,8 @@
     overflow: hidden;
     font-size: 0.9em;
   }
+  .selection-label { font-size: .72em; color: #475569; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .selection-label.selected { color: #166534; font-weight: 700; }
   .event-code { font-weight: 750; }
   .event-group { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .event-title {
@@ -125,7 +134,7 @@
   .cancelled .event-title { text-decoration: line-through; }
   /* Small lanes need a concise label, not several unreadable metadata rows. */
   @container calendar-card (max-width: 125px) {
-    .event-time, .event-location { display: none; }
+    .event-time, .event-location, .selection-label { display: none; }
     .event-heading { display: block; }
     .event-group { display: none; }
   }
