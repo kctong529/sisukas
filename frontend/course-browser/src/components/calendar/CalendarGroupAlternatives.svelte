@@ -9,12 +9,13 @@
     onTogglePreview: (id: string) => void;
   }
   let { alternatives, previewGroupId, retainedGroupId, onPreview, onTogglePreview }: Props = $props();
+  const instructionId = $props.id();
 </script>
 
 {#if alternatives.length > 0}
   <section class="alternatives" aria-labelledby="calendar-alternatives-title">
     <h4 id="calendar-alternatives-title">Alternative teaching groups</h4>
-    <p class="explanation">Same offering and teaching type. Preview only — not a study-plan selection or SISU registration.</p>
+    <p id={instructionId} class="explanation">Same offering and teaching type. Preview only — not a study-plan selection or SISU registration. Focus to highlight temporarily; activate to keep the highlight.</p>
     <ul>
       {#each alternatives as alternative (alternative.groupId)}
         <li>
@@ -22,6 +23,7 @@
             type="button"
             class:previewed={previewGroupId === alternative.groupId}
             aria-pressed={retainedGroupId === alternative.groupId}
+            aria-describedby={instructionId}
             onpointerenter={() => onPreview(alternative.groupId)}
             onpointerleave={() => onPreview(null)}
             onfocus={() => onPreview(alternative.groupId)}

@@ -15,6 +15,7 @@
   }
 
   let { segment, presentation, selection = 'candidate', onPreview, onPreviewEnd, onInspect }: Props = $props();
+  const instructionId = $props.id();
   const cancelled = $derived(segment.entry.source.event.cancelled);
   const excluded = $derived(segment.entry.source.event.excluded);
   const location = $derived(presentation.locationLabel);
@@ -44,9 +45,13 @@
   class:excluded
   title={accessibleText}
   aria-label={accessibleText}
+  aria-describedby={instructionId}
   data-compact={compact}
   data-selection={selection}
 >
+  <span id={instructionId} class="sr-only">
+    Focus to preview event details; activate to pin details in the panel. This does not select a teaching group.
+  </span>
   <span class="event-heading">
     {#if presentation.courseCode}<span class="event-code">{presentation.courseCode}</span>{/if}
     {#if presentation.groupLabel}<span class="event-group">{presentation.groupLabel}</span>{/if}
@@ -71,6 +76,7 @@
 </button>
 
 <style>
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
   .calendar-event {
     box-sizing: border-box;
     appearance: none;

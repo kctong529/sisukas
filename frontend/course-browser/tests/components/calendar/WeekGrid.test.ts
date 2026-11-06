@@ -295,6 +295,90 @@ describe('WeekGrid alternative study-group previews', () => {
 });
 
 
+describe('WeekGrid accessibility integration', () => {
+
+  it('exposes keyboard instructions without implying a study-group selection', () => {
+    const target = render([event('a')]);
+    const card = target.querySelector<HTMLButtonElement>('.calendar-event')!;
+    const descriptionId = card.getAttribute('aria-describedby');
+    expect(descriptionId).toBeTruthy();
+    const instructions = document.getElementById(descriptionId!);
+    expect(instructions?.textContent).toContain('activate to pin details');
+    expect(instructions?.textContent).toContain('does not select a teaching group');
+    expect(card.getAttribute('aria-label')).toContain('Candidate');
+    expect(target.querySelectorAll('.day-column[role="group"]')).toHaveLength(7);
+  });
+
+  it('restores focus to the busy-period trigger when the dialog closes', () => {
+    const target = render([event('a'), event('b'), event('c'), event('d')]);
+    const trigger = target.querySelector<HTMLButtonElement>('.cluster button')!;
+    trigger.focus();
+    trigger.click();
+    flushSync();
+    const dialog = target.querySelector<HTMLDialogElement>('dialog')!;
+    expect(dialog.open).toBe(true);
+
+    // Simulate the native close event (Escape or the Close form button).
+    dialog.removeAttribute('open');
+    dialog.dispatchEvent(new Event('close'));
+    flushSync();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('closes on backdrop clicks but not clicks inside dialog content', () => {
+    const target = render([event('a'), event('b'), event('c'), event('d')]);
+    const trigger = target.querySelector<HTMLButtonElement>('.cluster button')!;
+    trigger.focus();
+    trigger.click();
+    flushSync();
+    const dialog = target.querySelector<HTMLDialogElement>('dialog')!;
+    Object.defineProperty(dialog, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ left: 100, right: 400, top: 100, bottom: 400 }),
+    });
+    // jsdom lacks native close(); simulate closing and dispatching close.
+    const close = vi.fn(() => {
+      dialog.removeAttribute('open');
+      dialog.dispatchEvent(new Event('close'));
+    });
+    Object.defineProperty(dialog, 'close', { configurable: true, value: close });
+
+    dialog.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 200, clientY: 200 }));
+    expect(close).not.toHaveBeenCalled();
+    dialog.querySelector('header')!.dispatchEvent(new MouseEvent('pointerdown', {
+      bubbles: true, clientX: 50, clientY: 50,
+    }));
+    expect(close).not.toHaveBeenCalled();
+
+    dialog.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 50 }));
+    expect(close).toHaveBeenCalledOnce();
+    flushSync();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('uses keyboard focus to preview alternatives without selecting them', () => {
+    const groups: StudyGroup[] = [
+      { groupId: 'Group a', name: 'H01', type: 'Exercise', studyEvents: [] },
+      { groupId: 'Group b', name: 'H02', type: 'Exercise', studyEvents: [] },
+    ];
+    const target = render([event('a', 10, 11), event('b', 12, 13)], groups);
+    target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
+    flushSync();
+    const alternative = target.querySelector<HTMLButtonElement>('.alternatives button')!;
+    alternative.focus();
+    flushSync();
+    expect(target.querySelectorAll('.alternative-highlight')).toHaveLength(1);
+    expect(alternative.getAttribute('aria-pressed')).toBe('false');
+    const descriptionId = alternative.getAttribute('aria-describedby');
+    expect(descriptionId).toBeTruthy();
+    const instructions = document.getElementById(descriptionId!);
+    expect(instructions?.textContent).toContain('not a study-plan selection or SISU registration');
+    alternative.blur();
+    flushSync();
+    expect(target.querySelectorAll('.alternative-highlight')).toHaveLength(0);
+  });
+});
+
 describe('WeekGrid aggregated room details', () => {
   it('shows one calendar card with all room assignments in the context panel', () => {
     const entries = ['U157', 'Y122', 'Y202a'].map((room, index) => {

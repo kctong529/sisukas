@@ -63,11 +63,22 @@
   }
   let selectedGroup = $state<DenseOverlapDisplay | null>(null);
   let detailsDialog: DenseOverlapDialog;
+  let overlapTrigger: HTMLButtonElement | null = null;
   let workspaceElement: HTMLDivElement;
 
   function openGroup(group: DenseOverlapDisplay): void {
+    // Remember the invoking control so focus returns after the native dialog closes.
+    overlapTrigger = document.activeElement instanceof HTMLButtonElement
+      ? document.activeElement : null;
     selectedGroup = group;
     detailsDialog.showModal();
+  }
+
+  function closeGroup(): void {
+    selectedGroup = null;
+    // The trigger may have disappeared after a projection or week change.
+    if (overlapTrigger?.isConnected) overlapTrigger.focus();
+    overlapTrigger = null;
   }
 
   function handleCalendarKeydown(event: KeyboardEvent): void {
@@ -145,7 +156,7 @@
   {presentationForSegment}
   {membersForSegment}
   {selectionForSegment}
-  onClose={() => { selectedGroup = null; }}
+  onClose={closeGroup}
 />
 
 <style>

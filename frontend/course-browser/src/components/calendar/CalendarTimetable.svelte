@@ -87,7 +87,7 @@
     </div>
 
     {#each layout.days as date, dayIndex (date)}
-      <div class="day-column" aria-label={date}>
+      <div class="day-column" role="group" aria-label={date}>
         {#each segmentsByDay[dayIndex] as segment (segment.id)}
           <div
             class="event"

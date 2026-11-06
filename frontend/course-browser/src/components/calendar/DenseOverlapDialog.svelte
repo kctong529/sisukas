@@ -27,9 +27,19 @@
   export function isOpen(): boolean {
     return dialogElement?.open ?? false;
   }
+
+  function handleBackdropPointerDown(event: PointerEvent): void {
+    // A click on the backdrop targets the <dialog> itself. Clicks inside
+    // its visible rectangle must not close it (including dialog padding).
+    if (event.target !== dialogElement) return;
+    const bounds = dialogElement.getBoundingClientRect();
+    const outside = event.clientX < bounds.left || event.clientX > bounds.right
+      || event.clientY < bounds.top || event.clientY > bounds.bottom;
+    if (outside) dialogElement.close();
+  }
 </script>
 
-<dialog bind:this={dialogElement} onclose={onClose} aria-label="Overlapping calendar events" class="event-details">
+<dialog bind:this={dialogElement} onclose={onClose} onpointerdown={handleBackdropPointerDown} aria-label="Overlapping calendar events" class="event-details">
   {#if selectedGroup}
     <header>
       <div>
@@ -61,7 +71,7 @@
 </dialog>
 
 <style>
-  .event-details { border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px; max-width: min(560px, calc(100vw - 32px)); width: 100%; max-height: min(75vh, 650px); color: #0f172a; background: #fff; box-shadow: 0 16px 42px #0f172a40; }
+  .event-details { border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px; max-width: min(560px, calc(100vw - 32px)); width: 100%; max-height: min(75vh, 650px); overflow-y: auto; color: #0f172a; background: #fff; box-shadow: 0 16px 42px #0f172a40; }
   .event-details::backdrop { background: #0f172a80; }
   .event-details header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
   .event-details h2 { font-size: 1.1rem; margin: 0 0 4px; }
