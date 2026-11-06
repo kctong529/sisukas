@@ -81,6 +81,7 @@ jobs:
           VITE_DEBUG_PLAN_STORE: ${{ inputs.debug }}
           VITE_DEBUG_BLOCK_STORE: ${{ inputs.debug }}
           VITE_DEBUG_PERIOD_TIMELINE_STORE: ${{ inputs.debug }}
+          VITE_DEBUG_CALENDAR_PROJECTION_STORE: ${{ inputs.debug }}
         run: |
           npm run build
           echo "result=success" >> $GITHUB_OUTPUT

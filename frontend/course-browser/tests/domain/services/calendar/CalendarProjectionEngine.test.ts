@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { projectActivePlan, type StudyGroupSnapshot, type StudyGroupSelection } from
+import { projectActivePlan, selectExclusiveGroupOfType, type StudyGroupSnapshot, type StudyGroupSelection } from
   "@domain/services/calendar/CalendarProjection";
 import type { Plan } from "@domain/models/Plan";
 import type { Course } from "@domain/models/Course";
@@ -49,7 +49,7 @@ describe("projectActivePlan stage 2", () => {
     expect(result.entries).toHaveLength(1);
     expect(result.entries[0]).toMatchObject({
       kind: "fixed", occurrenceKey: expect.any(String),
-      source: { courseOfferingId: "off-1", studyGroupId: "L01", seriesId: "series-1", event: source },
+      source: { courseOfferingId: "off-1", studyGroupId: "L01", studyGroupName: "L01", studyGroupType: "Lecture", seriesId: "series-1", event: source },
     });
     expect(result.entries[0].interval).toEqual({
       startMs: Date.parse("2026-11-02T08:00:00Z"),
@@ -148,30 +148,52 @@ describe("projectActivePlan stage 3 policies", () => {
   it("restricts projection to explicitly selected groups", () => {
     const result = withSelection([
       group("L01", [event()]), group("L02", [event()]),
-    ], { studyGroupIds: ["L02"] });
+    ], { choices: { L01: "excluded", L02: "selected" } });
     expect(result.entries.map(e => e.source.studyGroupId)).toEqual(["L02"]);
     expect(result.completeness.status).toBe("complete");
   });
 
-  it("treats explicit empty selection differently from absent selection", () => {
-    const result = withSelection([group("L01", [event()])], { studyGroupIds: [] });
-    expect(result.entries).toEqual([]);
-    expect(result.completeness.availableCourses).toBe(1);
-    expect(result.diagnostics).toEqual([]);
-  });
-
-  it("reports unknown selected groups without falling back", () => {
-    const result = withSelection([group("L01", [event()])], { studyGroupIds: ["L99"] });
-    expect(result.entries).toEqual([]);
-    expect(result.diagnostics).toContainEqual(expect.objectContaining({
-      code: "selected_study_group_missing",
-      source: { courseOfferingId: "off-1", studyGroupId: "L99" },
-    }));
-  });
-
-  it("does not duplicate repeated selected IDs", () => {
-    const result = withSelection([group("L01", [event()])], { studyGroupIds: ["L01", "L01"] });
+  it("keeps groups as candidates with an empty choice map", () => {
+    const result = withSelection([group("L01", [event()])], { choices: {} });
     expect(result.entries).toHaveLength(1);
+    expect(result.selectionByGroup["off-1"].L01).toBe("candidate");
+  });
+
+  it("reports unknown selected groups while retaining candidates", () => {
+    const result = withSelection(
+      [group("L01", [event()])],
+      { choices: { L99: "selected" } },
+    );
+
+    expect(result.entries.map(e => e.source.studyGroupId))
+      .toEqual(["L01"]);
+
+    expect(result.selectionByGroup["off-1"].L01)
+      .toBe("candidate");
+
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({
+        code: "selected_study_group_missing",
+        source: {
+          courseOfferingId: "off-1",
+          studyGroupId: "L99",
+        },
+      }),
+    );
+  });
+
+  it("selecting one exercise leaves lectures and examinations visible", () => {
+    const groups = [
+      { ...group("E01", [event({ seriesId: "e1" })]), type: "Exercise" },
+      { ...group("E02", [event({ seriesId: "e2" })]), type: "Exercise" },
+      { ...group("L01", [event({ seriesId: "l1" })]), type: "Lecture" },
+      { ...group("KT", [event({ seriesId: "kt" })]), type: "Exam" },
+    ];
+    const result = withSelection(groups, { choices: { E01: "selected", E02: "excluded" } });
+    expect(result.entries.map(e => e.source.studyGroupId).sort()).toEqual(["E01", "KT", "L01"]);
+    expect(result.selectionByGroup["off-1"]).toEqual({
+      E01: "selected", E02: "excluded", L01: "candidate", KT: "candidate",
+    });
   });
 
   it("retains cancelled occurrences, which cannot occupy conflict time", () => {
@@ -273,7 +295,7 @@ describe("projectActivePlan stage 3 policies", () => {
   it("does not emit duplicate-group warnings for unselected groups", () => {
     const result = withSelection([
       group("L01", [event()]), group("L01", [event()]), group("L02", [event()]),
-    ], { studyGroupIds: ["L02"] });
+    ], { choices: { L01: "excluded", L02: "selected" } });
     expect(result.entries).toHaveLength(1);
     expect(result.entries[0].source.studyGroupId).toBe("L02");
     expect(result.diagnostics.filter(d => d.code === "duplicate_study_group_id")).toHaveLength(0);
@@ -281,9 +303,65 @@ describe("projectActivePlan stage 3 policies", () => {
 
   it("does not mutate frozen selections or events", () => {
     const source = Object.freeze(event());
-    const selection = Object.freeze({ studyGroupIds: Object.freeze(["L01"]) });
+    const selection = Object.freeze({ choices: Object.freeze({ L01: "selected" as const }) });
     const result = withSelection([group("L01", [source])], selection);
     expect(result.entries).toHaveLength(1);
-    expect(selection.studyGroupIds).toEqual(["L01"]);
+    expect(selection.choices.L01).toBe("selected");
+  });
+});
+
+
+describe("Slice 4 — explicit plan-choice evidence", () => {
+  const input = (selection?: StudyGroupSelection | null) => projectActivePlan({
+    plan: plan(["off-1"]),
+    getCourseForOffering: () => course("off-1"),
+    getStudyGroups: () => available([
+      group("H01", [event({ seriesId: "one" })]),
+      group("H02", [event({ seriesId: "two" })]),
+    ]),
+    getSelection: selection === undefined ? undefined : () => selection,
+  });
+
+  it("keeps unselected groups as candidates when explicit selection is absent", () => {
+    const projected = input();
+    expect(projected.selectionByGroup["off-1"]).toEqual({ H01: "candidate", H02: "candidate" });
+    expect(projected.entries).toHaveLength(2);
+  });
+
+  it("only marks explicitly selected groups as selected", () => {
+    const projected = input({ choices: { H02: "selected" } });
+    expect(projected.selectionByGroup["off-1"]).toEqual({ H01: "candidate", H02: "selected" });
+    expect(projected.entries.map(e => e.source.studyGroupId).sort()).toEqual(["H01", "H02"]);
+  });
+
+  it("excludes only explicitly excluded groups", () => {
+    const projected = input({ choices: { H01: "excluded" } });
+    expect(projected.selectionByGroup["off-1"]).toEqual({ H01: "excluded", H02: "candidate" });
+    expect(projected.entries.map(e => e.source.studyGroupId)).toEqual(["H02"]);
+  });
+
+  it("reports unknown selected groups without presenting candidates as selected", () => {
+    const projected = input({ choices: { unknown: "selected" } });
+    expect(projected.entries).toHaveLength(2);
+    expect(projected.diagnostics.map(d => d.code)).toContain("selected_study_group_missing");
+  });
+});
+
+describe("same-type exclusive-selection shortcut", () => {
+  it("excludes only sibling exercise groups and preserves other choices", () => {
+    const groups = [
+      { ...group("E01", []), type: "Exercise" },
+      { ...group("E02", []), type: "Exercise" },
+      { ...group("L01", []), type: "Lecture" },
+      { ...group("KT", []), type: "Exam" },
+    ];
+    const original = { choices: { L01: "selected" as const, E02: "selected" as const } };
+    const next = selectExclusiveGroupOfType(original, groups, "E01");
+    expect(next.choices).toEqual({ L01: "selected", E01: "selected", E02: "excluded" });
+    expect(original.choices).toEqual({ L01: "selected", E02: "selected" });
+  });
+  it("does not invent a selection for an unknown group ID", () => {
+    const source = { choices: { E01: "selected" as const } };
+    expect(selectExclusiveGroupOfType(source, [group("E01", [])], "unknown")).toBe(source);
   });
 });

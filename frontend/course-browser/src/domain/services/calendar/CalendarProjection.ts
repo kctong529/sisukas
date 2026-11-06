@@ -24,9 +24,28 @@ export interface StudyGroupSnapshot {
   groups: readonly StudyGroup[] | null;
 }
 
-/** Only explicit selection qualifies as selected; LEGO blocks are not selections. */
+/** Per-group planning decisions. Unmentioned groups remain candidates.
+ * These choices are scoped to the offering; they are not SISU registration data.
+ */
+export type ExplicitStudyGroupChoice = "selected" | "excluded";
+export type CalendarGroupSelection = ExplicitStudyGroupChoice | "candidate";
 export interface StudyGroupSelection {
-  studyGroupIds: readonly string[];
+  choices: Readonly<Record<string, ExplicitStudyGroupChoice>>;
+}
+
+/** Convenience operation: preserve other teaching types. Not a persistence mode. */
+export function selectExclusiveGroupOfType(
+  selection: StudyGroupSelection,
+  groups: readonly StudyGroup[],
+  selectedId: string,
+): StudyGroupSelection {
+  const target = groups.find(group => group.groupId === selectedId);
+  if (!target) return selection;
+  const choices = { ...selection.choices };
+  for (const group of groups) {
+    if (group.type === target.type) choices[group.groupId] = group.groupId === selectedId ? "selected" : "excluded";
+  }
+  return { choices };
 }
 
 /** Pure synchronous lookups. The projector neither fetches nor mutates data. */
@@ -34,7 +53,7 @@ export interface CalendarProjectionInput {
   plan: Plan;
   getCourseForOffering(courseOfferingId: string): Course | undefined;
   getStudyGroups(courseUnitId: string, courseOfferingId: string): StudyGroupSnapshot;
-  /** Optional explicit selection. Absence means all groups are candidates. */
+  /** Optional group-level choices. Absence means all groups are candidates. */
   getSelection?(courseOfferingId: string): StudyGroupSelection | null;
 }
 
@@ -51,6 +70,8 @@ export interface CalendarCompleteness {
 
 /** The counts refer to distinct offering IDs, not event or study-group counts. */
 export interface CalendarProjectionResult {
+  /** Resolved choice for each available group, scoped by offering and group ID. */
+  selectionByGroup: Readonly<Record<string, Readonly<Record<string, CalendarGroupSelection>>>>;
   entries: CalendarEntry[];
   diagnostics: CalendarDiagnostic[];
   completeness: CalendarCompleteness;
@@ -93,7 +114,7 @@ export function summarizeCalendarCompleteness(
 /**
  * Projects the current plan into fixed calendar occurrences using cached data.
  *
- * Explicit selections restrict groups; absent selections retain all candidates.
+ * Group-level exclusions suppress only those groups; candidates remain visible.
  * Excluded events and repeated object references within an association are omitted.
  * Distinct source records are preserved even when their identities collide.
  * Flexible classification is deliberately deferred pending verified evidence.
@@ -104,6 +125,7 @@ export function projectActivePlan(
   input: CalendarProjectionInput,
 ): CalendarProjectionResult {
   const entries: CalendarEntry[] = [];
+  const selectionByGroup: Record<string, Record<string, CalendarGroupSelection>> = {};
   const diagnostics: CalendarDiagnostic[] = [];
   const availability: StudyGroupAvailability[] = [];
   const candidates: CalendarOccurrenceCandidate[] = [];
@@ -140,21 +162,21 @@ export function projectActivePlan(
         message: "Using stale study-group data",
       });
     }
-    // Explicitly empty selections are meaningful: they select no groups.
-    // Null or an absent lookup means there is no explicit selection.
-    const selection = input.getSelection?.(courseOfferingId) ?? null;
-    const selectedIds = selection === null ? null : new Set(selection.studyGroupIds);
-    if (selectedIds !== null) {
-      const knownIds = new Set(snapshot.groups.map(group => group.groupId));
-      for (const studyGroupId of selectedIds) {
-        if (!knownIds.has(studyGroupId)) {
-          diagnostics.push({
-            severity: "warning", code: "selected_study_group_missing",
-            source: { courseOfferingId, studyGroupId },
-            message: "Explicitly selected study group is not in the available snapshot",
-          });
-        }
+    const choices = input.getSelection?.(courseOfferingId)?.choices ?? {};
+    const groupStates: Record<string, CalendarGroupSelection> = {};
+    selectionByGroup[courseOfferingId] = groupStates;
+    const knownIds = new Set(snapshot.groups.map(group => group.groupId));
+    for (const [studyGroupId, choice] of Object.entries(choices)) {
+      if (!knownIds.has(studyGroupId)) {
+        diagnostics.push({
+          severity: "warning", code: "selected_study_group_missing",
+          source: { courseOfferingId, studyGroupId },
+          message: `Explicit ${choice} study group is not in the available snapshot`,
+        });
       }
+    }
+    for (const group of snapshot.groups) {
+      groupStates[group.groupId] = choices[group.groupId] ?? "candidate";
     }
 
     // A duplicate group ID is inconsistent source data, not a reason to drop
@@ -162,7 +184,7 @@ export function projectActivePlan(
     // the same offering/group association.
     const seenByGroup = new Map<string, Set<StudyGroup["studyEvents"][number]>>();
     for (const group of snapshot.groups) {
-      if (selectedIds !== null && !selectedIds.has(group.groupId)) continue;
+      if (groupStates[group.groupId] === "excluded") continue;
 
       const groupSource = { courseOfferingId, studyGroupId: group.groupId };
       let seenReferences = seenByGroup.get(group.groupId);
@@ -194,6 +216,8 @@ export function projectActivePlan(
         candidates.push({
           courseOfferingId,
           studyGroupId: group.groupId,
+          studyGroupName: group.name,
+          studyGroupType: group.type,
           event,
           interval: result.interval,
         });
@@ -208,6 +232,7 @@ export function projectActivePlan(
   }
   entries.sort(compareCalendarEntries);
   return {
+    selectionByGroup,
     entries,
     diagnostics,
     completeness: summarizeCalendarCompleteness(availability),

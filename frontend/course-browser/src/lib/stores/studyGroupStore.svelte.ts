@@ -31,6 +31,8 @@ export interface StudyGroupStoreState {
 
   loadingKeys: string[];
   error: string | null;
+  /** Per-request failures. Global error is retained for legacy consumers. */
+  failedKeys: Record<string, string>;
 
   // Keys with cached data but stale (background refresh active)
   staleKeys: Set<string>;
@@ -135,6 +137,7 @@ export const studyGroupStore = (() => {
     fallbackSummaries: {},
     loadingKeys: [],
     error: null,
+    failedKeys: {},
     staleKeys: new Set(),
   });
 
@@ -205,9 +208,13 @@ export const studyGroupStore = (() => {
     if (toSend.length === 0) return;
 
     markLoading(loadingKeys);
+    // A retry must not keep reporting the previous failure while in flight.
+    const nextFailures = { ...state.failedKeys };
+    for (const key of loadingKeys) delete nextFailures[key];
+    state.failedKeys = nextFailures;
 
     try {
-      await service.fetchStudyGroupsBatch(toSend, {
+      const received = await service.fetchStudyGroupsBatch(toSend, {
         chunkSize: 20,
         concurrency: 4,
         onChunk: (partial) => {
@@ -225,16 +232,32 @@ export const studyGroupStore = (() => {
           }
 
           state.error = null;
+          const failures = { ...state.failedKeys };
+          for (const key of keys) delete failures[key];
+          state.failedKeys = failures;
 
           // Clear markers as chunks arrive
           clearLoading(keys);
           clearStale(keys);
         },
       });
-    } catch (e) {
-      state.error = e instanceof Error ? e.message : "Batch fetch failed";
+      // The service can return a partial or empty map on HTTP/network errors.
+      // Do not interpret an absent key as a successfully empty group list.
+      const failures = { ...state.failedKeys };
+      for (const key of loadingKeys) {
+        if (!received.has(key)) failures[key] = "No full study-group response was received";
+      }
+      state.failedKeys = failures;
       clearLoading(loadingKeys);
-      clearStale(loadingKeys);
+      // Keep stale full data (and its stale indicator) on failed refresh.
+      clearStale(loadingKeys.filter(key => received.has(key)));
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Batch fetch failed";
+      state.error = message;
+      state.failedKeys = { ...state.failedKeys,
+        ...Object.fromEntries(loadingKeys.map(key => [key, message])),
+      };
+      clearLoading(loadingKeys);
     }
 
     if (hiQueue.size > 0 || loQueue.size > 0) scheduleFlush();
@@ -275,6 +298,10 @@ export const studyGroupStore = (() => {
 
     isStale(courseUnitId: string, courseOfferingId: string): boolean {
       return isStaleKey(keyOf(courseUnitId, courseOfferingId));
+    },
+
+    hasFailed(courseUnitId: string, courseOfferingId: string): boolean {
+      return Boolean(state.failedKeys[keyOf(courseUnitId, courseOfferingId)]);
     },
 
     hasFull(courseUnitId: string, courseOfferingId: string): boolean {
@@ -473,7 +500,7 @@ export const studyGroupStore = (() => {
     ensureFetched(courseUnitId: string, courseOfferingId: string): void {
       const k = keyOf(courseUnitId, courseOfferingId);
       if (state.cache[k] !== undefined) return;
-      if (state.loadingKeys.includes(k)) return;
+      if (state.loadingKeys.includes(k) || state.failedKeys[k]) return;
 
       enqueueLow(courseUnitId, courseOfferingId);
     },
@@ -487,6 +514,7 @@ export const studyGroupStore = (() => {
       state.fallbackSummaries = {};
       state.loadingKeys = [];
       state.error = null;
+      state.failedKeys = {};
       state.staleKeys = new Set();
     },
   };

@@ -7,6 +7,9 @@ import type { CalendarInterval } from "../services/calendar/CalendarTime";
 export interface CalendarEntrySource {
   courseOfferingId: string;
   studyGroupId: string;
+  /** Human-readable source group name/type, independent of internal identity. */
+  studyGroupName?: string;
+  studyGroupType?: string;
   /** Source-series identity; not a unique expanded-occurrence identifier. */
   seriesId: string | null;
   /** The original normalized source event, retained for traceability. */
