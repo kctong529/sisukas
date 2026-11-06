@@ -13,6 +13,7 @@
     layout: WeeklyCalendarLayoutResult;
     colorByOffering: Readonly<Record<string, number>>;
     visibleSegments: WeeklyCalendarSegment[];
+    previewOnlySegments?: readonly WeeklyCalendarSegment[];
     denseGroups: DenseOverlapDisplay[];
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
     selectionForSegment: (segment: WeeklyCalendarSegment) => CalendarGroupSelection;
@@ -27,7 +28,7 @@
   }
 
   let {
-    layout, colorByOffering, visibleSegments, denseGroups, presentationForSegment, selectionForSegment,
+    layout, colorByOffering, visibleSegments, previewOnlySegments = [], denseGroups, presentationForSegment, selectionForSegment,
     onPreview, onPreviewEnd, onInspect, onOpenGroup,
     previewGroupId = null, previewOfferingId = null, previewCourseId = null, previewOccurrenceId = null,
   }: Props = $props();
@@ -46,6 +47,8 @@
     visibleSegments.filter(segment => segment.dayIndex === dayIndex)));
   const denseByDay = $derived(layout.days.map((_, dayIndex) =>
     denseGroups.filter(display => display.group.dayIndex === dayIndex)));
+  const previewOnlyByDay = $derived(layout.days.map((_, dayIndex) =>
+    previewOnlySegments.filter(segment => segment.dayIndex === dayIndex)));
 
   /** Geometry comes from the domain layout; this component only renders it. */
   function segmentStyle(segment: WeeklyCalendarSegment): string {
@@ -91,6 +94,13 @@
 
     {#each layout.days as date, dayIndex (date)}
       <div class="day-column" role="group" aria-label={date}>
+        {#each previewOnlyByDay[dayIndex] as segment (segment.id)}
+          <!-- Ephemeral placement guide only: no click, conflict, or planning semantics. -->
+          <div class="hidden-preview" style={segmentStyle(segment)}
+            data-preview-segment-id={segment.id} aria-hidden="true">
+            <span>{segment.entry.source.studyGroupName || segment.entry.source.studyGroupId}</span>
+          </div>
+        {/each}
         {#each segmentsByDay[dayIndex] as segment (segment.id)}
           <div
             class="event"
@@ -200,7 +210,22 @@
       margin: 0 0 0.4rem;
     }
   }
-  .event, .cluster { position: absolute; box-sizing: border-box; overflow: hidden; border-radius: 4px; }
+  .event, .cluster, .hidden-preview { position: absolute; box-sizing: border-box; overflow: hidden; border-radius: 4px; }
+  /* A visibility-hidden event is shown only as a noninteractive location guide.
+     It is deliberately distinct from a normal scheduled event. */
+  .hidden-preview {
+    z-index: 2;
+    pointer-events: none;
+    border: 2px dashed #0f766e;
+    background: repeating-linear-gradient(135deg, #ccfbf1b0 0 5px, #f0fdfaab 5px 10px);
+    color: #115e59;
+    font-size: .67rem;
+    line-height: 1.25;
+    padding: .25rem;
+    min-width: 0;
+  }
+  .hidden-preview span { font-weight: 600; overflow-wrap: anywhere; }
+
   /* Preserve contrasting event states and dense-lane readability. */
   /* First six hues are LEGO's block colors; the remaining six extend the palette. */
   .event[data-offering-color="0"] { --event-rgb: 234, 88, 12; }

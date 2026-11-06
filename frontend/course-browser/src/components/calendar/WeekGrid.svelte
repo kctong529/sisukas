@@ -5,6 +5,7 @@
   } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import { denseOverlapPresentation } from '@application/calendar/denseOverlapPresentation';
+  import { calendarPreviewLayout } from '@application/calendar/calendarPreviewLayout';
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
   import CalendarContextPanel from './CalendarContextPanel.svelte';
   import CalendarCourseContext from './CalendarCourseContext.svelte';
@@ -89,6 +90,25 @@
   const previewGroupId = $derived(alternatives.some(group => group.groupId === requestedAlternativeId)
     ? requestedAlternativeId : null);
   const previewOfferingId = $derived(previewGroupId ? displayedSegment?.entry.source.courseOfferingId ?? null : null);
+  // Visibility-filtered entries have no rendered calendar card. During an explicit
+  // group/occurrence inspection, render their positions as read-only outlines.
+  // Planning exclusions (and source exclusions) are not visibility preferences.
+  const hiddenPreviewSegments = $derived.by(() => {
+    const groupId = courseOccurrencePreviewId === null ? courseGroupPreviewId ?? previewGroupId : null;
+    const offeringId = courseGroupPreviewId !== null
+      ? displayedCourse?.offeringId ?? null : previewOfferingId;
+    const visibleEntries = new Set(layout.segments.map(segment => segment.entry));
+    return unfilteredSegments.filter(segment => {
+      if (visibleEntries.has(segment.entry)) return false;
+      if (segment.entry.source.event.excluded || selectionForSegment(segment) === 'excluded') return false;
+      if (courseOccurrencePreviewId !== null) return segment.id === courseOccurrencePreviewId;
+      return groupId !== null && offeringId !== null &&
+        segment.entry.source.studyGroupId === groupId &&
+        segment.entry.source.courseOfferingId === offeringId;
+    });
+  });
+  // Reflow both the ghost and its visible neighbors together before rendering.
+  const previewGeometry = $derived(calendarPreviewLayout(layout, hiddenPreviewSegments));
   function toggleAlternative(id: string): void {
     if (retainedAlternativeContext === alternativeContext && retainedAlternativeId === id) {
       retainedAlternativeId = null;
@@ -168,10 +188,11 @@
     <CalendarTimetable
       {layout}
       {colorByOffering}
-      visibleSegments={presentation.visibleSegments}
+      visibleSegments={previewGeometry.visibleSegments}
       denseGroups={presentation.displays}
       {presentationForSegment}
       {selectionForSegment}
+      previewOnlySegments={previewGeometry.previewOnlySegments}
       onPreview={id => { previewId = id; }}
       onPreviewEnd={id => { if (previewId === id) previewId = null; }}
       onInspect={id => { selectedOfferingId = null; previewCourseId = null; pinnedId = id; }}
@@ -188,7 +209,7 @@
         segments={courseSegments} {visibility} {membersForSegment}
         {onToggleGroup} {onToggleOccurrence}
         onGroupPreview={id => { courseGroupPreviewId = id; courseOccurrencePreviewId = null; }}
-        onOccurrencePreview={id => { courseOccurrencePreviewId = id; courseGroupPreviewId = null; }}
+        onOccurrencePreview={id => { courseOccurrencePreviewId = id; }}
         onClear={() => { selectedOfferingId = null; previewCourseId = null; }} />
     {:else}
     <CalendarContextPanel
