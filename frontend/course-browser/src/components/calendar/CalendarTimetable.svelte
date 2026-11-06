@@ -23,12 +23,13 @@
     previewGroupId?: string | null;
     previewOfferingId?: string | null;
     previewCourseId?: string | null;
+    previewOccurrenceId?: string | null;
   }
 
   let {
     layout, colorByOffering, visibleSegments, denseGroups, presentationForSegment, selectionForSegment,
     onPreview, onPreviewEnd, onInspect, onOpenGroup,
-    previewGroupId = null, previewOfferingId = null, previewCourseId = null,
+    previewGroupId = null, previewOfferingId = null, previewCourseId = null, previewOccurrenceId = null,
   }: Props = $props();
 
   const hours = Array.from({ length: 25 }, (_, i) => i);
@@ -93,14 +94,16 @@
         {#each segmentsByDay[dayIndex] as segment (segment.id)}
           <div
             class="event"
-            class:course-highlight={previewCourseId !== null && segment.entry.source.courseOfferingId === previewCourseId}
-            class:course-dim={previewCourseId !== null && segment.entry.source.courseOfferingId !== previewCourseId}
+            class:occurrence-highlight={previewOccurrenceId !== null && segment.id === previewOccurrenceId}
+            class:occurrence-dim={previewOccurrenceId !== null && segment.id !== previewOccurrenceId}
+            class:course-highlight={previewOccurrenceId === null && previewGroupId === null && previewCourseId !== null && segment.entry.source.courseOfferingId === previewCourseId}
+            class:course-dim={previewOccurrenceId === null && previewGroupId === null && previewCourseId !== null && segment.entry.source.courseOfferingId !== previewCourseId}
             class:inactive={!segment.conflictEligible}
             class:cancelled={segment.entry.source.event.cancelled}
-            class:alternative-highlight={previewGroupId !== null &&
+            class:alternative-highlight={previewOccurrenceId === null && previewGroupId !== null &&
               segment.entry.source.courseOfferingId === previewOfferingId &&
               segment.entry.source.studyGroupId === previewGroupId}
-            class:alternative-dim={previewGroupId !== null &&
+            class:alternative-dim={previewOccurrenceId === null && previewGroupId !== null &&
               segment.entry.source.courseOfferingId === previewOfferingId &&
               segment.entry.source.studyGroupId !== previewGroupId}
             style={segmentStyle(segment)}
@@ -213,6 +216,8 @@
   .event[data-offering-color="10"] { --event-rgb: 180, 83, 9; }
   .event[data-offering-color="11"] { --event-rgb: 8, 145, 178; }
   .event { container: calendar-card / inline-size; border: 1px solid rgb(var(--event-rgb, 47, 127, 214)); background: color-mix(in srgb, rgb(var(--event-rgb, 47, 127, 214)) 14%, white); color: #0f172a; font-size: 0.68rem; line-height: 1.25; }
+  .event.occurrence-highlight { outline: 3px solid #0f766e; outline-offset: -2px; z-index: 2; }
+  .event.occurrence-dim { opacity: .35; }
   .event.course-highlight { outline: 3px solid var(--calendar-primary, #2f7fd6); outline-offset: -2px; z-index: 2; }
   .event.course-dim { opacity: .28; }
   .event.alternative-highlight { outline: 3px solid #0f766e; outline-offset: -2px; z-index: 2; }

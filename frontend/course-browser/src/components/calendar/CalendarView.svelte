@@ -57,14 +57,14 @@
     const { courseOfferingId, studyGroupId } = segment.entry.source;
     toggleGroup(courseOfferingId, studyGroupId, true);
   }
-  function toggleOccurrence(segment: WeeklyCalendarSegment, hidden: boolean): void {
+  function toggleOccurrence(segment: WeeklyCalendarSegment, state: 'hidden' | 'visible' | null): void {
     const members = membersForSegment(segment);
     const keys = members.map(member => member.occurrenceKey);
     if (keys.some(key => key === null)) return;
-    updateVisibility(setCalendarOccurrenceVisibility(visibility, keys as string[], hidden ? 'hidden' : 'visible'));
+    updateVisibility(setCalendarOccurrenceVisibility(visibility, keys as string[], state));
   }
   function hideOccurrence(segment: WeeklyCalendarSegment): void {
-    toggleOccurrence(segment, true);
+    toggleOccurrence(segment, 'hidden');
   }
   // Depends on full projection, not weekStart; navigation only reads this map.
   const colorByOffering = $derived(activePlan && projection

@@ -34,7 +34,7 @@
     unfilteredSegments?: readonly WeeklyCalendarSegment[];
     visibility?: CalendarVisibility;
     onToggleGroup?: (offeringId: string, groupId: string, hidden: boolean) => void;
-    onToggleOccurrence?: (segment: WeeklyCalendarSegment, hidden: boolean) => void;
+    onToggleOccurrence?: (segment: WeeklyCalendarSegment, state: 'hidden' | 'visible' | null) => void;
   }
   let {
     layout, offeringIds, colorByOffering: assignedColors, presentationForSegment, groupsForSegment = () => null,
@@ -56,16 +56,23 @@
   let pinnedId = $state<string | null>(null);
   let selectedOfferingId = $state<string | null>(null);
   let previewCourseId = $state<string | null>(null);
+  // Preview overrides the pinned course context, but leaving restores the pin.
   const selectedCourse = $derived(weekCourses.find(course => course.offeringId === selectedOfferingId) ?? null);
-  // A course context wins over incidental event hover. Event clicks switch back.
-  const showCourse = $derived(selectedCourse !== null);
-  const courseSegments = $derived(selectedCourse ? [...new Map(unfilteredSegments
-    .filter(segment => segment.entry.source.courseOfferingId === selectedCourse.offeringId)
+  const previewedCourse = $derived(weekCourses.find(course => course.offeringId === previewCourseId) ?? null);
+  const displayedCourse = $derived(previewedCourse ?? selectedCourse);
+  const coursePinned = $derived(selectedCourse !== null && (previewedCourse === null || previewedCourse.offeringId === selectedCourse.offeringId));
+  // Ephemeral event inspection wins, without clearing a pinned course.
+  const courseSegments = $derived(displayedCourse ? [...new Map(unfilteredSegments
+    .filter(segment => segment.entry.source.courseOfferingId === displayedCourse.offeringId)
     .map(segment => [segment.entry, segment] as const)).values()] : []);
   let panelSide = $state<'left' | 'right'>('left');
   const previewSegment = $derived(layout.segments.find(segment => segment.id === previewId) ?? null);
   const pinnedSegment = $derived(layout.segments.find(segment => segment.id === pinnedId) ?? null);
   const displayedSegment = $derived(previewSegment ?? pinnedSegment);
+  const showCourse = $derived(previewSegment === null && displayedCourse !== null);
+  // Course-group and occurrence hover is highlighting only, never a visibility edit.
+  let courseGroupPreviewId = $state<string | null>(null);
+  let courseOccurrencePreviewId = $state<string | null>(null);
   const alternatives = $derived(displayedSegment
     ? calendarGroupAlternatives(groupsForSegment(displayedSegment), displayedSegment.entry.source.studyGroupId)
     : []);
@@ -95,6 +102,7 @@
   let detailsDialog: DenseOverlapDialog;
   let overlapTrigger: HTMLButtonElement | null = null;
   let workspaceElement: HTMLDivElement;
+  let courseBarElement: HTMLDivElement;
 
   function openGroup(group: DenseOverlapDisplay): void {
     // Remember the invoking control so focus returns after the native dialog closes.
@@ -121,12 +129,15 @@
     const target = event.target;
     if (!(target instanceof Node)) return;
 
-    if (!workspaceElement?.contains(target)) return;
+    if (!workspaceElement?.contains(target) && !courseBarElement?.contains(target)) return;
 
-    if (pinnedId !== null || previewId !== null || selectedOfferingId !== null) {
+    if (pinnedId !== null || previewId !== null || selectedOfferingId !== null || previewCourseId !== null || courseGroupPreviewId !== null || courseOccurrencePreviewId !== null) {
       pinnedId = null;
       previewId = null;
       selectedOfferingId = null;
+      previewCourseId = null;
+      courseGroupPreviewId = null;
+      courseOccurrencePreviewId = null;
       hoveredAlternativeId = null;
       retainedAlternativeId = null;
       event.preventDefault();
@@ -136,10 +147,12 @@
 
 <svelte:window onkeydown={handleCalendarKeydown} />
 
+<div bind:this={courseBarElement}>
 <CalendarCourseBar courses={weekCourses} {colorByOffering}
   {selectedOfferingId}
-  onSelect={id => { selectedOfferingId = id; pinnedId = null; previewId = null; }}
-  onPreview={id => { previewCourseId = id; }} />
+  onSelect={id => { selectedOfferingId = id; pinnedId = null; previewId = null; courseGroupPreviewId = null; courseOccurrencePreviewId = null; }}
+  onPreview={id => { previewCourseId = id; courseGroupPreviewId = null; courseOccurrencePreviewId = null; }} />
+</div>
 <div class="calendar-panel-controls">
   <button
     type="button"
@@ -159,20 +172,23 @@
       denseGroups={presentation.displays}
       {presentationForSegment}
       {selectionForSegment}
-      onPreview={id => { if (!showCourse) previewId = id; }}
+      onPreview={id => { previewId = id; }}
       onPreviewEnd={id => { if (previewId === id) previewId = null; }}
-      onInspect={id => { selectedOfferingId = null; pinnedId = id; }}
+      onInspect={id => { selectedOfferingId = null; previewCourseId = null; pinnedId = id; }}
       onOpenGroup={openGroup}
-      {previewGroupId}
-      {previewOfferingId}
+      previewGroupId={courseGroupPreviewId ?? previewGroupId}
+      previewOfferingId={courseGroupPreviewId !== null ? displayedCourse?.offeringId ?? null : previewOfferingId}
       {previewCourseId}
+      previewOccurrenceId={courseOccurrencePreviewId}
     />
   </div>
   <div class="calendar-panel-pane">
-    {#if selectedCourse}
-      <CalendarCourseContext course={selectedCourse} groups={groupsForCourse(selectedCourse.offeringId)}
+    {#if showCourse && displayedCourse}
+      <CalendarCourseContext course={displayedCourse} isPinned={coursePinned} groups={groupsForCourse(displayedCourse.offeringId)}
         segments={courseSegments} {visibility} {membersForSegment}
         {onToggleGroup} {onToggleOccurrence}
+        onGroupPreview={id => { courseGroupPreviewId = id; courseOccurrencePreviewId = null; }}
+        onOccurrencePreview={id => { courseOccurrencePreviewId = id; courseGroupPreviewId = null; }}
         onClear={() => { selectedOfferingId = null; previewCourseId = null; }} />
     {:else}
     <CalendarContextPanel
