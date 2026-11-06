@@ -116,7 +116,15 @@
   }
 </script>
 
-<section class="calendar-view" aria-labelledby="calendar-title">
+<section class="calendar-view" aria-labelledby="calendar-title"
+  data-benchmark-plan={loadError ? 'error' : !plansReady ? 'loading' : activePlan ? 'active' : 'none'}
+  data-benchmark-status={projection?.completeness.status ?? 'pending'}
+  data-benchmark-total={projection?.completeness.totalCourses ?? -1}
+  data-benchmark-available={projection?.completeness.availableCourses ?? -1}
+  data-benchmark-stale={projection?.completeness.staleCourses ?? -1}
+  data-benchmark-missing={projection?.completeness.missingCourses ?? -1}
+  data-benchmark-loading={projection?.completeness.loadingCourses ?? -1}
+  data-benchmark-failed={projection?.completeness.failedCourses ?? -1}>
   <h1 id="calendar-title">Weekly calendar</h1>
   <WeekNavigation
     {weekStart}
