@@ -30,7 +30,12 @@ export interface CalendarAvailabilityPreview {
   state: "stale" | "missing" | "loading" | "failed";
 }
 let availabilityPreview = $state<CalendarAvailabilityPreview | null>(null);
-const previewAllowed = import.meta.env.DEV;
+const previewAllowed =
+  import.meta.env.DEV ||
+  (
+    import.meta.env.VITE_DEBUG_PANELS === "true" &&
+    import.meta.env.VITE_DEBUG_CALENDAR_PROJECTION_STORE === "true"
+  );
 
 const projection = $derived.by((): CalendarProjectionResult | null => {
   const plan = plansStore.read.getActive();
