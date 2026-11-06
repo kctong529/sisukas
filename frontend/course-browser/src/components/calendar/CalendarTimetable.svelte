@@ -6,7 +6,7 @@
   import type { WeeklyCalendarLayoutResult, WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
   import CalendarEvent from './CalendarEvent.svelte';
-  import type { CalendarOfferingSelection } from '@domain/services/calendar/CalendarProjection';
+  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
   import DenseOverlapCard from './DenseOverlapCard.svelte';
 
   interface Props {
@@ -14,7 +14,7 @@
     visibleSegments: WeeklyCalendarSegment[];
     denseGroups: DenseOverlapDisplay[];
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
-    selectionForSegment: (segment: WeeklyCalendarSegment) => CalendarOfferingSelection;
+    selectionForSegment: (segment: WeeklyCalendarSegment) => CalendarGroupSelection;
     onPreview: (id: string) => void;
     onPreviewEnd: (id: string) => void;
     onInspect: (id: string) => void;

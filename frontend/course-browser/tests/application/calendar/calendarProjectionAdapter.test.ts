@@ -51,11 +51,11 @@ describe("calendar projection store adapter", () => {
           cancelled: false, excluded: false, locationIds: [], locations: [],
         }],
       }]),
-      readSelection: () => ({ studyGroupIds: ["H01"] }),
+      readSelection: () => ({ choices: { H01: "selected" } }),
     });
-    expect(chosen.selectionByOffering.offering).toBe("selected");
+    expect(chosen.selectionByGroup.offering.H01).toBe("selected");
     expect(chosen.entries).toHaveLength(1);
-    expect(projectPlanFromSources(plan, sources([])).selectionByOffering.offering).toBe("candidate");
+    expect(projectPlanFromSources(plan, sources([])).selectionByGroup.offering).toEqual({});
   });
 
   it("reports unresolved offerings as missing", () => {

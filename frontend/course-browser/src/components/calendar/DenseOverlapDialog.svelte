@@ -6,7 +6,7 @@
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import { displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
-  import type { CalendarOfferingSelection } from '@domain/services/calendar/CalendarProjection';
+  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
 
   interface Props {
     group: DenseOverlapDisplay | null;
@@ -14,7 +14,7 @@
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
     onClose: () => void;
     membersForSegment?: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
-    selectionForSegment?: (segment: WeeklyCalendarSegment) => CalendarOfferingSelection;
+    selectionForSegment?: (segment: WeeklyCalendarSegment) => CalendarGroupSelection;
   }
 
   let { group: selectedGroup, layout, presentationForSegment, onClose, membersForSegment = segment => [segment.entry], selectionForSegment = () => 'candidate' }: Props = $props();

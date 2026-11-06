@@ -11,7 +11,7 @@
   import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
   import WeekNavigation from './WeekNavigation.svelte';
   import WeekGrid from './WeekGrid.svelte';
-  import type { CalendarOfferingSelection } from '@domain/services/calendar/CalendarProjection';
+  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
   import { studyGroupStore } from '@lib/stores/studyGroupStore.svelte';
 
   let weekStart = $state(currentHelsinkiWeek());
@@ -22,13 +22,12 @@
   const projection = $derived(calendarProjectionStore.projection);
   const display = $derived(projection ? aggregateCalendarDisplayEntries(projection.entries) : null);
   const layout = $derived(display ? layoutCalendarWeek(display.entries, weekStart) : null);
-  const explicitlyEmptyOfferings = $derived(projection
-    ? Object.values(projection.selectionByOffering).filter(mode => mode === 'explicit-empty').length : 0);
   const unresolvedSelections = $derived(projection
     ? projection.diagnostics.filter(item => item.code === 'selected_study_group_missing').length : 0);
 
-  function selectionForSegment(segment: WeeklyCalendarSegment): CalendarOfferingSelection {
-    return projection?.selectionByOffering[segment.entry.source.courseOfferingId] ?? 'candidate';
+  function selectionForSegment(segment: WeeklyCalendarSegment): CalendarGroupSelection {
+    const { courseOfferingId, studyGroupId } = segment.entry.source;
+    return projection?.selectionByGroup[courseOfferingId]?.[studyGroupId] ?? 'candidate';
   }
 
   function membersForSegment(segment: WeeklyCalendarSegment) {
@@ -99,11 +98,8 @@
       <p>No fixed events in this week for the active plan.</p>
     {/if}
 
-    {#if explicitlyEmptyOfferings > 0}
-      <p role="status">{explicitlyEmptyOfferings} course offering(s) have an explicit empty teaching-group selection in Sisukas.</p>
-    {/if}
     {#if unresolvedSelections > 0}
-      <p role="status">{unresolvedSelections} selected teaching-group reference(s) could not be found in the available source data.</p>
+      <p role="status">{unresolvedSelections} explicit teaching-group choice reference(s) could not be found in the available source data.</p>
     {/if}
     <p class="selection-explanation">Candidate and selected labels describe Sisukas planning choices, not SISU registration.</p>
     <WeekGrid {layout} {presentationForSegment} {groupsForSegment} {membersForSegment} {selectionForSegment} />

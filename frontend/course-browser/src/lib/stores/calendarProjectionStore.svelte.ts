@@ -15,13 +15,10 @@ const sources: CalendarProjectionSources = {
   isStale: (unitId, offeringId) => studyGroupStore.read.isStale(unitId, offeringId),
 };
 
-/** In-memory debug override. Never persisted or enabled in production builds. */
-export type CalendarSelectionPreviewMode = "selected" | "explicit-empty" | "unresolved";
+/** Development-only choices scoped by plan and offering. No persisted plan is modified. */
 export interface CalendarSelectionPreview {
   planId: string;
-  offeringId: string;
-  mode: CalendarSelectionPreviewMode;
-  groupId?: string;
+  choicesByOffering: Readonly<Record<string, Readonly<Record<string, "selected" | "excluded">>>>;
 }
 
 let selectionPreview = $state<CalendarSelectionPreview | null>(null);
@@ -31,15 +28,13 @@ const projection = $derived.by((): CalendarProjectionResult | null => {
   const plan = plansStore.read.getActive();
   if (!plan) return null;
   const preview = previewAllowed && selectionPreview?.planId === plan.id
-    && plan.instanceIds.includes(selectionPreview.offeringId)
     ? selectionPreview : null;
   return projectPlanFromSources(plan, preview ? {
     ...sources,
     readSelection: (offeringId) => {
-      if (offeringId !== preview.offeringId) return null;
-      if (preview.mode === "explicit-empty") return { studyGroupIds: [] };
-      if (preview.mode === "unresolved") return { studyGroupIds: ["__sisukas_preview_unresolved_group__"] };
-      return preview.groupId ? { studyGroupIds: [preview.groupId] } : null;
+      if (!plan.instanceIds.includes(offeringId)) return null;
+      const choices = preview.choicesByOffering[offeringId];
+      return choices ? { choices } : null;
     },
   } : sources);
 });
@@ -48,7 +43,7 @@ export const calendarProjectionStore = {
   get selectionPreview() {
     if (!previewAllowed) return null;
     const plan = plansStore.read.getActive();
-    return plan && selectionPreview?.planId === plan.id && plan.instanceIds.includes(selectionPreview.offeringId)
+    return plan && selectionPreview?.planId === plan.id
       ? selectionPreview : null;
   },
   /** Developer-only, local and reversible; never modifies a plan or network cache. */

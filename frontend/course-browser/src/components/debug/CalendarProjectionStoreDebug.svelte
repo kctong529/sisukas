@@ -2,13 +2,13 @@
   import { calendarProjectionStore } from "../../lib/stores/calendarProjectionStore.svelte";
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
-  import type { CalendarSelectionPreviewMode } from "../../lib/stores/calendarProjectionStore.svelte";
+  import { selectExclusiveGroupOfType, type ExplicitStudyGroupChoice } from "../../domain/services/calendar/CalendarProjection";
   import { plansStore } from "../../lib/stores/plansStore.svelte";
 
   let isOpen = $state(false);
   let showEntries = $state(false);
   let previewOffering = $state("");
-  let previewMode = $state<"candidate" | CalendarSelectionPreviewMode>("candidate");
+  let previewMode = $state<"candidate" | ExplicitStudyGroupChoice>("candidate");
   let previewGroupId = $state("");
   let showDiagnostics = $state(true);
 
@@ -22,18 +22,33 @@
   const currentOffering = $derived(eligibleOfferings.find(item => item.id === previewOffering) ?? eligibleOfferings[0]);
   const availableGroups = $derived(currentOffering?.groups ?? []);
   const preview = $derived(calendarProjectionStore.selectionPreview);
+  const offeringChoices = $derived(preview?.choicesByOffering[currentOffering?.id ?? ""] ?? {});
+  const selectedGroupId = $derived(
+    availableGroups.some(group => group.groupId === previewGroupId)
+      ? previewGroupId : availableGroups[0]?.groupId ?? "",
+  );
+  const previewOfferingCount = $derived(Object.keys(preview?.choicesByOffering ?? {}).length);
 
-  function applyPreview() {
-    if (!plan || !currentOffering) return;
-    const groupId = availableGroups.some(group => group.groupId === previewGroupId)
-      ? previewGroupId : availableGroups[0]?.groupId;
-    if (previewMode === "selected" && !groupId) return;
-    calendarProjectionStore.setSelectionPreview(previewMode === "candidate" ? null : {
-      planId: plan.id,
-      offeringId: currentOffering.id,
-      mode: previewMode,
-      ...(previewMode === "selected" ? { groupId } : {}),
-    });
+  // Restore the saved choice for the selected group when browsing offerings.
+  $effect(() => {
+    const choice = offeringChoices[selectedGroupId];
+    previewMode = choice ?? "candidate";
+  });
+
+  function applyPreview(exclusive = false) {
+    if (!plan || !currentOffering || !selectedGroupId) return;
+    const choices = { ...offeringChoices };
+    if (previewMode === "candidate") delete choices[selectedGroupId];
+    else choices[selectedGroupId] = previewMode;
+    const nextChoices = exclusive && previewMode === "selected"
+      ? selectExclusiveGroupOfType({ choices }, availableGroups, selectedGroupId).choices
+      : choices;
+    const choicesByOffering = { ...(preview?.choicesByOffering ?? {}) };
+    if (Object.keys(nextChoices).length > 0) choicesByOffering[currentOffering.id] = nextChoices;
+    else delete choicesByOffering[currentOffering.id];
+    calendarProjectionStore.setSelectionPreview(
+      Object.keys(choicesByOffering).length > 0 ? { planId: plan.id, choicesByOffering } : null,
+    );
   }
   function clearPreview() {
     calendarProjectionStore.setSelectionPreview(null);
@@ -59,7 +74,7 @@
     <div class="debug-content">
       <div class="section selection-preview">
         <h4>Selection-state preview (development only)</h4>
-        <p class="preview-note">Injects a temporary choice into the real projection for one offering. No saved plan, registration or cache is modified. Other offerings remain candidates.</p>
+        <p class="preview-note">Temporarily applies independent choices across offerings in the active plan. Unspecified groups remain candidates; other teaching types are unaffected. No saved plan, registration or cache is modified.</p>
         {#if eligibleOfferings.length === 0}
           <p class="empty">Load an active plan with at least one offering with full study-group data to preview selection states.</p>
         {:else}
@@ -69,29 +84,35 @@
               <option value={offering.id}>{offering.label}</option>
             {/each}
           </select>
-          <label for="preview-mode">Scenario</label>
-          <select id="preview-mode" bind:value={previewMode}>
-            <option value="candidate">Candidate (no explicit choice)</option>
-            <option value="selected">Explicitly selected group</option>
-            <option value="explicit-empty">Explicitly empty choice</option>
-            <option value="unresolved">Unknown selected group ID</option>
+          <label for="preview-group">Study group</label>
+          <select id="preview-group" value={selectedGroupId} onchange={event => previewGroupId = event.currentTarget.value}>
+            {#each availableGroups as group (group.groupId)}
+              <option value={group.groupId}>{group.name} ({group.type}) — {group.groupId}</option>
+            {/each}
           </select>
-          {#if previewMode === 'selected'}
-            <label for="preview-group">Group</label>
-            <select id="preview-group" value={previewGroupId || availableGroups[0]?.groupId || ''} onchange={event => previewGroupId = event.currentTarget.value}>
-              {#each availableGroups as group (group.groupId)}
-                <option value={group.groupId}>{group.name} ({group.type}) — {group.groupId}</option>
-              {/each}
-            </select>
-          {/if}
+          <label for="preview-mode">Choice</label>
+          <select id="preview-mode" bind:value={previewMode}>
+            <option value="candidate">Candidate (clear explicit choice)</option>
+            <option value="selected">Selected</option>
+            <option value="excluded">Excluded</option>
+          </select>
           <div class="preview-actions">
-            <button onclick={applyPreview}>Apply preview</button>
-            <button onclick={clearPreview} disabled={!preview}>Reset</button>
+            <button onclick={() => applyPreview()}>Apply group choice</button>
+            <button onclick={() => applyPreview(true)} disabled={previewMode !== 'selected'}>Select exclusively within type</button>
+            <button onclick={clearPreview} disabled={!preview}>Reset all</button>
           </div>
           {#if preview}
-            <p role="status" class="preview-note">Active: {preview.mode} for {preview.offeringId}{preview.groupId ? ` / ${preview.groupId}` : ''}. Change weeks or inspect the calendar to verify it.</p>
+            <p role="status" class="preview-note">Active choices across {previewOfferingCount} {previewOfferingCount === 1 ? 'offering' : 'offerings'}.</p>
+            <p class="preview-note">Choices for {currentOffering.id}:</p>
+            <ul class="details">
+              {#each Object.entries(offeringChoices) as [groupId, choice] (groupId)}
+                <li class="mono">{groupId}: {choice}</li>
+              {:else}
+                <li>No explicit choices for this offering.</li>
+              {/each}
+            </ul>
           {:else}
-            <p class="preview-note">No preview active; the calendar uses its normal projection.</p>
+            <p class="preview-note">No preview active; all groups are candidates.</p>
           {/if}
         {/if}
       </div>

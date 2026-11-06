@@ -3,12 +3,12 @@
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
-  import type { CalendarOfferingSelection } from '@domain/services/calendar/CalendarProjection';
+  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
 
   interface Props {
     segment: WeeklyCalendarSegment;
     presentation: CalendarEventPresentation;
-    selection?: CalendarOfferingSelection;
+    selection?: CalendarGroupSelection;
     onPreview?: () => void;
     onPreviewEnd?: () => void;
     onInspect?: () => void;

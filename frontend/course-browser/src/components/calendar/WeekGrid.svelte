@@ -12,14 +12,14 @@
   import type { StudyGroup } from '@domain/models/StudyGroup';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import { calendarGroupAlternatives } from '@application/calendar/calendarGroupAlternatives';
-  import type { CalendarOfferingSelection } from '@domain/services/calendar/CalendarProjection';
+  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
     groupsForSegment?: (segment: WeeklyCalendarSegment) => readonly StudyGroup[] | null;
     membersForSegment?: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
-    selectionForSegment?: (segment: WeeklyCalendarSegment) => CalendarOfferingSelection;
+    selectionForSegment?: (segment: WeeklyCalendarSegment) => CalendarGroupSelection;
   }
   let {
     layout, presentationForSegment, groupsForSegment = () => null,

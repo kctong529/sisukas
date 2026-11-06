@@ -7,14 +7,14 @@
   import CalendarGroupAlternatives from './CalendarGroupAlternatives.svelte';
   import CalendarLocationList from './CalendarLocationList.svelte';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
-  import type { CalendarOfferingSelection } from '@domain/services/calendar/CalendarProjection';
+  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
 
   interface Props {
     segment: WeeklyCalendarSegment | null;
     presentation: CalendarEventPresentation | null;
     date: string | null;
     isPinned: boolean;
-    selection?: CalendarOfferingSelection;
+    selection?: CalendarGroupSelection;
     onClear: () => void;
     members?: readonly CalendarEntry[];
     alternatives?: readonly CalendarGroupAlternative[];

@@ -1,10 +1,10 @@
-import type { CalendarOfferingSelection } from "@domain/services/calendar/CalendarProjection";
+import type { CalendarGroupSelection } from "@domain/services/calendar/CalendarProjection";
 
-/** Only an explicit saved Sisukas choice may be labelled selected. */
-export function calendarSelectionLabel(state: CalendarOfferingSelection): string {
+/** A Sisukas planning choice is not a confirmed SISU registration. */
+export function calendarSelectionLabel(state: CalendarGroupSelection): string {
   switch (state) {
     case "selected": return "Selected in Sisukas";
     case "candidate": return "Candidate · not selected in Sisukas";
-    case "explicit-empty": return "No teaching groups selected in Sisukas";
+    case "excluded": return "Excluded from Sisukas calendar";
   }
 }
