@@ -7,6 +7,10 @@
   import { denseOverlapPresentation } from '@application/calendar/denseOverlapPresentation';
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
   import CalendarContextPanel from './CalendarContextPanel.svelte';
+  import CalendarCourseContext from './CalendarCourseContext.svelte';
+  import CalendarCourseBar from './CalendarCourseBar.svelte';
+  import type { CalendarWeekCourse } from '@application/calendar/calendarCoursesForWeek';
+  import type { CalendarVisibility } from '@application/calendar/calendarVisibility';
   import CalendarTimetable from './CalendarTimetable.svelte';
   import DenseOverlapDialog from './DenseOverlapDialog.svelte';
   import type { StudyGroup } from '@domain/models/StudyGroup';
@@ -25,11 +29,20 @@
     selectionForSegment?: (segment: WeeklyCalendarSegment) => CalendarGroupSelection;
     hideGroup?: (segment: WeeklyCalendarSegment) => void;
     hideOccurrence?: (segment: WeeklyCalendarSegment) => void;
+    weekCourses?: readonly CalendarWeekCourse[];
+    groupsForCourse?: (offeringId: string) => readonly StudyGroup[];
+    unfilteredSegments?: readonly WeeklyCalendarSegment[];
+    visibility?: CalendarVisibility;
+    onToggleGroup?: (offeringId: string, groupId: string, hidden: boolean) => void;
+    onToggleOccurrence?: (segment: WeeklyCalendarSegment, hidden: boolean) => void;
   }
   let {
     layout, offeringIds, colorByOffering: assignedColors, presentationForSegment, groupsForSegment = () => null,
     membersForSegment = segment => [segment.entry],
     selectionForSegment = () => 'candidate', hideGroup = () => {}, hideOccurrence = () => {},
+    weekCourses = [], groupsForCourse = () => [], unfilteredSegments = [],
+    visibility = { hiddenGroups: [], occurrenceOverrides: {} },
+    onToggleGroup = () => {}, onToggleOccurrence = () => {},
   }: Props = $props();
 
   // Callers supply the whole active plan so colors do not change with the week.
@@ -41,6 +54,14 @@
   // Resolve stored IDs against the current layout so week changes cannot show stale data.
   let previewId = $state<string | null>(null);
   let pinnedId = $state<string | null>(null);
+  let selectedOfferingId = $state<string | null>(null);
+  let previewCourseId = $state<string | null>(null);
+  const selectedCourse = $derived(weekCourses.find(course => course.offeringId === selectedOfferingId) ?? null);
+  // A course context wins over incidental event hover. Event clicks switch back.
+  const showCourse = $derived(selectedCourse !== null);
+  const courseSegments = $derived(selectedCourse ? [...new Map(unfilteredSegments
+    .filter(segment => segment.entry.source.courseOfferingId === selectedCourse.offeringId)
+    .map(segment => [segment.entry, segment] as const)).values()] : []);
   let panelSide = $state<'left' | 'right'>('left');
   const previewSegment = $derived(layout.segments.find(segment => segment.id === previewId) ?? null);
   const pinnedSegment = $derived(layout.segments.find(segment => segment.id === pinnedId) ?? null);
@@ -102,9 +123,10 @@
 
     if (!workspaceElement?.contains(target)) return;
 
-    if (pinnedId !== null || previewId !== null) {
+    if (pinnedId !== null || previewId !== null || selectedOfferingId !== null) {
       pinnedId = null;
       previewId = null;
+      selectedOfferingId = null;
       hoveredAlternativeId = null;
       retainedAlternativeId = null;
       event.preventDefault();
@@ -114,6 +136,10 @@
 
 <svelte:window onkeydown={handleCalendarKeydown} />
 
+<CalendarCourseBar courses={weekCourses} {colorByOffering}
+  {selectedOfferingId}
+  onSelect={id => { selectedOfferingId = id; pinnedId = null; previewId = null; }}
+  onPreview={id => { previewCourseId = id; }} />
 <div class="calendar-panel-controls">
   <button
     type="button"
@@ -133,15 +159,22 @@
       denseGroups={presentation.displays}
       {presentationForSegment}
       {selectionForSegment}
-      onPreview={id => { previewId = id; }}
+      onPreview={id => { if (!showCourse) previewId = id; }}
       onPreviewEnd={id => { if (previewId === id) previewId = null; }}
-      onInspect={id => { pinnedId = id; }}
+      onInspect={id => { selectedOfferingId = null; pinnedId = id; }}
       onOpenGroup={openGroup}
       {previewGroupId}
       {previewOfferingId}
+      {previewCourseId}
     />
   </div>
   <div class="calendar-panel-pane">
+    {#if selectedCourse}
+      <CalendarCourseContext course={selectedCourse} groups={groupsForCourse(selectedCourse.offeringId)}
+        segments={courseSegments} {visibility} {membersForSegment}
+        {onToggleGroup} {onToggleOccurrence}
+        onClear={() => { selectedOfferingId = null; previewCourseId = null; }} />
+    {:else}
     <CalendarContextPanel
       segment={displayedSegment}
       presentation={displayedSegment ? presentationForSegment(displayedSegment) : null}
@@ -158,7 +191,11 @@
       onHideGroup={() => { if (displayedSegment) { hideGroup(displayedSegment); pinnedId = null; previewId = null; } }}
       onHideOccurrence={() => { if (displayedSegment) { hideOccurrence(displayedSegment); pinnedId = null; previewId = null; } }}
       canHideOccurrence={displayedSegment !== null && membersForSegment(displayedSegment).every(entry => entry.occurrenceKey !== null)}
+      onShowCourse={() => {
+        if (displayedSegment) { selectedOfferingId = displayedSegment.entry.source.courseOfferingId; pinnedId = null; previewId = null; }
+      }}
     />
+    {/if}
   </div>
 </div>
 

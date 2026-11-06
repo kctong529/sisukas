@@ -16,6 +16,7 @@
     isPinned: boolean;
     selection?: CalendarGroupSelection;
     onClear: () => void;
+    onShowCourse?: () => void;
     onHideGroup?: () => void;
     onHideOccurrence?: () => void;
     canHideOccurrence?: boolean;
@@ -27,7 +28,7 @@
     onAlternativeToggle?: (id: string) => void;
   }
   let {
-    segment, presentation, date, isPinned, selection = 'candidate', onClear, members = [],
+    segment, presentation, date, isPinned, selection = 'candidate', onClear, onShowCourse = () => {}, members = [],
     onHideGroup = () => {}, onHideOccurrence = () => {}, canHideOccurrence = true,
     alternatives = [], previewGroupId = null, retainedGroupId = null,
     onAlternativePreview = () => {}, onAlternativeToggle = () => {},
@@ -68,6 +69,7 @@
       {/if}
       {#if !isPinned}<p class="hint">Previewing · Click the event to pin its details here.</p>{/if}
       <div class="visibility-actions" aria-label="Calendar visibility">
+        <button type="button" onclick={onShowCourse}>Course overview and visibility</button>
         <button type="button" onclick={onHideGroup}>Hide teaching group</button>
         <button type="button" onclick={onHideOccurrence} disabled={!canHideOccurrence} title={canHideOccurrence ? undefined : 'This event has no unambiguous source identity'}>Hide this event</button>
       </div>

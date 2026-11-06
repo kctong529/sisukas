@@ -22,12 +22,13 @@
     onOpenGroup: (group: DenseOverlapDisplay) => void;
     previewGroupId?: string | null;
     previewOfferingId?: string | null;
+    previewCourseId?: string | null;
   }
 
   let {
     layout, colorByOffering, visibleSegments, denseGroups, presentationForSegment, selectionForSegment,
     onPreview, onPreviewEnd, onInspect, onOpenGroup,
-    previewGroupId = null, previewOfferingId = null,
+    previewGroupId = null, previewOfferingId = null, previewCourseId = null,
   }: Props = $props();
 
   const hours = Array.from({ length: 25 }, (_, i) => i);
@@ -92,6 +93,8 @@
         {#each segmentsByDay[dayIndex] as segment (segment.id)}
           <div
             class="event"
+            class:course-highlight={previewCourseId !== null && segment.entry.source.courseOfferingId === previewCourseId}
+            class:course-dim={previewCourseId !== null && segment.entry.source.courseOfferingId !== previewCourseId}
             class:inactive={!segment.conflictEligible}
             class:cancelled={segment.entry.source.event.cancelled}
             class:alternative-highlight={previewGroupId !== null &&
@@ -210,6 +213,8 @@
   .event[data-offering-color="10"] { --event-rgb: 180, 83, 9; }
   .event[data-offering-color="11"] { --event-rgb: 8, 145, 178; }
   .event { container: calendar-card / inline-size; border: 1px solid rgb(var(--event-rgb, 47, 127, 214)); background: color-mix(in srgb, rgb(var(--event-rgb, 47, 127, 214)) 14%, white); color: #0f172a; font-size: 0.68rem; line-height: 1.25; }
+  .event.course-highlight { outline: 3px solid var(--calendar-primary, #2f7fd6); outline-offset: -2px; z-index: 2; }
+  .event.course-dim { opacity: .28; }
   .event.alternative-highlight { outline: 3px solid #0f766e; outline-offset: -2px; z-index: 2; }
   .event.alternative-dim { opacity: .38; }
   .event:hover, .event:focus-within { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 1px; z-index: 2; }
