@@ -10,6 +10,9 @@ from datetime import date
 from dataclasses import replace
 from typing import List, Dict, Any, Tuple, Optional
 from functools import lru_cache
+from time import perf_counter
+
+from . import profiling
 
 from .models import CourseOffering, StudyGroup, StudyEvent, StudyLocation
 from .client import SisuClient
@@ -189,20 +192,40 @@ class SisuService:
             ])
         """
         results = {}
+        started = perf_counter()
+        cache_before = self.fetch_course_offering.cache_info() if profiling.enabled() else None
+        failed = 0
 
-        for course_unit_id, course_offering_id in requests:
+        for index, (course_unit_id, course_offering_id) in enumerate(requests):
             key = (course_unit_id, course_offering_id)
+            offering_started = perf_counter()
+            outcome = "ok"
             try:
                 results[key] = self.fetch_study_groups(
                     course_unit_id, course_offering_id
                 )
             except Exception as e:
+                outcome = "failed"
+                failed += 1
                 logger.error(
                     "Failed to fetch study groups %s/%s: %s",
                     course_unit_id, course_offering_id, e
                 )
                 results[key] = []
+            finally:
+                profiling.log(
+                    "offering", index=index, outcome=outcome,
+                    duration_ms=profiling.elapsed_ms(offering_started),
+                )
 
+        if cache_before is not None:
+            cache_after = self.fetch_course_offering.cache_info()
+            profiling.log(
+                "retrieval", count=len(requests), failed=failed,
+                cache_hits=cache_after.hits - cache_before.hits,
+                cache_misses=cache_after.misses - cache_before.misses,
+                duration_ms=profiling.elapsed_ms(started),
+            )
         return results
 
     @staticmethod
@@ -282,13 +305,19 @@ class SisuService:
         """
         cache: dict[str, StudyLocation | None] = {}
         resolved_groups: list[StudyGroup] = []
+        started = perf_counter()
+        lookups = 0
+        failed_lookups = 0
+        occurrences = 0
 
         for group in groups:
             resolved_events: list[StudyEvent] = []
             for event in group.study_events:
+                occurrences += 1
                 locations: list[StudyLocation] = []
                 for location_id in event.location_ids:
                     if location_id not in cache:
+                        lookups += 1
                         try:
                             raw = self.client.fetch_location(location_id)
                             location = self._parse_location(raw)
@@ -296,6 +325,7 @@ class SisuService:
                                 raise ValueError("Mismatched location ID")
                             cache[location_id] = location
                         except (SisuAPIError, KeyError, TypeError, ValueError) as exc:
+                            failed_lookups += 1
                             logger.warning(
                                 "Unable to resolve SISU location %s: %s",
                                 location_id, exc,
@@ -306,6 +336,12 @@ class SisuService:
                 resolved_events.append(replace(event, locations=locations))
             resolved_groups.append(replace(group, study_events=resolved_events))
 
+        profiling.log(
+            "locations", groups=len(groups), occurrences=occurrences,
+            distinct_locations=len(cache), lookups=lookups,
+            failed_lookups=failed_lookups,
+            duration_ms=profiling.elapsed_ms(started),
+        )
         return resolved_groups
 
     def fetch_study_groups_with_locations(

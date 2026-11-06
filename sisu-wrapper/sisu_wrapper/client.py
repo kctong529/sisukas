@@ -6,6 +6,8 @@ including connection pooling, error handling, and request/response parsing.
 """
 
 import logging
+from time import perf_counter
+from . import profiling
 from typing import Any, Dict, List, Optional
 import requests
 from .exceptions import (
@@ -74,13 +76,18 @@ class SisuClient:
         url = f"{self.base_url}{endpoint}"
         timeout = timeout or self.timeout
 
+        started = perf_counter()
+        status = "none"
+        outcome = "ok"
         try:
             logger.debug("GET %s with params=%s", url, params)
             response = self.session.get(
                 url, params=params, timeout=timeout)
+            status = str(response.status_code)
             response.raise_for_status()
             return response.json()
         except requests.HTTPError as exc:
+            outcome = "http_error"
             status_code = exc.response.status_code
             logger.error("HTTP error fetching %s: %s", url, exc)
             if status_code == 404:
@@ -91,14 +98,22 @@ class SisuClient:
                 status_code=status_code
             ) from exc
         except requests.Timeout as exc:
+            outcome = "timeout"
             logger.error("Timeout fetching %s", url)
             raise SisuTimeoutError(
                 f"Request to {endpoint} timed out after {timeout}s"
             ) from exc
         except requests.RequestException as exc:
+            outcome = "connection_error"
             logger.error("Request error fetching %s: %s", url, exc)
             raise SisuConnectionError(
                 f"Request failed for {endpoint}") from exc
+        finally:
+            profiling.log(
+                "upstream", resource=profiling.upstream_kind(endpoint),
+                status=status, outcome=outcome,
+                duration_ms=profiling.elapsed_ms(started),
+            )
 
     def fetch_course_unit(
         self,
