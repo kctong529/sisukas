@@ -77,19 +77,20 @@
 </aside>
 
 <style>
-  .context-panel { box-sizing: border-box; min-width: 0; padding: 16px; border: 1px solid #dce4ee; border-radius: 8px; background: #fff; color: #0f172a; }
-  header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
-  h2 { font-size: 1rem; margin: 0; }
-  h3 { font-size: 1.05rem; margin: 4px 0 12px; overflow-wrap: anywhere; }
-  .clear { border: 1px solid #94a3b8; background: #fff; border-radius: 5px; padding: 5px 8px; cursor: pointer; font-size: .75rem; }
-  .clear:focus-visible { outline: 2px solid #2563eb; }
+  .context-panel { box-sizing: border-box; min-width: 0; padding: 1rem; border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 8px; background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.75rem; }
+  h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+  h3 { font-size: 0.95rem; margin: 0.25rem 0 0.75rem; overflow-wrap: anywhere; }
+  .clear { border: 1px solid var(--calendar-border, #e2e8f0); background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); border-radius: 6px; padding: 0.4rem 0.7rem; cursor: pointer; font: inherit; font-size: 0.75rem; }
+  .clear:hover:not(:disabled) { border-color: var(--calendar-primary, #2f7fd6); background: #f1f5f9; }
+  .clear:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
   .clear:disabled { opacity: .55; cursor: not-allowed; }
-  .code { font-size: .85rem; font-weight: 700; color: #1d4ed8; margin: 0; }
-  .group { font-weight: 600; font-size: .88rem; margin: 0 0 14px; }
-  dl { display: grid; grid-template-columns: 65px minmax(0, 1fr); gap: 10px; font-size: .84rem; margin: 0; }
-  dt { color: #64748b; }
+  .code { font-size: 0.85rem; font-weight: 700; color: var(--calendar-primary, #2f7fd6); margin: 0; }
+  .group { font-weight: 600; font-size: 0.85rem; margin: 0 0 0.75rem; }
+  dl { display: grid; grid-template-columns: 65px minmax(0, 1fr); gap: 0.6rem; font-size: 0.8rem; margin: 0; }
+  dt { color: var(--calendar-muted, #64748b); }
   dd { margin: 0; overflow-wrap: anywhere; }
-  .empty, .hint, .continuation { font-size: .84rem; line-height: 1.5; color: #475569; }
-  .hint { margin: 16px 0 0; }
+  .empty, .hint, .continuation { font-size: 0.8rem; line-height: 1.5; color: var(--calendar-muted, #64748b); }
+  .hint { margin: 0.75rem 0 0; }
   @media (max-width: 1000px) { .context-panel { margin-top: 4px; } }
 </style>

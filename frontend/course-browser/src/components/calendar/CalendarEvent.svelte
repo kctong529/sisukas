@@ -97,7 +97,7 @@
     padding: 4px 6px;
     overflow: hidden;
   }
-  .calendar-event:focus-visible { outline: 3px solid #1d4ed8; outline-offset: -3px; }
+  .calendar-event:focus-visible { outline: 3px solid var(--calendar-primary, #2f7fd6); outline-offset: -3px; }
   .calendar-event.compact { padding: 1px 4px; }
   .event-heading {
     display: flex;

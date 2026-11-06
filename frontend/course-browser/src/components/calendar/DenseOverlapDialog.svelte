@@ -71,13 +71,14 @@
 </dialog>
 
 <style>
-  .event-details { border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px; max-width: min(560px, calc(100vw - 32px)); width: 100%; max-height: min(75vh, 650px); overflow-y: auto; color: #0f172a; background: #fff; box-shadow: 0 16px 42px #0f172a40; }
+  .event-details { border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 12px; padding: 1.25rem; max-width: min(560px, calc(100vw - 32px)); width: 100%; max-height: min(75vh, 650px); overflow-y: auto; color: var(--calendar-text, #1e293b); background: var(--calendar-card, #fff); box-shadow: 0 16px 42px #0f172a40; }
   .event-details::backdrop { background: #0f172a80; }
   .event-details header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
   .event-details h2 { font-size: 1.1rem; margin: 0 0 4px; }
   .event-details p { margin: 0; font-size: 0.82rem; color: #475569; }
-  .event-details .close { border: 1px solid #94a3b8; border-radius: 5px; background: #fff; padding: 5px 10px; cursor: pointer; }
-  .event-details .close:focus-visible { outline: 3px solid #1d4ed8; }
+  .event-details .close { border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 6px; color: var(--calendar-text, #1e293b); background: var(--calendar-card, #fff); padding: 0.4rem 0.7rem; cursor: pointer; font: inherit; font-size: 0.8rem; }
+  .event-details .close:hover { border-color: var(--calendar-primary, #2f7fd6); background: #f1f5f9; }
+  .event-details .close:focus-visible { outline: 3px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
   .event-details ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
   .event-details li { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: #f1f5f9; border-radius: 6px; font-size: 0.85rem; }
   .event-details li strong { overflow-wrap: anywhere; }

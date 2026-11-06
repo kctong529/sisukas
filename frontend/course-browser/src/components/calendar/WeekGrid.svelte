@@ -13,20 +13,27 @@
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import { calendarGroupAlternatives } from '@application/calendar/calendarGroupAlternatives';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
+  import { calendarOfferingColorIndices } from '@application/calendar/calendarOfferingColors';
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;
+    offeringIds?: readonly string[];
+    colorByOffering?: Readonly<Record<string, number>>;
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
     groupsForSegment?: (segment: WeeklyCalendarSegment) => readonly StudyGroup[] | null;
     membersForSegment?: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
     selectionForSegment?: (segment: WeeklyCalendarSegment) => CalendarGroupSelection;
   }
   let {
-    layout, presentationForSegment, groupsForSegment = () => null,
+    layout, offeringIds, colorByOffering: assignedColors, presentationForSegment, groupsForSegment = () => null,
     membersForSegment = segment => [segment.entry],
     selectionForSegment = () => 'candidate',
   }: Props = $props();
 
+  // Callers supply the whole active plan so colors do not change with the week.
+  // Standalone/test instances can derive a fallback from the visible layout.
+  const colorByOffering = $derived(assignedColors ?? calendarOfferingColorIndices(offeringIds ??
+    layout.segments.map(segment => segment.entry.source.courseOfferingId).sort()));
   const presentation = $derived(denseOverlapPresentation(layout));
   // A preview never changes the plan. A pinned event remains when hover ends.
   // Resolve stored IDs against the current layout so week changes cannot show stale data.
@@ -119,6 +126,7 @@
   <div class="calendar-grid-pane">
     <CalendarTimetable
       {layout}
+      {colorByOffering}
       visibleSegments={presentation.visibleSegments}
       denseGroups={presentation.displays}
       {presentationForSegment}
@@ -160,10 +168,11 @@
 />
 
 <style>
-  .calendar-panel-controls { display: flex; justify-content: flex-end; margin-bottom: 8px; }
-  .panel-position-button { border: 1px solid #94a3b8; background: #fff; color: #0f172a; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: .8rem; }
-  .panel-position-button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
-  .calendar-workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 14px; align-items: start; }
+  .calendar-panel-controls { display: flex; justify-content: flex-end; margin-bottom: 0.5rem; }
+  .panel-position-button { border: 1px solid var(--calendar-border, #e2e8f0); background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); border-radius: 6px; padding: 0.4rem 0.7rem; cursor: pointer; font: inherit; font-size: 0.8rem; }
+  .panel-position-button:hover { border-color: var(--calendar-primary, #2f7fd6); background: #f1f5f9; }
+  .panel-position-button:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
+  .calendar-workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 0.75rem; align-items: start; }
   .calendar-grid-pane { min-width: 0; order: 2; }
   .calendar-panel-pane { min-width: 0; order: 1; }
   .calendar-workspace.panel-right { grid-template-columns: minmax(0, 1fr) 300px; }

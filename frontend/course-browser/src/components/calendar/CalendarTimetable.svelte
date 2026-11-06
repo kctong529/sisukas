@@ -11,6 +11,7 @@
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;
+    colorByOffering: Readonly<Record<string, number>>;
     visibleSegments: WeeklyCalendarSegment[];
     denseGroups: DenseOverlapDisplay[];
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
@@ -24,7 +25,7 @@
   }
 
   let {
-    layout, visibleSegments, denseGroups, presentationForSegment, selectionForSegment,
+    layout, colorByOffering, visibleSegments, denseGroups, presentationForSegment, selectionForSegment,
     onPreview, onPreviewEnd, onInspect, onOpenGroup,
     previewGroupId = null, previewOfferingId = null,
   }: Props = $props();
@@ -101,6 +102,7 @@
               segment.entry.source.studyGroupId !== previewGroupId}
             style={segmentStyle(segment)}
             data-segment-id={segment.id}
+            data-offering-color={colorByOffering[segment.entry.source.courseOfferingId] ?? 0}
           >
             <CalendarEvent
               {segment}
@@ -128,11 +130,11 @@
     max-height: min(75vh, 760px);
     overflow: auto;
     overscroll-behavior: contain;
-    border: 1px solid #dce4ee;
+    border: 1px solid var(--calendar-border, #e2e8f0);
     border-radius: 8px;
-    background: #fff;
+    background: var(--calendar-card, #fff);
   }
-  .week-scroll:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+  .week-scroll:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
   .week-grid {
     display: grid;
     grid-template-columns: 60px repeat(7, minmax(160px, 1fr));
@@ -143,7 +145,7 @@
     top: 0;
     background: #f1f5f9;
     z-index: 4;
-    border-bottom: 1px solid #cbd5e1;
+    border-bottom: 1px solid var(--calendar-border, #e2e8f0);
   }
   .corner { left: 0; z-index: 6; }
   .day-heading {
@@ -157,10 +159,10 @@
     text-align: center;
     border-left: 1px solid #e2e8f0;
   }
-  .day-name { font-size: 0.85rem; font-weight: 700; }
-  .day-date { font-size: 0.75rem; color: #475569; }
+  .day-name { font-size: 0.8rem; font-weight: 700; color: var(--calendar-text, #1e293b); }
+  .day-date { font-size: 0.75rem; color: var(--calendar-muted, #64748b); }
   .time-axis, .day-column { height: 1440px; position: relative; }
-  .time-axis { position: sticky; left: 0; z-index: 3; background: #fff; }
+  .time-axis { position: sticky; left: 0; z-index: 3; background: var(--calendar-card, #fff); }
   .time-axis span {
     position: absolute;
     right: 8px;
@@ -193,10 +195,24 @@
     }
   }
   .event, .cluster { position: absolute; box-sizing: border-box; overflow: hidden; border-radius: 4px; }
-  .event { container: calendar-card / inline-size; border: 1px solid #1d4ed8; background: #dbeafe; color: #1e3a8a; font-size: 0.68rem; line-height: 1.25; }
+  /* Preserve contrasting event states and dense-lane readability. */
+  /* First six hues are LEGO's block colors; the remaining six extend the palette. */
+  .event[data-offering-color="0"] { --event-rgb: 234, 88, 12; }
+  .event[data-offering-color="1"] { --event-rgb: 21, 128, 61; }
+  .event[data-offering-color="2"] { --event-rgb: 124, 58, 237; }
+  .event[data-offering-color="3"] { --event-rgb: 2, 132, 199; }
+  .event[data-offering-color="4"] { --event-rgb: 245, 158, 11; }
+  .event[data-offering-color="5"] { --event-rgb: 219, 39, 119; }
+  .event[data-offering-color="6"] { --event-rgb: 13, 148, 136; }
+  .event[data-offering-color="7"] { --event-rgb: 79, 70, 229; }
+  .event[data-offering-color="8"] { --event-rgb: 190, 24, 93; }
+  .event[data-offering-color="9"] { --event-rgb: 101, 163, 13; }
+  .event[data-offering-color="10"] { --event-rgb: 180, 83, 9; }
+  .event[data-offering-color="11"] { --event-rgb: 8, 145, 178; }
+  .event { container: calendar-card / inline-size; border: 1px solid rgb(var(--event-rgb, 47, 127, 214)); background: color-mix(in srgb, rgb(var(--event-rgb, 47, 127, 214)) 14%, white); color: #0f172a; font-size: 0.68rem; line-height: 1.25; }
   .event.alternative-highlight { outline: 3px solid #0f766e; outline-offset: -2px; z-index: 2; }
   .event.alternative-dim { opacity: .38; }
-  .event:hover, .event:focus-within { outline: 2px solid #1d4ed8; outline-offset: 1px; z-index: 2; }
+  .event:hover, .event:focus-within { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 1px; z-index: 2; }
   .event.inactive { border-style: dashed; border-color: #94a3b8; background: #f1f5f9; color: #475569; }
   .event.cancelled { border-color: #b91c1c; background: #fee2e2; color: #7f1d1d; }
   .cluster {

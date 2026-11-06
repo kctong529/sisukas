@@ -36,14 +36,14 @@
 </section>
 
 <style>
-  .locations { margin-top: 16px; min-width: 0; font-size: .84rem; }
+  .locations { margin-top: 1rem; min-width: 0; font-size: 0.8rem; }
   h4 { font-size: .9rem; margin: 0 0 4px; }
-  .count { margin: 0 0 8px; color: #475569; }
-  .note { margin: 0 0 12px; line-height: 1.45; color: #475569; }
+  .count { margin: 0 0 0.5rem; color: var(--calendar-muted, #64748b); }
+  .note { margin: 0 0 0.75rem; line-height: 1.45; color: var(--calendar-muted, #64748b); }
   .buildings, .rooms { list-style: none; margin: 0; padding: 0; }
   .buildings { display: grid; gap: 12px; }
   h5 { margin: 0 0 6px; font-size: .82rem; font-weight: 650; overflow-wrap: anywhere; }
-  h5 span { font-size: .75rem; font-weight: 400; color: #64748b; }
+  h5 span { font-size: 0.75rem; font-weight: 400; color: var(--calendar-muted, #64748b); }
   .rooms { display: flex; flex-wrap: wrap; gap: 5px; }
   .rooms li { max-width: 100%; box-sizing: border-box; padding: 4px 7px; border-radius: 4px; background: #f1f5f9; color: #334155; font-size: .78rem; line-height: 1.35; overflow-wrap: anywhere; }
 </style>

@@ -41,12 +41,13 @@
 {/if}
 
 <style>
-  .alternatives { margin-top: 16px; padding-top: 14px; border-top: 1px solid #dce4ee; }
-  h4 { margin: 0 0 6px; font-size: .9rem; }
-  .explanation { color: #475569; font-size: .78rem; line-height: 1.45; margin: 5px 0 10px; }
-  ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-  button { width: 100%; background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 5px; padding: 7px 9px; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
-  button.previewed { border-color: #2563eb; background: #dbeafe; }
-  button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
-  .count { color: #475569; font-size: .75rem; }
+  .alternatives { margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--calendar-border, #e2e8f0); }
+  h4 { margin: 0 0 0.35rem; font-size: 0.9rem; }
+  .explanation { color: var(--calendar-muted, #64748b); font-size: 0.78rem; line-height: 1.45; margin: 0.3rem 0 0.65rem; }
+  ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+  button { width: 100%; background: #f8fafc; color: var(--calendar-text, #1e293b); border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 6px; padding: 0.45rem 0.6rem; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 0.2rem; font: inherit; font-size: 0.8rem; }
+  button:hover { border-color: var(--calendar-primary, #2f7fd6); background: #eff6ff; }
+  button.previewed { border-color: var(--calendar-primary, #2f7fd6); background: #dbeafe; }
+  button:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
+  .count { color: var(--calendar-muted, #64748b); font-size: 0.75rem; }
 </style>

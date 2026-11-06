@@ -13,14 +13,14 @@ const at = (hour: number) => `2026-11-02T${String(hour).padStart(2, '0')}:00:00+
 const event = (id: string, start = 10, end = 11) =>
   fixed(id, at(start), at(end), { group: `Group ${id}` });
 
-function render(entries: ReturnType<typeof fixed>[], groups: StudyGroup[] | null = null) {
+function render(entries: ReturnType<typeof fixed>[], groups: StudyGroup[] | null = null, offeringIds?: string[]) {
   const target = document.createElement('div');
   document.body.appendChild(target);
   targetElements.push(target);
   const layout = layoutCalendarWeek(entries, '2026-11-02');
   mounted.push(mount(WeekGrid, {
     target,
-    props: { layout, groupsForSegment: () => groups, presentationForSegment: (segment) => ({
+    props: { layout, offeringIds, groupsForSegment: () => groups, presentationForSegment: (segment) => ({
       courseCode: null, courseTitle: segment.entry.source.studyGroupId,
       groupLabel: 'Exercise H02', locationLabel: null,
     }) },
@@ -41,6 +41,29 @@ afterEach(async () => {
   for (const component of mounted.splice(0)) await unmount(component);
   for (const target of targetElements.splice(0)) target.remove();
   vi.restoreAllMocks();
+});
+
+describe('WeekGrid offering colors', () => {
+  it('assigns different colors by plan membership, independent of visible events', () => {
+    const alpha = event('alpha');
+    const beta = event('beta', 12, 13);
+    const target = render([
+      alpha,
+      { ...beta, source: { ...beta.source, courseOfferingId: 'other-offering' } },
+    ], null, ['offering', 'unused-offering', 'other-offering']);
+    const colors = [...target.querySelectorAll<HTMLElement>('.event')]
+      .map(card => card.dataset.offeringColor);
+    expect(colors).toEqual(['0', '2']);
+  });
+
+  it('uses the same palette index for every event from one offering', () => {
+    const target = render([event('one', 10, 11), event('two', 13, 14)]);
+    const cards = [...target.querySelectorAll<HTMLElement>('.event')];
+    expect(cards).toHaveLength(2);
+    expect(cards.map(card => card.dataset.offeringColor)).toEqual(['0', '0']);
+    expect(cards.map(card => card.querySelector('.calendar-event')?.getAttribute('aria-label'))
+      .every(label => label?.includes('Candidate'))).toBe(true);
+  });
 });
 
 describe('WeekGrid dense overlap disclosure', () => {
