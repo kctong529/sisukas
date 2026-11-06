@@ -14,6 +14,7 @@ export interface CalendarProjectionSources {
   readGroups(unitId: string, offeringId: string): readonly StudyGroup[] | null;
   isLoading(unitId: string, offeringId: string): boolean;
   isStale(unitId: string, offeringId: string): boolean;
+  hasFailed?(unitId: string, offeringId: string): boolean;
   /** Optional explicit choice; do not infer selection from LEGO blocks. */
   readSelection?(offeringId: string): StudyGroupSelection | null;
 }
@@ -28,7 +29,8 @@ export function readStudyGroupSnapshot(
     return { availability: sources.isStale(unitId, offeringId) ? "stale" : "available", groups };
   }
   return {
-    availability: sources.isLoading(unitId, offeringId) ? "loading" : "missing",
+    availability: sources.isLoading(unitId, offeringId) ? "loading"
+      : sources.hasFailed?.(unitId, offeringId) ? "failed" : "missing",
     groups: null,
   };
 }

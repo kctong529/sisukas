@@ -11,6 +11,8 @@
   let previewMode = $state<"candidate" | ExplicitStudyGroupChoice>("candidate");
   let previewGroupId = $state("");
   let showDiagnostics = $state(true);
+  let dataPreviewOffering = $state("");
+  let dataPreviewMode = $state<"stale" | "missing" | "loading" | "failed">("loading");
 
   const eligibleOfferings = $derived((plansStore.read.getActive()?.instanceIds ?? []).flatMap((id) => {
     const course = courseIndexStore.read.resolveByInstanceId(id);
@@ -56,6 +58,19 @@
   }
 
   const plan = $derived(plansStore.read.getActive());
+  const dataOfferings = $derived((plan?.instanceIds ?? []).map(id => {
+    const course = courseIndexStore.read.resolveByInstanceId(id);
+    return { id, label: `${course?.code?.value ?? id} (${id})`,
+      hasFull: course ? studyGroupStore.read.getCached(course.unitId, id) !== null : false };
+  }));
+  const activeDataOffering = $derived(dataOfferings.find(o => o.id === dataPreviewOffering) ?? dataOfferings[0]);
+  const availabilityPreview = $derived(calendarProjectionStore.availabilityPreview);
+  function applyDataPreview() {
+    if (!plan || !activeDataOffering) return;
+    calendarProjectionStore.setAvailabilityPreview({
+      planId: plan.id, offeringId: activeDataOffering.id, state: dataPreviewMode,
+    });
+  }
   const projection = $derived(calendarProjectionStore.projection);
   const completeness = $derived(projection?.completeness);
   const entries = $derived(projection?.entries ?? []);
@@ -114,6 +129,35 @@
           {:else}
             <p class="preview-note">No preview active; all groups are candidates.</p>
           {/if}
+        {/if}
+      </div>
+
+      <div class="section selection-preview">
+        <h4>Data-state preview (development only)</h4>
+        <p class="preview-note">Simulates one offering's availability through the real projection, without modifying the cache or persisted plan. Reset to restore actual data.</p>
+        {#if activeDataOffering}
+          <label for="data-offering">Offering</label>
+          <select id="data-offering" value={activeDataOffering.id} onchange={event => dataPreviewOffering = event.currentTarget.value}>
+            {#each dataOfferings as offering (offering.id)}
+              <option value={offering.id}>{offering.label}</option>
+            {/each}
+          </select>
+          <label for="data-state">Simulated availability</label>
+          <select id="data-state" bind:value={dataPreviewMode}>
+            <option value="loading">Loading (hide full data)</option>
+            <option value="missing">Missing (hide full data)</option>
+            <option value="failed">Failed (hide full data)</option>
+            <option value="stale" disabled={!activeDataOffering.hasFull}>Stale (requires cached full data)</option>
+          </select>
+          <div class="preview-actions">
+            <button onclick={applyDataPreview} disabled={dataPreviewMode === 'stale' && !activeDataOffering.hasFull}>Apply data state</button>
+            <button onclick={() => calendarProjectionStore.setAvailabilityPreview(null)} disabled={!availabilityPreview}>Reset data state</button>
+          </div>
+          {#if availabilityPreview}
+            <p role="status" class="preview-note">Simulating {availabilityPreview.state} for {availabilityPreview.offeringId}.</p>
+          {/if}
+        {:else}
+          <p class="empty">Add a course offering to the active plan to preview data states.</p>
         {/if}
       </div>
 

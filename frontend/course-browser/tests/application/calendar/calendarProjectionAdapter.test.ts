@@ -36,6 +36,12 @@ describe("calendar projection store adapter", () => {
     expect(readStudyGroupSnapshot(sources(null), "unit", "offering").availability).toBe("missing");
     expect(readStudyGroupSnapshot(sources(null, true), "unit", "offering").availability).toBe("loading");
   });
+  it("distinguishes a failed request from never-fetched data", () => {
+    const failed = { ...sources(null), hasFailed: () => true };
+    expect(readStudyGroupSnapshot(failed, "unit", "offering").availability).toBe("failed");
+    expect(readStudyGroupSnapshot({ ...failed, isLoading: () => true }, "unit", "offering").availability).toBe("loading");
+    expect(readStudyGroupSnapshot({ ...failed, readGroups: () => [] }, "unit", "offering").availability).toBe("available");
+  });
   it("does not mutate the plan or request data", () => {
     const frozen = Object.freeze({...plan, instanceIds: Object.freeze(["offering"])}) as unknown as Plan;
     expect(projectPlanFromSources(frozen, sources(null)).completeness.missingCourses).toBe(1);

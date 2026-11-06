@@ -9,6 +9,7 @@
   import { aggregateCalendarDisplayEntries, displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
   import { currentHelsinkiWeek } from '@application/calendar/currentHelsinkiWeek';
   import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
+  import { calendarDataNotices, calendarEmptyMessage } from '@application/calendar/calendarDataStates';
   import WeekNavigation from './WeekNavigation.svelte';
   import WeekGrid from './WeekGrid.svelte';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
@@ -22,6 +23,8 @@
   const projection = $derived(calendarProjectionStore.projection);
   const display = $derived(projection ? aggregateCalendarDisplayEntries(projection.entries) : null);
   const layout = $derived(display ? layoutCalendarWeek(display.entries, weekStart) : null);
+  const notices = $derived(projection ? calendarDataNotices(projection.completeness) : []);
+  const emptyMessage = $derived(projection ? calendarEmptyMessage(projection.completeness) : null);
   const unresolvedSelections = $derived(projection
     ? projection.diagnostics.filter(item => item.code === 'selected_study_group_missing').length : 0);
 
@@ -82,20 +85,18 @@
   {:else if !activePlan}
     <p>No active study plan. Create or select a plan in LEGO to see its calendar.</p>
   {:else if layout}
-    {#if projection?.completeness.status === 'partial'}
-      {#if layout.segments.length === 0}
-        <p role="status">
-          Loading calendar events… Some study-group data
-          is not yet available.
-        </p>
-      {:else}
-        <p role="status">
-          Some study-group data is still missing or loading;
-          this calendar may be incomplete.
-        </p>
-      {/if}
-    {:else if layout.segments.length === 0}
-      <p>No fixed events in this week for the active plan.</p>
+    {#each notices as notice (notice.kind)}
+      <p role={notice.kind === 'failed' ? 'alert' : 'status'} class={`data-notice ${notice.kind}`}>
+        {notice.message}
+      </p>
+    {/each}
+    {#if projection && (projection.completeness.failedCourses > 0 || projection.completeness.missingCourses > 0)}
+      <button class="retry-data" onclick={() => calendarProjectionStore.retryUnavailableGroups()}>
+        Retry unavailable study-group data
+      </button>
+    {/if}
+    {#if layout.segments.length === 0 && emptyMessage}
+      <p role="status">{emptyMessage}</p>
     {/if}
 
     {#if unresolvedSelections > 0}
@@ -110,6 +111,9 @@
   .calendar-view { margin: 1rem auto; padding: 1rem; max-width: 1500px; }
   h1 { font-size: 1.45rem; margin: 0 0 0.3rem; }
   .selection-explanation { color: #475569; font-size: .82rem; margin: 0 0 10px; }
+  .data-notice.failed { color: #991b1b; }
+  .data-notice.stale { color: #854d0e; }
+  .retry-data { margin: 0 0 12px; padding: 6px 10px; cursor: pointer; }
   [role='status'] {
     color: #475569;
     font-size: 0.9rem;

@@ -41,6 +41,7 @@ function counts() {
 beforeEach(() => {
   plansStore.actions.clear();
   calendarProjectionStore.setSelectionPreview(null);
+  calendarProjectionStore.setAvailabilityPreview(null);
   courseIndexStore.actions.setCourses([]);
   courseIndexStore.actions.setHistoricalCourses([]);
   studyGroupStore.state.cache = {};
@@ -49,11 +50,13 @@ beforeEach(() => {
   studyGroupStore.state.loadingKeys = [];
   studyGroupStore.state.staleKeys = new Set();
   studyGroupStore.state.error = null;
+  studyGroupStore.state.failedKeys = {};
   flushSync();
 });
 
 afterEach(() => {
   calendarProjectionStore.setSelectionPreview(null);
+  calendarProjectionStore.setAvailabilityPreview(null);
   plansStore.actions.clear();
   flushSync();
 });
@@ -97,6 +100,20 @@ describe("calendar projection reactive store", () => {
     }
   });
 
+  it("shows per-offering request failures without hiding other available offerings", () => {
+    courseIndexStore.actions.setCourses([course("a"), course("b")]);
+    setFull("a");
+    activate(plan("p", ["a", "b"]));
+    studyGroupStore.state.failedKeys = { [key("b")]: "No response" };
+    flushSync();
+    expect(counts().failedCourses).toBe(1);
+    expect(counts().availableCourses).toBe(1);
+    studyGroupStore.state.loadingKeys = [key("b")];
+    flushSync();
+    expect(counts().loadingCourses).toBe(1);
+    setFull("b");
+    expect(counts().availableCourses).toBe(2);
+  });
   it("does not mistake summary-only fallback for full data", () => {
     courseIndexStore.actions.setCourses([course("a")]);
     activate(plan("p", ["a"]));
@@ -220,5 +237,38 @@ describe("development-only group-choice preview", () => {
     activate(plan("other", ["a"]));
     expect(calendarProjectionStore.selectionPreview).toBeNull();
     expect(calendarProjectionStore.projection?.selectionByGroup.a.KT).toBe("candidate");
+  });
+});
+
+describe("development-only availability preview", () => {
+  it("isolates availability previews from other active plans", () => {
+    courseIndexStore.actions.setCourses([course("a")]);
+    setFull("a");
+    activate(plan("first", ["a"]));
+    calendarProjectionStore.setAvailabilityPreview({ planId: "first", offeringId: "a", state: "failed" });
+    flushSync();
+    expect(counts().failedCourses).toBe(1);
+    activate(plan("second", ["a"]));
+    expect(counts().availableCourses).toBe(1);
+    expect(calendarProjectionStore.availabilityPreview).toBeNull();
+  });
+  it("simulates loading, failed, missing and stale without altering cached data", () => {
+    courseIndexStore.actions.setCourses([course("a"), course("b")]);
+    setFull("a");
+    setFull("b");
+    activate(plan("p", ["a", "b"]));
+    for (const [state, property] of [
+      ["loading", "loadingCourses"], ["failed", "failedCourses"],
+      ["missing", "missingCourses"], ["stale", "staleCourses"],
+    ] as const) {
+      calendarProjectionStore.setAvailabilityPreview({ planId: "p", offeringId: "a", state });
+      flushSync();
+      expect(counts()[property]).toBe(1);
+      expect(counts().availableCourses).toBe(1);
+      expect(studyGroupStore.read.getCached("unit-a", "a")).toEqual([]);
+    }
+    calendarProjectionStore.setAvailabilityPreview(null);
+    flushSync();
+    expect(counts().availableCourses).toBe(2);
   });
 });
