@@ -1,10 +1,44 @@
 <script lang="ts">
   import { calendarProjectionStore } from "../../lib/stores/calendarProjectionStore.svelte";
+  import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
+  import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
+  import type { CalendarSelectionPreviewMode } from "../../lib/stores/calendarProjectionStore.svelte";
   import { plansStore } from "../../lib/stores/plansStore.svelte";
 
   let isOpen = $state(false);
   let showEntries = $state(false);
+  let previewOffering = $state("");
+  let previewMode = $state<"candidate" | CalendarSelectionPreviewMode>("candidate");
+  let previewGroupId = $state("");
   let showDiagnostics = $state(true);
+
+  const eligibleOfferings = $derived((plansStore.read.getActive()?.instanceIds ?? []).flatMap((id) => {
+    const course = courseIndexStore.read.resolveByInstanceId(id);
+    if (!course) return [];
+    const groups = studyGroupStore.read.getCached(course.unitId, id);
+    if (groups === null || groups.length === 0) return [];
+    return [{ id, label: `${course.code?.value ?? id} (${id})`, groups }];
+  }));
+  const currentOffering = $derived(eligibleOfferings.find(item => item.id === previewOffering) ?? eligibleOfferings[0]);
+  const availableGroups = $derived(currentOffering?.groups ?? []);
+  const preview = $derived(calendarProjectionStore.selectionPreview);
+
+  function applyPreview() {
+    if (!plan || !currentOffering) return;
+    const groupId = availableGroups.some(group => group.groupId === previewGroupId)
+      ? previewGroupId : availableGroups[0]?.groupId;
+    if (previewMode === "selected" && !groupId) return;
+    calendarProjectionStore.setSelectionPreview(previewMode === "candidate" ? null : {
+      planId: plan.id,
+      offeringId: currentOffering.id,
+      mode: previewMode,
+      ...(previewMode === "selected" ? { groupId } : {}),
+    });
+  }
+  function clearPreview() {
+    calendarProjectionStore.setSelectionPreview(null);
+    previewMode = "candidate";
+  }
 
   const plan = $derived(plansStore.read.getActive());
   const projection = $derived(calendarProjectionStore.projection);
@@ -23,6 +57,45 @@
 
   {#if isOpen}
     <div class="debug-content">
+      <div class="section selection-preview">
+        <h4>Selection-state preview (development only)</h4>
+        <p class="preview-note">Injects a temporary choice into the real projection for one offering. No saved plan, registration or cache is modified. Other offerings remain candidates.</p>
+        {#if eligibleOfferings.length === 0}
+          <p class="empty">Load an active plan with at least one offering with full study-group data to preview selection states.</p>
+        {:else}
+          <label for="preview-offering">Offering</label>
+          <select id="preview-offering" value={currentOffering?.id ?? ''} onchange={event => { previewOffering = event.currentTarget.value; previewGroupId = ''; }}>
+            {#each eligibleOfferings as offering (offering.id)}
+              <option value={offering.id}>{offering.label}</option>
+            {/each}
+          </select>
+          <label for="preview-mode">Scenario</label>
+          <select id="preview-mode" bind:value={previewMode}>
+            <option value="candidate">Candidate (no explicit choice)</option>
+            <option value="selected">Explicitly selected group</option>
+            <option value="explicit-empty">Explicitly empty choice</option>
+            <option value="unresolved">Unknown selected group ID</option>
+          </select>
+          {#if previewMode === 'selected'}
+            <label for="preview-group">Group</label>
+            <select id="preview-group" value={previewGroupId || availableGroups[0]?.groupId || ''} onchange={event => previewGroupId = event.currentTarget.value}>
+              {#each availableGroups as group (group.groupId)}
+                <option value={group.groupId}>{group.name} ({group.type}) — {group.groupId}</option>
+              {/each}
+            </select>
+          {/if}
+          <div class="preview-actions">
+            <button onclick={applyPreview}>Apply preview</button>
+            <button onclick={clearPreview} disabled={!preview}>Reset</button>
+          </div>
+          {#if preview}
+            <p role="status" class="preview-note">Active: {preview.mode} for {preview.offeringId}{preview.groupId ? ` / ${preview.groupId}` : ''}. Change weeks or inspect the calendar to verify it.</p>
+          {:else}
+            <p class="preview-note">No preview active; the calendar uses its normal projection.</p>
+          {/if}
+        {/if}
+      </div>
+
       <div class="section">
         <h4>Projection</h4>
         <div class="stats-grid">
@@ -92,7 +165,7 @@
           {/if}
         {/if}
       </div>
-      <p class="empty">Read-only. This panel does not fetch study groups or change calendar selections.</p>
+      <p class="empty">Debug overrides are temporary and never saved. This panel does not fetch study groups.</p>
     </div>
   {/if}
 </div>
@@ -102,6 +175,11 @@
   .calendar-projection-debug { --dbg-max-width: 440px; width: max-content; }
   .calendar-projection-debug:has(.debug-content) { width: min(440px, calc(100vw - 2rem)); }
   .calendar-projection-debug .debug-toggle { white-space: nowrap; }
+  .selection-preview select { display: block; width: 100%; padding: .35rem; margin: .25rem 0 .65rem; color: inherit; background: var(--dbg-muted-bg); border: 1px solid var(--dbg-muted-border); border-radius: 4px; }
+  .selection-preview label { display: block; font-size: .8rem; }
+  .preview-actions { display: flex; gap: .5rem; margin: .5rem 0; }
+  .preview-actions button { padding: .35rem .6rem; border: 1px solid var(--dbg-muted-border); border-radius: 4px; cursor: pointer; }
+  .preview-actions button:disabled { opacity: .5; cursor: default; }
   .entry-preview { list-style: none; padding: 0; margin: 0.5rem 0 0; max-height: 280px; overflow: auto; }
   .entry-preview li { padding: 0.5rem; border-bottom: 1px solid var(--dbg-muted-border); overflow-wrap: anywhere; }
   .entry-heading { display: flex; justify-content: space-between; gap: 0.5rem; }

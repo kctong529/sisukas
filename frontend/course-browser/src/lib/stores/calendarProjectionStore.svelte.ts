@@ -15,12 +15,47 @@ const sources: CalendarProjectionSources = {
   isStale: (unitId, offeringId) => studyGroupStore.read.isStale(unitId, offeringId),
 };
 
+/** In-memory debug override. Never persisted or enabled in production builds. */
+export type CalendarSelectionPreviewMode = "selected" | "explicit-empty" | "unresolved";
+export interface CalendarSelectionPreview {
+  planId: string;
+  offeringId: string;
+  mode: CalendarSelectionPreviewMode;
+  groupId?: string;
+}
+
+let selectionPreview = $state<CalendarSelectionPreview | null>(null);
+const previewAllowed = import.meta.env.DEV;
+
 const projection = $derived.by((): CalendarProjectionResult | null => {
   const plan = plansStore.read.getActive();
-  return plan ? projectPlanFromSources(plan, sources) : null;
+  if (!plan) return null;
+  const preview = previewAllowed && selectionPreview?.planId === plan.id
+    && plan.instanceIds.includes(selectionPreview.offeringId)
+    ? selectionPreview : null;
+  return projectPlanFromSources(plan, preview ? {
+    ...sources,
+    readSelection: (offeringId) => {
+      if (offeringId !== preview.offeringId) return null;
+      if (preview.mode === "explicit-empty") return { studyGroupIds: [] };
+      if (preview.mode === "unresolved") return { studyGroupIds: ["__sisukas_preview_unresolved_group__"] };
+      return preview.groupId ? { studyGroupIds: [preview.groupId] } : null;
+    },
+  } : sources);
 });
 
 export const calendarProjectionStore = {
+  get selectionPreview() {
+    if (!previewAllowed) return null;
+    const plan = plansStore.read.getActive();
+    return plan && selectionPreview?.planId === plan.id && plan.instanceIds.includes(selectionPreview.offeringId)
+      ? selectionPreview : null;
+  },
+  /** Developer-only, local and reversible; never modifies a plan or network cache. */
+  setSelectionPreview(preview: CalendarSelectionPreview | null): void {
+    if (!previewAllowed) return;
+    selectionPreview = preview;
+  },
   get projection() { return projection; },
   /** Explicit loading command: call from a mounted calendar view, not during derivation. */
   ensureActivePlanGroups(): void {

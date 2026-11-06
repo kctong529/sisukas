@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { flushSync } from "svelte";
+import type { StudyGroup } from "@domain/models/StudyGroup";
 import type { Course } from "@domain/models/Course";
 import type { Plan } from "@domain/models/Plan";
 import { plansStore } from "@lib/stores/plansStore.svelte";
@@ -26,7 +27,7 @@ function activate(p: Plan) {
   flushSync();
 }
 
-function setFull(id: string, groups: [] = []) {
+function setFull(id: string, groups: StudyGroup[] = []) {
   studyGroupStore.state.cache = { ...studyGroupStore.state.cache, [key(id)]: groups };
   flushSync();
 }
@@ -39,6 +40,7 @@ function counts() {
 
 beforeEach(() => {
   plansStore.actions.clear();
+  calendarProjectionStore.setSelectionPreview(null);
   courseIndexStore.actions.setCourses([]);
   courseIndexStore.actions.setHistoricalCourses([]);
   studyGroupStore.state.cache = {};
@@ -51,6 +53,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  calendarProjectionStore.setSelectionPreview(null);
   plansStore.actions.clear();
   flushSync();
 });
@@ -144,5 +147,89 @@ describe("calendar projection reactive store", () => {
     courseIndexStore.actions.setCourses([course("a")]);
     setFull("a");
     expect(counts().availableCourses).toBe(1);
+  });
+});
+
+
+describe("development-only selection-state preview", () => {
+  const groups: StudyGroup[] = ["L01", "L02"].map((id, index) => ({
+    groupId: id,
+    name: id,
+    type: "Lecture",
+    studyEvents: [{
+      id: id,
+      seriesId: `series-${id}`,
+      start: `2026-11-02T${10 + index}:00:00`,
+      end: `2026-11-02T${11 + index}:00:00`,
+      startIso: `2026-11-02T${10 + index}:00:00+02:00`,
+      endIso: `2026-11-02T${11 + index}:00:00+02:00`,
+      cancelled: false,
+      excluded: false,
+      locationIds: [],
+      locations: [],
+    }],
+  }));
+
+  it("routes candidate, selected, empty and unresolved choices through the actual projection", () => {
+    courseIndexStore.actions.setCourses([course("a")]);
+    setFull("a", groups);
+    activate(plan("p", ["a"]));
+    const observer = observeProjection();
+    try {
+      expect(calendarProjectionStore.projection?.selectionByOffering.a).toBe("candidate");
+      expect(calendarProjectionStore.projection?.entries).toHaveLength(2);
+
+      calendarProjectionStore.setSelectionPreview({ planId: "p", offeringId: "a", mode: "selected", groupId: "L02" });
+      flushSync();
+      expect(calendarProjectionStore.projection?.selectionByOffering.a).toBe("selected");
+      expect(calendarProjectionStore.projection?.entries.map(e => e.source.studyGroupId)).toEqual(["L02"]);
+
+      calendarProjectionStore.setSelectionPreview({ planId: "p", offeringId: "a", mode: "explicit-empty" });
+      flushSync();
+      expect(calendarProjectionStore.projection?.selectionByOffering.a).toBe("explicit-empty");
+      expect(calendarProjectionStore.projection?.entries).toHaveLength(0);
+
+      calendarProjectionStore.setSelectionPreview({ planId: "p", offeringId: "a", mode: "unresolved" });
+      flushSync();
+      expect(calendarProjectionStore.projection?.entries).toHaveLength(0);
+      expect(calendarProjectionStore.projection?.diagnostics.some(d => d.code === "selected_study_group_missing")).toBe(true);
+
+      calendarProjectionStore.setSelectionPreview(null);
+      flushSync();
+      expect(calendarProjectionStore.projection?.selectionByOffering.a).toBe("candidate");
+      expect(calendarProjectionStore.projection?.entries).toHaveLength(2);
+      expect(observer.seen.length).toBeGreaterThan(1);
+    } finally {
+      observer.dispose();
+    }
+  });
+
+  it("limits the override to one offering and never modifies the saved plan", () => {
+    courseIndexStore.actions.setCourses([course("a"), course("b")]);
+    setFull("a", groups);
+    setFull("b", groups);
+    const active = plan("p", ["a", "b"]);
+    activate(active);
+    calendarProjectionStore.setSelectionPreview({ planId: "p", offeringId: "a", mode: "explicit-empty" });
+    flushSync();
+    expect(calendarProjectionStore.projection?.selectionByOffering).toMatchObject({ a: "explicit-empty", b: "candidate" });
+    expect(calendarProjectionStore.projection?.entries.map(e => e.source.courseOfferingId)).toEqual(["b", "b"]);
+    expect(active.instanceIds).toEqual(["a", "b"]);
+    expect(plansStore.read.getActive()).toBe(active);
+  });
+
+  it("never applies an override to another plan or an offering removed from the plan", () => {
+    courseIndexStore.actions.setCourses([course("a"), course("b")]);
+    setFull("a", groups);
+    setFull("b", groups);
+    activate(plan("p", ["a"]));
+    calendarProjectionStore.setSelectionPreview({ planId: "p", offeringId: "a", mode: "explicit-empty" });
+    flushSync();
+    activate(plan("other", ["a"]));
+    expect(calendarProjectionStore.selectionPreview).toBeNull();
+    expect(calendarProjectionStore.projection?.selectionByOffering.a).toBe("candidate");
+    activate(plan("p", ["b"]));
+    expect(calendarProjectionStore.selectionPreview).toBeNull();
+    expect(calendarProjectionStore.projection?.selectionByOffering.b).toBe("candidate");
   });
 });
