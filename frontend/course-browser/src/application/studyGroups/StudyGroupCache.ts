@@ -12,8 +12,8 @@ const MISSING_ENTRY: Readonly<StudyGroupEntry> = {
 /**
  * Stores the latest full study-group data for each offering.
  *
- * This cache does not fetch data, schedule requests, apply TTL policies,
- * or manage Svelte reactivity.
+ * The cache owns its data and returns independent copies to callers.
+ * It does not fetch, schedule, persist, or apply freshness policies.
  */
 export class StudyGroupCache {
   private readonly entries = new Map<string, StudyGroupEntry>();
@@ -23,13 +23,25 @@ export class StudyGroupCache {
 
     return {
       ...entry,
+      groups:
+        entry.groups === null
+          ? null
+          : structuredClone(entry.groups),
     };
   }
 
   /**
-   * Begin an initial retrieval or retry when no full data is available.
+   * Begin an initial retrieval or retry without cached full data.
    */
   markLoading(key: string): void {
+    const previous = this.entries.get(key) ?? MISSING_ENTRY;
+
+    if (previous.groups !== null) {
+      throw new Error(
+        "Cannot start initial loading with cached full data",
+      );
+    }
+
     this.entries.set(key, {
       groups: null,
       status: "loading",
@@ -48,7 +60,7 @@ export class StudyGroupCache {
     fetchedAt: number,
   ): void {
     this.entries.set(key, {
-      groups,
+      groups: structuredClone(groups),
       status: "ready",
       fetchedAt,
       error: null,
@@ -60,7 +72,7 @@ export class StudyGroupCache {
    * Record a failed retrieval without discarding previously loaded data.
    */
   markFailed(key: string, error: Error): void {
-    const previous = this.get(key);
+    const previous = this.entries.get(key) ?? MISSING_ENTRY;
 
     if (previous.groups !== null) {
       this.entries.set(key, {
@@ -85,7 +97,7 @@ export class StudyGroupCache {
    * Begin refreshing an already available full-data result.
    */
   markRefreshing(key: string): void {
-    const previous = this.get(key);
+    const previous = this.entries.get(key) ?? MISSING_ENTRY;
 
     if (previous.groups === null) {
       throw new Error(
