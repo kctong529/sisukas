@@ -121,27 +121,53 @@ export class StudyGroupCacheLoader {
   ): Promise<void> {
     const generation = this.generation;
 
+    // The coordinator isolates observer exceptions, so an unrecoverable
+    // cache-update error must be retained and surfaced after retrieval.
+    let unrecoveredError: Error | null = null;
+
     const operation = this.coordinator.loadSettled(
       [request],
       {
         onOutcome: (outcomeKey, outcome) => {
-          // Ignore notifications from a previous cache lifecycle.
+          // Ignore notifications from an invalidated cache lifecycle.
           if (generation !== this.generation) {
             return;
           }
 
-          this.applyOutcome(outcomeKey, outcome);
+          try {
+            this.applyOutcome(outcomeKey, outcome);
+          } catch (error) {
+            const applicationError =
+              error instanceof Error
+                ? error
+                : new Error("Study-group cache update failed");
+
+            try {
+              // Preserve previously cached full data on refresh failure.
+              this.cache.markFailed(outcomeKey, applicationError);
+            } catch (recoveryError) {
+              // The coordinator would swallow a thrown callback error.
+              // Save it for the loader's own completion promise.
+              unrecoveredError =
+                recoveryError instanceof Error
+                  ? recoveryError
+                  : new Error(
+                      "Study-group cache failure recovery failed",
+                    );
+            }
+          }
         },
       },
     );
 
-    // Keep completion tracking separate from retrieval outcomes.
-    // Ordinary retrieval failures are represented in the cache;
-    // cancellation still rejects this promise.
     const task: Promise<void> = operation
-      .then(() => undefined)
+      .then(() => {
+        if (unrecoveredError !== null) {
+          throw unrecoveredError;
+        }
+      })
       .finally(() => {
-        // An old task must never delete a newer task for this key.
+        // An obsolete task must not remove a newer task for this key.
         if (this.pending.get(key) === task) {
           this.pending.delete(key);
         }
@@ -151,6 +177,7 @@ export class StudyGroupCacheLoader {
 
     return task;
   }
+
 
   private applyOutcome(
     key: string,

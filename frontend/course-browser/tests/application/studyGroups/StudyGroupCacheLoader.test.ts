@@ -372,11 +372,14 @@ describe("StudyGroupCacheLoader", () => {
 
   it("deduplicates repeated offerings within a loader invocation", async () => {
     const transport = vi.fn(
-      async (_requests: StudyGroupRequest[]): Promise<StudyGroupBatchResult> =>
-        new Map([
+      async (requests: StudyGroupRequest[]): Promise<StudyGroupBatchResult> => {
+        expect(requests).toEqual([offeringA, offeringB]);
+
+        return new Map([
           [keyA, [makeGroup("lecture-1")]],
           [keyB, []],
-        ]),
+        ]);
+      },
     );
 
     const cache = new StudyGroupCache();
