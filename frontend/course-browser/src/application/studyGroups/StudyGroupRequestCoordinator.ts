@@ -19,6 +19,13 @@ export interface StudyGroupRequestCoordinatorOptions {
   concurrency?: number;
 }
 
+export interface StudyGroupLoadSettledOptions {
+  onOutcome?: (
+    key: string,
+    outcome: StudyGroupOutcome,
+  ) => void;
+}
+
 interface PendingRequest {
   request: StudyGroupRequest;
   key: string;
@@ -98,17 +105,29 @@ export class StudyGroupRequestCoordinator {
   /**
    * Retrieve offerings with independent success and failure outcomes.
    *
+   * Reports each distinct offering as soon as its retrieval settles.
    * Shares queued and in-flight work with load().
-   * Cancellation invalidates the entire operation instead of becoming
-   * an ordinary retrieval failure.
+   *
+   * Cancellation rejects the operation rather than producing a failure
+   * outcome. Observer exceptions never affect retrieval results.
    */
   async loadSettled(
     requests: StudyGroupRequest[],
+    options: StudyGroupLoadSettledOptions = {},
   ): Promise<Map<string, StudyGroupOutcome>> {
-    const entries = await Promise.all(
-      requests.map(async (request) => {
-        const key = studyGroupKey(request);
+    // Notify each offering at most once within this invocation.
+    const uniqueRequests = new Map<string, StudyGroupRequest>();
 
+    for (const request of requests) {
+      const key = studyGroupKey(request);
+
+      if (!uniqueRequests.has(key)) {
+        uniqueRequests.set(key, request);
+      }
+    }
+
+    const entries = await Promise.all(
+      [...uniqueRequests].map(async ([key, request]) => {
         let outcome: StudyGroupOutcome;
 
         try {
@@ -135,6 +154,15 @@ export class StudyGroupRequestCoordinator {
                 ? error
                 : new Error("Study-group retrieval failed"),
           };
+        }
+
+        // Notification failures must not become retrieval failures.
+        if (options.onOutcome) {
+          try {
+            options.onOutcome(key, outcome);
+          } catch {
+            // Observers are isolated from coordinator execution.
+          }
         }
 
         return [key, outcome] as const;
