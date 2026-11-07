@@ -754,4 +754,228 @@ describe("StudyGroupRequestCoordinator", () => {
       [studyGroupKey(offeringA), []],
     ]));
   });
+
+  it("notifies completed offerings before the entire load settles", async () => {
+    const firstBatch = deferred<BatchResult>();
+    const secondBatch = deferred<BatchResult>();
+
+    const transport = vi.fn()
+      .mockImplementationOnce(() => firstBatch.promise)
+      .mockImplementationOnce(() => secondBatch.promise);
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+      chunkSize: 1,
+      concurrency: 2,
+    });
+
+    const onOutcome = vi.fn();
+    const load = coordinator.loadSettled(
+      [offeringA, offeringB],
+      { onOutcome },
+    );
+
+    let finished = false;
+    void load.then(() => {
+      finished = true;
+    });
+
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(2);
+    });
+
+    firstBatch.resolve(new Map([
+      [studyGroupKey(offeringA), []],
+    ]));
+
+    await vi.waitFor(() => {
+      expect(onOutcome).toHaveBeenCalledTimes(1);
+    });
+
+    expect(onOutcome).toHaveBeenCalledWith(
+      studyGroupKey(offeringA),
+      { status: "success", groups: [] },
+    );
+    expect(finished).toBe(false);
+
+    secondBatch.resolve(new Map([
+      [studyGroupKey(offeringB), []],
+    ]));
+
+    await load;
+
+    expect(onOutcome).toHaveBeenCalledTimes(2);
+    expect(finished).toBe(true);
+  });
+
+  it("notifies each caller sharing an in-flight offering", async () => {
+    const pending = deferred<BatchResult>();
+    const transport = vi.fn(() => pending.promise);
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const firstCallback = vi.fn();
+    const secondCallback = vi.fn();
+
+    const first = coordinator.loadSettled(
+      [offeringA],
+      { onOutcome: firstCallback },
+    );
+
+    const second = coordinator.loadSettled(
+      [offeringA],
+      { onOutcome: secondCallback },
+    );
+
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(1);
+    });
+
+    pending.resolve(new Map([
+      [studyGroupKey(offeringA), []],
+    ]));
+
+    await Promise.all([first, second]);
+
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(firstCallback).toHaveBeenCalledTimes(1);
+    expect(secondCallback).toHaveBeenCalledTimes(1);
+  });
+
+  it("notifies successful and failed offerings independently", async () => {
+    const transport = vi.fn(async () => new Map([
+      [studyGroupKey(offeringA), [] as StudyGroup[]],
+    ]));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const onOutcome = vi.fn();
+
+    const outcomes = await coordinator.loadSettled(
+      [offeringA, offeringB],
+      { onOutcome },
+    );
+
+    expect(onOutcome).toHaveBeenCalledTimes(2);
+
+    expect(onOutcome).toHaveBeenCalledWith(
+      studyGroupKey(offeringA),
+      { status: "success", groups: [] },
+    );
+
+    const failed = outcomes.get(studyGroupKey(offeringB));
+
+    expect(failed?.status).toBe("failure");
+
+    if (failed?.status === "failure") {
+      expect(failed.error).toBeInstanceOf(StudyGroupRetrievalError);
+      expect(onOutcome).toHaveBeenCalledWith(
+        studyGroupKey(offeringB),
+        failed,
+      );
+    }
+  });
+
+  it("does not notify outcomes for cancelled retrievals", async () => {
+    const pending = deferred<BatchResult>();
+    const transport = vi.fn(() => pending.promise);
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const onOutcome = vi.fn();
+
+    const load = coordinator.loadSettled(
+      [offeringA],
+      { onOutcome },
+    );
+
+    const cancelled = expect(load).rejects.toBeInstanceOf(
+      StudyGroupRequestCancelledError,
+    );
+
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(1);
+    });
+
+    coordinator.clear();
+
+    await cancelled;
+    expect(onOutcome).not.toHaveBeenCalled();
+
+    pending.resolve(new Map([
+      [studyGroupKey(offeringA), []],
+    ]));
+
+    // Allow the obsolete transport completion to run.
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(onOutcome).not.toHaveBeenCalled();
+  });
+
+  it("isolates callback exceptions from retrieval and other callers", async () => {
+    const transport = vi.fn(async () => new Map([
+      [studyGroupKey(offeringA), [] as StudyGroup[]],
+    ]));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const brokenCallback = vi.fn(() => {
+      throw new Error("observer failed");
+    });
+
+    const workingCallback = vi.fn();
+
+    const [first, second] = await Promise.all([
+      coordinator.loadSettled(
+        [offeringA],
+        { onOutcome: brokenCallback },
+      ),
+      coordinator.loadSettled(
+        [offeringA],
+        { onOutcome: workingCallback },
+      ),
+    ]);
+
+    const success = {
+      status: "success",
+      groups: [],
+    };
+
+    expect(first.get(studyGroupKey(offeringA))).toEqual(success);
+    expect(second.get(studyGroupKey(offeringA))).toEqual(success);
+
+    expect(brokenCallback).toHaveBeenCalledTimes(1);
+    expect(workingCallback).toHaveBeenCalledTimes(1);
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it("notifies once per distinct offering within a load", async () => {
+    const transport = vi.fn(async () => new Map([
+      [studyGroupKey(offeringA), [] as StudyGroup[]],
+    ]));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const onOutcome = vi.fn();
+
+    const outcomes = await coordinator.loadSettled(
+      [offeringA, offeringA],
+      { onOutcome },
+    );
+
+    expect(outcomes.size).toBe(1);
+    expect(onOutcome).toHaveBeenCalledTimes(1);
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
 });
