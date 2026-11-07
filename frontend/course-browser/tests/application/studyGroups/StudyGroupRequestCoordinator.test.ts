@@ -453,4 +453,120 @@ describe("StudyGroupRequestCoordinator", () => {
 
     expect(transport).toHaveBeenCalledTimes(2);
   });
+
+  it("discards queued requests when cleared before dispatch", async () => {
+    const transport = vi.fn(async (requests: StudyGroupRequest[]) =>
+      new Map(requests.map((request) => [
+        studyGroupKey(request),
+        [] as StudyGroup[],
+      ])),
+    );
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const load = coordinator.load([offeringA]);
+    const cancelled = expect(load).rejects.toThrow(/cancel/i);
+
+    coordinator.clear();
+
+    await cancelled;
+    expect(transport).not.toHaveBeenCalled();
+  });
+
+  it("rejects active and queued requests when cleared", async () => {
+    const pending = deferred<BatchResult>();
+    const transport = vi.fn()
+      .mockImplementationOnce(() => pending.promise)
+      .mockImplementationOnce(async () => new Map([
+        [studyGroupKey(offeringA), []],
+      ]));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+      chunkSize: 1,
+      concurrency: 1,
+    });
+
+    const active = coordinator.load([offeringA]);
+
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(1);
+    });
+
+    const queued = coordinator.load([offeringB]);
+
+    // Attach rejection handlers before triggering cancellation.
+    const activeCancelled = expect(active).rejects.toThrow(/cancel/i);
+    const queuedCancelled = expect(queued).rejects.toThrow(/cancel/i);
+
+    coordinator.clear();
+
+    await Promise.all([activeCancelled, queuedCancelled]);
+
+    // Complete the obsolete transport request.
+    pending.resolve(new Map([
+      [studyGroupKey(offeringA), []],
+    ]));
+
+    const next = coordinator.load([offeringA]);
+
+    await expect(next).resolves.toEqual(
+      new Map([[studyGroupKey(offeringA), []]]),
+    );
+
+    expect(transport).toHaveBeenCalledTimes(2);
+    expect(transport).not.toHaveBeenCalledWith([offeringB]);
+  });
+
+  it("does not let an obsolete response settle a new request", async () => {
+    const oldBatch = deferred<BatchResult>();
+    const newBatch = deferred<BatchResult>();
+
+    const transport = vi.fn()
+      .mockImplementationOnce(() => oldBatch.promise)
+      .mockImplementationOnce(() => newBatch.promise);
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+      chunkSize: 1,
+      concurrency: 1,
+    });
+
+    const oldLoad = coordinator.load([offeringA]);
+
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(1);
+    });
+
+    const oldCancelled = expect(oldLoad).rejects.toThrow(/cancel/i);
+
+    coordinator.clear();
+
+    await oldCancelled;
+
+    // The same offering can be requested in a new generation.
+    const newLoad = coordinator.load([offeringA]);
+
+    // The obsolete HTTP request still occupies the sole slot.
+    expect(transport).toHaveBeenCalledTimes(1);
+
+    // A response with an omitted key must not fail the new request.
+    oldBatch.resolve(new Map());
+
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(2);
+    });
+
+    expect(transport).toHaveBeenNthCalledWith(2, [offeringA]);
+
+    newBatch.resolve(new Map([
+      [studyGroupKey(offeringA), []],
+    ]));
+
+    await expect(newLoad).resolves.toEqual(
+      new Map([[studyGroupKey(offeringA), []]]),
+    );
+  });
 });
