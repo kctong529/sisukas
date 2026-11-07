@@ -1,9 +1,10 @@
 import type { StudyGroup } from "@domain/models/StudyGroup";
-import { StudyGroupRetrievalError } from "./StudyGroupRetrievalError";
 import {
   studyGroupKey,
   type StudyGroupRequest,
 } from "./StudyGroupRequest";
+import { StudyGroupRetrievalError } from "./StudyGroupRetrievalError";
+import { StudyGroupRequestCancelledError } from "./StudyGroupRequestCancelledError";
 
 export type StudyGroupBatchResult = Map<string, StudyGroup[]>;
 
@@ -18,6 +19,9 @@ export interface StudyGroupRequestCoordinatorOptions {
 }
 
 interface PendingRequest {
+  request: StudyGroupRequest;
+  key: string;
+  generation: number;
   promise: Promise<StudyGroup[] | undefined>;
   resolve: (groups: StudyGroup[] | undefined) => void;
   reject: (reason: unknown) => void;
@@ -29,10 +33,11 @@ export class StudyGroupRequestCoordinator {
   private readonly concurrency: number;
 
   private readonly inFlight = new Map<string, PendingRequest>();
-  private readonly queue: StudyGroupRequest[] = [];
+  private readonly queue: PendingRequest[] = [];
 
   private activeBatches = 0;
   private dispatchScheduled = false;
+  private generation = 0;
 
   constructor(options: StudyGroupRequestCoordinatorOptions) {
     const { transport, chunkSize = 20, concurrency = 2 } = options;
@@ -51,10 +56,10 @@ export class StudyGroupRequestCoordinator {
   }
 
   /**
-   * Retrieve offerings using one shared queue and concurrency limit.
+   * Retrieve offerings using one shared queue and global concurrency limit.
    *
-   * Concurrent callers requesting the same offering share pending work.
-   * Completed results are not cached by this coordinator.
+   * Concurrent callers share queued and in-flight requests.
+   * Completed results are not cached.
    */
   async load(
     requests: StudyGroupRequest[],
@@ -65,9 +70,9 @@ export class StudyGroupRequestCoordinator {
       let pending = this.inFlight.get(key);
 
       if (!pending) {
-        pending = this.createPendingRequest();
+        pending = this.createPendingRequest(request, key);
         this.inFlight.set(key, pending);
-        this.queue.push(request);
+        this.queue.push(pending);
       }
 
       return [key, await pending.promise] as const;
@@ -89,7 +94,28 @@ export class StudyGroupRequestCoordinator {
     return result;
   }
 
-  private createPendingRequest(): PendingRequest {
+  /**
+   * Logically cancel all outstanding work.
+   *
+   * Queued work is discarded. Running transports are not aborted,
+   * and continue occupying concurrency slots until they settle.
+   */
+  clear(): void {
+    this.generation++;
+    this.queue.length = 0;
+
+    const pending = [...this.inFlight.values()];
+    this.inFlight.clear();
+
+    for (const entry of pending) {
+      entry.reject(new StudyGroupRequestCancelledError());
+    }
+  }
+
+  private createPendingRequest(
+    request: StudyGroupRequest,
+    key: string,
+  ): PendingRequest {
     let resolve!: PendingRequest["resolve"];
     let reject!: PendingRequest["reject"];
 
@@ -100,11 +126,18 @@ export class StudyGroupRequestCoordinator {
       },
     );
 
-    return { promise, resolve, reject };
+    return {
+      request,
+      key,
+      generation: this.generation,
+      promise,
+      resolve,
+      reject,
+    };
   }
 
   /**
-   * Coalesce synchronous load() calls into the next microtask.
+   * Coalesce synchronous requests into the next microtask.
    */
   private scheduleDispatch(): void {
     if (this.dispatchScheduled) {
@@ -119,55 +152,43 @@ export class StudyGroupRequestCoordinator {
     });
   }
 
-  /**
-   * Start as many queued batches as the global limit permits.
-   */
   private dispatch(): void {
     while (
       this.activeBatches < this.concurrency &&
       this.queue.length > 0
     ) {
       const batch = this.queue.splice(0, this.chunkSize);
-      this.activeBatches++;
 
+      this.activeBatches++;
       void this.runBatch(batch);
     }
   }
 
   private async runBatch(
-    requests: StudyGroupRequest[],
+    batch: PendingRequest[],
   ): Promise<void> {
     try {
-      const result = await this.transport(requests);
+      const result = await this.transport(
+        batch.map((entry) => entry.request),
+      );
 
-      for (const request of requests) {
-        const key = studyGroupKey(request);
-        const pending = this.inFlight.get(key);
+      for (const entry of batch) {
+        if (this.isCurrent(entry)) {
+          this.inFlight.delete(entry.key);
 
-        if (!pending) {
-          continue;
+          if (!result.has(entry.key)) {
+            entry.reject(new StudyGroupRetrievalError());
+          } else {
+            entry.resolve(result.get(entry.key));
+          }
         }
-
-        this.inFlight.delete(key);
-
-        if (!result.has(key)) {
-          pending.reject(new StudyGroupRetrievalError());
-          continue;
-        }
-
-        pending.resolve(result.get(key));
       }
     } catch (error) {
-      for (const request of requests) {
-        const key = studyGroupKey(request);
-        const pending = this.inFlight.get(key);
-
-        if (!pending) {
-          continue;
+      for (const entry of batch) {
+        if (this.isCurrent(entry)) {
+          this.inFlight.delete(entry.key);
+          entry.reject(error);
         }
-
-        this.inFlight.delete(key);
-        pending.reject(error);
       }
     } finally {
       this.activeBatches--;
@@ -176,5 +197,16 @@ export class StudyGroupRequestCoordinator {
         this.scheduleDispatch();
       }
     }
+  }
+
+  /**
+   * Prevent an obsolete batch from settling a newer request
+   * for the same offering key.
+   */
+  private isCurrent(entry: PendingRequest): boolean {
+    return (
+      entry.generation === this.generation &&
+      this.inFlight.get(entry.key) === entry
+    );
   }
 }
