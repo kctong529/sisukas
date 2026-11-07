@@ -2,6 +2,8 @@
 
 This Playwright benchmark measures the time until the calendar is visible and until study-group data for the active plan is complete. It covers **cold load**, **reload**, and **warm navigation**. It is intended for reproducible local performance measurements, not load testing.
 
+A **cold load** means a fresh browser context with stored summary cache keys cleared. It does **not** clear server-side, wrapper, or upstream SISU caches.
+
 ## Prerequisites
 
 - Install frontend dependencies in `frontend/course-browser/` and install Playwright Chromium if needed: `npx playwright install chromium`.
@@ -42,6 +44,8 @@ Inspect the summary:
 jq '.summary' /tmp/sisukas-161/results.json
 ```
 
+The command exits with a nonzero status if any scenario is incomplete, partial, skipped, timed out, or otherwise unsuccessful. Inspect the JSON report for details.
+
 The script records browser readiness, full-data completion, request counts, failures, and request timings. A fast `readyMs` is **not** equivalent to completed calendar loading; compare `completeMs` for runs whose status is `complete`.
 
 ## Configuration
@@ -51,7 +55,7 @@ The script records browser readiness, full-data completion, request counts, fail
 | `SISUKAS_BASE_URL` | `https://test.sisukas.eu` | Frontend URL |
 | `SISUKAS_STORAGE_STATE` | `playwright/.auth/test-user.json` | Playwright authentication state |
 | `SISUKAS_BENCH_RUNS` | `3` | Repetitions |
-| `SISUKAS_BENCH_TIMEOUT_MS` | `90000` | Per-scenario timeout; use a longer limit for slow baselines |
+| `SISUKAS_BENCH_TIMEOUT_MS` | `120000` | Per-scenario timeout |
 | `SISUKAS_BENCH_OUTPUT` | `test-results/benchmark161/results.json` | JSON results path |
 | `SISUKAS_BENCH_IDLE_MS` | `1500` | Stability observation interval |
 | `SISUKAS_BENCH_HEADED` | unset | Set to `1` to display the Playwright browser |

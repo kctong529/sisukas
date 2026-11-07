@@ -10,7 +10,7 @@ const origin = new URL(baseURL).origin;
 const authPath = resolve(process.env.SISUKAS_STORAGE_STATE ?? 'playwright/.auth/test-user.json');
 const outputPath = resolve(process.env.SISUKAS_BENCH_OUTPUT ?? 'test-results/benchmark161/results.json');
 const repeats = Number(process.env.SISUKAS_BENCH_RUNS ?? 3);
-const timeoutMs = Number(process.env.SISUKAS_BENCH_TIMEOUT_MS ?? 90_000);
+const timeoutMs = Number(process.env.SISUKAS_BENCH_TIMEOUT_MS ?? 120_000);
 const idleMs = Number(process.env.SISUKAS_BENCH_IDLE_MS ?? 1500);
 const pollMs = 150;
 if (!Number.isInteger(repeats) || repeats < 1 || repeats > 20) throw Error('SISUKAS_BENCH_RUNS must be 1..20');
@@ -274,4 +274,5 @@ const report = {
 await mkdir(dirname(outputPath), {recursive:true});
 await writeFile(outputPath, JSON.stringify(report, null, 2) + '\n');
 console.log(`\nWrote ${outputPath}\n${JSON.stringify(aggregate,null,2)}`);
-if (results.some(row => row.status === 'timeout' || row.status === 'action-error' || row.status === 'invalid-plan')) process.exitCode = 1;
+// Incomplete, partial, skipped, and failed scenarios must not pass silently.
+if (results.some(row => row.status !== 'complete')) process.exitCode = 1;

@@ -29,3 +29,8 @@ def test_resource_categories_do_not_leak_ids():
     assert profiling.upstream_kind("/study-events") == "study_events"
     assert profiling.upstream_kind("/locations/v1/sensitive") == "location"
     assert profiling.upstream_kind("/course-unit-realisations/published") == "published_realisations"
+
+
+def test_elapsed_ms_is_nonnegative():
+    from time import perf_counter
+    assert profiling.elapsed_ms(perf_counter()) >= 0
