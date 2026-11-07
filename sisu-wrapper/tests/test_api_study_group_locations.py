@@ -136,3 +136,60 @@ def test_openapi_describes_opt_in_for_both_routes(monkeypatch):
         flag = next(p for p in parameters if p["name"] == "resolve_locations")
         assert flag["required"] is False
         assert flag["schema"]["default"] is False
+
+
+def test_batch_profiling_preserves_response_and_emits_phases(monkeypatch, caplog):
+    """Opt-in profiling must not change the batch response or service calls."""
+    from sisu_wrapper import profiling
+
+    client, service = _client(monkeypatch)
+    payload = {"requests": [
+        {"course_unit_id": UNIT, "course_offering_id": OFFERING}
+    ]}
+
+    monkeypatch.delenv("SISUKAS_PROFILE_STUDY_GROUPS", raising=False)
+    without_profile = client.post(
+        "/api/courses/batch/study-groups?resolve_locations=true",
+        json=payload,
+    )
+
+    monkeypatch.setenv("SISUKAS_PROFILE_STUDY_GROUPS", "1")
+    with caplog.at_level("INFO", logger="uvicorn.error"):
+        with_profile = client.post(
+            "/api/courses/batch/study-groups?resolve_locations=true",
+            json=payload,
+        )
+
+    assert without_profile.status_code == with_profile.status_code == 200
+    assert without_profile.json() == with_profile.json()
+    assert service.fetch_study_groups_batch.call_count == 2
+    assert service.resolve_study_group_locations.call_count == 2
+    assert "perf161.batch_start" in caplog.text
+    assert "perf161.batch_phases" in caplog.text
+    assert "retrieval_ms=" in caplog.text
+    assert "locations_ms=" in caplog.text
+    assert "perf161.batch_end" in caplog.text
+    assert "outcome=ok" in caplog.text
+    assert UNIT not in caplog.text
+    assert OFFERING not in caplog.text
+    assert profiling.current_batch() is None
+
+
+def test_batch_profiling_emits_failure_and_clears_context(monkeypatch, caplog):
+    """Exceptions must produce a failed completion log without leaking context."""
+    from sisu_wrapper import profiling
+
+    client, service = _client(monkeypatch)
+    service.fetch_study_groups_batch.side_effect = RuntimeError("test backend failure")
+    monkeypatch.setenv("SISUKAS_PROFILE_STUDY_GROUPS", "1")
+    with caplog.at_level("INFO", logger="uvicorn.error"):
+        response = client.post("/api/courses/batch/study-groups", json={
+            "requests": [{"course_unit_id": UNIT, "course_offering_id": OFFERING}]
+        })
+
+    assert response.status_code == 500
+    assert response.json()["detail"] == "Internal server error"
+    assert "perf161.batch_start" in caplog.text
+    assert "perf161.batch_end" in caplog.text
+    assert "outcome=failed" in caplog.text
+    assert profiling.current_batch() is None

@@ -17,12 +17,14 @@ Implementation notes
 
 from datetime import date
 import logging
+from time import perf_counter
 from typing import List, Dict, Any
 from fastapi import APIRouter, Query, HTTPException
 from pydantic import BaseModel, Field
 from sisu_wrapper.historical import DateRange
 
 from sisu_wrapper.service import SisuService
+from sisu_wrapper import profiling
 from sisu_wrapper.client import SisuClient
 from sisu_wrapper.models import StudyGroup, CourseOffering
 from sisu_wrapper.exceptions import (
@@ -245,17 +247,33 @@ async def batch_get_study_groups(
     ),
 ):
     """Batch fetch study groups, optionally resolving room metadata."""
+    started = perf_counter()
+    token = profiling.start_batch() if profiling.enabled() else None
+    outcome = "ok"
     try:
+        profiling.log(
+            "batch_start", count=len(body.requests),
+            resolve_locations=resolve_locations,
+        )
         batch_requests = [
             (req.course_unit_id, req.course_offering_id)
             for req in body.requests
         ]
+        retrieval_started = perf_counter()
         results = _service.fetch_study_groups_batch(batch_requests)
+        retrieval_ms = profiling.elapsed_ms(retrieval_started)
+
+        locations_started = perf_counter()
         if resolve_locations:
             results = {
                 key: _service.resolve_study_group_locations(groups)
                 for key, groups in results.items()
             }
+        locations_ms = profiling.elapsed_ms(locations_started)
+        profiling.log(
+            "batch_phases", retrieval_ms=retrieval_ms,
+            locations_ms=locations_ms,
+        )
 
         return BatchStudyGroupsResponse(
             results={
@@ -264,8 +282,16 @@ async def batch_get_study_groups(
             total_requests=len(body.requests)
         )
     except Exception as e:
+        outcome = "failed"
         logger.exception("Error in batch study groups request")
         raise HTTPException(status_code=500, detail="Internal server error") from e
+    finally:
+        profiling.log(
+            "batch_end", outcome=outcome,
+            duration_ms=profiling.elapsed_ms(started),
+        )
+        if token is not None:
+            profiling.end_batch(token)
 
 
 @router.post(
