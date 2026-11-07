@@ -10,6 +10,10 @@ import {
 } from "@application/studyGroups/StudyGroupRequest";
 
 import {
+  StudyGroupRequestCancelledError,
+} from "@application/studyGroups/StudyGroupRequestCancelledError";
+
+import {
   StudyGroupRetrievalError,
 } from "@application/studyGroups/StudyGroupRetrievalError";
 
@@ -568,5 +572,186 @@ describe("StudyGroupRequestCoordinator", () => {
     await expect(newLoad).resolves.toEqual(
       new Map([[studyGroupKey(offeringA), []]]),
     );
+  });
+
+  it("returns success outcomes for populated and empty results", async () => {
+    const groups: StudyGroup[] = [
+      {
+        groupId: "group-1",
+        name: "Lecture 1",
+        type: "Lecture",
+        studyEvents: [],
+      },
+    ];
+
+    const transport = vi.fn(async () => new Map([
+      [studyGroupKey(offeringA), groups],
+      [studyGroupKey(offeringB), [] as StudyGroup[]],
+    ]));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const outcomes = await coordinator.loadSettled([
+      offeringA,
+      offeringB,
+    ]);
+
+    expect(outcomes.get(studyGroupKey(offeringA))).toEqual({
+      status: "success",
+      groups,
+    });
+
+    expect(outcomes.get(studyGroupKey(offeringB))).toEqual({
+      status: "success",
+      groups: [],
+    });
+
+    expect(outcomes.size).toBe(2);
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it("preserves successes when another offering is omitted", async () => {
+    const transport = vi.fn(async () => new Map([
+      [studyGroupKey(offeringA), [] as StudyGroup[]],
+    ]));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const outcomes = await coordinator.loadSettled([
+      offeringA,
+      offeringB,
+    ]);
+
+    expect(outcomes.get(studyGroupKey(offeringA))).toEqual({
+      status: "success",
+      groups: [],
+    });
+
+    const missing = outcomes.get(studyGroupKey(offeringB));
+
+    expect(missing?.status).toBe("failure");
+
+    if (missing?.status === "failure") {
+      expect(missing.error).toBeInstanceOf(StudyGroupRetrievalError);
+    }
+
+    expect(outcomes.size).toBe(2);
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(transport).toHaveBeenCalledWith([
+      offeringA,
+      offeringB,
+    ]);
+  });
+
+  it("reports transport failures per offering and allows retries", async () => {
+    const transport = vi.fn()
+      .mockRejectedValueOnce(new Error("upstream unavailable"))
+      .mockResolvedValueOnce(new Map([
+        [studyGroupKey(offeringA), [] as StudyGroup[]],
+        [studyGroupKey(offeringB), [] as StudyGroup[]],
+      ]));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const first = await coordinator.loadSettled([
+      offeringA,
+      offeringB,
+    ]);
+
+    for (const request of [offeringA, offeringB]) {
+      const outcome = first.get(studyGroupKey(request));
+
+      expect(outcome?.status).toBe("failure");
+
+      if (outcome?.status === "failure") {
+        expect(outcome.error.message).toBe("upstream unavailable");
+      }
+    }
+
+    const retried = await coordinator.loadSettled([
+      offeringA,
+      offeringB,
+    ]);
+
+    expect(retried.get(studyGroupKey(offeringA))).toEqual({
+      status: "success",
+      groups: [],
+    });
+
+    expect(retried.get(studyGroupKey(offeringB))).toEqual({
+      status: "success",
+      groups: [],
+    });
+
+    expect(transport).toHaveBeenCalledTimes(2);
+  });
+
+  it("shares pending retrieval with the existing load API", async () => {
+    const pending = deferred<BatchResult>();
+    const transport = vi.fn(() => pending.promise);
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const original = coordinator.load([offeringA]);
+    const settled = coordinator.loadSettled([offeringA]);
+
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(1);
+    });
+
+    pending.resolve(new Map([
+      [studyGroupKey(offeringA), []],
+    ]));
+
+    const [originalResult, settledResult] = await Promise.all([
+      original,
+      settled,
+    ]);
+
+    expect(originalResult.get(studyGroupKey(offeringA))).toEqual([]);
+
+    expect(settledResult.get(studyGroupKey(offeringA))).toEqual({
+      status: "success",
+      groups: [],
+    });
+
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects cancellation instead of reporting a retrieval failure", async () => {
+    const pending = deferred<BatchResult>();
+    const transport = vi.fn(() => pending.promise);
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const load = coordinator.loadSettled([offeringA]);
+
+    // Attach the rejection assertion before cancellation.
+    const cancelled = expect(load).rejects.toBeInstanceOf(
+      StudyGroupRequestCancelledError,
+    );
+
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(1);
+    });
+
+    coordinator.clear();
+
+    await cancelled;
+
+    // The obsolete transport can finish without affecting new work.
+    pending.resolve(new Map([
+      [studyGroupKey(offeringA), []],
+    ]));
   });
 });
