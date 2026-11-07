@@ -325,4 +325,265 @@ describe("StudyGroupCacheLoader", () => {
       refreshing: false,
     });
   });
+
+  it("shares pending work across overlapping ensure and refresh calls", async () => {
+    const pending = deferred<StudyGroupBatchResult>();
+    const transport = vi.fn(() => pending.promise);
+
+    const cache = new StudyGroupCache();
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+    const loader = new StudyGroupCacheLoader({
+      cache,
+      coordinator,
+      now: () => 1_000,
+    });
+
+    const first = loader.ensure([offeringA]);
+    const second = loader.refresh([offeringA]);
+    const third = loader.ensure([offeringA]);
+
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(1);
+    });
+
+    expect(cache.get(keyA)).toMatchObject({
+      groups: null,
+      status: "loading",
+      refreshing: false,
+    });
+
+    pending.resolve(new Map([
+      [keyA, [makeGroup("lecture-1")]],
+    ]));
+
+    await Promise.all([first, second, third]);
+
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(cache.get(keyA)).toEqual({
+      groups: [makeGroup("lecture-1")],
+      status: "ready",
+      fetchedAt: 1_000,
+      error: null,
+      refreshing: false,
+    });
+  });
+
+  it("deduplicates repeated offerings within a loader invocation", async () => {
+    const transport = vi.fn(
+      async (_requests: StudyGroupRequest[]): Promise<StudyGroupBatchResult> =>
+        new Map([
+          [keyA, [makeGroup("lecture-1")]],
+          [keyB, []],
+        ]),
+    );
+
+    const cache = new StudyGroupCache();
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+    const loader = new StudyGroupCacheLoader({
+      cache,
+      coordinator,
+      now: () => 1_000,
+    });
+
+    await loader.ensure([
+      offeringA,
+      offeringA,
+      offeringB,
+      offeringA,
+      offeringB,
+    ]);
+
+    expect(transport).toHaveBeenCalledTimes(1);
+
+    const dispatched = transport.mock.calls[0][0];
+
+    expect(dispatched).toEqual([offeringA, offeringB]);
+
+    expect(cache.get(keyA).groups).toEqual([
+      makeGroup("lecture-1"),
+    ]);
+    expect(cache.get(keyB).groups).toEqual([]);
+  });
+
+  it("loads missing and failed offerings through explicit refresh", async () => {
+    const transport = vi.fn(async () => new Map([
+      [keyA, [] as StudyGroup[]],
+      [keyB, [makeGroup("lecture-1")]],
+    ]));
+
+    const cache = new StudyGroupCache();
+    cache.markFailed(keyB, new Error("Previous failure"));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+    const loader = new StudyGroupCacheLoader({
+      cache,
+      coordinator,
+      now: () => 2_000,
+    });
+
+    await loader.refresh([offeringA, offeringB]);
+
+    expect(transport).toHaveBeenCalledTimes(1);
+
+    expect(cache.get(keyA)).toEqual({
+      groups: [],
+      status: "ready",
+      fetchedAt: 2_000,
+      error: null,
+      refreshing: false,
+    });
+
+    expect(cache.get(keyB)).toEqual({
+      groups: [makeGroup("lecture-1")],
+      status: "ready",
+      fetchedAt: 2_000,
+      error: null,
+      refreshing: false,
+    });
+  });
+
+  it("updates successful refreshes without discarding failed refresh data", async () => {
+    const transport = vi.fn(async () => new Map([
+      [keyA, [makeGroup("updated-lecture")]],
+      // Offering B intentionally omitted.
+    ]));
+
+    const cache = new StudyGroupCache();
+    const previousA = [makeGroup("old-lecture")];
+    const previousB = [makeGroup("old-exercise")];
+
+    cache.markReady(keyA, previousA, 1_000);
+    cache.markReady(keyB, previousB, 1_500);
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+    const loader = new StudyGroupCacheLoader({
+      cache,
+      coordinator,
+      now: () => 3_000,
+    });
+
+    await loader.refresh([offeringA, offeringB]);
+
+    expect(cache.get(keyA)).toEqual({
+      groups: [makeGroup("updated-lecture")],
+      status: "ready",
+      fetchedAt: 3_000,
+      error: null,
+      refreshing: false,
+    });
+
+    expect(cache.get(keyB)).toEqual({
+      groups: previousB,
+      status: "ready",
+      fetchedAt: 1_500,
+      error: new StudyGroupRetrievalError().message,
+      refreshing: false,
+    });
+
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not let an obsolete completion overwrite a reload", async () => {
+    const oldBatch = deferred<StudyGroupBatchResult>();
+    const newBatch = deferred<StudyGroupBatchResult>();
+
+    const transport = vi.fn()
+      .mockImplementationOnce(() => oldBatch.promise)
+      .mockImplementationOnce(() => newBatch.promise);
+
+    const cache = new StudyGroupCache();
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+      concurrency: 1,
+      chunkSize: 1,
+    });
+    const loader = new StudyGroupCacheLoader({
+      cache,
+      coordinator,
+      now: () => 2_000,
+    });
+
+    const obsoleteLoad = loader.ensure([offeringA]);
+    const cancelled = expect(obsoleteLoad).rejects.toBeInstanceOf(
+      StudyGroupRequestCancelledError,
+    );
+
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(1);
+    });
+
+    loader.clear();
+    await cancelled;
+
+    const freshLoad = loader.ensure([offeringA]);
+
+    // The obsolete physical transport still occupies the only slot.
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(cache.get(keyA).status).toBe("loading");
+
+    oldBatch.resolve(new Map([
+      [keyA, [makeGroup("obsolete")]],
+    ]));
+
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(2);
+    });
+
+    // Old results must not populate the new cache generation.
+    expect(cache.get(keyA)).toMatchObject({
+      groups: null,
+      status: "loading",
+    });
+
+    newBatch.resolve(new Map([
+      [keyA, [makeGroup("fresh")]],
+    ]));
+
+    await freshLoad;
+
+    expect(cache.get(keyA)).toEqual({
+      groups: [makeGroup("fresh")],
+      status: "ready",
+      fetchedAt: 2_000,
+      error: null,
+      refreshing: false,
+    });
+  });
+
+  it("does not leave entries loading when outcome application throws", async () => {
+    const transport = vi.fn(async () => new Map([
+      [keyA, [makeGroup("lecture-1")]],
+    ]));
+
+    const cache = new StudyGroupCache();
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+    const loader = new StudyGroupCacheLoader({
+      cache,
+      coordinator,
+      now: () => {
+        throw new Error("Clock unavailable");
+      },
+    });
+
+    await loader.ensure([offeringA]);
+
+    expect(transport).toHaveBeenCalledTimes(1);
+
+    expect(cache.get(keyA)).toMatchObject({
+      groups: null,
+      status: "failed",
+      error: "Clock unavailable",
+      refreshing: false,
+    });
+  });
 });
