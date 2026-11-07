@@ -4,6 +4,8 @@ import { chromium } from '@playwright/test';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
+import { URL } from 'node:url';
+import { setTimeout } from 'node:timers';
 
 const baseURL = process.env.SISUKAS_BASE_URL ?? 'https://test.sisukas.eu';
 const origin = new URL(baseURL).origin;
