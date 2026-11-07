@@ -1,6 +1,14 @@
 import type { StudyGroup } from "@domain/models/StudyGroup";
 import type { StudyGroupEntry } from "./StudyGroupEntry";
 
+export type StudyGroupCacheChange =
+  | { type: "entry"; key: string }
+  | { type: "clear" };
+
+export type StudyGroupCacheListener = (
+  change: StudyGroupCacheChange,
+) => void;
+
 const MISSING_ENTRY: Readonly<StudyGroupEntry> = {
   groups: null,
   status: "missing",
@@ -13,10 +21,28 @@ const MISSING_ENTRY: Readonly<StudyGroupEntry> = {
  * Stores the latest full study-group data for each offering.
  *
  * The cache owns its data and returns independent copies to callers.
+ * Subscribers receive change notifications, not mutable cache entries.
+ *
  * It does not fetch, schedule, persist, or apply freshness policies.
  */
 export class StudyGroupCache {
   private readonly entries = new Map<string, StudyGroupEntry>();
+
+  private readonly listeners = new Set<StudyGroupCacheListener>();
+
+  /**
+   * Subscribe to successful cache state changes.
+   *
+   * Notifications are synchronous and occur after mutation.
+   * Registration does not replay the current state.
+   */
+  subscribe(listener: StudyGroupCacheListener): () => void {
+    this.listeners.add(listener);
+
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
 
   get(key: string): StudyGroupEntry {
     const entry = this.entries.get(key) ?? MISSING_ENTRY;
@@ -49,6 +75,8 @@ export class StudyGroupCache {
       error: null,
       refreshing: false,
     });
+
+    this.notify({ type: "entry", key });
   }
 
   /**
@@ -66,6 +94,8 @@ export class StudyGroupCache {
       error: null,
       refreshing: false,
     });
+
+    this.notify({ type: "entry", key });
   }
 
   /**
@@ -81,16 +111,17 @@ export class StudyGroupCache {
         error: error.message,
         refreshing: false,
       });
-      return;
+    } else {
+      this.entries.set(key, {
+        groups: null,
+        status: "failed",
+        fetchedAt: null,
+        error: error.message,
+        refreshing: false,
+      });
     }
 
-    this.entries.set(key, {
-      groups: null,
-      status: "failed",
-      fetchedAt: null,
-      error: error.message,
-      refreshing: false,
-    });
+    this.notify({ type: "entry", key });
   }
 
   /**
@@ -111,15 +142,36 @@ export class StudyGroupCache {
       error: null,
       refreshing: true,
     });
+
+    this.notify({ type: "entry", key });
   }
 
   /**
    * Forget every stored offering.
    *
-   * The future coordinator adapter owns protection against late
-   * asynchronous completions.
+   * The loader owns invalidation of outstanding asynchronous work.
+   * Subscribers remain registered across clears.
    */
   clear(): void {
     this.entries.clear();
+    this.notify({ type: "clear" });
+  }
+
+  /**
+   * Publish a change without exposing internal cache references.
+   *
+   * A faulty listener must not interrupt cache mutations or prevent
+   * other listeners from receiving the same notification.
+   */
+  private notify(change: StudyGroupCacheChange): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(change);
+      } catch {
+        // Subscribers are observers, not participants in cache
+        // state transitions. Their errors cannot roll back
+        // mutations or prevent other notifications.
+      }
+    }
   }
 }
