@@ -332,4 +332,102 @@ describe("StudyGroupRequestCoordinator", () => {
     await Promise.all([first, second]);
   });
 
+  it("treats an explicitly empty response as successful", async () => {
+    const transport = vi.fn(async () => new Map([
+      [studyGroupKey(offeringA), [] as StudyGroup[]],
+    ]));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const result = await coordinator.load([offeringA]);
+
+    expect(result.has(studyGroupKey(offeringA))).toBe(true);
+    expect(result.get(studyGroupKey(offeringA))).toEqual([]);
+  });
+
+  it("rejects when a requested offering is missing from the response", async () => {
+    const transport = vi.fn(async () => new Map<string, StudyGroup[]>());
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    await expect(coordinator.load([offeringA])).rejects.toThrow(
+      /missing|omitted|incomplete/i,
+    );
+
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it("settles successful offerings independently of omitted offerings", async () => {
+    const transport = vi.fn(async () => new Map([
+      [studyGroupKey(offeringA), [] as StudyGroup[]],
+    ]));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    const [successful, missing] = await Promise.allSettled([
+      coordinator.load([offeringA]),
+      coordinator.load([offeringB]),
+    ]);
+
+    expect(successful.status).toBe("fulfilled");
+    if (successful.status === "fulfilled") {
+      expect(successful.value.has(studyGroupKey(offeringA))).toBe(true);
+    }
+
+    expect(missing.status).toBe("rejected");
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(transport).toHaveBeenCalledWith([offeringA, offeringB]);
+  });
+
+  it("rejects a failed transport and releases its scheduler slot", async () => {
+    const transport = vi.fn()
+      .mockRejectedValueOnce(new Error("upstream unavailable"))
+      .mockResolvedValueOnce(new Map([
+        [studyGroupKey(offeringB), []],
+      ]));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+      chunkSize: 1,
+      concurrency: 1,
+    });
+
+    const first = coordinator.load([offeringA]);
+    const second = coordinator.load([offeringB]);
+
+    await expect(first).rejects.toThrow("upstream unavailable");
+    await expect(second).resolves.toEqual(
+      new Map([[studyGroupKey(offeringB), []]]),
+    );
+
+    expect(transport).toHaveBeenCalledTimes(2);
+  });
+
+  it("allows retrying an offering after a failed retrieval", async () => {
+    const transport = vi.fn()
+      .mockRejectedValueOnce(new Error("temporary failure"))
+      .mockResolvedValueOnce(new Map([
+        [studyGroupKey(offeringA), []],
+      ]));
+
+    const coordinator = new StudyGroupRequestCoordinator({
+      transport,
+    });
+
+    await expect(coordinator.load([offeringA])).rejects.toThrow(
+      "temporary failure",
+    );
+
+    await expect(coordinator.load([offeringA])).resolves.toEqual(
+      new Map([[studyGroupKey(offeringA), []]]),
+    );
+
+    expect(transport).toHaveBeenCalledTimes(2);
+  });
 });
