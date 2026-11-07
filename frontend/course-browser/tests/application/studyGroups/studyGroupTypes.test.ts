@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   studyGroupKey,
-  type StudyGroupEntry,
-} from "../../../src/lib/studyGroups/studyGroupTypes";
+} from "@application/studyGroups/StudyGroupRequest";
+
+import type {
+  StudyGroupEntry,
+} from "@application/studyGroups/StudyGroupEntry";
 
 describe("studyGroupKey", () => {
   it("uses the existing wrapper response key format", () => {
