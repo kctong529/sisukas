@@ -9,6 +9,10 @@ import {
   type StudyGroupRequest,
 } from "@application/studyGroups/StudyGroupRequest";
 
+import {
+  StudyGroupRetrievalError,
+} from "@application/studyGroups/StudyGroupRetrievalError";
+
 import type { StudyGroup } from "@domain/models/StudyGroup";
 
 type BatchResult = Map<string, StudyGroup[]>;
@@ -200,16 +204,21 @@ describe("StudyGroupRequestCoordinator", () => {
   });
 
   it("enforces one concurrency limit across separate load calls", async () => {
-    const pending: Array<ReturnType<typeof deferred<BatchResult>>> = [];
+    const pending: Array<{
+      requests: StudyGroupRequest[];
+      operation: ReturnType<typeof deferred<BatchResult>>;
+    }> = [];
+
     let active = 0;
     let maximumActive = 0;
 
-    const transport = vi.fn(() => {
+    const transport = vi.fn((requests: StudyGroupRequest[]) => {
       active++;
       maximumActive = Math.max(maximumActive, active);
 
       const operation = deferred<BatchResult>();
-      pending.push(operation);
+
+      pending.push({ requests, operation });
 
       return operation.promise.finally(() => {
         active--;
@@ -221,6 +230,20 @@ describe("StudyGroupRequestCoordinator", () => {
       chunkSize: 1,
       concurrency: 2,
     });
+
+    // Test-only helper
+    function completeBatch(index: number): void {
+      const { requests, operation } = pending[index];
+
+      operation.resolve(
+        new Map(
+          requests.map((request) => [
+            studyGroupKey(request),
+            [] as StudyGroup[],
+          ]),
+        ),
+      );
+    }
 
     const offerings = Array.from({ length: 5 }, (_, index) => ({
       courseUnitId: "unit-1",
@@ -237,8 +260,8 @@ describe("StudyGroupRequestCoordinator", () => {
     expect(maximumActive).toBe(2);
     expect(transport).toHaveBeenCalledTimes(2);
 
-    pending[0].resolve(new Map());
-    pending[1].resolve(new Map());
+    completeBatch(0);
+    completeBatch(1);
 
     await vi.waitFor(() => {
       expect(pending).toHaveLength(4);
@@ -246,14 +269,14 @@ describe("StudyGroupRequestCoordinator", () => {
 
     expect(maximumActive).toBe(2);
 
-    pending[2].resolve(new Map());
-    pending[3].resolve(new Map());
+    completeBatch(2);
+    completeBatch(3);
 
     await vi.waitFor(() => {
       expect(pending).toHaveLength(5);
     });
 
-    pending[4].resolve(new Map());
+    completeBatch(4);
 
     await Promise.all(loads);
 
@@ -354,9 +377,9 @@ describe("StudyGroupRequestCoordinator", () => {
       transport,
     });
 
-    await expect(coordinator.load([offeringA])).rejects.toThrow(
-      /missing|omitted|incomplete/i,
-    );
+    await expect(
+      coordinator.load([offeringA]),
+    ).rejects.toBeInstanceOf(StudyGroupRetrievalError);
 
     expect(transport).toHaveBeenCalledTimes(1);
   });

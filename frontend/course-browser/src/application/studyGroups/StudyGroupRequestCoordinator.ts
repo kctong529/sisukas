@@ -1,4 +1,5 @@
 import type { StudyGroup } from "@domain/models/StudyGroup";
+import { StudyGroupRetrievalError } from "./StudyGroupRetrievalError";
 import {
   studyGroupKey,
   type StudyGroupRequest,
@@ -143,20 +144,30 @@ export class StudyGroupRequestCoordinator {
         const key = studyGroupKey(request);
         const pending = this.inFlight.get(key);
 
-        if (pending) {
-          this.inFlight.delete(key);
-          pending.resolve(result.get(key));
+        if (!pending) {
+          continue;
         }
+
+        this.inFlight.delete(key);
+
+        if (!result.has(key)) {
+          pending.reject(new StudyGroupRetrievalError());
+          continue;
+        }
+
+        pending.resolve(result.get(key));
       }
     } catch (error) {
       for (const request of requests) {
         const key = studyGroupKey(request);
         const pending = this.inFlight.get(key);
 
-        if (pending) {
-          this.inFlight.delete(key);
-          pending.reject(error);
+        if (!pending) {
+          continue;
         }
+
+        this.inFlight.delete(key);
+        pending.reject(error);
       }
     } finally {
       this.activeBatches--;
