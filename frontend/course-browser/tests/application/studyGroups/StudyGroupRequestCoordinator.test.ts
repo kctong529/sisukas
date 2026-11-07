@@ -47,7 +47,10 @@ describe("StudyGroupRequestCoordinator", () => {
     const first = coordinator.load([offeringA]);
     const second = coordinator.load([offeringA]);
 
-    expect(transport).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(1);
+    });
+
     expect(transport).toHaveBeenCalledWith([offeringA]);
 
     pending.resolve(new Map([
@@ -73,9 +76,11 @@ describe("StudyGroupRequestCoordinator", () => {
 
     const first = coordinator.load([offeringA]);
 
-    // Give the first request an opportunity to start.
-    await Promise.resolve();
+    await vi.waitFor(() => {
+      expect(transport).toHaveBeenCalledTimes(1);
+    });
 
+    // The transport has started but has not completed.
     const second = coordinator.load([offeringA]);
 
     expect(transport).toHaveBeenCalledTimes(1);
@@ -89,7 +94,7 @@ describe("StudyGroupRequestCoordinator", () => {
     expect(transport).toHaveBeenCalledTimes(1);
   });
 
-  it("retrieves different offerings independently", async () => {
+  it("preserves independent offering results within a shared batch", async () => {
     const transport = vi.fn(async (requests: StudyGroupRequest[]) =>
       new Map(
         requests.map((request) => [
@@ -109,9 +114,16 @@ describe("StudyGroupRequestCoordinator", () => {
     ]);
 
     expect(first.has(studyGroupKey(offeringA))).toBe(true);
-    expect(second.has(studyGroupKey(offeringB))).toBe(true);
+    expect(first.has(studyGroupKey(offeringB))).toBe(false);
 
-    expect(transport).toHaveBeenCalledTimes(2);
+    expect(second.has(studyGroupKey(offeringB))).toBe(true);
+    expect(second.has(studyGroupKey(offeringA))).toBe(false);
+
+    expect(transport).toHaveBeenCalledTimes(1);
+    expect(transport).toHaveBeenCalledWith([
+      offeringA,
+      offeringB,
+    ]);
   });
 
   it("preserves an empty response as a successful result", async () => {
@@ -192,7 +204,7 @@ describe("StudyGroupRequestCoordinator", () => {
     let active = 0;
     let maximumActive = 0;
 
-    const transport = vi.fn((_requests: StudyGroupRequest[]) => {
+    const transport = vi.fn(() => {
       active++;
       maximumActive = Math.max(maximumActive, active);
 
