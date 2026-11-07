@@ -7,9 +7,29 @@ A **cold load** means a fresh browser context with stored summary cache keys cle
 ## Prerequisites
 
 - Install frontend dependencies in `frontend/course-browser/` and install Playwright Chromium if needed: `npx playwright install chromium`.
-- Set up a test account with a representative active study plan. Generate Playwright authentication state using `npm run test:e2e:auth:setup`. Keep `playwright/.auth/test-user.json` private and untracked.
+- Set up a dedicated test account with a representative active study plan. Capture its login session as described below.
 - Ensure the calendar exposes the completeness attributes expected by `scripts/benchmark-calendar.mjs`.
 - Run the frontend and required backend services using the project's normal development setup. Confirm the frontend actually calls the intended `sisu-wrapper` instance.
+
+### Authenticate Playwright before benchmarking
+
+The benchmark does **not** log in automatically. It reuses the authenticated browser state produced by `scripts/capture-auth-state.mjs`. Capture this state once for each test account/environment, and recapture it if the session expires.
+
+With the frontend running, from `frontend/course-browser/`:
+
+```sh
+SISUKAS_BASE_URL=https://localhost:5173 npm run test:e2e:auth:setup
+```
+
+1. The helper opens a **Playwright-controlled Chromium window**.
+2. On the site, request a Better Auth magic link using a **dedicated test account** with a representative active plan.
+3. Paste the magic-link URL into the **Playwright browser address bar**, not into the terminal or your normal browser.
+4. On the **Verify your email** page, select **Sign In Now** and wait for the application to redirect.
+5. Return to the terminal and press **Enter**. The helper checks that **Sign out** is visible, reloads the page, verifies the session again, and writes `playwright/.auth/test-user.json`.
+
+The benchmark uses that file by default. To use another filename, set `SISUKAS_STORAGE_STATE` consistently for **both** the authentication helper and the benchmark. Use the same `SISUKAS_BASE_URL` as the benchmark; a session captured for a different origin may not authenticate the local frontend.
+
+**Security:** The saved file contains active authentication state. Keep it private and untracked; never commit, upload, or share it. If the benchmark opens an unauthenticated session, rerun the capture helper before interpreting benchmark results.
 
 ### Local wrapper (optional profiling)
 
