@@ -3,6 +3,7 @@ import {
   studyGroupKey,
   type StudyGroupRequest,
 } from "./StudyGroupRequest";
+import type { StudyGroupOutcome } from "./StudyGroupOutcome";
 import { StudyGroupRetrievalError } from "./StudyGroupRetrievalError";
 import { StudyGroupRequestCancelledError } from "./StudyGroupRequestCancelledError";
 
@@ -92,6 +93,55 @@ export class StudyGroupRequestCoordinator {
     }
 
     return result;
+  }
+
+  /**
+   * Retrieve offerings with independent success and failure outcomes.
+   *
+   * Shares queued and in-flight work with load().
+   * Cancellation invalidates the entire operation instead of becoming
+   * an ordinary retrieval failure.
+   */
+  async loadSettled(
+    requests: StudyGroupRequest[],
+  ): Promise<Map<string, StudyGroupOutcome>> {
+    const entries = await Promise.all(
+      requests.map(async (request) => {
+        const key = studyGroupKey(request);
+
+        let outcome: StudyGroupOutcome;
+
+        try {
+          const result = await this.load([request]);
+          const groups = result.get(key);
+
+          if (groups === undefined) {
+            throw new StudyGroupRetrievalError();
+          }
+
+          outcome = {
+            status: "success",
+            groups,
+          };
+        } catch (error) {
+          if (error instanceof StudyGroupRequestCancelledError) {
+            throw error;
+          }
+
+          outcome = {
+            status: "failure",
+            error:
+              error instanceof Error
+                ? error
+                : new Error("Study-group retrieval failed"),
+          };
+        }
+
+        return [key, outcome] as const;
+      }),
+    );
+
+    return new Map(entries);
   }
 
   /**
