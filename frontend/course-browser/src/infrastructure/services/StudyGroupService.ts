@@ -165,7 +165,8 @@ export class StudyGroupService {
   // ========== Batch Study Groups Endpoint ==========
 
   private async fetchStudyGroupsBatchOnce(
-    requests: StudyGroupRequest[]
+    requests: StudyGroupRequest[],
+    strict = false,
   ): Promise<Map<string, StudyGroup[]>> {
     if (requests.length === 0) return new Map();
 
@@ -186,11 +187,36 @@ export class StudyGroupService {
     });
 
     if (!response.ok) {
+      if (strict) {
+        throw new Error(
+          `HTTP ${response.status} while fetching study groups`,
+        );
+      }
+
       this.handleErrorResponse(response.status);
       return new Map();
     }
 
     const data: SisuBatchStudyGroupsResponse = await response.json();
+
+    if (strict) {
+      if (
+        !data ||
+        typeof data !== "object" ||
+        !data.results ||
+        typeof data.results !== "object" ||
+        Array.isArray(data.results)
+      ) {
+        throw new Error("Invalid study-group batch response");
+      }
+
+      for (const groups of Object.values(data.results)) {
+        if (!Array.isArray(groups)) {
+          throw new Error("Invalid study-group batch result");
+        }
+      }
+    }
+
     const results = new Map<string, StudyGroup[]>();
 
     for (const [key, sisuGroups] of Object.entries(data.results)) {
@@ -198,6 +224,31 @@ export class StudyGroupService {
     }
 
     return results;
+  }
+
+  /**
+   * Fetch and normalize one coordinator-sized batch.
+   *
+   * Performs at most one HTTP request. Does not deduplicate, split,
+   * schedule, retry, or suppress retrieval errors.
+   *
+   * The coordinator owns batching and concurrency. Legacy consumers
+   * should continue using fetchStudyGroupsBatch().
+   */
+  async fetchStudyGroupsChunk(
+    requests: StudyGroupRequest[],
+  ): Promise<Map<string, StudyGroup[]>> {
+    if (requests.length === 0) {
+      return new Map();
+    }
+
+    if (requests.length > 50) {
+      throw new RangeError(
+        "Study-group batch exceeds maximum of 50 requests",
+      );
+    }
+
+    return this.fetchStudyGroupsBatchOnce(requests, true);
   }
 
   async fetchStudyGroupsBatch(
