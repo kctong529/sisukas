@@ -37,6 +37,19 @@ let loadPromise: Promise<void> | null = null;
 let ensureDefaultPromise: Promise<void> | null = null;
 let generation = 0;
 
+class PlanOperationCancelledError extends Error {
+  constructor() {
+    super('Plan operation invalidated by store reset');
+    this.name = 'PlanOperationCancelledError';
+  }
+}
+
+function assertCurrentGeneration(expected: number): void {
+  if (generation !== expected) {
+    throw new PlanOperationCancelledError();
+  }
+}
+
 function normalizeActive(activeId: string | null) {
   // Pick a fallback if activeId is null but we have plans
   const finalActiveId = activeId ?? state.ids[0] ?? null;
@@ -116,56 +129,86 @@ const actions = {
    * Concurrency-safe: multiple callers share the same in-flight promise.
    */
   async ensureDefaultPlan(): Promise<void> {
-    // Fast-path: already has at least one plan and active plan
     if (state.ids.length > 0 && state.activePlanId) return;
-
     if (ensureDefaultPromise) return ensureDefaultPromise;
 
-    ensureDefaultPromise = (async () => {
-      await actions.ensureLoaded();
+    const currentGeneration = generation;
 
-      // Re-check after load (important)
+    const operation = (async () => {
+      await actions.ensureLoaded();
+      assertCurrentGeneration(currentGeneration);
+
       const plans = read.getAll();
       const active = read.getActive();
 
       if (plans.length === 0) {
-        const p = await actions.create("Default");
-        await actions.setActive(p.id);
+        const plan = await actions.create('Default');
+        assertCurrentGeneration(currentGeneration);
+
+        await actions.setActive(plan.id);
+        assertCurrentGeneration(currentGeneration);
         return;
       }
 
       if (!active) {
         await actions.setActive(plans[0].id);
+        assertCurrentGeneration(currentGeneration);
       }
-    })().finally(() => {
-      ensureDefaultPromise = null;
-    });
+    })();
 
-    return ensureDefaultPromise;
+    ensureDefaultPromise = operation;
+
+    try {
+      await operation;
+    } finally {
+      if (ensureDefaultPromise === operation) {
+        ensureDefaultPromise = null;
+      }
+    }
   },
 
   async create(name: string): Promise<Plan> {
+    const currentGeneration = generation;
     state.error = null;
+
     try {
       const newPlan = await plansService.create(name);
+
+      assertCurrentGeneration(currentGeneration);
+
       state.byId = new Map(state.byId).set(newPlan.id, newPlan);
       state.ids = [...state.ids, newPlan.id];
+
       return newPlan;
     } catch (err) {
-      state.error = err instanceof Error ? err.message : 'Failed to create plan';
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to create plan';
+      }
+
       throw err;
     }
   },
 
   async setActive(planId: string): Promise<void> {
+    const currentGeneration = generation;
     state.error = null;
-    const updatedPlan = await plansService.setActive(planId);
-    
-    // Update the server-returned plan
-    state.byId = new Map(state.byId).set(planId, updatedPlan);
 
-    // Enforce invariant locally regardless of what else is in memory
-    normalizeActive(planId);
+    try {
+      const updatedPlan = await plansService.setActive(planId);
+
+      assertCurrentGeneration(currentGeneration);
+
+      state.byId = new Map(state.byId).set(planId, updatedPlan);
+      normalizeActive(planId);
+    } catch (err) {
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to activate plan';
+      }
+
+      throw err;
+    }
   },
 
   async addInstanceToActivePlan(instanceId: string): Promise<void> {

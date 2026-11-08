@@ -141,4 +141,120 @@ describe("plansStore loading lifecycle", () => {
     expect(plansStore.state.loaded).toBe(true);
     expect(plansStore.state.error).toBeNull();
   });
+
+  it("does not activate a default plan created after clear", async () => {
+    const pending = deferred<Plan>();
+
+    vi.spyOn(plansService, "loadAll")
+      .mockResolvedValue([]);
+
+    vi.spyOn(plansService, "create")
+      .mockReturnValue(pending.promise);
+
+    const setActive = vi.spyOn(plansService, "setActive");
+
+    const initialization = plansStore.actions.ensureDefaultPlan();
+
+    // Allow ensureLoaded to finish and default creation to begin.
+    await vi.waitFor(() => {
+      expect(plansService.create).toHaveBeenCalledOnce();
+    });
+
+    plansStore.actions.clear();
+
+    pending.resolve(plan("obsolete"));
+
+    await expect(initialization).rejects.toThrow(
+      "Plan operation invalidated by store reset",
+    );
+
+    expect(setActive).not.toHaveBeenCalled();
+    expect(plansStore.read.getAll()).toEqual([]);
+    expect(plansStore.state.error).toBeNull();
+  });
+
+  it("does not restore a plan from an obsolete create", async () => {
+    const pending = deferred<Plan>();
+
+    vi.spyOn(plansService, "create")
+      .mockReturnValue(pending.promise);
+
+    const creation = plansStore.actions.create("Default");
+
+    plansStore.actions.clear();
+    pending.resolve(plan("obsolete"));
+
+    await expect(creation).rejects.toThrow(
+      "Plan operation invalidated by store reset",
+    );
+
+    expect(plansStore.read.getById("obsolete")).toBeNull();
+    expect(plansStore.state.error).toBeNull();
+  });
+
+  it("does not activate a plan after clear", async () => {
+    const pending = deferred<Plan>();
+
+    vi.spyOn(plansService, "setActive")
+      .mockReturnValue(pending.promise);
+
+    const activation = plansStore.actions.setActive("obsolete");
+
+    plansStore.actions.clear();
+    pending.resolve(plan("obsolete"));
+
+    await expect(activation).rejects.toThrow(
+      "Plan operation invalidated by store reset",
+    );
+
+    expect(plansStore.state.activePlanId).toBeNull();
+    expect(plansStore.read.getById("obsolete")).toBeNull();
+  });
+
+  it("does not let old initialization clear newer work", async () => {
+    const oldCreate = deferred<Plan>();
+    const newCreate = deferred<Plan>();
+
+    vi.spyOn(plansService, "loadAll")
+      .mockResolvedValue([]);
+
+    vi.spyOn(plansService, "create")
+      .mockReturnValueOnce(oldCreate.promise)
+      .mockReturnValueOnce(newCreate.promise);
+
+    vi.spyOn(plansService, "setActive")
+      .mockImplementation(async id => plan(id));
+
+    const oldInitialization = plansStore.actions.ensureDefaultPlan();
+
+    await vi.waitFor(() => {
+      expect(plansService.create).toHaveBeenCalledTimes(1);
+    });
+
+    plansStore.actions.clear();
+
+    const newInitialization = plansStore.actions.ensureDefaultPlan();
+
+    await vi.waitFor(() => {
+      expect(plansService.create).toHaveBeenCalledTimes(2);
+    });
+
+    oldCreate.resolve(plan("old"));
+
+    await expect(oldInitialization).rejects.toThrow(
+      "Plan operation invalidated by store reset",
+    );
+
+    // A third caller should join the new initialization.
+    const joinedInitialization = plansStore.actions.ensureDefaultPlan();
+
+    expect(plansService.create).toHaveBeenCalledTimes(2);
+
+    newCreate.resolve(plan("new"));
+
+    await Promise.all([newInitialization, joinedInitialization]);
+
+    expect(plansStore.state.activePlanId).toBe("new");
+    expect(plansStore.read.getById("old")).toBeNull();
+  });
 });
