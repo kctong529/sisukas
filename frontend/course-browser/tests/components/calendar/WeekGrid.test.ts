@@ -2,10 +2,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushSync, mount, unmount } from 'svelte';
 import WeekGrid from '../../../src/components/calendar/WeekGrid.svelte';
-import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
+import { layoutCalendarWeek, type WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';
 import type { StudyGroup } from '@modules/study-groups';
-import { aggregateCalendarDisplayEntries } from '../../../src/application/calendar/calendarDisplayAggregation';
+import { aggregateCalendarDisplayEntries } from '@application/calendar/calendarDisplayAggregation';
 
 const mounted: Array<ReturnType<typeof mount>> = [];
 const targetElements: HTMLElement[] = [];
@@ -20,7 +20,7 @@ function render(entries: ReturnType<typeof fixed>[], groups: StudyGroup[] | null
   const layout = layoutCalendarWeek(entries, '2026-11-02');
   mounted.push(mount(WeekGrid, {
     target,
-    props: { layout, offeringIds, groupsForSegment: () => groups, presentationForSegment: (segment) => ({
+    props: { layout, offeringIds, groupsForSegment: () => groups, presentationForSegment: (segment: WeeklyCalendarSegment) => ({
       courseCode: null, courseTitle: segment.entry.source.studyGroupId,
       groupLabel: 'Exercise H02', locationLabel: null,
     }) },
@@ -430,7 +430,8 @@ describe('WeekGrid aggregated room details', () => {
       target,
       props: {
         layout,
-        membersForSegment: segment => display.membersByEntry.get(segment.entry) ?? [segment.entry],
+        membersForSegment: (segment: WeeklyCalendarSegment) =>
+          display.membersByEntry.get(segment.entry) ?? [segment.entry],
         presentationForSegment: () => ({
           courseCode: 'MS-A0001', courseTitle: 'Matrix Algebra',
           groupLabel: 'Exam KT', locationLabel: '3 listed rooms',
@@ -528,7 +529,12 @@ describe('WeekGrid course context navigation', () => {
       layout,
       unfilteredSegments: layout.segments,
       weekCourses: [course('offering'), course('other')],
-      presentationForSegment: segment => ({ courseCode: null, courseTitle: segment.entry.source.studyGroupId, groupLabel: null, locationLabel: null }),
+      presentationForSegment: (segment: WeeklyCalendarSegment) => ({
+        courseCode: null,
+        courseTitle: segment.entry.source.studyGroupId,
+        groupLabel: null,
+        locationLabel: null,
+      }),
     } }));
     flushSync();
     const buttons = target.querySelectorAll<HTMLButtonElement>('.course-bar button');
@@ -623,9 +629,16 @@ describe('WeekGrid hidden visibility previews (#92)', () => {
       weekCourses: options.course ? [course] : [],
       groupsForCourse: () => groups,
       groupsForSegment: () => groups,
-      selectionForSegment: segment => segment.entry.source.studyGroupId === options.excludeGroup ? 'excluded' : 'candidate',
-      presentationForSegment: segment => ({ courseCode: 'TEST', courseTitle: 'Test course',
-        groupLabel: segment.entry.source.studyGroupId, locationLabel: null }),
+      selectionForSegment: (segment: WeeklyCalendarSegment) =>
+        segment.entry.source.studyGroupId === options.excludeGroup
+          ? 'excluded'
+          : 'candidate',
+      presentationForSegment: (segment: WeeklyCalendarSegment) => ({
+        courseCode: 'TEST',
+        courseTitle: 'Test course',
+        groupLabel: segment.entry.source.studyGroupId,
+        locationLabel: null,
+      }),
     } }));
     flushSync();
     return target;
