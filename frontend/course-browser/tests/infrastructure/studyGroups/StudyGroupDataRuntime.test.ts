@@ -11,6 +11,7 @@ import {
   createStudyGroupDataRuntime,
   getStudyGroupDataRuntime,
 } from "@infrastructure/studyGroups/StudyGroupDataRuntime";
+import { StudyGroupRequestCancelledError } from "@application/studyGroups/StudyGroupRequestCancelledError";
 
 const offeringA: StudyGroupRequest = {
   courseUnitId: "unit-a",
@@ -247,6 +248,9 @@ describe("StudyGroupDataRuntime composition", () => {
 
     const obsoleteLoad = runtime.ensure([offeringA]);
 
+    // Attach the rejection handler before clear() cancels the request.
+    const obsoleteSettlement = Promise.allSettled([obsoleteLoad]);
+
     await vi.waitFor(() => {
       expect(retrieve).toHaveBeenCalledTimes(1);
     });
@@ -267,10 +271,16 @@ describe("StudyGroupDataRuntime composition", () => {
 
     newResult.resolve(result([group("current")]));
 
-    await Promise.allSettled([
-      obsoleteLoad,
-      replacementLoad,
-    ]);
+    const [obsoleteOutcome] = await obsoleteSettlement;
+    await replacementLoad;
+
+    expect(obsoleteOutcome.status).toBe("rejected");
+
+    if (obsoleteOutcome.status === "rejected") {
+      expect(obsoleteOutcome.reason).toBeInstanceOf(
+        StudyGroupRequestCancelledError,
+      );
+    }
 
     expect(get(entry)).toMatchObject({
       groups: [group("current")],
