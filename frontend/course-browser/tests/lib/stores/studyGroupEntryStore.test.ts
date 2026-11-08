@@ -11,11 +11,6 @@ const offeringA: StudyGroupRequest = {
   courseOfferingId: "offering-a",
 };
 
-const offeringB: StudyGroupRequest = {
-  courseUnitId: "unit-b",
-  courseOfferingId: "offering-b",
-};
-
 const keyA = "unit-a:offering-a";
 const keyB = "unit-b:offering-b";
 
