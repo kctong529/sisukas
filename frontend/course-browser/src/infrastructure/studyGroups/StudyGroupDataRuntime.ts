@@ -7,9 +7,9 @@ import { StudyGroupCacheLoader } from
 import type { StudyGroupEntry } from
   "@modules/study-groups/cache/StudyGroupEntry";
 import type { StudyGroupRequest } from
-  "@application/studyGroups/StudyGroupRequest";
+  "@modules/study-groups/retrieval/StudyGroupRequest";
 import { StudyGroupRequestCoordinator } from
-  "@application/studyGroups/StudyGroupRequestCoordinator";
+  "@modules/study-groups/retrieval/StudyGroupRequestCoordinator";
 
 import { StudyGroupService } from
   "@infrastructure/services/StudyGroupService";

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   studyGroupKey,
-} from "@application/studyGroups/StudyGroupRequest";
+} from "@modules/study-groups/retrieval/StudyGroupRequest";
 
 import type {
   StudyGroupEntry,

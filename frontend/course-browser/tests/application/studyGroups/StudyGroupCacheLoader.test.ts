@@ -5,13 +5,13 @@ import { StudyGroupCacheLoader } from "@application/studyGroups/StudyGroupCacheL
 import {
   StudyGroupRequestCoordinator,
   type StudyGroupBatchResult,
-} from "@application/studyGroups/StudyGroupRequestCoordinator";
+} from "@modules/study-groups/retrieval/StudyGroupRequestCoordinator";
 import {
   studyGroupKey,
   type StudyGroupRequest,
-} from "@application/studyGroups/StudyGroupRequest";
-import { StudyGroupRequestCancelledError } from "@application/studyGroups/StudyGroupRequestCancelledError";
-import { StudyGroupRetrievalError } from "@application/studyGroups/StudyGroupRetrievalError";
+} from "@modules/study-groups/retrieval/StudyGroupRequest";
+import { StudyGroupRequestCancelledError } from "@modules/study-groups/retrieval/StudyGroupRequestCancelledError";
+import { StudyGroupRetrievalError } from "@modules/study-groups/retrieval/StudyGroupRetrievalError";
 
 const offeringA: StudyGroupRequest = {
   courseUnitId: "course-unit-a",

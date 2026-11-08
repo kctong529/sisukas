@@ -3,7 +3,7 @@ import { get } from "svelte/store";
 
 import type { StudyGroup } from "@domain/models/StudyGroup";
 import type { StudyGroupRequest } from
-  "@application/studyGroups/StudyGroupRequest";
+  "@modules/study-groups/retrieval/StudyGroupRequest";
 import { StudyGroupService } from
   "@infrastructure/services/StudyGroupService";
 
@@ -11,7 +11,7 @@ import {
   createStudyGroupDataRuntime,
   getStudyGroupDataRuntime,
 } from "@infrastructure/studyGroups/StudyGroupDataRuntime";
-import { StudyGroupRequestCancelledError } from "@application/studyGroups/StudyGroupRequestCancelledError";
+import { StudyGroupRequestCancelledError } from "@modules/study-groups/retrieval/StudyGroupRequestCancelledError";
 
 const offeringA: StudyGroupRequest = {
   courseUnitId: "unit-a",

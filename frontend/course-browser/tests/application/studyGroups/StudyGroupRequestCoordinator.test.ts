@@ -2,20 +2,20 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   StudyGroupRequestCoordinator,
-} from "@application/studyGroups/StudyGroupRequestCoordinator";
+} from "@modules/study-groups/retrieval/StudyGroupRequestCoordinator";
 
 import {
   studyGroupKey,
   type StudyGroupRequest,
-} from "@application/studyGroups/StudyGroupRequest";
+} from "@modules/study-groups/retrieval/StudyGroupRequest";
 
 import {
   StudyGroupRequestCancelledError,
-} from "@application/studyGroups/StudyGroupRequestCancelledError";
+} from "@modules/study-groups/retrieval/StudyGroupRequestCancelledError";
 
 import {
   StudyGroupRetrievalError,
-} from "@application/studyGroups/StudyGroupRetrievalError";
+} from "@modules/study-groups/retrieval/StudyGroupRetrievalError";
 
 import type { StudyGroup } from "@domain/models/StudyGroup";
 

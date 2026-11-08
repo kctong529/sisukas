@@ -5,7 +5,7 @@ import type { StudyGroupEntry } from "@modules/study-groups/cache/StudyGroupEntr
 import {
   studyGroupKey,
   type StudyGroupRequest,
-} from "@application/studyGroups/StudyGroupRequest";
+} from "@modules/study-groups/retrieval/StudyGroupRequest";
 
 /**
  * Expose one offering's authoritative full-data cache entry

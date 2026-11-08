@@ -1,6 +1,6 @@
 import type {
   StudyGroupTransport,
-} from "@application/studyGroups/StudyGroupRequestCoordinator";
+} from "@modules/study-groups/retrieval/StudyGroupRequestCoordinator";
 import { StudyGroupService } from "@infrastructure/services/StudyGroupService";
 
 /**

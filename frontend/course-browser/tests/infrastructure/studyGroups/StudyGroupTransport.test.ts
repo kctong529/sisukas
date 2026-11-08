@@ -5,8 +5,8 @@ import {
   it,
   vi,
 } from "vitest";
-import type { StudyGroupRequest } from "@application/studyGroups/StudyGroupRequest";
-import { studyGroupKey } from "@application/studyGroups/StudyGroupRequest";
+import type { StudyGroupRequest } from "@modules/study-groups/retrieval/StudyGroupRequest";
+import { studyGroupKey } from "@modules/study-groups/retrieval/StudyGroupRequest";
 import { StudyGroupService } from "@infrastructure/services/StudyGroupService";
 import { createStudyGroupTransport } from "@infrastructure/studyGroups/StudyGroupTransport";
 

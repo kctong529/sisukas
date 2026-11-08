@@ -6,12 +6,12 @@ import { StudyGroupCacheLoader } from "@application/studyGroups/StudyGroupCacheL
 import {
   StudyGroupRequestCoordinator,
   type StudyGroupBatchResult,
-} from "@application/studyGroups/StudyGroupRequestCoordinator";
+} from "@modules/study-groups/retrieval/StudyGroupRequestCoordinator";
 import {
   studyGroupKey,
   type StudyGroupRequest,
-} from "@application/studyGroups/StudyGroupRequest";
-import { StudyGroupRequestCancelledError } from "@application/studyGroups/StudyGroupRequestCancelledError";
+} from "@modules/study-groups/retrieval/StudyGroupRequest";
+import { StudyGroupRequestCancelledError } from "@modules/study-groups/retrieval/StudyGroupRequestCancelledError";
 
 const offeringA: StudyGroupRequest = {
   courseUnitId: "course-unit-a",
