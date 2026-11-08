@@ -1,7 +1,7 @@
 // src/lib/stores/studyGroupStore.svelte.ts
 import { StudyGroupService } from "../../modules/study-groups/infrastructure/StudyGroupService";
-import type { StudyGroup } from "../../domain/models/StudyGroup";
-import { formatSchedulePattern } from "../studyGroups/studyGroupFormatters";
+import type { StudyGroup } from "../../modules/study-groups/models/StudyGroup";
+import { formatSchedulePattern } from "../../modules/study-groups/formatters/studyGroupFormatters";
 
 const LS_PREFIX = "sisukas:studyGroups:v1";
 

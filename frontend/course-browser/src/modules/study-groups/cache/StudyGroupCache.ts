@@ -1,4 +1,4 @@
-import type { StudyGroup } from "@domain/models/StudyGroup";
+import type { StudyGroup } from "../models/StudyGroup";
 import type { StudyGroupEntry } from "./StudyGroupEntry";
 
 export type StudyGroupCacheChange =

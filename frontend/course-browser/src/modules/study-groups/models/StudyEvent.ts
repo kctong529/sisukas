@@ -1,5 +1,3 @@
-// src/domain/models/StudyEvent.ts
-
 export interface StudyLocation {
   id: string;
   name: string;

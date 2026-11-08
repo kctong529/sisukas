@@ -3,7 +3,7 @@
   import type { Course } from "@domain/models/Course";
   import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
   import type { StudyGroupSummary } from "../../lib/stores/studyGroupStore.svelte";
-  import { formatStudyEventSchedule, formatStudyEventTime } from "../../lib/studyGroups/studyGroupFormatters";
+  import { formatStudyEventSchedule, formatStudyEventTime } from "../../modules/study-groups/formatters/studyGroupFormatters";
 
   type Props = {
     course: Course;

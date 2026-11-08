@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { StudyGroup } from "@domain/models/StudyGroup";
+import type { StudyGroup } from "@modules/study-groups/models/StudyGroup";
 import { StudyGroupCache } from "@modules/study-groups/cache/StudyGroupCache";
 import type { StudyGroupCacheChange } from "@modules/study-groups/cache/StudyGroupCache";
 import { StudyGroupCacheLoader } from "@modules/study-groups/cache/StudyGroupCacheLoader";

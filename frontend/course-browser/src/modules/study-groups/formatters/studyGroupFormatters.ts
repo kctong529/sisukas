@@ -1,5 +1,4 @@
-// src/lib/studyGroups/studyGroupFormatters.ts
-import type { StudyEvent } from "../../domain/models/StudyEvent";
+import type { StudyEvent } from "../models/StudyEvent";
 
 type EventLike = {
   startIso?: string;

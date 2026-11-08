@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { flushSync } from "svelte";
-import type { StudyGroup } from "@domain/models/StudyGroup";
+import type { StudyGroup } from "@modules/study-groups/models/StudyGroup";
 import type { Course } from "@domain/models/Course";
 import type { Plan } from "@domain/models/Plan";
 import { plansStore } from "@lib/stores/plansStore.svelte";

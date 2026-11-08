@@ -4,7 +4,7 @@ import { flushSync, mount, unmount } from 'svelte';
 import WeekGrid from '../../../src/components/calendar/WeekGrid.svelte';
 import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';
-import type { StudyGroup } from '../../../src/domain/models/StudyGroup';
+import type { StudyGroup } from '../../../src/modules/study-groups/models/StudyGroup';
 import { aggregateCalendarDisplayEntries } from '../../../src/application/calendar/calendarDisplayAggregation';
 
 const mounted: Array<ReturnType<typeof mount>> = [];

@@ -17,7 +17,7 @@ import {
   StudyGroupRetrievalError,
 } from "@modules/study-groups/retrieval/StudyGroupRetrievalError";
 
-import type { StudyGroup } from "@domain/models/StudyGroup";
+import type { StudyGroup } from "@modules/study-groups/models/StudyGroup";
 
 type BatchResult = Map<string, StudyGroup[]>;
 

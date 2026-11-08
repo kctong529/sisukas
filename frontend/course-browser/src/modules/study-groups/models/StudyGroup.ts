@@ -1,5 +1,3 @@
-// src/domain/models/StudyGroup.ts
-
 import type { StudyEvent } from './StudyEvent';
 
 export interface StudyGroup {

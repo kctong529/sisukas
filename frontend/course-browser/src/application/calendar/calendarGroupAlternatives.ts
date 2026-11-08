@@ -1,4 +1,4 @@
-import type { StudyGroup } from '@domain/models/StudyGroup';
+import type { StudyGroup } from '@modules/study-groups/models/StudyGroup';
 import { calendarGroupLabel } from './calendarPresentation';
 
 export interface CalendarGroupAlternative {
