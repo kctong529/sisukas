@@ -2,6 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
+  import AuthenticatedDataLifecycle from './app/auth/AuthenticatedDataLifecycle.svelte';
   import AuthModal from "./components/auth/AuthModal.svelte";
   import CalendarView from "./components/calendar/CalendarView.svelte";
   import CourseTable from './components/courses/CourseTable.svelte';
@@ -336,6 +337,8 @@
     }
   });
 </script>
+
+<AuthenticatedDataLifecycle pending={$session.isPending} userId={user?.id ?? null} />
 
 <main class="app-main">
   <Navigation

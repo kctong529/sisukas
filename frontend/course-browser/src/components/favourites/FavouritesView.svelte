@@ -75,7 +75,6 @@
     editingNotes: '',
 
     hasLoadedForUser: false,
-    hasInitializedPlans: false,
     hasInitializedGrades: false,
 
     removeMode: false,
@@ -98,15 +97,15 @@
 
   // ---- Sign-in driven init/cleanup ----
   $effect(() => {
+    if ($session.isPending) return;
+
     if (!isSignedIn) {
       favouritesStore.clear?.();
-      plansStore.actions.clear();
       courseGradeStore.clear?.();
       studyGroupStore.actions.clear();
 
       expandedInstanceIds = new Set();
       ui.hasLoadedForUser = false;
-      ui.hasInitializedPlans = false;
       ui.hasInitializedGrades = false;
       ui.editingCourseId = null;
       ui.editingNotes = '';
@@ -139,14 +138,6 @@
   $effect(() => {
     if (!isSignedIn) return;
     if (!ui.hasLoadedForUser) return;
-    if (ui.hasInitializedPlans) return;
-
-    void initializePlans();
-  });
-
-  $effect(() => {
-    if (!isSignedIn) return;
-    if (!ui.hasLoadedForUser) return;
     if (ui.hasInitializedGrades) return;
 
     try {
@@ -157,21 +148,6 @@
       ui.hasInitializedGrades = true;
     }
   });
-
-  async function initializePlans() {
-    try {
-      await plansStore.actions.ensureDefaultPlan();
-      
-      // Initialize expanded state with plan instances
-      if (activePlan?.instanceIds && activePlan.instanceIds.length > 0) {
-        expandedInstanceIds = new Set(activePlan.instanceIds);
-      }
-    } catch (err) {
-      console.error('Failed to initialize plans:', err);
-    } finally {
-      ui.hasInitializedPlans = true;
-    }
-  }
 
   const planInstanceIdByCode = $derived.by(() => {
     const m = new Map<string, string>();
@@ -188,13 +164,9 @@
   // ---- Plan switch detection and state sync ----
   $effect(() => {
     if (activePlanId !== prevPlanId) {
-      // Clear old expanded state
-      expandedInstanceIds = new Set();
+      // Keep view expansion in sync with the currently selected plan.
       prevPlanId = activePlanId;
-      
-      if (ui.hasInitializedPlans && activePlan && activePlan.instanceIds && activePlan.instanceIds.length > 0) {
-        expandedInstanceIds = new Set(activePlan.instanceIds);
-      }
+      expandedInstanceIds = new Set(activePlan?.instanceIds ?? []);
     }
   });
 
