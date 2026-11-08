@@ -16,6 +16,7 @@ export interface AccountDataLifecycleActions {
 export interface AccountDataDependencies {
   favourites: AccountDataLifecycleActions;
   grades: AccountDataLifecycleActions;
+  studyGroups?: { clear(): void };
 }
 
 /**
@@ -42,6 +43,7 @@ export function createAuthenticatedPlanLifecycle(
       actions.clear();
       accountData?.favourites.clear();
       accountData?.grades.clear();
+      accountData?.studyGroups?.clear();
 
       if (!transition.current) return;
       const initializingAccount = transition.current;

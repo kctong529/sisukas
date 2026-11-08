@@ -95,11 +95,14 @@ describe("authenticated account data lifecycle", () => {
       clear: vi.fn(() => { calls.push("grades:clear"); }),
       load: vi.fn(async () => { calls.push("grades:load"); }),
     };
+    const studyGroups = {
+      clear: vi.fn(() => { calls.push("study-groups:clear"); }),
+    };
     const errors = vi.fn();
     const lifecycle = createAuthenticatedPlanLifecycle(
-      plans, errors, { favourites, grades },
+      plans, errors, { favourites, grades, studyGroups },
     );
-    return { lifecycle, plans, favourites, grades, errors, calls };
+    return { lifecycle, plans, favourites, grades, studyGroups, errors, calls };
   }
 
   it("does not load any account-scoped data until authentication settles", () => {
@@ -118,9 +121,9 @@ describe("authenticated account data lifecycle", () => {
     lifecycle.update(false, "a");
     lifecycle.update(false, "b");
     expect(calls).toEqual([
-      "plans:clear", "favourites:clear", "grades:clear",
+      "plans:clear", "favourites:clear", "grades:clear", "study-groups:clear",
       "plans:load", "favourites:load", "grades:load",
-      "plans:clear", "favourites:clear", "grades:clear",
+      "plans:clear", "favourites:clear", "grades:clear", "study-groups:clear",
       "plans:load", "favourites:load", "grades:load",
     ]);
   });
@@ -131,7 +134,7 @@ describe("authenticated account data lifecycle", () => {
     calls.length = 0;
     lifecycle.update(false, null);
     expect(calls).toEqual([
-      "plans:clear", "favourites:clear", "grades:clear",
+      "plans:clear", "favourites:clear", "grades:clear", "study-groups:clear",
     ]);
   });
 
@@ -147,5 +150,43 @@ describe("authenticated account data lifecycle", () => {
     oldGrade.reject(new Error("old grades"));
     await Promise.resolve();
     expect(errors).not.toHaveBeenCalled();
+  });
+});
+
+
+describe("study-group cache authentication boundaries", () => {
+  function setup() {
+    const clear = vi.fn();
+    const plans = { clear: vi.fn(), ensureDefaultPlan: vi.fn(async () => {}) };
+    const favourites = { clear: vi.fn(), load: vi.fn(async () => {}) };
+    const grades = { clear: vi.fn(), load: vi.fn(async () => {}) };
+    const lifecycle = createAuthenticatedPlanLifecycle(
+      plans, vi.fn(), { favourites, grades, studyGroups: { clear } },
+    );
+    return { lifecycle, clear };
+  }
+
+  it("does not clear either cache before session resolution", () => {
+    const { lifecycle, clear } = setup();
+    lifecycle.update(true, null);
+    lifecycle.update(true, "user-a");
+    expect(clear).not.toHaveBeenCalled();
+  });
+
+  it("clears on initial settled context, logout and direct account switch", () => {
+    const { lifecycle, clear } = setup();
+    lifecycle.update(false, "user-a");
+    lifecycle.update(false, "user-b");
+    lifecycle.update(false, null);
+    expect(clear).toHaveBeenCalledTimes(3);
+  });
+
+  it("does not clear again on unchanged accounts or temporary pending state", () => {
+    const { lifecycle, clear } = setup();
+    lifecycle.update(false, "user-a");
+    lifecycle.update(false, "user-a");
+    lifecycle.update(true, null);
+    lifecycle.update(false, "user-a");
+    expect(clear).toHaveBeenCalledOnce();
   });
 });
