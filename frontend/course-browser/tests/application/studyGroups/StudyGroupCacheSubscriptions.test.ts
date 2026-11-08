@@ -3,7 +3,7 @@ import type { StudyGroup } from "@domain/models/StudyGroup";
 import {
   StudyGroupCache,
   type StudyGroupCacheChange,
-} from "@application/studyGroups/StudyGroupCache";
+} from "@modules/study-groups/cache/StudyGroupCache";
 
 const keyA = "course-unit-a:offering-a";
 const keyB = "course-unit-b:offering-b";

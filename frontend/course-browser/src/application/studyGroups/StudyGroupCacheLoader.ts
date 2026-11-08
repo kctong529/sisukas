@@ -1,4 +1,4 @@
-import { StudyGroupCache } from "./StudyGroupCache";
+import { StudyGroupCache } from "@modules/study-groups/cache/StudyGroupCache";
 import {
   StudyGroupRequestCoordinator,
 } from "./StudyGroupRequestCoordinator";

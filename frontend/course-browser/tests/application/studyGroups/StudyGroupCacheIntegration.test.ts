@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { StudyGroup } from "@domain/models/StudyGroup";
-import { StudyGroupCache } from "@application/studyGroups/StudyGroupCache";
-import type { StudyGroupCacheChange } from "@application/studyGroups/StudyGroupCache";
+import { StudyGroupCache } from "@modules/study-groups/cache/StudyGroupCache";
+import type { StudyGroupCacheChange } from "@modules/study-groups/cache/StudyGroupCache";
 import { StudyGroupCacheLoader } from "@application/studyGroups/StudyGroupCacheLoader";
 import {
   StudyGroupRequestCoordinator,

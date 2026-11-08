@@ -1,11 +1,11 @@
 import type { Readable } from "svelte/store";
 
 import { StudyGroupCache } from
-  "@application/studyGroups/StudyGroupCache";
+  "@modules/study-groups/cache/StudyGroupCache";
 import { StudyGroupCacheLoader } from
   "@application/studyGroups/StudyGroupCacheLoader";
 import type { StudyGroupEntry } from
-  "@application/studyGroups/StudyGroupEntry";
+  "@modules/study-groups/cache/StudyGroupEntry";
 import type { StudyGroupRequest } from
   "@application/studyGroups/StudyGroupRequest";
 import { StudyGroupRequestCoordinator } from

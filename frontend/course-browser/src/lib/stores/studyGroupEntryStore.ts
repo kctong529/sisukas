@@ -1,7 +1,7 @@
 import { readable, type Readable } from "svelte/store";
 
-import { StudyGroupCache } from "@application/studyGroups/StudyGroupCache";
-import type { StudyGroupEntry } from "@application/studyGroups/StudyGroupEntry";
+import { StudyGroupCache } from "@modules/study-groups/cache/StudyGroupCache";
+import type { StudyGroupEntry } from "@modules/study-groups/cache/StudyGroupEntry";
 import {
   studyGroupKey,
   type StudyGroupRequest,
