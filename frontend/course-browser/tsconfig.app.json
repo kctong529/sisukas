@@ -13,9 +13,11 @@
     "composite": true,
     "paths": {
       "@application/*": ["./src/application/*"],
+      "@data/*": ["./src/data/*"],
       "@domain/*": ["./src/domain/*"],
       "@infrastructure/*": ["./src/infrastructure/*"],
-      "@lib/*": ["./src/lib/*"]
+      "@lib/*": ["./src/lib/*"],
+      "@modules/*": ["./src/modules/*"]
     },
     /**
      * Typecheck JS in `.svelte` and `.js` files by default.

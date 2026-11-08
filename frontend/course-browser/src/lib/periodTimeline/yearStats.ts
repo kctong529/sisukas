@@ -1,4 +1,4 @@
-import type { PeriodTimelineChip } from "../../domain/viewModels/PeriodTimelineModel";
+import type { PeriodTimelineChip } from "@domain/viewModels/PeriodTimelineModel";
 
 export type YearStats = {
   totalCreditsAll: number;        // all chips (even ungraded)

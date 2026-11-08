@@ -1,6 +1,6 @@
 <!-- src/components/StudyGroupStoreDebug.svelte -->
 <script lang="ts">
-  import type { StudyGroup } from "../../domain/models/StudyGroup";
+  import type { StudyGroup } from "@modules/study-groups";
   import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
 
   let isOpen = $state(false);

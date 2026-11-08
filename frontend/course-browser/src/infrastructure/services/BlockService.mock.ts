@@ -1,7 +1,7 @@
 // src/infrastructure/services/BlockService.mock.ts
 
-import type { Block } from '../../domain/models/Block';
-import type { StudyGroup } from '../../domain/models/StudyGroup';
+import type { Block } from '@domain/models/Block';
+import type { StudyGroup } from '@modules/study-groups';
 
 interface UpdateBlockRequest {
   label?: string;

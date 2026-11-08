@@ -1,4 +1,4 @@
-import type { StudyEvent } from "@domain/models/StudyEvent";
+import type { StudyEvent } from "@modules/study-groups";
 import type {
   CalendarDiagnostic,
   CalendarSourceContext,

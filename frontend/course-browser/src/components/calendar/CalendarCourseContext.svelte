@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { CalendarWeekCourse } from '@application/calendar/calendarCoursesForWeek';
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
-  import type { StudyGroup } from '@domain/models/StudyGroup';
+  import type { StudyGroup } from '@modules/study-groups';
   import type { CalendarVisibility } from '@application/calendar/calendarVisibility';
   import { calendarGroupKey, calendarEntryVisible } from '@application/calendar/calendarVisibility';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { StudyEvent } from '../../../src/domain/models/StudyEvent';
+import type { StudyEvent } from '@modules/study-groups';
 import { aggregateStudyEventsByTimeSlot } from '../../../src/lib/analytics/aggregateStudyEventsByTimeSlot';
 
 const START = '2026-11-02T10:15:00';

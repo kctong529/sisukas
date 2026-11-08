@@ -1,7 +1,7 @@
 // src/lib/stores/favouritesStore.ts
 import { writable } from 'svelte/store';
-import { FavouritesService } from '../../infrastructure/services/FavouritesService';
-import type { Favourite } from '../../infrastructure/services/FavouritesService';
+import { FavouritesService } from '@infrastructure/services/FavouritesService';
+import type { Favourite } from '@infrastructure/services/FavouritesService';
 
 export interface FavouritesStore {
   favourites: Favourite[];

@@ -2,10 +2,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { flushSync, mount, unmount } from 'svelte';
 import CalendarCourseContext from '../../../src/components/calendar/CalendarCourseContext.svelte';
-import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
+import { layoutCalendarWeek, type WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';
-import { calendarGroupKey } from '../../../src/application/calendar/calendarVisibility';
-import type { CalendarWeekCourse } from '../../../src/application/calendar/calendarCoursesForWeek';
+import { calendarGroupKey } from '@application/calendar/calendarVisibility';
+import type { CalendarWeekCourse } from '@application/calendar/calendarCoursesForWeek';
 
 const instances: Array<ReturnType<typeof mount>> = [];
 const targets: HTMLElement[] = [];
@@ -36,7 +36,7 @@ function render(override: 'visible' | 'hidden' | null, pinned = true) {
         hiddenGroups: [calendarGroupKey('offering', 'group')],
         occurrenceOverrides: override ? { 'occ-1': override } : {},
       },
-      membersForSegment: item => [item.entry],
+      membersForSegment: (item: WeeklyCalendarSegment) => [item.entry],
       onToggleGroup: vi.fn(), onToggleOccurrence, onClear, onGroupPreview, onOccurrencePreview,
     },
   }));

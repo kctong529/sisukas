@@ -1,5 +1,5 @@
 // src/infrastructure/loaders/OrganizationLoader.ts
-import organizationsYaml from '../../data/organizations.yaml';
+import organizationsYaml from '@data/organizations.yaml';
 
 /**
  * Load and validate organization names from YAML

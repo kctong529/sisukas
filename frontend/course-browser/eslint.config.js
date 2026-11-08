@@ -3,6 +3,8 @@ import ts from 'typescript-eslint';
 import svelte from 'eslint-plugin-svelte';
 import svelteParser from 'svelte-eslint-parser';
 import globals from 'globals';
+import { studyGroupBoundaryRule } from
+  './scripts/study-group-boundary-rule.js';
 
 export default [
   {
@@ -52,6 +54,20 @@ export default [
     },
     rules: {
       "svelte/prefer-svelte-reactivity": "off",
+    },
+  },
+
+  {
+    files: ['src/**/*.{ts,tsx,svelte,js}'],
+    plugins: {
+      'local-boundaries': {
+        rules: {
+          'study-groups': studyGroupBoundaryRule,
+        },
+      },
+    },
+    rules: {
+      'local-boundaries/study-groups': 'error',
     },
   },
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, expectTypeOf } from "vitest";
-import type { StudyEvent } from "@domain/models/StudyEvent";
+import type { StudyEvent } from "@modules/study-groups";
 import type { CalendarEntry } from "@domain/models/CalendarEntry";
 import type { CalendarIdentifiedOccurrence } from "@domain/services/calendar/CalendarOccurrenceIdentity";
 import {

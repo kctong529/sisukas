@@ -1,4 +1,4 @@
-import type { StudyEvent } from "./StudyEvent";
+import type { StudyEvent } from "@modules/study-groups";
 import type { CalendarInterval } from "../services/calendar/CalendarTime";
 
 /** Source association carried by every calendar entry.

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { calendarLocationGroups } from '../../../src/application/calendar/calendarLocationGroups';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';
 import type { CalendarEntry } from '../../../src/domain/models/CalendarEntry';
-import type { StudyLocation } from '../../../src/domain/models/StudyEvent';
+import type { StudyLocation } from '@modules/study-groups';
 
 function entry(id: string, locations: StudyLocation[]): CalendarEntry {
   const source = fixed(id, '2026-12-01T17:00:00+02:00', '2026-12-01T20:00:00+02:00');

@@ -1,6 +1,6 @@
 // src/infrastructure/services/PlansService.mock.ts
 
-import type { Plan } from '../../domain/models/Plan';
+import type { Plan } from '@domain/models/Plan';
 
 /**
  * Mock implementation of PlansService for testing and development

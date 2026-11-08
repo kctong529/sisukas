@@ -1,7 +1,7 @@
 // src/lib/stores/courseIndexStore.svelte.ts
-import type { Course } from "../../domain/models/Course";
-import { loadCoursesWithCache, loadHistoricalCoursesWithCache } from "../../infrastructure/loaders/RemoteCourseLoader";
-import { SnapshotHistoricalMerge } from "../../infrastructure/loaders/SnapshotHistoricalMerge";
+import type { Course } from "@domain/models/Course";
+import { loadCoursesWithCache, loadHistoricalCoursesWithCache } from "@infrastructure/loaders/RemoteCourseLoader";
+import { SnapshotHistoricalMerge } from "@infrastructure/loaders/SnapshotHistoricalMerge";
 
 type SnapshotMergeStats = { fetched: number; merged: number; skipped: number };
 const ZERO_SNAPSHOTS: SnapshotMergeStats = { fetched: 0, merged: 0, skipped: 0 };

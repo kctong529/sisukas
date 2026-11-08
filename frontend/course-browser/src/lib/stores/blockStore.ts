@@ -1,8 +1,8 @@
 // src/lib/stores/blockStore.ts
 import { writable, get, derived } from 'svelte/store';
-import { blockService } from '../../infrastructure/services/BlockService';
-import type { Block } from '../../domain/models/Block';
-import type { StudyGroup } from '../../domain/models/StudyGroup';
+import { blockService } from '@infrastructure/services/BlockService';
+import type { Block } from '@domain/models/Block';
+import type { StudyGroup } from '@modules/study-groups';
 import { colorAllocator, colorAllocatorVersion } from './colorAllocator';
 
 // ========== Store State Types ==========
