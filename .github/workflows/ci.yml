@@ -41,6 +41,9 @@ jobs:
       - name: Check Svelte and TypeScript
         run: npm run check
       
+      - name: Type Check Tests
+        run: npx tsc -p tsconfig.test.json --noEmit
+      
       - name: Validate Curriculum Metadata
         run: npm run validate:curricula -- --format-only
 
