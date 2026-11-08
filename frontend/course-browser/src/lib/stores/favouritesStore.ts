@@ -19,6 +19,7 @@ function createFavouritesStore() {
   };
 
   const { subscribe, set, update } = writable(initialState);
+  let generation = 0;
 
   return {
     subscribe,
@@ -27,10 +28,12 @@ function createFavouritesStore() {
      * Load favourites from API
      */
     async load() {
+      const requestedGeneration = generation;
       update(state => ({ ...state, loading: true, error: null }));
       
       try {
         const favourites = await FavouritesService.getFavourites();
+        if (requestedGeneration !== generation) return favourites;
         update(state => ({
           ...state,
           favourites,
@@ -38,6 +41,7 @@ function createFavouritesStore() {
         }));
         return favourites;
       } catch (err) {
+        if (requestedGeneration !== generation) return [];
         const error = err instanceof Error ? err.message : 'Failed to load favourites';
         update(state => ({
           ...state,
@@ -141,6 +145,7 @@ function createFavouritesStore() {
      * Clear all data (on sign out)
      */
     clear() {
+      generation += 1;
       set(initialState);
     },
   };

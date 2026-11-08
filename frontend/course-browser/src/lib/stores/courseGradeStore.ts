@@ -27,14 +27,17 @@ function createCourseGradeStore() {
   };
 
   const { subscribe, set, update } = writable<CourseGradeStoreState>(initialState);
+  let generation = 0;
 
   return {
     subscribe,
 
     async load() {
+      const requestedGeneration = generation;
       update((s) => ({ ...s, loading: true, error: null }));
       try {
         const rows = await gradesService.loadAll();
+        if (requestedGeneration !== generation) return;
         update((s) => ({
           ...s,
           grades: rowsToMap(rows),
@@ -42,6 +45,7 @@ function createCourseGradeStore() {
           loadedOnce: true,
         }));
       } catch (err) {
+        if (requestedGeneration !== generation) return;
         update((s) => ({
           ...s,
           loading: false,
@@ -91,6 +95,7 @@ function createCourseGradeStore() {
     },
 
     clear() {
+      generation += 1;
       set(initialState);
     },
   };
