@@ -212,33 +212,61 @@ const actions = {
   },
 
   async addInstanceToActivePlan(instanceId: string): Promise<void> {
+    const currentGeneration = generation;
+    const planId = state.activePlanId;
+
     state.error = null;
-    if (!state.activePlanId) {
+
+    if (!planId) {
       state.error = 'No active plan';
       throw new Error('No active plan');
     }
 
     try {
-      const updatedPlan = await plansService.addInstance(state.activePlanId, instanceId);
-      state.byId = new Map(state.byId).set(state.activePlanId, updatedPlan);
+      const updatedPlan = await plansService.addInstance(
+        planId,
+        instanceId,
+      );
+
+      assertCurrentGeneration(currentGeneration);
+
+      state.byId = new Map(state.byId).set(planId, updatedPlan);
     } catch (err) {
-      state.error = err instanceof Error ? err.message : 'Failed to add instance';
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to add instance';
+      }
+
       throw err;
     }
   },
 
   async removeInstanceFromActivePlan(instanceId: string): Promise<void> {
+    const currentGeneration = generation;
+    const planId = state.activePlanId;
+
     state.error = null;
-    if (!state.activePlanId) {
+
+    if (!planId) {
       state.error = 'No active plan';
       throw new Error('No active plan');
     }
 
     try {
-      const updatedPlan = await plansService.removeInstance(state.activePlanId, instanceId);
-      state.byId = new Map(state.byId).set(state.activePlanId, updatedPlan);
+      const updatedPlan = await plansService.removeInstance(
+        planId,
+        instanceId,
+      );
+
+      assertCurrentGeneration(currentGeneration);
+
+      state.byId = new Map(state.byId).set(planId, updatedPlan);
     } catch (err) {
-      state.error = err instanceof Error ? err.message : 'Failed to remove instance';
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to remove instance';
+      }
+
       throw err;
     }
   },

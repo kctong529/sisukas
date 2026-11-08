@@ -257,4 +257,76 @@ describe("plansStore loading lifecycle", () => {
     expect(plansStore.state.activePlanId).toBe("new");
     expect(plansStore.read.getById("old")).toBeNull();
   });
+
+  it.each([
+    ["add", "addInstanceToActivePlan", "addInstance"],
+    ["remove", "removeInstanceFromActivePlan", "removeInstance"],
+  ] as const)(
+    "ignores obsolete %s membership results after clear",
+    async (_label, action, serviceMethod) => {
+      const pending = deferred<Plan>();
+
+      vi.spyOn(plansService, "loadAll")
+        .mockResolvedValue([plan("plan-a")]);
+
+      await plansStore.actions.ensureLoaded();
+
+      vi.spyOn(plansService, serviceMethod)
+        .mockReturnValue(pending.promise);
+
+      const mutation = plansStore.actions[action]("offering-a");
+
+      plansStore.actions.clear();
+      pending.resolve(plan("plan-a"));
+
+      await expect(mutation).rejects.toThrow(
+        "Plan operation invalidated by store reset",
+      );
+
+      expect(plansStore.read.getAll()).toEqual([]);
+      expect(plansStore.state.error).toBeNull();
+    },
+  );
+
+  it.each([
+    ["add", "addInstanceToActivePlan", "addInstance"],
+    ["remove", "removeInstanceFromActivePlan", "removeInstance"],
+  ] as const)(
+    "applies %s results to the original plan after switching",
+    async (_label, action, serviceMethod) => {
+      const pending = deferred<Plan>();
+
+      const first = plan("plan-a");
+      const second = { ...plan("plan-b"), isActive: false };
+
+      vi.spyOn(plansService, "loadAll")
+        .mockResolvedValue([first, second]);
+
+      await plansStore.actions.ensureLoaded();
+
+      vi.spyOn(plansService, serviceMethod)
+        .mockReturnValue(pending.promise);
+
+      vi.spyOn(plansService, "setActive")
+        .mockResolvedValue({ ...second, isActive: true });
+
+      const mutation = plansStore.actions[action]("offering-a");
+
+      await plansStore.actions.setActive("plan-b");
+
+      const updatedFirst = {
+        ...first,
+        instanceIds: ["offering-a"],
+      };
+
+      pending.resolve(updatedFirst);
+      await mutation;
+
+      expect(plansStore.state.activePlanId).toBe("plan-b");
+      expect(plansStore.read.getById("plan-a")?.instanceIds)
+        .toEqual(["offering-a"]);
+      expect(plansStore.read.getById("plan-b")?.instanceIds)
+        .toEqual([]);
+    },
+  );
 });
