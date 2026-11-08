@@ -329,4 +329,90 @@ describe("plansStore loading lifecycle", () => {
         .toEqual([]);
     },
   );
+
+  it("does not restore an obsolete plan rename", async () => {
+    const pending = deferred<Plan>();
+
+    vi.spyOn(plansService, "updatePlanName")
+      .mockReturnValue(pending.promise);
+
+    const renaming = plansStore.actions.updatePlanName(
+      "plan-a",
+      "Renamed",
+    );
+
+    plansStore.actions.clear();
+
+    pending.resolve({ ...plan("plan-a"), name: "Renamed" });
+
+    await expect(renaming).rejects.toThrow(
+      "Plan operation invalidated by store reset",
+    );
+
+    expect(plansStore.read.getById("plan-a")).toBeNull();
+    expect(plansStore.state.error).toBeNull();
+  });
+
+  it("stops last-plan deletion after obsolete replacement creation", async () => {
+    const pending = deferred<Plan>();
+
+    vi.spyOn(plansService, "loadAll")
+      .mockResolvedValue([plan("plan-a")]);
+
+    vi.spyOn(plansService, "create")
+      .mockReturnValue(pending.promise);
+
+    const activate = vi.spyOn(plansService, "setActive");
+    const remove = vi.spyOn(plansService, "removePlan");
+
+    const deletion = plansStore.actions.removePlan("plan-a");
+
+    await vi.waitFor(() => {
+      expect(plansService.create).toHaveBeenCalledOnce();
+    });
+
+    plansStore.actions.clear();
+
+    pending.resolve(plan("replacement"));
+
+    await expect(deletion).rejects.toThrow(
+      "Plan operation invalidated by store reset",
+    );
+
+    expect(activate).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
+    expect(plansStore.read.getAll()).toEqual([]);
+  });
+
+  it("ignores a deletion response after clear", async () => {
+    const pending = deferred<void>();
+
+    vi.spyOn(plansService, "loadAll")
+      .mockResolvedValue([
+        plan("plan-a"),
+        { ...plan("plan-b"), isActive: false },
+      ]);
+
+    vi.spyOn(plansService, "removePlan")
+      .mockReturnValue(pending.promise);
+
+    const deletion = plansStore.actions.removePlan("plan-b");
+
+    await vi.waitFor(() => {
+      expect(plansService.removePlan).toHaveBeenCalledWith(
+        "plan-b",
+      );
+    });
+
+    plansStore.actions.clear();
+
+    pending.resolve();
+
+    await expect(deletion).rejects.toThrow(
+      "Plan operation invalidated by store reset",
+    );
+
+    expect(plansStore.read.getAll()).toEqual([]);
+    expect(plansStore.state.error).toBeNull();
+  });
 });

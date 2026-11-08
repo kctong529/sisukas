@@ -271,59 +271,88 @@ const actions = {
     }
   },
 
-  async updatePlanName(planId: string, newName: string): Promise<void> {
+  async updatePlanName(
+    planId: string,
+    newName: string,
+  ): Promise<void> {
+    const currentGeneration = generation;
     state.error = null;
+
     try {
-      const updatedPlan = await plansService.updatePlanName(planId, newName);
+      const updatedPlan = await plansService.updatePlanName(
+        planId,
+        newName,
+      );
+
+      assertCurrentGeneration(currentGeneration);
+
       state.byId = new Map(state.byId).set(planId, updatedPlan);
     } catch (err) {
-      state.error = err instanceof Error ? err.message : 'Failed to update plan';
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to update plan';
+      }
+
       throw err;
     }
   },
   
   async removePlan(planId: string): Promise<void> {
+    const currentGeneration = generation;
     state.error = null;
 
     try {
-      // Make sure we have a consistent baseline
       await actions.ensureLoaded();
+      assertCurrentGeneration(currentGeneration);
 
-      const isLastPlan = state.ids.length === 1 && state.ids[0] === planId;
+      const isLastPlan =
+        state.ids.length === 1 && state.ids[0] === planId;
       const wasActive = state.activePlanId === planId;
 
-      // If the user is removing the last remaining plan,
-      // create a replacement FIRST (server + local), activate it,
-      // then delete the old plan.
       if (isLastPlan) {
-        const replacement = await actions.create("Empty");
+        // Create and activate a replacement before deletion.
+        const replacement = await actions.create('Empty');
+        assertCurrentGeneration(currentGeneration);
+
         await actions.setActive(replacement.id);
-        // now we are guaranteed to have at least one plan besides `planId`
+        assertCurrentGeneration(currentGeneration);
       } else if (wasActive) {
-        // If deleting the active plan and it's not the last one,
-        // switch active to a fallback BEFORE deleting to keep UI stable.
-        const fallbackId = state.ids.find((id) => id !== planId) ?? null;
-        if (fallbackId) await actions.setActive(fallbackId);
-        else normalizeActive(null); // defensive, should not happen since !isLastPlan
+        const fallbackId =
+          state.ids.find(id => id !== planId) ?? null;
+
+        if (fallbackId) {
+          await actions.setActive(fallbackId);
+          assertCurrentGeneration(currentGeneration);
+        } else {
+          normalizeActive(null);
+        }
       }
 
-      // Now delete on server
-      await plansService.removePlan(planId);
+      assertCurrentGeneration(currentGeneration);
 
-      // Remove locally
+      await plansService.removePlan(planId);
+      assertCurrentGeneration(currentGeneration);
+
       const nextById = new Map(state.byId);
       nextById.delete(planId);
-      state.byId = nextById;
-      state.ids = state.ids.filter((id) => id !== planId);
 
-      // Final safety: ensure active points to an existing plan and flags are consistent
-      if (state.activePlanId && !state.byId.has(state.activePlanId)) {
+      state.byId = nextById;
+      state.ids = state.ids.filter(id => id !== planId);
+
+      if (
+        state.activePlanId &&
+        !state.byId.has(state.activePlanId)
+      ) {
         normalizeActive(state.ids[0] ?? null);
       } else {
         normalizeActive(state.activePlanId);
       }
     } catch (err) {
-      state.error = err instanceof Error ? err.message : "Failed to remove plan";
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to remove plan';
+      }
+
       throw err;
     }
   },
