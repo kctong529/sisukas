@@ -7,8 +7,8 @@ import {
 } from "vitest";
 import type { StudyGroupRequest } from "@modules/study-groups/retrieval/StudyGroupRequest";
 import { studyGroupKey } from "@modules/study-groups/retrieval/StudyGroupRequest";
-import { StudyGroupService } from "@infrastructure/services/StudyGroupService";
-import { createStudyGroupTransport } from "@infrastructure/studyGroups/StudyGroupTransport";
+import { StudyGroupService } from "@modules/study-groups/infrastructure/StudyGroupService";
+import { createStudyGroupTransport } from "@modules/study-groups/infrastructure/StudyGroupTransport";
 
 const API = "https://wrapper.example.test";
 

@@ -5,12 +5,12 @@ import type { StudyGroup } from "@domain/models/StudyGroup";
 import type { StudyGroupRequest } from
   "@modules/study-groups/retrieval/StudyGroupRequest";
 import { StudyGroupService } from
-  "@infrastructure/services/StudyGroupService";
+  "@modules/study-groups/infrastructure/StudyGroupService";
 
 import {
   createStudyGroupDataRuntime,
   getStudyGroupDataRuntime,
-} from "@infrastructure/studyGroups/StudyGroupDataRuntime";
+} from "@modules/study-groups/StudyGroupDataRuntime";
 import { StudyGroupRequestCancelledError } from "@modules/study-groups/retrieval/StudyGroupRequestCancelledError";
 
 const offeringA: StudyGroupRequest = {

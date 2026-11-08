@@ -4,7 +4,7 @@ import type { StudyGroup } from "@domain/models/StudyGroup";
 import { StudyGroupCache } from "@modules/study-groups/cache/StudyGroupCache";
 import type { StudyGroupEntry } from "@modules/study-groups/cache/StudyGroupEntry";
 import type { StudyGroupRequest } from "@modules/study-groups/retrieval/StudyGroupRequest";
-import { createStudyGroupEntryStore } from "@lib/stores/studyGroupEntryStore";
+import { createStudyGroupEntryStore } from "@modules/study-groups/stores/studyGroupEntryStore";
 
 const offeringA: StudyGroupRequest = {
   courseUnitId: "unit-a",

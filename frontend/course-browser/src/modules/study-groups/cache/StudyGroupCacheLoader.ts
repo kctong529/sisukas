@@ -1,10 +1,10 @@
-import { StudyGroupCache } from "@modules/study-groups/cache/StudyGroupCache";
-import { StudyGroupRequestCoordinator } from "../../modules/study-groups/retrieval/StudyGroupRequestCoordinator";
+import { StudyGroupCache } from "./StudyGroupCache";
+import { StudyGroupRequestCoordinator } from "../retrieval/StudyGroupRequestCoordinator";
 import {
   studyGroupKey,
   type StudyGroupRequest,
-} from "../../modules/study-groups/retrieval/StudyGroupRequest";
-import type { StudyGroupOutcome } from "../../modules/study-groups/retrieval/StudyGroupOutcome";
+} from "../retrieval/StudyGroupRequest";
+import type { StudyGroupOutcome } from "../retrieval/StudyGroupOutcome";
 
 export interface StudyGroupCacheLoaderOptions {
   cache: StudyGroupCache;

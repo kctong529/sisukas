@@ -1,5 +1,5 @@
 // src/lib/stores/studyGroupStore.svelte.ts
-import { StudyGroupService } from "../../infrastructure/services/StudyGroupService";
+import { StudyGroupService } from "../../modules/study-groups/infrastructure/StudyGroupService";
 import type { StudyGroup } from "../../domain/models/StudyGroup";
 import { formatSchedulePattern } from "../studyGroups/studyGroupFormatters";
 

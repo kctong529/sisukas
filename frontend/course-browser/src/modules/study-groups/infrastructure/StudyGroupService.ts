@@ -1,5 +1,3 @@
-// src/infrastructure/services/StudyGroupService.ts
-
 /**
  * Fetches and normalizes study group data from the SISU wrapper API.
  *
@@ -17,8 +15,8 @@
  *   concurrency to keep the UI responsive.
  */
 
-import type { StudyGroup } from '../../domain/models/StudyGroup';
-import type { StudyEvent } from '../../domain/models/StudyEvent';
+import type { StudyGroup } from '../../../domain/models/StudyGroup';
+import type { StudyEvent } from '../../../domain/models/StudyEvent';
 
 // ========== API Response Types ==========
 

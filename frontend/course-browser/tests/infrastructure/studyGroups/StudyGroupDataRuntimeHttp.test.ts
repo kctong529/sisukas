@@ -4,9 +4,9 @@ import { get } from "svelte/store";
 import type { StudyGroupRequest } from
   "@modules/study-groups/retrieval/StudyGroupRequest";
 import { StudyGroupService } from
-  "@infrastructure/services/StudyGroupService";
+  "@modules/study-groups/infrastructure/StudyGroupService";
 import { createStudyGroupDataRuntime } from
-  "@infrastructure/studyGroups/StudyGroupDataRuntime";
+  "@modules/study-groups/StudyGroupDataRuntime";
 
 const API = "https://wrapper.example.test";
 
