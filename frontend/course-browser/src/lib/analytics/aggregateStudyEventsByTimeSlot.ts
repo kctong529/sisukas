@@ -1,4 +1,4 @@
-import type { StudyEvent } from "../../modules/study-groups/models/StudyEvent";
+import type { StudyEvent } from "@modules/study-groups";
 
 /** A time slot used by scheduling analytics, not a source occurrence. */
 export interface AggregatedStudyTimeSlot {

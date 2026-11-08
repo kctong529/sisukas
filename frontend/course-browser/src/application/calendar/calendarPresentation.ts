@@ -1,4 +1,4 @@
-import type { StudyEvent } from '@modules/study-groups/models/StudyEvent';
+import type { StudyEvent } from '@modules/study-groups';
 import type { Course } from '@domain/models/Course';
 import type { CalendarEntrySource } from '@domain/models/CalendarEntry';
 

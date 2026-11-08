@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { get } from "svelte/store";
 
-import type { StudyGroup } from "@modules/study-groups/models/StudyGroup";
+import type { StudyGroup } from "@modules/study-groups";
 import type { StudyGroupRequest } from
-  "@modules/study-groups/retrieval/StudyGroupRequest";
+  "@modules/study-groups";
 import { StudyGroupService } from
   "@modules/study-groups/infrastructure/StudyGroupService";
 

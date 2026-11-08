@@ -6,7 +6,7 @@ import {
 } from "@application/calendar/calendarProjectionAdapter";
 import type { Plan } from "@domain/models/Plan";
 import type { Course } from "@domain/models/Course";
-import type { StudyGroup } from "@modules/study-groups/models/StudyGroup";
+import type { StudyGroup } from "@modules/study-groups";
 
 const plan: Plan = {
   id: "p", userId: "u", name: "Plan", isActive: true,

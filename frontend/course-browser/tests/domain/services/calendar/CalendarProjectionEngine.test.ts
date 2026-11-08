@@ -3,8 +3,8 @@ import { projectActivePlan, selectExclusiveGroupOfType, type StudyGroupSnapshot,
   "@domain/services/calendar/CalendarProjection";
 import type { Plan } from "@domain/models/Plan";
 import type { Course } from "@domain/models/Course";
-import type { StudyGroup } from "@modules/study-groups/models/StudyGroup";
-import type { StudyEvent } from "@modules/study-groups/models/StudyEvent";
+import type { StudyGroup } from "@modules/study-groups";
+import type { StudyEvent } from "@modules/study-groups";
 
 const plan = (ids: string[]): Plan => ({
   id: "plan", userId: "user", name: "Plan", isActive: true,

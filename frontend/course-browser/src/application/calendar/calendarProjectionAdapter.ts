@@ -1,6 +1,6 @@
 import type { Plan } from "@domain/models/Plan";
 import type { Course } from "@domain/models/Course";
-import type { StudyGroup } from "@modules/study-groups/models/StudyGroup";
+import type { StudyGroup } from "@modules/study-groups";
 import {
   projectActivePlan,
   type CalendarProjectionResult,

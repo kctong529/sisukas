@@ -13,6 +13,7 @@
     "composite": true,
     "paths": {
       "@application/*": ["./src/application/*"],
+      "@data/*": ["./src/data/*"],
       "@domain/*": ["./src/domain/*"],
       "@infrastructure/*": ["./src/infrastructure/*"],
       "@lib/*": ["./src/lib/*"],

@@ -2,7 +2,7 @@
 
 import type { Course } from "@domain/models/Course";
 import type { Block } from "@domain/models/Block";
-import type { StudyGroup } from "@modules/study-groups/models/StudyGroup";
+import type { StudyGroup } from "@modules/study-groups";
 import { aggregateStudyEventsByTimeSlot } from "@lib/analytics/aggregateStudyEventsByTimeSlot";
 
 /* ========= Backend request DTO ========= */

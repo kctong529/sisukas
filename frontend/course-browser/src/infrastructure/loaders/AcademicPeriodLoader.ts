@@ -1,7 +1,7 @@
 // src/infrastructure/loaders/AcademicPeriodLoader.ts
-import type { AcademicPeriod } from '../../domain/models/AcademicPeriod';
-import type { DateRange } from '../../domain/valueObjects/DateRange';
-import periodsYaml from '../../data/periods.yaml';
+import type { AcademicPeriod } from '@domain/models/AcademicPeriod';
+import type { DateRange } from '@domain/valueObjects/DateRange';
+import periodsYaml from '@data/periods.yaml';
 
 type RawPeriodsYaml = {
   periods: Array<{

@@ -14,7 +14,7 @@
   import type { CalendarVisibility } from '@application/calendar/calendarVisibility';
   import CalendarTimetable from './CalendarTimetable.svelte';
   import DenseOverlapDialog from './DenseOverlapDialog.svelte';
-  import type { StudyGroup } from '@modules/study-groups/models/StudyGroup';
+  import type { StudyGroup } from '@modules/study-groups';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import { calendarGroupAlternatives } from '@application/calendar/calendarGroupAlternatives';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';

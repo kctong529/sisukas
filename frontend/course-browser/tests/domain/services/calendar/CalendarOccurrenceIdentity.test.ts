@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { StudyEvent } from "@modules/study-groups/models/StudyEvent";
+import type { StudyEvent } from "@modules/study-groups";
 import {
   deriveCalendarOccurrenceKey,
   identifyCalendarOccurrences,

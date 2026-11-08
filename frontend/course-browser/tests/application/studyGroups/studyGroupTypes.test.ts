@@ -5,7 +5,7 @@ import {
 
 import type {
   StudyGroupEntry,
-} from "@modules/study-groups/cache/StudyGroupEntry";
+} from "@modules/study-groups";
 
 describe("studyGroupKey", () => {
   it("uses the existing wrapper response key format", () => {

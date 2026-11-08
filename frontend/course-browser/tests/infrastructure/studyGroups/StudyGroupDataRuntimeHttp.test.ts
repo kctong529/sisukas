@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { get } from "svelte/store";
 
 import type { StudyGroupRequest } from
-  "@modules/study-groups/retrieval/StudyGroupRequest";
+  "@modules/study-groups";
 import { StudyGroupService } from
   "@modules/study-groups/infrastructure/StudyGroupService";
 import { createStudyGroupDataRuntime } from

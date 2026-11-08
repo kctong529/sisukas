@@ -4,9 +4,9 @@ import { academicPeriodStore } from "./academicPeriodStore";
 import { courseIndexStore } from "./courseIndexStore.svelte";
 import { periodTimelineYearStore } from "./periodTimelineYearStore";
 import { courseGradeStore } from "./courseGradeStore";
-import { PeriodTimelineService } from "../../domain/services/PeriodTimelineService";
-import type { Course } from "../../domain/models/Course";
-import type { AcademicPeriod } from "../../domain/models/AcademicPeriod";
+import { PeriodTimelineService } from "@domain/services/PeriodTimelineService";
+import type { Course } from "@domain/models/Course";
+import type { AcademicPeriod } from "@domain/models/AcademicPeriod";
 
 interface GradesData {
   grades?: Map<string, number>;
