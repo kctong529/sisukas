@@ -3,7 +3,6 @@
   import { NotificationService } from '@infrastructure/services/NotificationService';
 
   import { useSession } from '../../lib/authClient';
-  import { courseGradeStore } from '../../lib/stores/courseGradeStore';
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { favouritesStore } from '../../lib/stores/favouritesStore';
   import { plansStore } from "../../lib/stores/plansStore.svelte";
@@ -74,9 +73,6 @@
     editingCourseId: null as string | null,
     editingNotes: '',
 
-    hasLoadedForUser: false,
-    hasInitializedGrades: false,
-
     removeMode: false,
 
     sortedFavourites: [] as Favourite[],
@@ -95,34 +91,26 @@
     source = source === "active" ? "all" : "active";
   }
 
-  // ---- Sign-in driven init/cleanup ----
+  // Only view-local state is reset here. Account-scoped stores are
+  // initialized and cleared by AuthenticatedDataLifecycle.
+  let observedViewAccount: string | null | undefined = undefined;
   $effect(() => {
     if ($session.isPending) return;
+    const accountId = user?.id ?? null;
+    if (accountId === observedViewAccount) return;
+    observedViewAccount = accountId;
 
-    if (!isSignedIn) {
-      favouritesStore.clear?.();
-      courseGradeStore.clear?.();
-      studyGroupStore.actions.clear();
-
-      expandedInstanceIds = new Set();
-      ui.hasLoadedForUser = false;
-      ui.hasInitializedGrades = false;
-      ui.editingCourseId = null;
-      ui.editingNotes = '';
-      ui.removeMode = false;
-      ui.sortedFavourites = [];
-      return;
-    }
-
-    if (!ui.hasLoadedForUser) {
-      void favouritesStore.load?.();
-      ui.hasLoadedForUser = true;
-    }
+    expandedInstanceIds = new Set();
+    prevPlanId = null;
+    lastSig = "";
+    ui.editingCourseId = null;
+    ui.editingNotes = '';
+    ui.removeMode = false;
+    ui.sortedFavourites = [];
   });
 
   $effect(() => {
-    if (!isSignedIn) return;
-    if (!ui.hasLoadedForUser) return;
+    if ($session.isPending || !isSignedIn) return;
     if (source !== "active") return;
     if (favState.favourites.length === 0) return;
 
@@ -132,20 +120,6 @@
 
     if (needsHistorical) {
       void courseIndexStore.actions.ensureHistoricalLoaded?.();
-    }
-  });
-
-  $effect(() => {
-    if (!isSignedIn) return;
-    if (!ui.hasLoadedForUser) return;
-    if (ui.hasInitializedGrades) return;
-
-    try {
-      void courseGradeStore.load?.();
-    } catch (err) {
-      console.error('Failed to initialize grades:', err);
-    } finally {
-      ui.hasInitializedGrades = true;
     }
   });
 
@@ -172,7 +146,7 @@
 
   // ---- Study group batch fetch (active view only) ----
   $effect(() => {
-    if (!ui.hasLoadedForUser) return;
+    if ($session.isPending || !isSignedIn) return;
     if (ui.sortedFavourites.length === 0) return;
     if (source !== "active") return;
 

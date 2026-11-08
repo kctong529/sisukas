@@ -78,3 +78,74 @@ describe("authenticated plan lifecycle", () => {
     expect(reportError.mock.calls[0][0]).toEqual(new Error("current"));
   });
 });
+
+
+describe("authenticated account data lifecycle", () => {
+  function setupAccountData() {
+    const calls: string[] = [];
+    const plans = {
+      clear: vi.fn(() => { calls.push("plans:clear"); }),
+      ensureDefaultPlan: vi.fn(async () => { calls.push("plans:load"); }),
+    };
+    const favourites = {
+      clear: vi.fn(() => { calls.push("favourites:clear"); }),
+      load: vi.fn(async () => { calls.push("favourites:load"); }),
+    };
+    const grades = {
+      clear: vi.fn(() => { calls.push("grades:clear"); }),
+      load: vi.fn(async () => { calls.push("grades:load"); }),
+    };
+    const errors = vi.fn();
+    const lifecycle = createAuthenticatedPlanLifecycle(
+      plans, errors, { favourites, grades },
+    );
+    return { lifecycle, plans, favourites, grades, errors, calls };
+  }
+
+  it("does not load any account-scoped data until authentication settles", () => {
+    const { lifecycle, plans, favourites, grades } = setupAccountData();
+    lifecycle.update(true, "a");
+    expect(plans.clear).not.toHaveBeenCalled();
+    expect(favourites.load).not.toHaveBeenCalled();
+    expect(grades.load).not.toHaveBeenCalled();
+  });
+
+  it("clears all stores before initializing for each new account", () => {
+    const { lifecycle, calls } = setupAccountData();
+    lifecycle.update(false, "a");
+    lifecycle.update(false, "a");
+    lifecycle.update(true, null);
+    lifecycle.update(false, "a");
+    lifecycle.update(false, "b");
+    expect(calls).toEqual([
+      "plans:clear", "favourites:clear", "grades:clear",
+      "plans:load", "favourites:load", "grades:load",
+      "plans:clear", "favourites:clear", "grades:clear",
+      "plans:load", "favourites:load", "grades:load",
+    ]);
+  });
+
+  it("clears account data without reloading on confirmed logout", () => {
+    const { lifecycle, calls } = setupAccountData();
+    lifecycle.update(false, "a");
+    calls.length = 0;
+    lifecycle.update(false, null);
+    expect(calls).toEqual([
+      "plans:clear", "favourites:clear", "grades:clear",
+    ]);
+  });
+
+  it("does not report obsolete favourites and grades load failures", async () => {
+    const { lifecycle, favourites, grades, errors } = setupAccountData();
+    const oldFavourite = deferred();
+    const oldGrade = deferred();
+    favourites.load.mockImplementationOnce(() => oldFavourite.promise);
+    grades.load.mockImplementationOnce(() => oldGrade.promise);
+    lifecycle.update(false, "a");
+    lifecycle.update(false, "b");
+    oldFavourite.reject(new Error("old favourites"));
+    oldGrade.reject(new Error("old grades"));
+    await Promise.resolve();
+    expect(errors).not.toHaveBeenCalled();
+  });
+});

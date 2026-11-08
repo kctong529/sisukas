@@ -8,6 +8,16 @@ export interface PlanLifecycleActions {
   ensureDefaultPlan(): Promise<void>;
 }
 
+export interface AccountDataLifecycleActions {
+  clear(): void;
+  load(): Promise<unknown>;
+}
+
+export interface AccountDataDependencies {
+  favourites: AccountDataLifecycleActions;
+  grades: AccountDataLifecycleActions;
+}
+
 /**
  * Coordinate plan initialization at settled account boundaries.
  * The plans store continues to own all plan data and request sharing.
@@ -15,6 +25,7 @@ export interface PlanLifecycleActions {
 export function createAuthenticatedPlanLifecycle(
   actions: PlanLifecycleActions,
   reportError: (error: unknown) => void = console.error,
+  accountData?: AccountDataDependencies,
 ) {
   let observedAccount: ObservedAccountId = undefined;
 
@@ -29,14 +40,24 @@ export function createAuthenticatedPlanLifecycle(
 
       observedAccount = transition.current;
       actions.clear();
+      accountData?.favourites.clear();
+      accountData?.grades.clear();
 
       if (!transition.current) return;
       const initializingAccount = transition.current;
 
-      void actions.ensureDefaultPlan().catch((error: unknown) => {
-        // Ignore failures from a previous account lifecycle.
-        if (observedAccount === initializingAccount) reportError(error);
-      });
+      const run = (operation: () => Promise<unknown>): void => {
+        // Each store owns its loading state and guards obsolete responses.
+        void operation().catch((error: unknown) => {
+          if (observedAccount === initializingAccount) reportError(error);
+        });
+      };
+
+      run(() => actions.ensureDefaultPlan());
+      if (accountData) {
+        run(() => accountData.favourites.load());
+        run(() => accountData.grades.load());
+      }
     },
   };
 }
