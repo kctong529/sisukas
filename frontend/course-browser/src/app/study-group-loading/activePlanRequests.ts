@@ -1,5 +1,5 @@
-import type { Plan } from "@domain/models/Plan";
 import type { Course } from "@domain/models/Course";
+import type { Plan } from "@domain/models/Plan";
 import type { StudyGroupRequest } from "@modules/study-groups";
 
 /**

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import {
   studyGroupKey,
 } from "@modules/study-groups/retrieval/StudyGroupRequest";

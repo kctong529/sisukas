@@ -1,6 +1,7 @@
 <script lang="ts">
-  import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
+
+  import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
 
   interface Props {
     display: DenseOverlapDisplay;

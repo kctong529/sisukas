@@ -1,7 +1,8 @@
 <!-- src/components/analytics/ScheduleHeatmap.svelte -->
 <script lang="ts">
   import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-  import type { Segment, ScheduleCandidate } from '../../lib/types/analytics';
+
+  import type { ScheduleCandidate, Segment } from '../../lib/types/analytics';
 
   export let segments: Segment[] = [];
   export let selection: ScheduleCandidate['selection'] = [];

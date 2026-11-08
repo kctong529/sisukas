@@ -1,10 +1,13 @@
+import { flushSync, mount, unmount } from 'svelte';
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { flushSync, mount, unmount } from 'svelte';
-import CalendarCourseContext from '../../../src/components/calendar/CalendarCourseContext.svelte';
-import { layoutCalendarWeek, type WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
-import { fixed } from '../../domain/services/calendar/layout/fixtures';
+
 import { calendarGroupKey } from '@application/calendar/calendarVisibility';
+import { layoutCalendarWeek, type WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
+
+import CalendarCourseContext from '../../../src/components/calendar/CalendarCourseContext.svelte';
+import { fixed } from '../../domain/services/calendar/layout/fixtures';
+
 import type { CalendarWeekCourse } from '@application/calendar/calendarCoursesForWeek';
 
 const instances: Array<ReturnType<typeof mount>> = [];

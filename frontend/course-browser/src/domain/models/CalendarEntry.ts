@@ -1,5 +1,5 @@
-import type { StudyEvent } from "@modules/study-groups";
 import type { CalendarInterval } from "../services/calendar/CalendarTime";
+import type { StudyEvent } from "@modules/study-groups";
 
 /** Source association carried by every calendar entry.
  * courseOfferingId refers to Course.id and Plan.instanceIds entries.

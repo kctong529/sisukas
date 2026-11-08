@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import { buildAnalyticsPayload } from "@application/analytics/buildAnalyticsPayload";
-import type { Course } from "@domain/models/Course";
+
 import type { Block } from "@domain/models/Block";
+import type { Course } from "@domain/models/Course";
 import type { StudyGroup } from "@modules/study-groups";
 
 describe("buildAnalyticsPayload", () => {

@@ -1,10 +1,10 @@
+import type { CalendarIdentifiedOccurrence } from "./CalendarOccurrenceIdentity";
 import type {
   CalendarEntry,
   FixedCalendarOccurrence,
   FlexibleCalendarWindow,
   FlexibleWindowEvidence,
 } from "@domain/models/CalendarEntry";
-import type { CalendarIdentifiedOccurrence } from "./CalendarOccurrenceIdentity";
 
 /**
  * Builds a fixed entry from an occurrence previously validated and identified

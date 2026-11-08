@@ -1,6 +1,7 @@
+import { PeriodFilterRule, type PeriodRelation } from '../rules/PeriodFilterRule';
+
 // src/domain/filters/blueprints/PeriodRuleBlueprint.ts
 import type { AcademicPeriod } from '../../models/AcademicPeriod';
-import { PeriodFilterRule, type PeriodRelation } from '../rules/PeriodFilterRule';
 import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
 
 export class PeriodRuleBlueprint implements BaseRuleBlueprint {

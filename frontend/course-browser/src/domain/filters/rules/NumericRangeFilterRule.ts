@@ -1,23 +1,24 @@
-// src/domain/filters/rules/NumericRangeFilterRule.ts
-import type { Course } from '../../models/Course';
-import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
-import type { NumericRange } from '../../valueObjects/NumericRange';
 import {
-  containsNumber,
-  isWithinRange,
-  overlaps,
   contains,
+  containsNumber,
   equals,
-  minAtLeast,
-  minAtMost,
-  minEquals,
+  isWithinRange,
   maxAtLeast,
   maxAtMost,
   maxEquals,
+  minAtLeast,
+  minAtMost,
+  minEquals,
+  overlaps,
   spanAtLeast,
   spanAtMost,
   spanEquals
 } from '../../valueObjects/NumericRange';
+
+// src/domain/filters/rules/NumericRangeFilterRule.ts
+import type { Course } from '../../models/Course';
+import type { NumericRange } from '../../valueObjects/NumericRange';
+import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 
 export type NumericRangeFieldSelector = (course: Course) => NumericRange;
 

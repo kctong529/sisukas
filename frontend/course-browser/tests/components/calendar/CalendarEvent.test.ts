@@ -1,6 +1,7 @@
+import { flushSync, mount, unmount } from 'svelte';
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { flushSync, mount, unmount } from 'svelte';
+
 import CalendarEvent from '../../../src/components/calendar/CalendarEvent.svelte';
 import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';

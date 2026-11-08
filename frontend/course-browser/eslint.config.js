@@ -1,9 +1,9 @@
 import js from '@eslint/js';
-import ts from 'typescript-eslint';
-import svelte from 'eslint-plugin-svelte';
-import svelteParser from 'svelte-eslint-parser';
-import globals from 'globals';
 import perfectionist from 'eslint-plugin-perfectionist';
+import svelte from 'eslint-plugin-svelte';
+import globals from 'globals';
+import svelteParser from 'svelte-eslint-parser';
+import ts from 'typescript-eslint';
 
 import { studyGroupBoundaryRule } from
   './scripts/study-group-boundary-rule.js';

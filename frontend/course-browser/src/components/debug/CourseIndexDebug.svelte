@@ -1,5 +1,6 @@
 <script lang="ts">
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
+
   import type { Course } from "../../domain/models/Course";
 
   let isOpen = $state(false);

@@ -1,9 +1,10 @@
 <script lang="ts">
-  import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
-  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
+
+  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
+  import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
 
   interface Props {
     segment: WeeklyCalendarSegment;

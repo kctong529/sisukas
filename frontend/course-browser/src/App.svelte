@@ -1,32 +1,34 @@
 <!-- src/App.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Navigation from "./components/layout/Navigation.svelte";
-  import FilterContainer from './components/filters/FilterContainer.svelte';
-  import CourseTable from './components/courses/CourseTable.svelte';
-  import SearchControls from './components/filters/SearchControls.svelte';
-  import NotificationContainer from "./components/notifications/NotificationContainer.svelte";
+
   import AuthModal from "./components/auth/AuthModal.svelte";
+  import CalendarView from "./components/calendar/CalendarView.svelte";
+  import CourseTable from './components/courses/CourseTable.svelte';
+  import DebugPanels from './components/debug/DebugPanels.svelte';
   import FavouritesView from "./components/favourites/FavouritesView.svelte";
-  import LegoView from './components/planning/LegoView.svelte';
+  import FilterContainer from './components/filters/FilterContainer.svelte';
+  import SearchControls from './components/filters/SearchControls.svelte';
+  import Navigation from "./components/layout/Navigation.svelte";
+  import NotificationContainer from "./components/notifications/NotificationContainer.svelte";
   import PeriodTimeline from './components/period-timeline/PeriodTimeline.svelte';
-  import { authClient, useSession } from "./lib/authClient";
+  import LegoView from './components/planning/LegoView.svelte';
   import { createRuleBlueprints, type RuleBlueprintKey } from './domain/filters/blueprints';
-  import type { BaseRuleBlueprint } from './domain/filters/blueprints';
+  import { FilterSerializer } from './domain/filters/helpers/FilterSerializer';
+  import { FilterService } from './domain/services/FilterService';
+  import { loadAcademicPeriods } from './infrastructure/loaders/AcademicPeriodLoader';
   import { loadCurricula } from './infrastructure/loaders/CurriculumLoader';
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
-  import { loadAcademicPeriods } from './infrastructure/loaders/AcademicPeriodLoader';
-  import { FilterService } from './domain/services/FilterService';
-  import { FilterSerializer } from './domain/filters/helpers/FilterSerializer';
   import { FiltersApiService } from './infrastructure/services/FiltersApiService';
   import { NotificationService } from './infrastructure/services/NotificationService';
-  import type { AcademicPeriod } from './domain/models/AcademicPeriod';
-  import type { FilterRuleGroups } from './domain/filters/FilterTypes';
-  import { courseIndexStore } from './lib/stores/courseIndexStore.svelte';
-  import type { CourseIndexMode } from './lib/stores/courseIndexStore.svelte';
+  import { authClient, useSession } from "./lib/authClient";
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
-  import CalendarView from "./components/calendar/CalendarView.svelte";
-  import DebugPanels from './components/debug/DebugPanels.svelte';
+  import { courseIndexStore } from './lib/stores/courseIndexStore.svelte';
+
+  import type { BaseRuleBlueprint } from './domain/filters/blueprints';
+  import type { FilterRuleGroups } from './domain/filters/FilterTypes';
+  import type { AcademicPeriod } from './domain/models/AcademicPeriod';
+  import type { CourseIndexMode } from './lib/stores/courseIndexStore.svelte';
 
   // -----------------------------
   // Local state (Svelte 5 runes)

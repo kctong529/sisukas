@@ -1,12 +1,13 @@
+import { 
+  type MembershipDataSource, 
+  MembershipFilterRule,
+  type MembershipFilterRuleConfig,
+  type MembershipRelation 
+} from '../rules/MembershipFilterRule';
+
 // src/domain/filters/blueprints/MembershipRuleBlueprint.ts
 import type { Course } from '../../models/Course';
 import type { CurriculaMap, CurriculumType } from '../../models/Curriculum';
-import { 
-  MembershipFilterRule, 
-  type MembershipRelation,
-  type MembershipFilterRuleConfig,
-  type MembershipDataSource 
-} from '../rules/MembershipFilterRule';
 import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
 
 /**

@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { CalendarEntry } from "@domain/models/CalendarEntry";
+
 import { segmentWeek } from "@domain/services/calendar/layout/WeeklyCalendarSegmentation";
 import { resolveHelsinkiWeek } from "@domain/services/calendar/layout/WeeklyCalendarTime";
+
 import { at, fixed, instant, mondaySegments, NORMAL_WEEK } from "./fixtures";
+
+import type { CalendarEntry } from "@domain/models/CalendarEntry";
 
 const monday = () => resolveHelsinkiWeek(NORMAL_WEEK);
 

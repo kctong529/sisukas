@@ -1,12 +1,13 @@
 <script lang="ts">
+  import { displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
+  import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
+
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
-  import type { WeeklyCalendarLayoutResult, WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
-  import { displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
-  import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
+  import type { WeeklyCalendarLayoutResult, WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
 
   interface Props {
     group: DenseOverlapDisplay | null;

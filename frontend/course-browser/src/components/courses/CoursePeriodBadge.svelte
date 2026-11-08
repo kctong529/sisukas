@@ -1,7 +1,8 @@
 <!-- src/components/courses/CoursePeriodBadge.svelte -->
 <script lang="ts">
+  import { type DateRange, overlaps } from '@domain/valueObjects/DateRange';
+
   import { academicPeriodStore } from '../../lib/stores/academicPeriodStore';
-  import { overlaps, type DateRange } from '@domain/valueObjects/DateRange';
 
   let { courseDate }: { courseDate: DateRange } = $props();
   let showAcademicYear = $state(false);

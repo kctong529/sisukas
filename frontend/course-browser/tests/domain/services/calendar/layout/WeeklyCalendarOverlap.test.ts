@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+
 import { assignOverlapLanes } from "@domain/services/calendar/layout/WeeklyCalendarOverlap";
+
 import { at, fixed, mondaySegments } from "./fixtures";
 
 function grouped(...events: Array<[string, number, number]>) {

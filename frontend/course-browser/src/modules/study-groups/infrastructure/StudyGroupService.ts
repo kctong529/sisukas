@@ -15,8 +15,8 @@
  *   concurrency to keep the UI responsive.
  */
 
-import type { StudyGroup } from '../models/StudyGroup';
 import type { StudyEvent } from '../models/StudyEvent';
+import type { StudyGroup } from '../models/StudyGroup';
 
 // ========== API Response Types ==========
 

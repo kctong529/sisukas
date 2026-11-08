@@ -1,7 +1,9 @@
 <!-- src/components/planning/PlanEditor.svelte -->
 <script lang="ts">
-  import { plansStore } from '../../lib/stores/plansStore.svelte';
   import { NotificationService } from '@infrastructure/services/NotificationService';
+
+  import { plansStore } from '../../lib/stores/plansStore.svelte';
+
   import type { Plan } from '@domain/models/Plan';
 
   interface PlanEditorProps {

@@ -1,9 +1,10 @@
+import { flushSync, mount, unmount } from 'svelte';
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { flushSync, mount, unmount } from 'svelte';
-import WeekNavigation from '../../../src/components/calendar/WeekNavigation.svelte';
+
 import { currentHelsinkiWeek } from '../../../src/application/calendar/currentHelsinkiWeek';
 import { shiftHelsinkiWeek } from '../../../src/application/calendar/weekNavigation';
+import WeekNavigation from '../../../src/components/calendar/WeekNavigation.svelte';
 
 const mounted: Array<ReturnType<typeof mount>> = [];
 const targets: HTMLElement[] = [];

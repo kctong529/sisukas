@@ -1,8 +1,10 @@
 <!-- src/components/filters/PeriodSelector.svelte -->
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import type { AcademicPeriod } from '@domain/models/AcademicPeriod';
+
   import { AcademicPeriodVisibility } from '@domain/services/AcademicPeriodVisibility';
+
+  import type { AcademicPeriod } from '@domain/models/AcademicPeriod';
   
   export let periods: AcademicPeriod[];
   export let selectedPeriods: string[] = [];

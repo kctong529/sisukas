@@ -1,11 +1,12 @@
-// src/domain/models/Course.ts
-import type { LocalizedString } from '../valueObjects/LocalizedString';
-import type { DateRange } from '../valueObjects/DateRange';
-import type { NumericRange } from '../valueObjects/NumericRange';
-import { CourseCode } from '../valueObjects/CourseCode'; 
-import type { Language, StudyLevel, RawCourseFormat, CourseFormat } from '../valueObjects/CourseTypes';
+import { CourseCode } from '../valueObjects/CourseCode';
 import { normalizeCourseFormat } from '../valueObjects/CourseTypes';
 import { Prerequisites } from '../valueObjects/Prerequisites';
+
+import type { CourseFormat, Language, RawCourseFormat, StudyLevel } from '../valueObjects/CourseTypes'; 
+import type { DateRange } from '../valueObjects/DateRange';
+// src/domain/models/Course.ts
+import type { LocalizedString } from '../valueObjects/LocalizedString';
+import type { NumericRange } from '../valueObjects/NumericRange';
 
 /**
  * A course offering in Sisukas. id is its courseOfferingId; unitId

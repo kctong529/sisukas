@@ -1,6 +1,7 @@
 // src/lib/stores/courseGradeStore.ts
-import { writable, get } from "svelte/store";
-import { gradesService, type CourseGrade } from "@infrastructure/services/GradesService";
+import { get, writable } from "svelte/store";
+
+import { type CourseGrade, gradesService } from "@infrastructure/services/GradesService";
 
 export type CourseGradeMap = Map<string, number>;
 

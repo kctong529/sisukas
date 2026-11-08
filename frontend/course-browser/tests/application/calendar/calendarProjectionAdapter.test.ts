@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
+
 import {
+  type CalendarProjectionSources,
   projectPlanFromSources,
   readStudyGroupSnapshot,
-  type CalendarProjectionSources,
 } from "@application/calendar/calendarProjectionAdapter";
-import type { Plan } from "@domain/models/Plan";
+
 import type { Course } from "@domain/models/Course";
+import type { Plan } from "@domain/models/Plan";
 import type { StudyGroup } from "@modules/study-groups";
 
 const plan: Plan = {

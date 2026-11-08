@@ -1,9 +1,10 @@
 
-import { describe, expect, it } from 'vitest';
 import { Linter } from 'eslint';
-import { studyGroupBoundaryRule } from '../../scripts/study-group-boundary-rule.js';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+
+import { studyGroupBoundaryRule } from '../../scripts/study-group-boundary-rule.js';
 
 const root = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

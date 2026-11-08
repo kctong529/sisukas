@@ -1,4 +1,5 @@
 import { assignOverlapLanes } from '@domain/services/calendar/layout/WeeklyCalendarOverlap';
+
 import type {
   WeeklyCalendarLayoutResult,
   WeeklyCalendarSegment,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import {
   dateFromUtcMs,
   helsinkiMidnight,
@@ -8,6 +9,7 @@ import {
   splitAtOffsetTransitions,
   utcDateMs,
 } from "@domain/services/calendar/layout/WeeklyCalendarTime";
+
 import { instant } from "./fixtures";
 
 const HOUR = 3_600_000;

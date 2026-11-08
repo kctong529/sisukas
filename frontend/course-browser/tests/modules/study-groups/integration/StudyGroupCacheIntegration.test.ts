@@ -1,17 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
-import type { StudyGroup } from "@modules/study-groups";
+
 import { StudyGroupCache } from "@modules/study-groups/cache/StudyGroupCache";
-import type { StudyGroupCacheChange } from "@modules/study-groups/cache/StudyGroupCache";
 import { StudyGroupCacheLoader } from "@modules/study-groups/cache/StudyGroupCacheLoader";
-import {
-  StudyGroupRequestCoordinator,
-  type StudyGroupBatchResult,
-} from "@modules/study-groups/retrieval/StudyGroupRequestCoordinator";
 import {
   studyGroupKey,
   type StudyGroupRequest,
 } from "@modules/study-groups/retrieval/StudyGroupRequest";
 import { StudyGroupRequestCancelledError } from "@modules/study-groups/retrieval/StudyGroupRequestCancelledError";
+import {
+  type StudyGroupBatchResult,
+  StudyGroupRequestCoordinator,
+} from "@modules/study-groups/retrieval/StudyGroupRequestCoordinator";
+
+import type { StudyGroup } from "@modules/study-groups";
+import type { StudyGroupCacheChange } from "@modules/study-groups/cache/StudyGroupCache";
 
 const offeringA: StudyGroupRequest = {
   courseUnitId: "course-unit-a",

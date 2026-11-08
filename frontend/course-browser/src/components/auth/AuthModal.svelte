@@ -1,7 +1,8 @@
 <!-- src/components/auth/AuthModal.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
-  import { useSession, authClient } from "../../lib/authClient";
+
+  import { authClient, useSession } from "../../lib/authClient";
 
   type Props = {
     onclose?: () => void;

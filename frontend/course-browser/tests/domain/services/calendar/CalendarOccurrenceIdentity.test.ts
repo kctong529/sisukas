@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { StudyEvent } from "@modules/study-groups";
+
 import {
+  type CalendarOccurrenceCandidate,
   deriveCalendarOccurrenceKey,
   identifyCalendarOccurrences,
-  type CalendarOccurrenceCandidate,
 } from "@domain/services/calendar/CalendarOccurrenceIdentity";
+
+import type { StudyEvent } from "@modules/study-groups";
 
 function event(overrides: Partial<StudyEvent> = {}): StudyEvent {
   return {

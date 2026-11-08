@@ -1,7 +1,8 @@
-import type { FixedCalendarOccurrence } from "@domain/models/CalendarEntry";
 import { parseOffsetInstant } from "@domain/services/calendar/CalendarTime";
-import { resolveHelsinkiWeek } from "@domain/services/calendar/layout/WeeklyCalendarTime";
 import { segmentWeek } from "@domain/services/calendar/layout/WeeklyCalendarSegmentation";
+import { resolveHelsinkiWeek } from "@domain/services/calendar/layout/WeeklyCalendarTime";
+
+import type { FixedCalendarOccurrence } from "@domain/models/CalendarEntry";
 
 export const NORMAL_WEEK = "2026-11-02";
 

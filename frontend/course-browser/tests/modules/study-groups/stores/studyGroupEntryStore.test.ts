@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from "vitest";
 import { get } from "svelte/store";
-import type { StudyGroup } from "@modules/study-groups";
+import { describe, expect, it, vi } from "vitest";
+
 import { StudyGroupCache } from "@modules/study-groups/cache/StudyGroupCache";
-import type { StudyGroupEntry } from "@modules/study-groups";
-import type { StudyGroupRequest } from "@modules/study-groups";
 import { createStudyGroupEntryStore } from "@modules/study-groups/stores/studyGroupEntryStore";
+
+import type { StudyGroup, StudyGroupEntry, StudyGroupRequest } from "@modules/study-groups";
 
 const offeringA: StudyGroupRequest = {
   courseUnitId: "unit-a",

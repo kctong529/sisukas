@@ -2,6 +2,7 @@
 <script lang="ts">
   import { blockStore } from '../../lib/stores/blockStore';
   import { studyGroupStore } from '../../lib/stores/studyGroupStore.svelte';
+
   import type { Block } from '../../domain/models/Block';
   import type { StudyGroup } from '@modules/study-groups';
   

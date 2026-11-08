@@ -1,15 +1,18 @@
 <!-- src/components/courses/CourseTable.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { useSession } from '../../lib/authClient';
-  import { favouritesStore } from '../../lib/stores/favouritesStore';
-  import { courseIndexStore } from '../../lib/stores/courseIndexStore.svelte';
-  import type { Course } from '@domain/models/Course';
-  import MissingCourseSubmit from './MissingCourseSubmit.svelte';
-  import CoursePeriodBadge from './CoursePeriodBadge.svelte';
+
   import { assertCourseCodeIsMissingEverywhere } from '@domain/services/CourseCodeGuard';
-  import { NotificationService } from '@infrastructure/services/NotificationService';
   import { CourseSnapshotsService } from '@infrastructure/services/CourseSnapshotsService';
+  import { NotificationService } from '@infrastructure/services/NotificationService';
+
+  import { useSession } from '../../lib/authClient';
+  import { courseIndexStore } from '../../lib/stores/courseIndexStore.svelte';
+  import { favouritesStore } from '../../lib/stores/favouritesStore';
+  import CoursePeriodBadge from './CoursePeriodBadge.svelte';
+  import MissingCourseSubmit from './MissingCourseSubmit.svelte';
+
+  import type { Course } from '@domain/models/Course';
 
   // -----------------------------
   // Props (runes mode)

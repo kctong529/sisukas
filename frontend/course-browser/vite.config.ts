@@ -1,10 +1,10 @@
-import { configDefaults, defineConfig } from 'vitest/config';
-import { svelte } from '@sveltejs/vite-plugin-svelte'
-import tsconfigPaths from 'vite-tsconfig-paths';
-import { VitePWA } from 'vite-plugin-pwa'
 import ViteYaml from '@modyfi/vite-plugin-yaml';
+import { svelte } from '@sveltejs/vite-plugin-svelte'
 import fs from 'fs'
 import path from 'path'
+import { VitePWA } from 'vite-plugin-pwa'
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 const keyPath = path.resolve('./localhost-key.pem')
 const certPath = path.resolve('./localhost.pem')

@@ -1,6 +1,7 @@
 // src/lib/stores/plansStore.svelte.ts
 
 import { plansService } from '@infrastructure/services/PlansService';
+
 import type { Plan } from '@domain/models/Plan';
 
 const state = $state({

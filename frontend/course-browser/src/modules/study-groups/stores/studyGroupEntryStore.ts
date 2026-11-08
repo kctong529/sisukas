@@ -1,11 +1,12 @@
 import { readable, type Readable } from "svelte/store";
 
-import { StudyGroupCache } from "../cache/StudyGroupCache";
-import type { StudyGroupEntry } from "../cache/StudyGroupEntry";
 import {
   studyGroupKey,
   type StudyGroupRequest,
 } from "../retrieval/StudyGroupRequest";
+
+import type { StudyGroupCache } from "../cache/StudyGroupCache";
+import type { StudyGroupEntry } from "../cache/StudyGroupEntry";
 
 /**
  * Expose one offering's authoritative full-data cache entry

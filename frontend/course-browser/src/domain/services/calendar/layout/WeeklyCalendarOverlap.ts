@@ -1,4 +1,4 @@
-import type { WeeklyCalendarSegment, WeeklyCalendarOverlapGroup } from "./WeeklyCalendarLayoutTypes";
+import type { WeeklyCalendarOverlapGroup, WeeklyCalendarSegment } from "./WeeklyCalendarLayoutTypes";
 
 function compareSegments(a: WeeklyCalendarSegment, b: WeeklyCalendarSegment): number {
   return a.interval.startMs - b.interval.startMs ||

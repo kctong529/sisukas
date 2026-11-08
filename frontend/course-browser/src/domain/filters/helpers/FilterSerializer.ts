@@ -1,6 +1,6 @@
+import type { BaseRuleBlueprint } from '../blueprints/BaseRuleBlueprint';
 // src/domain/filters/helpers/FilterSerializer.ts
 import type { FilterConfig } from '../FilterTypes';
-import type { BaseRuleBlueprint } from '../blueprints/BaseRuleBlueprint';
 
 type BlueprintMap = Record<string, BaseRuleBlueprint>;
 

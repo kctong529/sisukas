@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { calendarDayHeading } from '../../../src/application/calendar/calendarDayHeading';
 
 describe('calendarDayHeading', () => {

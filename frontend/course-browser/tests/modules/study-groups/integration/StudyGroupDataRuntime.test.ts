@@ -1,17 +1,15 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
 import { get } from "svelte/store";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { StudyGroup } from "@modules/study-groups";
-import type { StudyGroupRequest } from
-  "@modules/study-groups";
 import { StudyGroupService } from
   "@modules/study-groups/infrastructure/StudyGroupService";
-
+import { StudyGroupRequestCancelledError } from "@modules/study-groups/retrieval/StudyGroupRequestCancelledError";
 import {
   createStudyGroupDataRuntime,
   getStudyGroupDataRuntime,
 } from "@modules/study-groups/StudyGroupDataRuntime";
-import { StudyGroupRequestCancelledError } from "@modules/study-groups/retrieval/StudyGroupRequestCancelledError";
+
+import type { StudyGroup, StudyGroupRequest } from "@modules/study-groups";
 
 const offeringA: StudyGroupRequest = {
   courseUnitId: "unit-a",

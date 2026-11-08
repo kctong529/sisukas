@@ -1,8 +1,10 @@
 <!-- src/components/planning/BlocksGrid.svelte -->
 <script lang="ts">
-  import { tick, onDestroy } from "svelte";
+  import { onDestroy, tick } from "svelte";
+
   import { blockStore, previewColorForInstance } from "../../lib/stores/blockStore";
   import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
+
   import type { Block } from "@domain/models/Block";
   import type { Course } from "@domain/models/Course";
 

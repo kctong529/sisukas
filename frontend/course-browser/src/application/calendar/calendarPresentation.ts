@@ -1,6 +1,6 @@
-import type { StudyEvent } from '@modules/study-groups';
-import type { Course } from '@domain/models/Course';
 import type { CalendarEntrySource } from '@domain/models/CalendarEntry';
+import type { Course } from '@domain/models/Course';
+import type { StudyEvent } from '@modules/study-groups';
 
 /** Display-only wall-clock minutes supplied by the weekly layout engine. */
 export function formatCalendarMinute(minute: number): string {

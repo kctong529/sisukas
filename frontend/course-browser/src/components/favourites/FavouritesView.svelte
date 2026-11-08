@@ -1,17 +1,19 @@
 <!-- src/components/favourites/FavouritesView.svelte -->
 <script lang="ts">
+  import { NotificationService } from '@infrastructure/services/NotificationService';
+
   import { useSession } from '../../lib/authClient';
+  import { courseGradeStore } from '../../lib/stores/courseGradeStore';
+  import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { favouritesStore } from '../../lib/stores/favouritesStore';
   import { plansStore } from "../../lib/stores/plansStore.svelte";
-  import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
-  import { courseGradeStore } from '../../lib/stores/courseGradeStore';
-  import { NotificationService } from '@infrastructure/services/NotificationService';
   import StudyGroupsSection from "../courses/StudyGroupsSection.svelte";
-  import type { Course } from '@domain/models/Course';
-  import PlanManager from "../planning/PlanManager.svelte";
-  import type { Favourite } from '@infrastructure/services/FavouritesService';
   import PlanEditor from "../planning/PlanEditor.svelte";
+  import PlanManager from "../planning/PlanManager.svelte";
+
+  import type { Course } from '@domain/models/Course';
+  import type { Favourite } from '@infrastructure/services/FavouritesService';
 
   type Props = {
     source?: "active" | "all";

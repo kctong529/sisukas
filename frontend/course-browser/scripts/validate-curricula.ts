@@ -1,13 +1,14 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
+
+import { validateCurriculumMetadata } from '../src/domain/services/CurriculumMetadataValidator';
+import { CourseCode } from '../src/domain/valueObjects/CourseCode';
 
 import type { CurriculumType } from '../src/domain/models/Curriculum';
 import type { RawCurriculumData } from '../src/domain/parsers/CurriculumParser';
-import { CourseCode } from '../src/domain/valueObjects/CourseCode';
-import { validateCurriculumMetadata } from '../src/domain/services/CurriculumMetadataValidator';
 
 type CliOptions =
   | {

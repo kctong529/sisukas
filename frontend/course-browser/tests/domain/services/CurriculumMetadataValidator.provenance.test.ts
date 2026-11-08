@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+
 import { validateCurriculumMetadata } from '../../../src/domain/services/CurriculumMetadataValidator';
-import type { RawCurriculumEntry, RawCurriculumData } from '../../../src/domain/parsers/CurriculumParser';
+
 import type { CurriculumType } from '../../../src/domain/models/Curriculum';
+import type { RawCurriculumData, RawCurriculumEntry } from '../../../src/domain/parsers/CurriculumParser';
 
 const valid = (): RawCurriculumEntry => ({
   code: 'DSD26', name: 'Digital Systems and Design',

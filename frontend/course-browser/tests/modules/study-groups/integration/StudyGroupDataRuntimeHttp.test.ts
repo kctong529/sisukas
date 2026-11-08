@@ -1,12 +1,13 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
 import { get } from "svelte/store";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { StudyGroupRequest } from
-  "@modules/study-groups";
 import { StudyGroupService } from
   "@modules/study-groups/infrastructure/StudyGroupService";
 import { createStudyGroupDataRuntime } from
   "@modules/study-groups/StudyGroupDataRuntime";
+
+import type { StudyGroupRequest } from
+  "@modules/study-groups";
 
 const API = "https://wrapper.example.test";
 
