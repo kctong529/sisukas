@@ -35,6 +35,7 @@ const read = {
 
 let loadPromise: Promise<void> | null = null;
 let ensureDefaultPromise: Promise<void> | null = null;
+let generation = 0;
 
 function normalizeActive(activeId: string | null) {
   // Pick a fallback if activeId is null but we have plans
@@ -60,28 +61,54 @@ const actions = {
     if (state.loaded) return;
     if (loadPromise) return loadPromise;
 
+    const currentGeneration = generation;
+
     state.loading = true;
-    loadPromise = (async () => {
+    state.error = null;
+
+    const operation = (async () => {
       try {
         const plans = await plansService.loadAll();
+
+        // Ignore results from a previous store lifecycle.
+        if (currentGeneration !== generation) return;
+
         state.byId = new Map(plans.map(p => [p.id, p]));
         state.ids = plans.map(p => p.id);
 
-        // if backend sends multiple actives, choose one deterministically
-        const serverActiveIds = plans.filter(p => p.isActive).map(p => p.id);
+        const serverActiveIds = plans
+          .filter(p => p.isActive)
+          .map(p => p.id);
+
         normalizeActive(serverActiveIds[0] ?? null);
 
         state.loaded = true;
       } catch (err) {
-        state.error = err instanceof Error ? err.message : 'Failed to load plans';
+        if (currentGeneration !== generation) return;
+
+        state.error =
+          err instanceof Error
+            ? err.message
+            : 'Failed to load plans';
+
         throw err;
       } finally {
-        state.loading = false;
-        loadPromise = null;
+        if (currentGeneration === generation) {
+          state.loading = false;
+        }
       }
     })();
 
-    return loadPromise;
+    loadPromise = operation;
+
+    try {
+      await operation;
+    } finally {
+      // Do not remove a newer operation's promise.
+      if (loadPromise === operation) {
+        loadPromise = null;
+      }
+    }
   },
 
   /**
@@ -231,12 +258,15 @@ const actions = {
   },
 
   clear() {
+    generation += 1;
+
     state.byId = new Map();
     state.ids = [];
     state.activePlanId = null;
     state.loading = false;
     state.loaded = false;
     state.error = null;
+
     loadPromise = null;
     ensureDefaultPromise = null;
   },
