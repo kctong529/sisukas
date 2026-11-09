@@ -11,10 +11,6 @@ const inside = (candidate, dir) => candidate === dir || candidate.startsWith(`${
 
 const exceptions = new Map([
   ['src/components/courses/StudyGroupsSection.svelte', new Set(['formatters/studyGroupFormatters'])],
-  ['src/lib/stores/studyGroupStore.svelte.ts', new Set([
-    'formatters/studyGroupFormatters',
-    'infrastructure/StudyGroupService',
-  ])],
 ]);
 
 function targetPath(importer, specifier) {

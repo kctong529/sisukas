@@ -240,7 +240,7 @@ function createBlockStore() {
     },
 
     /**
-     * Convenience wrapper that keeps blockStore decoupled from studyGroupStore.
+     * Convenience wrapper that keeps blockStore independent of retrieval.
      * Caller supplies a provider (from cache, fetch, etc).
      */
     async autoPartitionForInstance(

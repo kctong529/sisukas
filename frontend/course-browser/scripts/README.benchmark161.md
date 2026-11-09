@@ -2,7 +2,7 @@
 
 This Playwright benchmark measures the time until the calendar is visible and until study-group data for the active plan is complete. It covers **cold load**, **reload**, and **warm navigation**. It is intended for reproducible local performance measurements, not load testing.
 
-A **cold load** means a fresh browser context with stored summary cache keys cleared. It does **not** clear server-side, wrapper, or upstream SISU caches.
+A **cold load** uses a fresh browser context with an empty in-memory study-group cache. The legacy summary cache has been removed; no study-group localStorage keys need clearing. This does **not** clear server-side, wrapper, or upstream SISU caches. A page reload also discards in-memory study-group data; warm navigation in the same page preserves it. Persistent full-data browser caching is tracked in #182.
 
 ## Prerequisites
 
@@ -66,6 +66,12 @@ jq '.summary' /tmp/sisukas-161/results.json
 
 The command exits with a nonzero status if any scenario is incomplete, partial, skipped, timed out, or otherwise unsuccessful. Inspect the JSON report for details.
 
+### Authenticated plan initialization
+
+Calendar may briefly report `data-benchmark-plan="none"` while the authenticated application lifecycle selects the default active plan, even if study plans have finished loading. The benchmark allows up to **15 seconds of continuous `none`** before reporting `invalid-plan`; an explicit plan-loading `error` still fails immediately. This grace period does not count as successful study-group completion. If `invalid-plan` persists, verify that the stored session is valid and the benchmark account has an active plan; do not treat zero recorded requests as a performance result.
+
+The benchmark requires an active plan with at least one offering, and measures completeness using the Calendar `data-benchmark-*` attributes. Its 1.5-second default idle observation is included in `completeMs` and should not be mistaken for data-fetching time alone.
+
 The script records browser readiness, full-data completion, request counts, failures, and request timings. A fast `readyMs` is **not** equivalent to completed calendar loading; compare `completeMs` for runs whose status is `complete`.
 
 ## Configuration
@@ -83,7 +89,7 @@ The script records browser readiness, full-data completion, request counts, fail
 ## Interpreting and sharing results
 
 - Confirm each run completes with the expected number of active-plan offerings and no missing or failed data.
-- Keep the active plan, API destinations, environment, concurrency, and location-enrichment configuration consistent when comparing runs.
+- Keep the active plan, API destinations, environment, concurrency, and location-enrichment configuration consistent when comparing runs. The #161 historical baseline (6 November 2026) used one repetition; repeat-run medians from #175 should be labeled accordingly, without assuming identical upstream cache state.
 - Use multiple repetitions to evaluate performance changes; a single run is preliminary.
 - Profiling logs can be filtered with `grep 'perf161\.' /tmp/sisukas-161-wrapper.log`. Overlapping wrapper requests mean summed batch durations are not elapsed wall-clock time.
 - Avoid uncontrolled load against upstream SISU APIs. Do not commit authentication state, credentials, raw logs, or benchmark output containing sensitive operational details; record aggregate results in issue #161.
