@@ -1,8 +1,9 @@
-import type { CalendarEntry } from "@domain/models/CalendarEntry";
-import { resolveHelsinkiWeek } from "./WeeklyCalendarTime";
-import { segmentWeek } from "./WeeklyCalendarSegmentation";
 import { assignOverlapLanes } from "./WeeklyCalendarOverlap";
-import type { WeeklyCalendarSegment, WeeklyCalendarLayoutResult } from "./WeeklyCalendarLayoutTypes";
+import { segmentWeek } from "./WeeklyCalendarSegmentation";
+import { resolveHelsinkiWeek } from "./WeeklyCalendarTime";
+
+import type { WeeklyCalendarLayoutResult, WeeklyCalendarSegment } from "./WeeklyCalendarLayoutTypes";
+import type { CalendarEntry } from "@domain/models/CalendarEntry";
 
 export type {
   WeeklyCalendarSegment,

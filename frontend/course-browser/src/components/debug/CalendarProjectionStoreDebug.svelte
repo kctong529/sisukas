@@ -1,9 +1,9 @@
 <script lang="ts">
+  import { type ExplicitStudyGroupChoice, selectExclusiveGroupOfType } from "../../domain/services/calendar/CalendarProjection";
   import { calendarProjectionStore } from "../../lib/stores/calendarProjectionStore.svelte";
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
-  import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
-  import { selectExclusiveGroupOfType, type ExplicitStudyGroupChoice } from "../../domain/services/calendar/CalendarProjection";
   import { plansStore } from "../../lib/stores/plansStore.svelte";
+  import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
 
   let isOpen = $state(false);
   let showEntries = $state(false);

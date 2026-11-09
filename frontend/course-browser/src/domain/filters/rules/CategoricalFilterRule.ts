@@ -1,6 +1,7 @@
+import * as ArrayComp from '../../valueObjects/ArrayComparison';
+
 // src/domain/filters/rules/CategoricalFilterRule.ts
 import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
-import * as ArrayComp from '../../valueObjects/ArrayComparison';
 
 export type CategoricalFieldSelector<T extends string, TEntity> = (entity: TEntity) => T | T[];
 

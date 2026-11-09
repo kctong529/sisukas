@@ -1,14 +1,15 @@
 // src/domain/parsers/CourseParser.ts
 import { Course } from '../models/Course';
-import type { DateRange } from '../valueObjects/DateRange';
-import type { NumericRange } from '../valueObjects/NumericRange';
 import { Prerequisites } from '../valueObjects/Prerequisites';
-import type { LocalizedString } from '../valueObjects/LocalizedString';
+
 import type {
-  StudyLevel,
   Language,
   RawCourseFormat,
+  StudyLevel,
 } from '../valueObjects/CourseTypes';
+import type { DateRange } from '../valueObjects/DateRange';
+import type { LocalizedString } from '../valueObjects/LocalizedString';
+import type { NumericRange } from '../valueObjects/NumericRange';
 
 /**
  * Normalized sisukas course catalog record.

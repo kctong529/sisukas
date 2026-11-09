@@ -1,8 +1,10 @@
 // src/infrastructure/loaders/RemoteCourseLoader.ts
 
-import type { Course } from '@domain/models/Course';
-import { type RawCourse, parseRawCourse } from '@domain/parsers/CourseParser';
+import { parseRawCourse, type RawCourse } from '@domain/parsers/CourseParser';
+
 import { LargeFileCache } from '../services/LargeFileCache';
+
+import type { Course } from '@domain/models/Course';
 
 const cache = new LargeFileCache();
 

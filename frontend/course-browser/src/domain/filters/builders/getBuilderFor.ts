@@ -23,24 +23,24 @@
  * which prevents invalid combinations of blueprint and builder.
  */
 
-import { TextRuleBuilder } from "./TextRuleBuilder";
-import { NumericRuleBuilder } from "./NumericRuleBuilder";
-import { NumericRangeRuleBuilder } from "./NumericRangeRuleBuilder";
-import { DateRuleBuilder } from "./DateRuleBuilder";
-import { DateRangeRuleBuilder } from "./DateRangeRuleBuilder";
 import { CategoricalRuleBuilder } from "./CategoricalRuleBuilder";
+import { DateRangeRuleBuilder } from "./DateRangeRuleBuilder";
+import { DateRuleBuilder } from "./DateRuleBuilder";
 import { MembershipRuleBuilder } from "./MembershipRuleBuilder";
+import { NumericRangeRuleBuilder } from "./NumericRangeRuleBuilder";
+import { NumericRuleBuilder } from "./NumericRuleBuilder";
 import { PeriodRuleBuilder } from './PeriodRuleBuilder';
+import { TextRuleBuilder } from "./TextRuleBuilder";
 
 import type {
-  TextRuleBlueprint,
-  NumericRuleBlueprint,
-  NumericRangeRuleBlueprint,
-  DateRuleBlueprint,
-  DateRangeRuleBlueprint,
   CategoricalRuleBlueprint,
+  DateRangeRuleBlueprint,
+  DateRuleBlueprint,
   MembershipRuleBlueprint,
-  PeriodRuleBlueprint
+  NumericRangeRuleBlueprint,
+  NumericRuleBlueprint,
+  PeriodRuleBlueprint,
+  TextRuleBlueprint
 } from "../blueprints";
 
 // Type-safe overloads ensure that each blueprint returns the correct builder type

@@ -1,6 +1,6 @@
+import type { FilterRule } from '../filters/core/FilterRule';
 // src/domain/services/FilterService.ts
 import type { Course } from '../models/Course';
-import type { FilterRule } from '../filters/core/FilterRule';
 
 export class FilterService {
   /**

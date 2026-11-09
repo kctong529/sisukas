@@ -1,18 +1,22 @@
 <script lang="ts">
+  import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
+  import { calendarEntryVisible, calendarGroupKey } from '@application/calendar/calendarVisibility';
+
+  import CalendarDetailsHeading from './CalendarDetailsHeading.svelte';
+
   import type { CalendarWeekCourse } from '@application/calendar/calendarCoursesForWeek';
+  import type { CalendarVisibility } from '@application/calendar/calendarVisibility';
+  import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
   import type { StudyGroup } from '@modules/study-groups';
-  import type { CalendarVisibility } from '@application/calendar/calendarVisibility';
-  import { calendarGroupKey, calendarEntryVisible } from '@application/calendar/calendarVisibility';
-  import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
-  import CalendarDetailsHeading from './CalendarDetailsHeading.svelte';
+
   interface Props {
     course: CalendarWeekCourse;
     isPinned: boolean;
     groups: readonly StudyGroup[];
     segments: readonly WeeklyCalendarSegment[];
     visibility: CalendarVisibility;
-    membersForSegment: (segment: WeeklyCalendarSegment) => readonly import('@domain/models/CalendarEntry').CalendarEntry[];
+    membersForSegment: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
     onToggleGroup: (offeringId: string, groupId: string, hidden: boolean) => void;
     onToggleOccurrence: (segment: WeeklyCalendarSegment, state: 'hidden' | 'visible' | null) => void;
     onClear: () => void;

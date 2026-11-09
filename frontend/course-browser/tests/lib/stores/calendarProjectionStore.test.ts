@@ -1,13 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { flushSync } from "svelte";
-import type { StudyGroup } from "@modules/study-groups";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { calendarProjectionStore } from "@lib/stores/calendarProjectionStore.svelte";
+import { courseIndexStore } from "@lib/stores/courseIndexStore.svelte";
+import { plansStore } from "@lib/stores/plansStore.svelte";
+import { studyGroupStore } from "@lib/stores/studyGroupStore.svelte";
+
+import { observeProjection } from "./projectionObserver.svelte";
+
 import type { Course } from "@domain/models/Course";
 import type { Plan } from "@domain/models/Plan";
-import { plansStore } from "@lib/stores/plansStore.svelte";
-import { courseIndexStore } from "@lib/stores/courseIndexStore.svelte";
-import { studyGroupStore } from "@lib/stores/studyGroupStore.svelte";
-import { calendarProjectionStore } from "@lib/stores/calendarProjectionStore.svelte";
-import { observeProjection } from "./projectionObserver.svelte";
+import type { StudyGroup } from "@modules/study-groups";
 
 const key = (id: string) => `unit-${id}:${id}`;
 const course = (id: string) => ({

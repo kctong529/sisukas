@@ -1,12 +1,14 @@
-import { describe, expect, it, expectTypeOf } from "vitest";
-import type { StudyEvent } from "@modules/study-groups";
-import type { CalendarEntry } from "@domain/models/CalendarEntry";
-import type { CalendarIdentifiedOccurrence } from "@domain/services/calendar/CalendarOccurrenceIdentity";
+import { describe, expect, expectTypeOf, it } from "vitest";
+
 import {
   compareCalendarEntries,
   defineFixedCalendarOccurrence,
   defineFlexibleCalendarWindow,
 } from "@domain/services/calendar/CalendarEntryContract";
+
+import type { CalendarEntry } from "@domain/models/CalendarEntry";
+import type { CalendarIdentifiedOccurrence } from "@domain/services/calendar/CalendarOccurrenceIdentity";
+import type { StudyEvent } from "@modules/study-groups";
 
 function identified(
   key: string | null = "key-1",

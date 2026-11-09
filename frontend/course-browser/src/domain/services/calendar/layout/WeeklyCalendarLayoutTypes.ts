@@ -1,5 +1,5 @@
-import type { FixedCalendarOccurrence } from "@domain/models/CalendarEntry";
 import type { CalendarInterval } from "../CalendarTime";
+import type { FixedCalendarOccurrence } from "@domain/models/CalendarEntry";
 
 /** Layout coordinates are Helsinki wall-clock minutes, not elapsed minutes. */
 export interface WeeklyCalendarSegment {

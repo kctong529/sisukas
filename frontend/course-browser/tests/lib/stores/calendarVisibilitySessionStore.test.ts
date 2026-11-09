@@ -1,10 +1,11 @@
 
 import { describe, expect, it } from 'vitest';
-import { createCalendarVisibilitySessionStore } from '../../../src/lib/stores/calendarVisibilitySessionStore.svelte';
+
 import {
   calendarGroupKey,
   setCalendarGroupHidden,
 } from '../../../src/application/calendar/calendarVisibility';
+import { createCalendarVisibilitySessionStore } from '../../../src/lib/stores/calendarVisibilitySessionStore.svelte';
 
 describe('calendar session visibility store (#92)', () => {
   it("retains one plan's visibility when switching A -> B -> A", () => {

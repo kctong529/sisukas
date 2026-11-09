@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { calendarDataNotices, calendarEmptyMessage } from "@application/calendar/calendarDataStates";
 import { summarizeCalendarCompleteness } from "@domain/services/calendar/CalendarProjection";
 

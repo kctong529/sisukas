@@ -1,6 +1,7 @@
+import { NotificationService } from './NotificationService';
+
 // src/infrastructure/services/FiltersApiService.ts
 import type { SerializedFilters } from '@domain/filters/helpers/FilterSerializer';
-import { NotificationService } from './NotificationService';
 
 const FILTERS_API_URL = import.meta.env.VITE_FILTERS_API;
 

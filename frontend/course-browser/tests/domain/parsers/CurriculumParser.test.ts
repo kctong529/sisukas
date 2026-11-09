@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { parseCurricula, type RawCurriculumData } from '../../../src/domain/parsers/CurriculumParser';
+
 import type { CurriculumType } from '../../../src/domain/models/Curriculum';
 
 function fixture(

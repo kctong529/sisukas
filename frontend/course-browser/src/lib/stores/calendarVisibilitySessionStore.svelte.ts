@@ -1,6 +1,6 @@
 import {
-  EMPTY_CALENDAR_VISIBILITY,
   type CalendarVisibility,
+  EMPTY_CALENDAR_VISIBILITY,
 } from '@application/calendar/calendarVisibility';
 
 /**

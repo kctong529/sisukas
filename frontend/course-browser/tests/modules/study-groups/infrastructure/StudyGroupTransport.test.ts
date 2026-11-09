@@ -5,10 +5,12 @@ import {
   it,
   vi,
 } from "vitest";
-import type { StudyGroupRequest } from "@modules/study-groups";
-import { studyGroupKey } from "@modules/study-groups/retrieval/StudyGroupRequest";
+
 import { StudyGroupService } from "@modules/study-groups/infrastructure/StudyGroupService";
 import { createStudyGroupTransport } from "@modules/study-groups/infrastructure/StudyGroupTransport";
+import { studyGroupKey } from "@modules/study-groups/retrieval/StudyGroupRequest";
+
+import type { StudyGroupRequest } from "@modules/study-groups";
 
 const API = "https://wrapper.example.test";
 

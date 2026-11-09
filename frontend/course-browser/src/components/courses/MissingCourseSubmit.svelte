@@ -1,9 +1,9 @@
 <!-- src/components/courses/MissingCourseSubmit.svelte -->
 <script lang="ts">
-  import { NotificationService } from "@infrastructure/services/NotificationService";
   import { assertCourseCodeIsMissingEverywhere } from "@domain/services/CourseCodeGuard";
-  import { CourseSnapshotsService } from "@infrastructure/services/CourseSnapshotsService";
   import { SnapshotHistoricalMerge } from "@infrastructure/loaders/SnapshotHistoricalMerge";
+  import { CourseSnapshotsService } from "@infrastructure/services/CourseSnapshotsService";
+  import { NotificationService } from "@infrastructure/services/NotificationService";
 
   type ResolveMissingCourseResponse = {
     courseCode: string;

@@ -1,9 +1,10 @@
 <!-- src/components/courses/StudyGroupsSection.svelte -->
 <script lang="ts">
-  import type { Course } from "@domain/models/Course";
   import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
-  import type { StudyGroupSummary } from "../../lib/stores/studyGroupStore.svelte";
   import { formatStudyEventSchedule, formatStudyEventTime } from "../../modules/study-groups/formatters/studyGroupFormatters";
+
+  import type { StudyGroupSummary } from "../../lib/stores/studyGroupStore.svelte";
+  import type { Course } from "@domain/models/Course";
 
   type Props = {
     course: Course;

@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-const nav = (page: import('@playwright/test').Page) => page.locator('nav.navbar');
+import type { Page } from '@playwright/test';
 
-async function openCourses(page: import('@playwright/test').Page) {
+const nav = (page: Page) => page.locator('nav.navbar');
+
+async function openCourses(page: Page) {
   await page.goto('/');
   await expect(nav(page).getByRole('button', { name: 'Browse courses' })).toBeVisible();
   await expect(page.locator('#course-count')).toContainText(/Total courses:\s*[1-9]\d*/, { timeout: 45_000 });

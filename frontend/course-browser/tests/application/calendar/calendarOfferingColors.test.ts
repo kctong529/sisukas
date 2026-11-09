@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { fixed } from '../../domain/services/calendar/layout/fixtures';
+
 import { CALENDAR_OFFERING_COLOR_COUNT, calendarOfferingColorIndices, weekAwareOfferingColorIndices } from '../../../src/application/calendar/calendarOfferingColors';
+import { fixed } from '../../domain/services/calendar/layout/fixtures';
 
 describe('calendar offering colors', () => {
   it('assigns twelve distinct indices, then repeats the palette', () => {

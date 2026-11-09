@@ -1,7 +1,9 @@
+import { flushSync, mount, unmount } from 'svelte';
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { flushSync, mount, unmount } from 'svelte';
+
 import CalendarCourseBar from '../../../src/components/calendar/CalendarCourseBar.svelte';
+
 import type { CalendarWeekCourse } from '../../../src/application/calendar/calendarCoursesForWeek';
 
 const course = (offeringId: string): CalendarWeekCourse => ({

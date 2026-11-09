@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import { calendarGroupAlternatives } from '../../../src/application/calendar/calendarGroupAlternatives';
+
 import type { StudyGroup } from '@modules/study-groups';
 
 const group = (groupId: string, name: string, type: string, count = 0): StudyGroup => ({

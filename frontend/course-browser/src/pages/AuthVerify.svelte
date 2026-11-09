@@ -1,6 +1,7 @@
 <!-- src/pages/AuthVerify.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
+
   import { authClient } from "../lib/authClient";
 
   let token = "";

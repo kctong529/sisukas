@@ -1,21 +1,22 @@
 <!-- src/components/planning/LegoView.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
+
+  import { buildAnalyticsPayload } from "@application/analytics/buildAnalyticsPayload";
+  import { normalizeComputeSchedulePairsResponse } from "@application/analytics/normalizeComputeSchedulePairs";
+  import { fetchTopKSchedulePairs } from "@infrastructure/services/AnalyticsService";
+
   import { useSession } from "../../lib/authClient";
+  import { blockStore } from "../../lib/stores/blockStore";
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { plansStore } from "../../lib/stores/plansStore.svelte";
-  import { blockStore } from "../../lib/stores/blockStore";
   import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
-
-  import PlanManager from "./PlanManager.svelte";
-  import BlocksGrid from "./BlocksGrid.svelte";
   import AnalyticsResults from "../analytics/AnalyticsResults.svelte";
+  import BlocksGrid from "./BlocksGrid.svelte";
+  import PlanManager from "./PlanManager.svelte";
 
-  import type { Course } from "@domain/models/Course";
-  import { buildAnalyticsPayload } from "@application/analytics/buildAnalyticsPayload";
-  import { fetchTopKSchedulePairs } from "@infrastructure/services/AnalyticsService";
   import type { AnalyticsResponse } from "../../lib/types/analytics";
-  import { normalizeComputeSchedulePairsResponse } from "@application/analytics/normalizeComputeSchedulePairs";
+  import type { Course } from "@domain/models/Course";
 
   // ---- Session (runes) ----
   const session = useSession();

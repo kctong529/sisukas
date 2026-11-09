@@ -1,6 +1,6 @@
+import { expect, type Page } from '@playwright/test';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, type Page } from '@playwright/test';
 
 /** Read-only authenticated smoke tests use this local, gitignored browser state. */
 export const authStatePath = resolve(

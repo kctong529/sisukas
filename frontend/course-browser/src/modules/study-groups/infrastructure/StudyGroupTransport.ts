@@ -1,7 +1,7 @@
 import type {
   StudyGroupTransport,
 } from "../retrieval/StudyGroupRequestCoordinator";
-import { StudyGroupService } from "./StudyGroupService";
+import type { StudyGroupService } from "./StudyGroupService";
 
 /**
  * Adapt the existing SISU wrapper service to the coordinator's

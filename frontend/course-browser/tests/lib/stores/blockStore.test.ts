@@ -1,13 +1,14 @@
-// tests/lib/stores/blockStore.test.ts
-import { describe, it, expect, beforeEach } from 'vitest';
 import { get } from 'svelte/store';
-import { 
-  blockStore, 
-  blocksForInstance, 
-  isModifyingBlock, 
-  isLoadingInstance 
-} from '@lib/stores/blockStore';
+// tests/lib/stores/blockStore.test.ts
+import { beforeEach, describe, expect, it } from 'vitest';
+
 import { mockBlocksService } from '@infrastructure/services/BlockService.mock';
+import { 
+  blocksForInstance, 
+  blockStore, 
+  isLoadingInstance, 
+  isModifyingBlock 
+} from '@lib/stores/blockStore';
 
 describe('blockStore Domain Logic', () => {
   const courseA = 'CS-101';

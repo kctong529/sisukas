@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+
 import { summarizeCalendarCompleteness } from "@domain/services/calendar/CalendarProjection";
+
 import type { StudyGroupSnapshot } from "@domain/services/calendar/CalendarProjection";
 
 describe("calendar projection completeness", () => {

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
+
 import { aggregateCalendarDisplayEntries, displayEntryLocations } from '../../../src/application/calendar/calendarDisplayAggregation';
-import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
 import { denseOverlapPresentation } from '../../../src/application/calendar/denseOverlapPresentation';
+import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';
-import type { FixedCalendarOccurrence } from '../../../src/domain/models/CalendarEntry';
 import scenario from '../../fixtures/calendar/december-2026-multi-room.json';
+
+import type { FixedCalendarOccurrence } from '../../../src/domain/models/CalendarEntry';
 
 function inRoom(id: string, room: string, options: {
   offering?: string; group?: string; series?: string | null; notice?: string;

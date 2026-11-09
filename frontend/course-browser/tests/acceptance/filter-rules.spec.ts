@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 
 // Every currently registered filter blueprint in src/domain/filters/blueprints/index.ts.
 // These are UI/integration checks against the deployed catalogue, not isolated domain-rule tests.

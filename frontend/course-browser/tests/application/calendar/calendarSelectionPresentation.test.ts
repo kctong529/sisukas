@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { calendarSelectionLabel } from "@application/calendar/calendarSelectionPresentation";
 
 describe("calendar selection labels", () => {

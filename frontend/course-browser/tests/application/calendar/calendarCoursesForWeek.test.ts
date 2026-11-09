@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { Course } from '../../../src/domain/models/Course';
+
 import { calendarCoursesForWeek } from '../../../src/application/calendar/calendarCoursesForWeek';
+
+import type { Course } from '../../../src/domain/models/Course';
 
 const course = (id: string, start: string, end: string) => ({
   id,

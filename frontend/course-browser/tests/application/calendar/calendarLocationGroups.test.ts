@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+
 import { calendarLocationGroups } from '../../../src/application/calendar/calendarLocationGroups';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';
+
 import type { CalendarEntry } from '../../../src/domain/models/CalendarEntry';
 import type { StudyLocation } from '@modules/study-groups';
 

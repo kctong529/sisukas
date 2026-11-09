@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { fixed } from '../../domain/services/calendar/layout/fixtures';
+
 import {
-  EMPTY_CALENDAR_VISIBILITY, calendarEntryVisible, calendarGroupKey,
+  calendarEntryVisible, calendarGroupKey, EMPTY_CALENDAR_VISIBILITY,
   setCalendarGroupHidden, setCalendarOccurrenceVisibility,
 } from '../../../src/application/calendar/calendarVisibility';
+import { fixed } from '../../domain/services/calendar/layout/fixtures';
 
 const a = fixed('occ-a', '2026-11-02T09:00:00+02:00', '2026-11-02T10:00:00+02:00');
 const b = fixed('occ-b', '2026-11-03T09:00:00+02:00', '2026-11-03T10:00:00+02:00');

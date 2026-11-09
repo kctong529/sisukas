@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { CalendarEntry } from "@domain/models/CalendarEntry";
+
 import { layoutCalendarWeek } from "@domain/services/calendar/layout/WeeklyCalendarLayout";
+
 import { fixed, NORMAL_WEEK } from "./fixtures";
+
+import type { CalendarEntry } from "@domain/models/CalendarEntry";
 
 const WEEK = NORMAL_WEEK;
 

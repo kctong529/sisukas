@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { denseOverlapPresentation, denseOverlapDisplays } from '../../../src/application/calendar/denseOverlapPresentation';
+
+import { denseOverlapDisplays, denseOverlapPresentation } from '../../../src/application/calendar/denseOverlapPresentation';
 import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';
 

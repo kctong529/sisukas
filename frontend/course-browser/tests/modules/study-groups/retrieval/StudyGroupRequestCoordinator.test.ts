@@ -1,18 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
-  StudyGroupRequestCoordinator,
-} from "@modules/study-groups/retrieval/StudyGroupRequestCoordinator";
-
-import {
   studyGroupKey,
   type StudyGroupRequest,
 } from "@modules/study-groups/retrieval/StudyGroupRequest";
-
 import {
   StudyGroupRequestCancelledError,
 } from "@modules/study-groups/retrieval/StudyGroupRequestCancelledError";
-
+import {
+  StudyGroupRequestCoordinator,
+} from "@modules/study-groups/retrieval/StudyGroupRequestCoordinator";
 import {
   StudyGroupRetrievalError,
 } from "@modules/study-groups/retrieval/StudyGroupRetrievalError";

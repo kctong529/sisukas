@@ -1,6 +1,7 @@
 // src/lib/stores/courseGradeStore.ts
-import { writable, get } from "svelte/store";
-import { gradesService, type CourseGrade } from "@infrastructure/services/GradesService";
+import { get, writable } from "svelte/store";
+
+import { type CourseGrade, gradesService } from "@infrastructure/services/GradesService";
 
 export type CourseGradeMap = Map<string, number>;
 
@@ -26,14 +27,17 @@ function createCourseGradeStore() {
   };
 
   const { subscribe, set, update } = writable<CourseGradeStoreState>(initialState);
+  let generation = 0;
 
   return {
     subscribe,
 
     async load() {
+      const requestedGeneration = generation;
       update((s) => ({ ...s, loading: true, error: null }));
       try {
         const rows = await gradesService.loadAll();
+        if (requestedGeneration !== generation) return;
         update((s) => ({
           ...s,
           grades: rowsToMap(rows),
@@ -41,6 +45,7 @@ function createCourseGradeStore() {
           loadedOnce: true,
         }));
       } catch (err) {
+        if (requestedGeneration !== generation) return;
         update((s) => ({
           ...s,
           loading: false,
@@ -90,6 +95,7 @@ function createCourseGradeStore() {
     },
 
     clear() {
+      generation += 1;
       set(initialState);
     },
   };

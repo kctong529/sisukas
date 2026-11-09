@@ -1,9 +1,10 @@
 // src/infrastructure/services/CourseSnapshotsService.ts
 import { NotificationService } from "./NotificationService";
+
 import type {
   CourseSnapshot,
-  SnapshotStatus,
   ResolveAndStoreResponse,
+  SnapshotStatus,
 } from "../../domain/models/CourseSnapshot";
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";

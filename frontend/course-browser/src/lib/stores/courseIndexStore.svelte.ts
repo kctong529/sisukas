@@ -1,7 +1,8 @@
-// src/lib/stores/courseIndexStore.svelte.ts
-import type { Course } from "@domain/models/Course";
 import { loadCoursesWithCache, loadHistoricalCoursesWithCache } from "@infrastructure/loaders/RemoteCourseLoader";
 import { SnapshotHistoricalMerge } from "@infrastructure/loaders/SnapshotHistoricalMerge";
+
+// src/lib/stores/courseIndexStore.svelte.ts
+import type { Course } from "@domain/models/Course";
 
 type SnapshotMergeStats = { fetched: number; merged: number; skipped: number };
 const ZERO_SNAPSHOTS: SnapshotMergeStats = { fetched: 0, merged: 0, skipped: 0 };
@@ -63,6 +64,7 @@ export const courseIndexStore = (() => {
 
     // Status
     loading: false,
+    activeReady: false,
     error: null as string | null,
     historicalReady: false,
     historicalLoading: false,
@@ -90,6 +92,7 @@ export const courseIndexStore = (() => {
   // actions: bootstrapping
   // ----------------------------
   async function bootstrapActive(): Promise<BootstrapActiveResult> {
+    state.activeReady = false;
     state.loading = true;
     state.error = null;
 
@@ -99,11 +102,13 @@ export const courseIndexStore = (() => {
 
       state.byInstanceId = active.byInstanceId;
       state.instanceIdsByCode = active.instanceIdsByCode;
+      state.activeReady = true;
 
       return { activeCount: activeCourses.length };
     } catch (err) {
       state.byInstanceId = new Map();
       state.instanceIdsByCode = new Map();
+      state.activeReady = false;
       state.error = err instanceof Error ? err.message : "Failed to load active courses";
       throw err;
     } finally {
@@ -239,6 +244,7 @@ export const courseIndexStore = (() => {
     const { byInstanceId, instanceIdsByCode } = buildIndexes(courses);
     state.byInstanceId = byInstanceId;
     state.instanceIdsByCode = instanceIdsByCode;
+    state.activeReady = true;
     state.loading = false;
     state.error = null;
     return { byInstanceId, instanceIdsByCode };

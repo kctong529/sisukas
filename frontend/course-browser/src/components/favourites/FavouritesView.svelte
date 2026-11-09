@@ -1,17 +1,18 @@
 <!-- src/components/favourites/FavouritesView.svelte -->
 <script lang="ts">
+  import { NotificationService } from '@infrastructure/services/NotificationService';
+
   import { useSession } from '../../lib/authClient';
+  import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { favouritesStore } from '../../lib/stores/favouritesStore';
   import { plansStore } from "../../lib/stores/plansStore.svelte";
-  import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
-  import { courseGradeStore } from '../../lib/stores/courseGradeStore';
-  import { NotificationService } from '@infrastructure/services/NotificationService';
   import StudyGroupsSection from "../courses/StudyGroupsSection.svelte";
-  import type { Course } from '@domain/models/Course';
-  import PlanManager from "../planning/PlanManager.svelte";
-  import type { Favourite } from '@infrastructure/services/FavouritesService';
   import PlanEditor from "../planning/PlanEditor.svelte";
+  import PlanManager from "../planning/PlanManager.svelte";
+
+  import type { Course } from '@domain/models/Course';
+  import type { Favourite } from '@infrastructure/services/FavouritesService';
 
   type Props = {
     source?: "active" | "all";
@@ -72,10 +73,6 @@
     editingCourseId: null as string | null,
     editingNotes: '',
 
-    hasLoadedForUser: false,
-    hasInitializedPlans: false,
-    hasInitializedGrades: false,
-
     removeMode: false,
 
     sortedFavourites: [] as Favourite[],
@@ -94,34 +91,26 @@
     source = source === "active" ? "all" : "active";
   }
 
-  // ---- Sign-in driven init/cleanup ----
+  // Only view-local state is reset here. Account-scoped stores are
+  // initialized and cleared by AuthenticatedDataLifecycle.
+  let observedViewAccount: string | null | undefined = undefined;
   $effect(() => {
-    if (!isSignedIn) {
-      favouritesStore.clear?.();
-      plansStore.actions.clear();
-      courseGradeStore.clear?.();
-      studyGroupStore.actions.clear();
+    if ($session.isPending) return;
+    const accountId = user?.id ?? null;
+    if (accountId === observedViewAccount) return;
+    observedViewAccount = accountId;
 
-      expandedInstanceIds = new Set();
-      ui.hasLoadedForUser = false;
-      ui.hasInitializedPlans = false;
-      ui.hasInitializedGrades = false;
-      ui.editingCourseId = null;
-      ui.editingNotes = '';
-      ui.removeMode = false;
-      ui.sortedFavourites = [];
-      return;
-    }
-
-    if (!ui.hasLoadedForUser) {
-      void favouritesStore.load?.();
-      ui.hasLoadedForUser = true;
-    }
+    expandedInstanceIds = new Set();
+    prevPlanId = null;
+    lastSig = "";
+    ui.editingCourseId = null;
+    ui.editingNotes = '';
+    ui.removeMode = false;
+    ui.sortedFavourites = [];
   });
 
   $effect(() => {
-    if (!isSignedIn) return;
-    if (!ui.hasLoadedForUser) return;
+    if ($session.isPending || !isSignedIn) return;
     if (source !== "active") return;
     if (favState.favourites.length === 0) return;
 
@@ -133,43 +122,6 @@
       void courseIndexStore.actions.ensureHistoricalLoaded?.();
     }
   });
-
-  $effect(() => {
-    if (!isSignedIn) return;
-    if (!ui.hasLoadedForUser) return;
-    if (ui.hasInitializedPlans) return;
-
-    void initializePlans();
-  });
-
-  $effect(() => {
-    if (!isSignedIn) return;
-    if (!ui.hasLoadedForUser) return;
-    if (ui.hasInitializedGrades) return;
-
-    try {
-      void courseGradeStore.load?.();
-    } catch (err) {
-      console.error('Failed to initialize grades:', err);
-    } finally {
-      ui.hasInitializedGrades = true;
-    }
-  });
-
-  async function initializePlans() {
-    try {
-      await plansStore.actions.ensureDefaultPlan();
-      
-      // Initialize expanded state with plan instances
-      if (activePlan?.instanceIds && activePlan.instanceIds.length > 0) {
-        expandedInstanceIds = new Set(activePlan.instanceIds);
-      }
-    } catch (err) {
-      console.error('Failed to initialize plans:', err);
-    } finally {
-      ui.hasInitializedPlans = true;
-    }
-  }
 
   const planInstanceIdByCode = $derived.by(() => {
     const m = new Map<string, string>();
@@ -186,19 +138,15 @@
   // ---- Plan switch detection and state sync ----
   $effect(() => {
     if (activePlanId !== prevPlanId) {
-      // Clear old expanded state
-      expandedInstanceIds = new Set();
+      // Keep view expansion in sync with the currently selected plan.
       prevPlanId = activePlanId;
-      
-      if (ui.hasInitializedPlans && activePlan && activePlan.instanceIds && activePlan.instanceIds.length > 0) {
-        expandedInstanceIds = new Set(activePlan.instanceIds);
-      }
+      expandedInstanceIds = new Set(activePlan?.instanceIds ?? []);
     }
   });
 
   // ---- Study group batch fetch (active view only) ----
   $effect(() => {
-    if (!ui.hasLoadedForUser) return;
+    if ($session.isPending || !isSignedIn) return;
     if (ui.sortedFavourites.length === 0) return;
     if (source !== "active") return;
 

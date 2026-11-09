@@ -1,14 +1,16 @@
 <script lang="ts">
-  import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
-  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
-  import type { CalendarGroupAlternative } from '@application/calendar/calendarGroupAlternatives';
-  import type { CalendarEntry } from '@domain/models/CalendarEntry';
-  import CalendarGroupAlternatives from './CalendarGroupAlternatives.svelte';
-  import CalendarDetailsHeading from './CalendarDetailsHeading.svelte';
-  import CalendarLocationList from './CalendarLocationList.svelte';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
+
+  import CalendarDetailsHeading from './CalendarDetailsHeading.svelte';
+  import CalendarGroupAlternatives from './CalendarGroupAlternatives.svelte';
+  import CalendarLocationList from './CalendarLocationList.svelte';
+
+  import type { CalendarGroupAlternative } from '@application/calendar/calendarGroupAlternatives';
+  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
+  import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
+  import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
 
   interface Props {
     segment: WeeklyCalendarSegment | null;

@@ -9,15 +9,16 @@
  * Blueprints are used to construct strongly-typed filter rules via their corresponding builders.
  */
 
-import { CodeRuleBlueprint, NameRuleBlueprint } from './TextRuleBlueprintRegistry';
-import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprintRegistry';
-import { StartDateRuleBlueprint, EndDateRuleBlueprint } from './DateRuleBlueprintRegistry';
+import { FormatRuleBlueprint, LanguagesRuleBlueprint, LevelRuleBlueprint, OrganizationRuleBlueprint, TagsRuleBlueprint, TeachersRuleBlueprint } from './CategoricalRuleBlueprintRegistry';
 import { EnrollmentRuleBlueprint } from './DateRangeRuleBlueprintRegistry';
-import { LevelRuleBlueprint, FormatRuleBlueprint, LanguagesRuleBlueprint, TeachersRuleBlueprint, TagsRuleBlueprint, OrganizationRuleBlueprint } from './CategoricalRuleBlueprintRegistry';
+import { EndDateRuleBlueprint, StartDateRuleBlueprint } from './DateRuleBlueprintRegistry';
 import { CurriculumMembershipRuleBlueprint } from './MembershipRuleBlueprintRegistry';
+import { CreditsRangeRuleBlueprint } from './NumericRangeRuleBlueprintRegistry';
 import { PeriodRuleBlueprint } from './PeriodRuleBlueprint';
-import type { CurriculaMap } from '../../models/Curriculum';
+import { CodeRuleBlueprint, NameRuleBlueprint } from './TextRuleBlueprintRegistry';
+
 import type { AcademicPeriod } from '../../models/AcademicPeriod';
+import type { CurriculaMap } from '../../models/Curriculum';
 
 /**
  * Static blueprints that don't require external data

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { StudyGroup } from "@modules/study-groups";
+
 import { StudyGroupCache } from "@modules/study-groups/cache/StudyGroupCache";
-import type { StudyEvent } from "@modules/study-groups";
+
+import type { StudyEvent, StudyGroup } from "@modules/study-groups";
 
 const key = "course-unit-a:offering-a";
 

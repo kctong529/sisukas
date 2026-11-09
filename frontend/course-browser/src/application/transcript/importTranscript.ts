@@ -1,12 +1,11 @@
+import { SnapshotHistoricalMerge } from "@infrastructure/loaders/SnapshotHistoricalMerge";
+import { CourseSnapshotsService } from "@infrastructure/services/CourseSnapshotsService";
+import { transcriptService } from "@infrastructure/services/TranscriptService";
+import { courseGradeStore } from "@lib/stores/courseGradeStore";
+import { courseIndexStore } from "@lib/stores/courseIndexStore.svelte";
 // src/application/transcript/importTranscript.ts
 import { favouritesStore } from "@lib/stores/favouritesStore";
 import { plansStore } from "@lib/stores/plansStore.svelte";
-import { courseIndexStore } from "@lib/stores/courseIndexStore.svelte";
-import { courseGradeStore } from "@lib/stores/courseGradeStore";
-
-import { transcriptService } from "@infrastructure/services/TranscriptService";
-import { CourseSnapshotsService } from "@infrastructure/services/CourseSnapshotsService";
-import { SnapshotHistoricalMerge } from "@infrastructure/loaders/SnapshotHistoricalMerge";
 
 import type { Course } from "@domain/models/Course";
 

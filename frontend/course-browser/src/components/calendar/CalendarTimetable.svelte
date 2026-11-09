@@ -1,13 +1,16 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+
   import { calendarDayHeading } from '@application/calendar/calendarDayHeading';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
-  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
-  import type { WeeklyCalendarLayoutResult, WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
-  import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
+
   import CalendarEvent from './CalendarEvent.svelte';
-  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
   import DenseOverlapCard from './DenseOverlapCard.svelte';
+
+  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
+  import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
+  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
+  import type { WeeklyCalendarLayoutResult, WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;

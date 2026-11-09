@@ -1,13 +1,13 @@
-import type { Plan } from "@domain/models/Plan";
-import type { Course } from "@domain/models/Course";
-import type { StudyGroup } from "@modules/study-groups";
-import type { CalendarEntry } from "@domain/models/CalendarEntry";
-import type { CalendarDiagnostic } from "@domain/models/CalendarDiagnostic";
-
-import type { CalendarOccurrenceCandidate } from "./CalendarOccurrenceIdentity";
+import { compareCalendarEntries, defineFixedCalendarOccurrence } from "./CalendarEntryContract";
 import { identifyCalendarOccurrences } from "./CalendarOccurrenceIdentity";
 import { resolveCalendarTime } from "./CalendarTime";
-import { defineFixedCalendarOccurrence, compareCalendarEntries } from "./CalendarEntryContract";
+
+import type { CalendarOccurrenceCandidate } from "./CalendarOccurrenceIdentity";
+import type { CalendarDiagnostic } from "@domain/models/CalendarDiagnostic";
+import type { CalendarEntry } from "@domain/models/CalendarEntry";
+import type { Course } from "@domain/models/Course";
+import type { Plan } from "@domain/models/Plan";
+import type { StudyGroup } from "@modules/study-groups";
 
 /** Explicit availability supplied by the caller, never inferred from [] groups. */
 export type StudyGroupAvailability =

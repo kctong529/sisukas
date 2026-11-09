@@ -1,27 +1,30 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { calendarProjectionStore } from '@lib/stores/calendarProjectionStore.svelte';
-  import { plansStore } from '@lib/stores/plansStore.svelte';
-  import { courseIndexStore } from '@lib/stores/courseIndexStore.svelte';
-  import { layoutCalendarWeek } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
-  import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
-  import { calendarEventPresentation } from '@application/calendar/calendarPresentation';
-  import { aggregateCalendarDisplayEntries, displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
-  import { currentHelsinkiWeek } from '@application/calendar/currentHelsinkiWeek';
-  import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
-  import { calendarDataNotices, calendarEmptyMessage } from '@application/calendar/calendarDataStates';
-  import WeekNavigation from './WeekNavigation.svelte';
-  import WeekGrid from './WeekGrid.svelte';
-  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
-  import { studyGroupStore } from '@lib/stores/studyGroupStore.svelte';
-  import { weekAwareOfferingColorIndices } from '@application/calendar/calendarOfferingColors';
-  import { calendarVisibilitySessionStore } from '@lib/stores/calendarVisibilitySessionStore.svelte';
+
   import { calendarCoursesForWeek } from '@application/calendar/calendarCoursesForWeek';
+  import { calendarDataNotices, calendarEmptyMessage } from '@application/calendar/calendarDataStates';
+  import { aggregateCalendarDisplayEntries, displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
+  import { weekAwareOfferingColorIndices } from '@application/calendar/calendarOfferingColors';
+  import { calendarEventPresentation } from '@application/calendar/calendarPresentation';
   import {
     calendarEntryVisible,
-    setCalendarGroupHidden, setCalendarOccurrenceVisibility,
-    type CalendarVisibility,
+    type CalendarVisibility, setCalendarGroupHidden,
+    setCalendarOccurrenceVisibility,
   } from '@application/calendar/calendarVisibility';
+  import { currentHelsinkiWeek } from '@application/calendar/currentHelsinkiWeek';
+  import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
+  import { layoutCalendarWeek } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
+  import { calendarProjectionStore } from '@lib/stores/calendarProjectionStore.svelte';
+  import { calendarVisibilitySessionStore } from '@lib/stores/calendarVisibilitySessionStore.svelte';
+  import { courseIndexStore } from '@lib/stores/courseIndexStore.svelte';
+  import { plansStore } from '@lib/stores/plansStore.svelte';
+  import { studyGroupStore } from '@lib/stores/studyGroupStore.svelte';
+
+  import WeekGrid from './WeekGrid.svelte';
+  import WeekNavigation from './WeekNavigation.svelte';
+
+  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
+  import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
 
   let weekStart = $state(currentHelsinkiWeek());
   const todayWeek = currentHelsinkiWeek;

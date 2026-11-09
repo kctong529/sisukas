@@ -1,9 +1,10 @@
- // @vitest-environment jsdom
+ import { flushSync, mount, unmount } from 'svelte';
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { flushSync, mount, unmount } from 'svelte';
 
 import CoursePeriodBadge from '../../src/components/courses/CoursePeriodBadge.svelte';
 import { academicPeriodStore } from '../../src/lib/stores/academicPeriodStore';
+
 import type { AcademicPeriod } from '../../src/domain/models/AcademicPeriod';
 import type { DateRange } from '../../src/domain/valueObjects/DateRange';
 

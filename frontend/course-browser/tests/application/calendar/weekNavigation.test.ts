@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { shiftHelsinkiWeek } from '../../../src/application/calendar/weekNavigation';
 
 describe('shiftHelsinkiWeek', () => {

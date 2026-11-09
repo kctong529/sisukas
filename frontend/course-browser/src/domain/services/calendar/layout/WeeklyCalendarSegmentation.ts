@@ -1,7 +1,8 @@
-import type { CalendarEntry, FixedCalendarOccurrence } from "@domain/models/CalendarEntry";
 import { isConflictEligible } from "../CalendarEntryContract";
 import { helsinkiOffsetMinutes, localMinute, splitAtOffsetTransitions } from "./WeeklyCalendarTime";
-import type { WeeklyCalendarSegment, WeeklyCalendarLayoutDiagnostic } from "./WeeklyCalendarLayoutTypes";
+
+import type { WeeklyCalendarLayoutDiagnostic, WeeklyCalendarSegment } from "./WeeklyCalendarLayoutTypes";
+import type { CalendarEntry, FixedCalendarOccurrence } from "@domain/models/CalendarEntry";
 
 /** Stable serialization of source associations without mutating upstream entries. */
 function stableValue(value: unknown): string {

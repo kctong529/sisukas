@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { StudyGroupService } from '@modules/study-groups/infrastructure/StudyGroupService';
 
 type SourceEvent = {

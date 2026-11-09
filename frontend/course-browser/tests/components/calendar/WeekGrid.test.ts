@@ -1,11 +1,15 @@
+import { flushSync, mount, unmount } from 'svelte';
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { flushSync, mount, unmount } from 'svelte';
-import WeekGrid from '../../../src/components/calendar/WeekGrid.svelte';
-import { layoutCalendarWeek, type WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
-import { fixed } from '../../domain/services/calendar/layout/fixtures';
-import type { StudyGroup } from '@modules/study-groups';
+
 import { aggregateCalendarDisplayEntries } from '@application/calendar/calendarDisplayAggregation';
+import { layoutCalendarWeek, type WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
+
+import WeekGrid from '../../../src/components/calendar/WeekGrid.svelte';
+import { fixed } from '../../domain/services/calendar/layout/fixtures';
+
+import type { CalendarWeekCourse } from '@application/calendar/calendarCoursesForWeek';
+import type { StudyGroup } from '@modules/study-groups';
 
 const mounted: Array<ReturnType<typeof mount>> = [];
 const targetElements: HTMLElement[] = [];
@@ -524,7 +528,7 @@ describe('WeekGrid course context navigation', () => {
     targetElements.push(target);
     const entry = event('one');
     const layout = layoutCalendarWeek([entry], '2026-11-02');
-    const course = (id: string) => ({ offeringId: id, code: id, title: `${id} title`, course: {} as import('../../../src/application/calendar/calendarCoursesForWeek').CalendarWeekCourse['course'] });
+    const course = (id: string) => ({ offeringId: id, code: id, title: `${id} title`, course: {} as CalendarWeekCourse['course'] });
     mounted.push(mount(WeekGrid, { target, props: {
       layout,
       unfilteredSegments: layout.segments,
@@ -559,7 +563,7 @@ describe('WeekGrid course context navigation', () => {
     const layout = layoutCalendarWeek([], '2026-11-02');
     mounted.push(mount(WeekGrid, { target, props: {
       layout,
-      weekCourses: [{ offeringId: 'offering', code: 'CS-1000', title: 'Example', course: {} as import('../../../src/application/calendar/calendarCoursesForWeek').CalendarWeekCourse['course'] }],
+      weekCourses: [{ offeringId: 'offering', code: 'CS-1000', title: 'Example', course: {} as CalendarWeekCourse['course'] }],
       presentationForSegment: () => ({ courseCode: null, courseTitle: '', groupLabel: null, locationLabel: null }),
     } }));
     flushSync();
@@ -584,7 +588,7 @@ describe('WeekGrid pinned course and temporary event inspection', () => {
     mounted.push(mount(WeekGrid, { target, props: {
       layout,
       unfilteredSegments: layout.segments,
-      weekCourses: [{ offeringId: 'offering', code: 'CS-1000', title: 'Pinned course', course: {} as import('../../../src/application/calendar/calendarCoursesForWeek').CalendarWeekCourse['course'] }],
+      weekCourses: [{ offeringId: 'offering', code: 'CS-1000', title: 'Pinned course', course: {} as CalendarWeekCourse['course'] }],
       presentationForSegment: () => ({ courseCode: 'CS-1000', courseTitle: 'Event course', groupLabel: 'Exercise', locationLabel: null }),
     } }));
     flushSync();
@@ -622,7 +626,7 @@ describe('WeekGrid hidden visibility previews (#92)', () => {
       studyEvents: [],
     }));
     const course = { offeringId: 'offering', code: 'TEST', title: 'Test course',
-      course: {} as import('../../../src/application/calendar/calendarCoursesForWeek').CalendarWeekCourse['course'] };
+      course: {} as CalendarWeekCourse['course'] };
     mounted.push(mount(WeekGrid, { target, props: {
       layout,
       unfilteredSegments: full.segments,

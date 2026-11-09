@@ -1,10 +1,12 @@
-import { plansStore } from "./plansStore.svelte";
-import { courseIndexStore } from "./courseIndexStore.svelte";
-import { studyGroupStore } from "./studyGroupStore.svelte";
 import {
-  projectPlanFromSources,
   type CalendarProjectionSources,
+  projectPlanFromSources,
 } from "@application/calendar/calendarProjectionAdapter";
+
+import { courseIndexStore } from "./courseIndexStore.svelte";
+import { plansStore } from "./plansStore.svelte";
+import { studyGroupStore } from "./studyGroupStore.svelte";
+
 import type { CalendarProjectionResult } from "@domain/services/calendar/CalendarProjection";
 
 const sources: CalendarProjectionSources = {

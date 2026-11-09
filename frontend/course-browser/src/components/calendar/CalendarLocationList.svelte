@@ -1,6 +1,7 @@
 <script lang="ts">
-  import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import { calendarLocationGroups } from '@application/calendar/calendarLocationGroups';
+
+  import type { CalendarEntry } from '@domain/models/CalendarEntry';
 
   interface Props {
     members: readonly CalendarEntry[];

@@ -1,5 +1,6 @@
 // src/lib/stores/colorAllocator.ts
 import { writable } from 'svelte/store';
+
 import type { Block } from '@domain/models/Block';
 
 const PALETTE_SIZE = 6;

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { calendarPreviewLayout } from '../../../src/application/calendar/calendarPreviewLayout';
 import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';

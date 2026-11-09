@@ -1,5 +1,6 @@
-import type { StudyGroup } from '@modules/study-groups';
 import { calendarGroupLabel } from './calendarPresentation';
+
+import type { StudyGroup } from '@modules/study-groups';
 
 export interface CalendarGroupAlternative {
   groupId: string;

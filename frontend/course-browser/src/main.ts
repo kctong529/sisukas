@@ -1,9 +1,12 @@
-import { mount } from 'svelte'
 import "./polyfills";
+
+import 'bootstrap-icons/font/bootstrap-icons.css'
+
+import { mount } from 'svelte'
 import { registerSW } from 'virtual:pwa-register'
+
 import App from './App.svelte'
 import AuthVerify from './pages/AuthVerify.svelte'
-import 'bootstrap-icons/font/bootstrap-icons.css'
 
 const path = window.location.pathname;
 const target = document.getElementById("app")!;

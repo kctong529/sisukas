@@ -1,5 +1,13 @@
 // @vitest-environment node
 
+import { spawnSync } from 'node:child_process';
+import {
+  mkdtemp,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import {
   afterEach,
   beforeEach,
@@ -7,16 +15,6 @@ import {
   expect,
   it,
 } from 'vitest';
-
-import {
-  mkdtemp,
-  rm,
-  writeFile,
-} from 'node:fs/promises';
-
-import { spawnSync } from 'node:child_process';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
 import { stringify as stringifyYaml } from 'yaml';
 
 const CLI = path.resolve(

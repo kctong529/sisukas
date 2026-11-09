@@ -1,12 +1,13 @@
-// src/infrastructure/loaders/SnapshotHistoricalMerge.ts
-import type { Course } from "@domain/models/Course";
 import { parseRawCourse, type RawCourse } from "@domain/parsers/CourseParser";
-import type { LocalizedString } from "@domain/valueObjects/LocalizedString";
-import type { NumericRange } from "@domain/valueObjects/NumericRange";
-import type { Language, RawCourseFormat } from "@domain/valueObjects/CourseTypes";
+import { courseIndexStore } from "@lib/stores/courseIndexStore.svelte";
 
 import { CourseSnapshotsService } from "../services/CourseSnapshotsService";
-import { courseIndexStore } from "@lib/stores/courseIndexStore.svelte";
+
+// src/infrastructure/loaders/SnapshotHistoricalMerge.ts
+import type { Course } from "@domain/models/Course";
+import type { Language, RawCourseFormat } from "@domain/valueObjects/CourseTypes";
+import type { LocalizedString } from "@domain/valueObjects/LocalizedString";
+import type { NumericRange } from "@domain/valueObjects/NumericRange";
 
 function isRecord(x: unknown): x is Record<string, unknown> {
   return !!x && typeof x === "object" && !Array.isArray(x);

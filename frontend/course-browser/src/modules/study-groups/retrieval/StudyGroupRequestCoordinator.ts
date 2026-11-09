@@ -1,11 +1,12 @@
-import type { StudyGroup } from "../models/StudyGroup";
 import {
   studyGroupKey,
   type StudyGroupRequest,
 } from "./StudyGroupRequest";
-import type { StudyGroupOutcome } from "./StudyGroupOutcome";
-import { StudyGroupRetrievalError } from "./StudyGroupRetrievalError";
 import { StudyGroupRequestCancelledError } from "./StudyGroupRequestCancelledError";
+import { StudyGroupRetrievalError } from "./StudyGroupRetrievalError";
+
+import type { StudyGroup } from "../models/StudyGroup";
+import type { StudyGroupOutcome } from "./StudyGroupOutcome";
 
 export type StudyGroupBatchResult = Map<string, StudyGroup[]>;
 

@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import type { StudyGroup } from "@modules/study-groups";
+
 import {
   StudyGroupCache,
   type StudyGroupCacheChange,
 } from "@modules/study-groups/cache/StudyGroupCache";
+
+import type { StudyGroup } from "@modules/study-groups";
 
 const keyA = "course-unit-a:offering-a";
 const keyB = "course-unit-b:offering-b";

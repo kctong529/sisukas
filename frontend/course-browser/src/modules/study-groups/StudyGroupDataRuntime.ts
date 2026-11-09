@@ -1,23 +1,21 @@
-import type { Readable } from "svelte/store";
-
 import { StudyGroupCache } from
   "./cache/StudyGroupCache";
 import { StudyGroupCacheLoader } from
   "./cache/StudyGroupCacheLoader";
-import type { StudyGroupEntry } from
-  "./cache/StudyGroupEntry";
-import type { StudyGroupRequest } from
-  "./retrieval/StudyGroupRequest";
-import { StudyGroupRequestCoordinator } from
-  "./retrieval/StudyGroupRequestCoordinator";
-
 import { StudyGroupService } from
   "./infrastructure/StudyGroupService";
 import { createStudyGroupTransport } from
   "./infrastructure/StudyGroupTransport";
-
+import { StudyGroupRequestCoordinator } from
+  "./retrieval/StudyGroupRequestCoordinator";
 import { createStudyGroupEntryStore } from
   "./stores/studyGroupEntryStore";
+
+import type { StudyGroupEntry } from
+  "./cache/StudyGroupEntry";
+import type { StudyGroupRequest } from
+  "./retrieval/StudyGroupRequest";
+import type { Readable } from "svelte/store";
 
 /**
  * Public access to the shared full-data retrieval pipeline.

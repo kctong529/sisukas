@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { projectActivePlan, selectExclusiveGroupOfType, type StudyGroupSnapshot, type StudyGroupSelection } from
+
+import { projectActivePlan, selectExclusiveGroupOfType, type StudyGroupSelection, type StudyGroupSnapshot } from
   "@domain/services/calendar/CalendarProjection";
-import type { Plan } from "@domain/models/Plan";
+
 import type { Course } from "@domain/models/Course";
-import type { StudyGroup } from "@modules/study-groups";
-import type { StudyEvent } from "@modules/study-groups";
+import type { Plan } from "@domain/models/Plan";
+import type { StudyEvent, StudyGroup } from "@modules/study-groups";
 
 const plan = (ids: string[]): Plan => ({
   id: "plan", userId: "user", name: "Plan", isActive: true,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import {
   formatHelsinkiLocal, intervalsOverlap, parseOffsetInstant, resolveCalendarTime,
 } from "@domain/services/calendar/CalendarTime";

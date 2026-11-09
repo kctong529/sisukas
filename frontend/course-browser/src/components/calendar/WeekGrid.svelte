@@ -1,24 +1,26 @@
 <script lang="ts">
+  import { calendarGroupAlternatives } from '@application/calendar/calendarGroupAlternatives';
+  import { calendarOfferingColorIndices } from '@application/calendar/calendarOfferingColors';
+  import { calendarPreviewLayout } from '@application/calendar/calendarPreviewLayout';
+  import { denseOverlapPresentation } from '@application/calendar/denseOverlapPresentation';
+
+  import CalendarContextPanel from './CalendarContextPanel.svelte';
+  import CalendarCourseBar from './CalendarCourseBar.svelte';
+  import CalendarCourseContext from './CalendarCourseContext.svelte';
+  import CalendarTimetable from './CalendarTimetable.svelte';
+  import DenseOverlapDialog from './DenseOverlapDialog.svelte';
+
+  import type { CalendarWeekCourse } from '@application/calendar/calendarCoursesForWeek';
+  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
+  import type { CalendarVisibility } from '@application/calendar/calendarVisibility';
+  import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
+  import type { CalendarEntry } from '@domain/models/CalendarEntry';
+  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
   import type {
     WeeklyCalendarLayoutResult,
     WeeklyCalendarSegment,
   } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
-  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
-  import { denseOverlapPresentation } from '@application/calendar/denseOverlapPresentation';
-  import { calendarPreviewLayout } from '@application/calendar/calendarPreviewLayout';
-  import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
-  import CalendarContextPanel from './CalendarContextPanel.svelte';
-  import CalendarCourseContext from './CalendarCourseContext.svelte';
-  import CalendarCourseBar from './CalendarCourseBar.svelte';
-  import type { CalendarWeekCourse } from '@application/calendar/calendarCoursesForWeek';
-  import type { CalendarVisibility } from '@application/calendar/calendarVisibility';
-  import CalendarTimetable from './CalendarTimetable.svelte';
-  import DenseOverlapDialog from './DenseOverlapDialog.svelte';
   import type { StudyGroup } from '@modules/study-groups';
-  import type { CalendarEntry } from '@domain/models/CalendarEntry';
-  import { calendarGroupAlternatives } from '@application/calendar/calendarGroupAlternatives';
-  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
-  import { calendarOfferingColorIndices } from '@application/calendar/calendarOfferingColors';
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;
