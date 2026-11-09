@@ -6,7 +6,6 @@
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { favouritesStore } from '../../lib/stores/favouritesStore';
   import { plansStore } from "../../lib/stores/plansStore.svelte";
-  import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
   import StudyGroupsSection from "../courses/StudyGroupsSection.svelte";
   import PlanEditor from "../planning/PlanEditor.svelte";
   import PlanManager from "../planning/PlanManager.svelte";
@@ -81,8 +80,6 @@
   let expandedInstanceIds = $state<Set<string>>(new Set());
   let isPlanningSwitching = $state(false);
   let prevPlanId: string | null = null;
-  let lastSig = "";
-  let fetchTimer: number | null = null;
 
   const planInstanceIds = $derived.by(() => new Set(activePlan?.instanceIds ?? []));
   const expandedIds = $derived.by(() => expandedInstanceIds);
@@ -102,7 +99,6 @@
 
     expandedInstanceIds = new Set();
     prevPlanId = null;
-    lastSig = "";
     ui.editingCourseId = null;
     ui.editingNotes = '';
     ui.removeMode = false;
@@ -144,42 +140,9 @@
     }
   });
 
-  // ---- Study group batch fetch (active view only) ----
-  $effect(() => {
-    if ($session.isPending || !isSignedIn) return;
-    if (ui.sortedFavourites.length === 0) return;
-    if (source !== "active") return;
-
-    const reqs: Array<{ courseUnitId: string; courseOfferingId: string }> = [];
-    const seen = new Set<string>();
-
-    for (const fav of ui.sortedFavourites) {
-      for (const course of getCoursesForId(fav.courseId)) {
-        const k = `${course.unitId}:${course.id}`;
-        if (seen.has(k)) continue;
-        seen.add(k);
-        reqs.push({ courseUnitId: course.unitId, courseOfferingId: course.id });
-      }
-    }
-
-    const sig = [
-      `plan:${activePlanId ?? "none"}`,
-      ...reqs.map(r => `${r.courseUnitId}:${r.courseOfferingId}`).sort().slice(0, 200),
-    ].join("|");
-
-    if (sig === lastSig) return;
-    if (fetchTimer) window.clearTimeout(fetchTimer);
-    lastSig = sig;
-
-    fetchTimer = window.setTimeout(() => {
-      void studyGroupStore.actions.fetchWithStaleWhileRevalidate(reqs);
-    }, 50);
-
-    return () => {
-      if (fetchTimer) window.clearTimeout(fetchTimer);
-      fetchTimer = null;
-    };
-  });
+  // StudyGroupsSection owns explicit retrieval for expanded offerings.
+  // The authenticated application lifecycle owns default active-plan loading.
+  // Favourites must not prefetch all visible offerings independently.
 
   // ---- Course resolution helpers ----
   function getCoursesForId(code: string): Course[] {
@@ -318,10 +281,6 @@
       // Expanding: add this instance
       newExpanded.add(instanceId);
 
-      const activeHit = courseIndexStore.read.resolveByInstanceId(instanceId);
-      if (activeHit) {
-        studyGroupStore.actions.ensureFetched(activeHit.unitId, activeHit.id);
-      }
     }
     
     expandedInstanceIds = newExpanded;
