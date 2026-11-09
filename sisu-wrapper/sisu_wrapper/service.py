@@ -49,6 +49,11 @@ class SisuService:
     def __init__(self, client: SisuClient):
         """Initialize the service with a Sisu client"""
         self.client = client
+        # Shared across location-enrichment calls on this service instance.
+        # Cache only successful lookups; exceptions are never retained.
+        self._cached_location = lru_cache(maxsize=2048)(
+            self._fetch_parsed_location
+        )
 
     @lru_cache(maxsize=128)
     def fetch_course_offering(
@@ -294,12 +299,20 @@ class SisuService:
             address=(building.get("address") or {}).get("streetAddress"),
         )
 
+    def _fetch_parsed_location(self, location_id: str) -> StudyLocation:
+        """Fetch and validate a SISU room before admitting it to the cache."""
+        location = self._parse_location(self.client.fetch_location(location_id))
+        if location.id != location_id:
+            raise ValueError("Mismatched location ID")
+        return location
+
     def resolve_study_group_locations(
         self, groups: list[StudyGroup]
     ) -> list[StudyGroup]:
         """Return copies of groups with best-effort resolved room metadata.
 
-        Each distinct location is fetched at most once per call. A failed
+        Each distinct location is fetched at most once per call. Successful
+        lookups are reused across calls on this service instance. A failed
         lookup leaves the occurrence intact with its original location IDs.
         Cached offerings and caller-owned objects are never mutated.
         """
@@ -319,11 +332,7 @@ class SisuService:
                     if location_id not in cache:
                         lookups += 1
                         try:
-                            raw = self.client.fetch_location(location_id)
-                            location = self._parse_location(raw)
-                            if location.id != location_id:
-                                raise ValueError("Mismatched location ID")
-                            cache[location_id] = location
+                            cache[location_id] = self._cached_location(location_id)
                         except (SisuAPIError, KeyError, TypeError, ValueError) as exc:
                             failed_lookups += 1
                             logger.warning(

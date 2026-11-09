@@ -95,3 +95,51 @@ def test_client_location_path():
     client.get_json.assert_called_once_with(
         "/locations/v1/aalto-TILA-457", timeout=None
     )
+
+
+def test_successful_locations_are_reused_across_resolution_calls():
+    data = {
+        "aalto-TILA-457": fixture("lecture_location.json"),
+        "aalto-TILA-488": fixture("exam_location.json"),
+    }
+    client = Mock()
+    client.fetch_location.side_effect = data.__getitem__
+    service = SisuService(client)
+
+    first = service.resolve_study_group_locations(groups())
+    second = service.resolve_study_group_locations(groups())
+
+    assert client.fetch_location.call_count == 2
+    assert first[0].study_events[0].locations == second[0].study_events[0].locations
+    assert service._cached_location.cache_info().hits == 2
+    assert service._cached_location.cache_info().maxsize == 2048
+
+
+def test_failed_location_lookup_is_retried_on_next_call():
+    data = fixture("lecture_location.json")
+    client = Mock()
+    client.fetch_location.side_effect = [
+        SisuConnectionError("offline"), data,
+    ]
+    service = SisuService(client)
+    event = StudyEvent("2026-08-31T10:15:00", "2026-08-31T12:00:00",
+                       location_ids=["aalto-TILA-457"])
+    source = [StudyGroup("g", "L01", "Lecture", [event])]
+
+    assert service.resolve_study_group_locations(source)[0].study_events[0].locations == []
+    assert len(service.resolve_study_group_locations(source)[0].study_events[0].locations) == 1
+    assert client.fetch_location.call_count == 2
+
+
+def test_location_cache_is_owned_by_service_instance():
+    data = fixture("lecture_location.json")
+    first_client = Mock()
+    first_client.fetch_location.return_value = data
+    second_client = Mock()
+    second_client.fetch_location.return_value = data
+
+    SisuService(first_client).resolve_study_group_locations(groups())
+    SisuService(second_client).resolve_study_group_locations(groups())
+
+    assert first_client.fetch_location.call_count == 2
+    assert second_client.fetch_location.call_count == 2
