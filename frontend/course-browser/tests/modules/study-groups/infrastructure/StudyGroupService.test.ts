@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { StudyGroupService } from '@modules/study-groups/infrastructure/StudyGroupService';
 
@@ -26,58 +26,51 @@ const API = 'https://wrapper.example.test';
 const UNIT = 'aalto-CU-1';
 const OFFERING = 'aalto-CO-1';
 const KEY = `${UNIT}:${OFFERING}`;
+const request = { courseUnitId: UNIT, courseOfferingId: OFFERING };
 const start = '2026-11-02T10:15:00';
 const end = '2026-11-02T12:00:00';
 
 function event(overrides: Partial<SourceEvent> = {}): SourceEvent {
   return { start, end, ...overrides };
 }
+
 function group(events: SourceEvent[] = []) {
   return {
     group_id: 'aalto-group-1', name: 'L01', type: 'Lecture', study_events: events,
   };
 }
+
 function response(body: unknown, status = 200): Response {
   return { ok: status >= 200 && status < 300, status, json: async () => body } as Response;
 }
-function singleBody(events: SourceEvent[]) {
-  return { course_unit_id: UNIT, course_offering_id: OFFERING, study_groups: [group(events)] };
-}
+
 function batchBody(events: SourceEvent[]) {
   return { total_requests: 1, results: { [KEY]: [group(events)] } };
 }
-function offeringsBody(events: SourceEvent[]) {
-  return {
-    total_requests: 1,
-    results: { [KEY]: {
-      course_unit_id: UNIT, offering_id: OFFERING, name: 'Example',
-      assessment_items: ['assessment-1'], study_groups: [group(events)],
-    } },
-  };
+
+function mockResponse(body: unknown, status = 200) {
+  return vi.spyOn(globalThis, 'fetch').mockResolvedValue(response(body, status));
 }
-function mockResponses(...bodies: unknown[]) {
-  return vi.spyOn(globalThis, 'fetch').mockImplementation(
-    async () => response(bodies.shift())
-  );
-}
+
 const service = () => new StudyGroupService(API);
 
-beforeEach(() => {
-  vi.spyOn(console, 'error').mockImplementation(() => {});
-});
+async function groupsFrom(body: unknown) {
+  mockResponse(body);
+  const result = await service().fetchStudyGroupsChunk([request]);
+  return result.get(KEY);
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
 describe('StudyGroupService: source-preserving normalization', () => {
-  it('returns an empty array when a single response has no groups', async () => {
-    mockResponses({ course_unit_id: UNIT, course_offering_id: OFFERING, study_groups: [] });
-    expect(await service().fetchStudyGroups(UNIT, OFFERING)).toEqual([]);
+  it('returns a successfully empty array when the batch result has no groups', async () => {
+    expect(await groupsFrom({ total_requests: 1, results: { [KEY]: [] } })).toEqual([]);
   });
 
   it('preserves a group with zero events', async () => {
-    mockResponses(singleBody([]));
-    const result = await service().fetchStudyGroups(UNIT, OFFERING);
+    const result = await groupsFrom(batchBody([]));
     expect(result).toEqual([{ groupId: 'aalto-group-1', name: 'L01', type: 'Lecture', studyEvents: [] }]);
   });
 
@@ -91,8 +84,7 @@ describe('StudyGroupService: source-preserving normalization', () => {
         building_name: 'Main building', address: 'Example road 1',
       }],
     });
-    mockResponses(singleBody([source]));
-    const [normalized] = (await service().fetchStudyGroups(UNIT, OFFERING))[0].studyEvents;
+    const [normalized] = (await groupsFrom(batchBody([source])))![0].studyEvents;
     expect(normalized).toEqual({
       id: 'aalto-group-1:0', start, end,
       startIso: '2026-11-02T10:15:00+02:00',
@@ -110,8 +102,7 @@ describe('StudyGroupService: source-preserving normalization', () => {
     ['null optional values', { series_id: null, notice: null, start_iso: null, end_iso: null }],
     ['empty locations', { location_ids: [], locations: [] }],
   ])('defaults omitted optional fields (%s)', async (_label, fields) => {
-    mockResponses(singleBody([event(fields)]));
-    const [e] = (await service().fetchStudyGroups(UNIT, OFFERING))[0].studyEvents;
+    const [e] = (await groupsFrom(batchBody([event(fields)])))![0].studyEvents;
     expect(e).toMatchObject({ seriesId: null, cancelled: false, excluded: false,
       notice: null, locationIds: [], locations: [] });
     expect(e.startIso).toBeUndefined();
@@ -120,11 +111,10 @@ describe('StudyGroupService: source-preserving normalization', () => {
   });
 
   it('retains distinct source events with identical start and end', async () => {
-    mockResponses(singleBody([
+    const events = (await groupsFrom(batchBody([
       event({ series_id: 'A', location_ids: ['room-A'] }),
       event({ series_id: 'B', location_ids: ['room-B'], cancelled: true }),
-    ]));
-    const events = (await service().fetchStudyGroups(UNIT, OFFERING))[0].studyEvents;
+    ])))![0].studyEvents;
     expect(events).toHaveLength(2);
     expect(events.map(e => e.seriesId)).toEqual(['A', 'B']);
     expect(events.map(e => e.id)).toEqual(['aalto-group-1:0', 'aalto-group-1:1']);
@@ -132,21 +122,19 @@ describe('StudyGroupService: source-preserving normalization', () => {
   });
 
   it('preserves multiple occurrences belonging to the same series', async () => {
-    mockResponses(singleBody([
+    const events = (await groupsFrom(batchBody([
       event({ series_id: 'series-1' }),
       event({ series_id: 'series-1', start: '2026-11-09T10:15:00', end: '2026-11-09T12:00:00' }),
-    ]));
-    const events = (await service().fetchStudyGroups(UNIT, OFFERING))[0].studyEvents;
+    ])))![0].studyEvents;
     expect(events).toHaveLength(2);
     expect(events.map(e => e.seriesId)).toEqual(['series-1', 'series-1']);
   });
 
   it('preserves exact time strings even at boundaries; does not validate time intervals', async () => {
-    mockResponses(singleBody([
+    const events = (await groupsFrom(batchBody([
       event({ start: end, end }),
       event({ start: '2026-11-02T23:30:00', end: '2026-11-03T00:30:00' }),
-    ]));
-    const events = (await service().fetchStudyGroups(UNIT, OFFERING))[0].studyEvents;
+    ])))![0].studyEvents;
     expect(events).toHaveLength(2);
     expect(events[0].start).toBe(events[0].end);
     expect(events[1].end).toBe('2026-11-03T00:30:00');
@@ -161,124 +149,101 @@ describe('StudyGroupService: source-preserving normalization', () => {
       location: 'Canonical label', locations: [{ id: '1', name: 'Room A' }],
     }, 'Canonical label'],
   ])('%s', async (_label, fields, expected) => {
-    mockResponses(singleBody([event(fields)]));
-    const e = (await service().fetchStudyGroups(UNIT, OFFERING))[0].studyEvents[0];
+    const e = (await groupsFrom(batchBody([event(fields)])))![0].studyEvents[0];
     expect(e.location).toBe(expected);
   });
 
   it('does not mutate source records or share nested location arrays', async () => {
-    const original = singleBody([event({
+    const original = batchBody([event({
       location_ids: ['room-1'], locations: [{ id: 'room-1', name: 'Room A' }],
     })]);
     const before = structuredClone(original);
-    mockResponses(original);
-    const normalized = (await service().fetchStudyGroups(UNIT, OFFERING))[0].studyEvents[0];
+    const normalized = (await groupsFrom(original))![0].studyEvents[0];
     expect(original).toEqual(before);
     normalized.locationIds.push('new-room');
     normalized.locations[0].name = 'changed';
     expect(original).toEqual(before);
   });
-
-  it('uses the same normalization for single, batch, and batch offerings', async () => {
-    const source = [event({ series_id: 'A', location_ids: ['room-A'] }), event({ series_id: 'B' })];
-    const fetchMock = mockResponses(singleBody(source), batchBody(source), offeringsBody(source));
-    const api = service();
-    const single = await api.fetchStudyGroups(UNIT, OFFERING);
-    const batched = await api.fetchStudyGroupsBatch([{ courseUnitId: UNIT, courseOfferingId: OFFERING }]);
-    const offerings = await api.fetchOfferingsBatch([{ courseUnitId: UNIT, offeringId: OFFERING }]);
-    expect(batched.get(KEY)).toEqual(single);
-    expect(offerings.get(KEY)?.studyGroups).toEqual(single);
-    expect(offerings.get(KEY)?.assessmentItems).toEqual(['assessment-1']);
-    expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(fetchMock.mock.calls[0][0].toString()).toContain('/api/courses/study-groups?');
-    expect(fetchMock.mock.calls[1][0].toString()).toContain('/api/courses/batch/study-groups');
-    expect(fetchMock.mock.calls[2][0].toString()).toContain('/api/courses/batch/offerings');
-  });
 });
 
-describe('StudyGroupService: requests and error boundaries', () => {
-  it('makes no network request for empty batches', async () => {
+describe('StudyGroupService: strict chunk transport', () => {
+  it('makes no network request for an empty chunk', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch');
-    expect(await service().fetchStudyGroupsBatch([])).toEqual(new Map());
-    expect(await service().fetchOfferingsBatch([])).toEqual(new Map());
+    expect(await service().fetchStudyGroupsChunk([])).toEqual(new Map());
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('deduplicates repeated batch inputs before posting', async () => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response(batchBody([])));
-    await service().fetchStudyGroupsBatch([
-      { courseUnitId: UNIT, courseOfferingId: OFFERING },
-      { courseUnitId: UNIT, courseOfferingId: OFFERING },
-    ]);
+  it('makes exactly one POST with requested offerings and resolved locations', async () => {
+    const fetchMock = mockResponse(batchBody([]));
+    const result = await service().fetchStudyGroupsChunk([request]);
+    expect(result.get(KEY)).toEqual([{ groupId: 'aalto-group-1', name: 'L01', type: 'Lecture', studyEvents: [] }]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
-    expect(body.requests).toHaveLength(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toBe(`${API}/api/courses/batch/study-groups?resolve_locations=true`);
+    expect(init?.method).toBe('POST');
+    expect(init?.headers).toEqual({ 'Content-Type': 'application/json' });
+    expect(JSON.parse(String(init?.body))).toEqual({ requests: [{
+      course_unit_id: UNIT, course_offering_id: OFFERING,
+    }] });
   });
 
-  it.each([0, 1, 50, 51, 101])('clamps chunkSize=%i to 1..50', async (chunkSize) => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({ results: {}, total_requests: 0 }));
-    const requests = Array.from({ length: 51 }, (_, n) => ({
-      courseUnitId: `cu-${n}`, courseOfferingId: `co-${n}`,
+  it('does not deduplicate or split requests inside the transport', async () => {
+    const fetchMock = mockResponse({ results: {}, total_requests: 2 });
+    await service().fetchStudyGroupsChunk([request, request]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(String(fetchMock.mock.calls[0][1]?.body)).requests).toHaveLength(2);
+  });
+
+  it('allows 50 requests in one HTTP call', async () => {
+    const fetchMock = mockResponse({ results: {}, total_requests: 50 });
+    const requests = Array.from({ length: 50 }, (_, i) => ({
+      courseUnitId: `cu-${i}`, courseOfferingId: `co-${i}`,
     }));
-    await service().fetchStudyGroupsBatch(requests, { chunkSize, concurrency: 1 });
-    const expectedSize = Math.min(Math.max(chunkSize, 1), 50);
-    expect(fetchMock).toHaveBeenCalledTimes(Math.ceil(51 / expectedSize));
-    for (const [, init] of fetchMock.mock.calls) {
-      const body = JSON.parse((init as RequestInit).body as string);
-      expect(body.requests.length).toBeGreaterThanOrEqual(1);
-      expect(body.requests.length).toBeLessThanOrEqual(50);
-    }
-  });
-
-  it('reports progress and chunk results for every completed chunk', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({ results: {}, total_requests: 0 }));
-    const onProgress = vi.fn();
-    const onChunk = vi.fn();
-    await service().fetchStudyGroupsBatch(
-      Array.from({ length: 3 }, (_, i) => ({ courseUnitId: `cu-${i}`, courseOfferingId: 'co' })),
-      { chunkSize: 1, concurrency: 1, onProgress, onChunk }
-    );
-    expect(onChunk).toHaveBeenCalledTimes(3);
-    expect(onProgress.mock.calls.map(([p]) => p)).toEqual([
-      { done: 1, total: 3 }, { done: 2, total: 3 }, { done: 3, total: 3 },
-    ]);
-  });
-
-  it.each([99, 100])('accepts %i offering requests', async (count) => {
-    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({ results: {}, total_requests: count }));
-    const result = await service().fetchOfferingsBatch(
-      Array.from({ length: count }, (_, i) => ({ courseUnitId: `cu-${i}`, offeringId: 'co' }))
-    );
-    expect(result.size).toBe(0);
+    await service().fetchStudyGroupsChunk(requests);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('rejects 101 offering requests locally without calling fetch', async () => {
+  it('rejects 51 requests before making an HTTP call', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch');
-    const result = await service().fetchOfferingsBatch(
-      Array.from({ length: 101 }, (_, i) => ({ courseUnitId: `cu-${i}`, offeringId: 'co' }))
-    );
-    expect(result.size).toBe(0);
+    const requests = Array.from({ length: 51 }, (_, i) => ({
+      courseUnitId: `cu-${i}`, courseOfferingId: `co-${i}`,
+    }));
+    await expect(service().fetchStudyGroupsChunk(requests)).rejects.toThrow(RangeError);
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(console.error).toHaveBeenCalled();
   });
 
-  it.each([404, 422, 500, 502, 504, 418])('handles HTTP %i without throwing', async status => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(response({}, status));
-    const result = await service().fetchStudyGroups(UNIT, OFFERING);
-    expect(result).toEqual([]);
-    expect(console.error).toHaveBeenCalled();
+  it.each([404, 422, 500, 502, 504, 418])('rejects HTTP %i instead of fabricating empty data', async status => {
+    mockResponse({}, status);
+    await expect(service().fetchStudyGroupsChunk([request])).rejects.toThrow(`HTTP ${status}`);
   });
 
-  it('handles rejected network requests without throwing', async () => {
+  it('propagates network failures', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
-    expect(await service().fetchStudyGroups(UNIT, OFFERING)).toEqual([]);
-    expect(console.error).toHaveBeenCalled();
+    await expect(service().fetchStudyGroupsChunk([request])).rejects.toThrow('offline');
   });
 
-  it('handles malformed response shape without throwing', async () => {
-    mockResponses({ unexpected: true });
-    expect(await service().fetchStudyGroups(UNIT, OFFERING)).toEqual([]);
-    expect(console.error).toHaveBeenCalled();
+  it.each([
+    null,
+    {},
+    { results: null },
+    { results: [] },
+    { results: { [KEY]: null } },
+    { results: { [KEY]: {} } },
+  ])('rejects malformed response shape (%j)', async body => {
+    mockResponse(body);
+    await expect(service().fetchStudyGroupsChunk([request])).rejects.toThrow(/Invalid study-group batch/);
+  });
+
+  it('propagates invalid JSON failures', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('invalid JSON', {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    await expect(
+      service().fetchStudyGroupsChunk([request]),
+    ).rejects.toThrow(SyntaxError);
   });
 });

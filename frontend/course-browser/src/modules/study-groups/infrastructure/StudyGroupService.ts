@@ -1,18 +1,9 @@
 /**
- * Fetches and normalizes study group data from the SISU wrapper API.
+ * Strict single-chunk transport adapter for the SISU wrapper's study-group API.
  *
- * Endpoints:
- * - GET  /api/courses/study-groups            (single instance)
- * - POST /api/courses/batch/study-groups      (many instances; preferred)
- * - POST /api/courses/batch/offerings         (offerings + embedded study groups)
- *
- * Notes:
- * - Normalization preserves every upstream occurrence, including events sharing
- *   the same time slot, together with identity, status, and location metadata.
- * - Scheduling-specific time-slot aggregation belongs to analytics consumers,
- *   not this shared API adapter.
- * - Batch requests are deduplicated, chunked, and processed with limited
- *   concurrency to keep the UI responsive.
+ * The request coordinator owns deduplication, chunking, concurrency and retries.
+ * This service performs at most one HTTP request and preserves every upstream
+ * study event, including occurrences sharing the same time slot.
  */
 
 import type { StudyEvent } from '../models/StudyEvent';
@@ -51,30 +42,9 @@ interface SisuStudyGroup {
   study_events: SisuStudyEvent[];
 }
 
-interface SisuStudyGroupsResponse {
-  course_unit_id: string;
-  course_offering_id: string;
-  study_groups: SisuStudyGroup[];
-}
-
-interface SisuCourseOffering {
-  course_unit_id: string;
-  offering_id: string;
-  name: string;
-  assessment_items?: string[];
-  study_groups?: SisuStudyGroup[];
-}
-
 interface SisuBatchStudyGroupsResponse {
   results: {
     [key: string]: SisuStudyGroup[]; // key: "unit_id:offering_id"
-  };
-  total_requests: number;
-}
-
-interface SisuBatchOfferingsResponse {
-  results: {
-    [key: string]: SisuCourseOffering; // key: "unit_id:offering_id"
   };
   total_requests: number;
 }
@@ -86,87 +56,26 @@ export interface StudyGroupRequest {
   courseOfferingId: string;
 }
 
-export interface BatchStudyGroupsRequest {
-  requests: StudyGroupRequest[];
-}
-
-export interface BatchOfferingsRequest {
-  requests: Array<{
-    courseUnitId: string;
-    offeringId: string;
-  }>;
-}
-
-// ========== Response Types ==========
-
-export interface CourseOfferingData {
-  courseUnitId: string;
-  offeringId: string;
-  name: string;
-  assessmentItems?: string[];
-  studyGroups: StudyGroup[];
-}
-
-/**
- * Fetches study groups and converts wrapper responses into domain models.
- *
- * The single study-group, batch study-group, and batch offering endpoints all
- * use the same source-preserving normalization. In particular, events with
- * equal time ranges remain separate, so calendar consumers can distinguish
- * source series, cancellation notices, and resolved locations.
- *
- * Scheduling analytics can aggregate equal time slots downstream without
- * altering the data shared with other consumers.
- */
+/** Normalizes source study groups without scheduling or caching requests. */
 export class StudyGroupService {
   private wrapperApiUrl: string;
-
-  private keyOf(r: StudyGroupRequest): string {
-    return `${r.courseUnitId}:${r.courseOfferingId}`;
-  }
 
   constructor(wrapperApiUrl: string) {
     this.wrapperApiUrl = wrapperApiUrl;
   }
 
-  // ========== Single Endpoint ==========
-
   /**
-   * Fetch study groups for a specific course instance (GET endpoint)
-   * @param courseUnitId - The unit ID of the course
-   * @param courseOfferingId - The offering ID of the course instance
-   * @returns Array of StudyGroup domain models
+   * Fetches and normalizes one coordinator-sized batch (at most 50 offerings).
+   * Empty input does not trigger a request; transport and response failures throw.
    */
-  async fetchStudyGroups(
-    courseUnitId: string,
-    courseOfferingId: string
-  ): Promise<StudyGroup[]> {
-    try {
-      const url = new URL(`${this.wrapperApiUrl}/api/courses/study-groups`);
-      url.searchParams.append('course_unit_id', courseUnitId);
-      url.searchParams.append('course_offering_id', courseOfferingId);
-
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        this.handleErrorResponse(response.status);
-        return [];
-      }
-
-      const data: SisuStudyGroupsResponse = await response.json();
-      return this.transformStudyGroups(data.study_groups);
-    } catch (error) {
-      console.error('Error fetching study groups:', error);
-      return [];
-    }
-  }
-
-  // ========== Batch Study Groups Endpoint ==========
-
-  private async fetchStudyGroupsBatchOnce(
+  async fetchStudyGroupsChunk(
     requests: StudyGroupRequest[],
-    strict = false,
   ): Promise<Map<string, StudyGroup[]>> {
     if (requests.length === 0) return new Map();
+
+    if (requests.length > 50) {
+      throw new RangeError("Study-group batch exceeds maximum of 50 requests");
+    }
 
     const url = new URL(`${this.wrapperApiUrl}/api/courses/batch/study-groups`);
     url.searchParams.set('resolve_locations', 'true');
@@ -185,33 +94,23 @@ export class StudyGroupService {
     });
 
     if (!response.ok) {
-      if (strict) {
-        throw new Error(
-          `HTTP ${response.status} while fetching study groups`,
-        );
-      }
-
-      this.handleErrorResponse(response.status);
-      return new Map();
+      throw new Error(`HTTP ${response.status} while fetching study groups`);
     }
 
     const data: SisuBatchStudyGroupsResponse = await response.json();
+    if (
+      !data ||
+      typeof data !== 'object' ||
+      !data.results ||
+      typeof data.results !== 'object' ||
+      Array.isArray(data.results)
+    ) {
+      throw new Error('Invalid study-group batch response');
+    }
 
-    if (strict) {
-      if (
-        !data ||
-        typeof data !== "object" ||
-        !data.results ||
-        typeof data.results !== "object" ||
-        Array.isArray(data.results)
-      ) {
-        throw new Error("Invalid study-group batch response");
-      }
-
-      for (const groups of Object.values(data.results)) {
-        if (!Array.isArray(groups)) {
-          throw new Error("Invalid study-group batch result");
-        }
+    for (const groups of Object.values(data.results)) {
+      if (!Array.isArray(groups)) {
+        throw new Error('Invalid study-group batch result');
       }
     }
 
@@ -222,159 +121,6 @@ export class StudyGroupService {
     }
 
     return results;
-  }
-
-  /**
-   * Fetch and normalize one coordinator-sized batch.
-   *
-   * Performs at most one HTTP request. Does not deduplicate, split,
-   * schedule, retry, or suppress retrieval errors.
-   *
-   * The coordinator owns batching and concurrency. Legacy consumers
-   * should continue using fetchStudyGroupsBatch().
-   */
-  async fetchStudyGroupsChunk(
-    requests: StudyGroupRequest[],
-  ): Promise<Map<string, StudyGroup[]>> {
-    if (requests.length === 0) {
-      return new Map();
-    }
-
-    if (requests.length > 50) {
-      throw new RangeError(
-        "Study-group batch exceeds maximum of 50 requests",
-      );
-    }
-
-    return this.fetchStudyGroupsBatchOnce(requests, true);
-  }
-
-  async fetchStudyGroupsBatch(
-    requests: StudyGroupRequest[],
-    opts?: {
-      chunkSize?: number;
-      concurrency?: number;
-      onProgress?: (p: { done: number; total: number }) => void;
-      onChunk?: (res: Map<string, StudyGroup[]>) => void;
-    }
-  ): Promise<Map<string, StudyGroup[]>> {
-    try {
-      if (requests.length === 0) return new Map();
-
-      // De-duplicate by (courseUnitId, courseOfferingId) to avoid redundant batch requests
-      const uniq = new Map<string, StudyGroupRequest>();
-      for (const r of requests) uniq.set(this.keyOf(r), r);
-      const deduped = [...uniq.values()];
-
-      // Clamp chunk size to keep each POST within backend limits
-      const chunkSize = Math.min(Math.max(opts?.chunkSize ?? 50, 1), 50);
-
-      // Limit parallel requests to avoid starving the browser or backend
-      const concurrency = Math.min(Math.max(opts?.concurrency ?? 4, 1), 12);
-
-      const chunks: StudyGroupRequest[][] = [];
-      for (let i = 0; i < deduped.length; i += chunkSize) {
-        chunks.push(deduped.slice(i, i + chunkSize));
-      }
-
-      const total = chunks.length;
-      let done = 0;
-
-      const merged = new Map<string, StudyGroup[]>();
-      let nextIndex = 0;
-
-      // Worker pulls the next chunk index atomically and processes it
-      const runWorker = async () => {
-        while (true) {
-          const i = nextIndex++;
-          if (i >= total) return;
-
-          const res = await this.fetchStudyGroupsBatchOnce(chunks[i]);
-
-          // emit partial results immediately
-          opts?.onChunk?.(res);
-
-          // still keep merged final map for callers who want it
-          for (const [k, v] of res.entries()) merged.set(k, v);
-
-          done++;
-          opts?.onProgress?.({ done, total });
-
-          // Yield to the event loop so rendering and input are not blocked
-          await new Promise<void>((r) => setTimeout(r, 0));
-        }
-      };
-
-      await Promise.all(Array.from({ length: Math.min(concurrency, total) }, runWorker));
-      return merged;
-    } catch (e) {
-      console.error("Error in batch study groups fetch:", e);
-      return new Map();
-    }
-  }
-
-
-  // ========== Batch Offerings Endpoint ==========
-
-  /**
-   * Batch fetch complete course offerings including study groups (POST endpoint)
-   * Returns full CourseOffering data with study groups included.
-   *
-   * @param requests Array of course references (max 100)
-   * @returns Map with key format "unitId:offeringId" -> CourseOfferingData
-   */
-  async fetchOfferingsBatch(
-    requests: Array<{ courseUnitId: string; offeringId: string }>
-  ): Promise<Map<string, CourseOfferingData>> {
-    try {
-      if (requests.length === 0) {
-        return new Map();
-      }
-
-      if (requests.length > 100) {
-        throw new Error('Batch request exceeds maximum of 100 items');
-      }
-
-      const url = new URL(`${this.wrapperApiUrl}/api/courses/batch/offerings`);
-
-      const payload = {
-        requests: requests.map(req => ({
-          course_unit_id: req.courseUnitId,
-          offering_id: req.offeringId,
-        })),
-      };
-
-      const response = await fetch(url.toString(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        this.handleErrorResponse(response.status);
-        return new Map();
-      }
-
-      const data: SisuBatchOfferingsResponse = await response.json();
-      const results = new Map<string, CourseOfferingData>();
-
-      for (const [key, offering] of Object.entries(data.results)) {
-        results.set(key, {
-          courseUnitId: offering.course_unit_id,
-          offeringId: offering.offering_id,
-          name: offering.name,
-          assessmentItems: offering.assessment_items,
-          studyGroups: offering.study_groups
-            ? this.transformStudyGroups(offering.study_groups)
-            : [],
-        });
-      }
-
-      return results;
-    } catch (error) {
-      console.error('Error in batch offerings fetch:', error);
-      return new Map();
-    }
   }
 
   // ========== Transform Methods ==========
@@ -448,23 +194,5 @@ export class StudyGroupService {
         location,
       };
     });
-  }
-
-  // ========== Error Handling ==========
-
-  /**
-   * Handle HTTP error responses from the API
-   */
-  private handleErrorResponse(status: number): void {
-    const errorMessages: { [key: number]: string } = {
-      404: 'Course not found',
-      422: 'Invalid request format',
-      500: 'Internal server error',
-      502: 'Sisu API unavailable',
-      504: 'Sisu API timeout',
-    };
-
-    const message = errorMessages[status] || `HTTP ${status} error`;
-    console.error(`Study Group Service error: ${message}`);
   }
 }
