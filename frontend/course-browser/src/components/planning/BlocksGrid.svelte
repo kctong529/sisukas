@@ -2,11 +2,13 @@
 <script lang="ts">
   import { onDestroy, tick } from "svelte";
 
+  import { getStudyGroupDataRuntime } from "@modules/study-groups";
+
   import { blockStore, previewColorForInstance } from "../../lib/stores/blockStore";
-  import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
 
   import type { Block } from "@domain/models/Block";
   import type { Course } from "@domain/models/Course";
+  import type { StudyGroupEntry, StudyGroupRequest } from "@modules/study-groups";
 
   type Props = {
     course: Course;
@@ -14,33 +16,56 @@
 
   let { course }: Props = $props();
 
-  // ---- Minimal derived: template needs groups to render ----
-  const studyGroups = $derived.by(() =>
-    course ? studyGroupStore.read.getGroups(course.unitId, course.id) : []
-  );
+  const runtime = getStudyGroupDataRuntime();
+  const missingEntry: StudyGroupEntry = {
+    groups: null,
+    status: "missing",
+    fetchedAt: null,
+    error: null,
+    refreshing: false,
+  };
+  const offeringKey = $derived(JSON.stringify([course.unitId, course.id]));
+  let studyGroupEntry = $state<StudyGroupEntry>(missingEntry);
+  const studyGroups = $derived(studyGroupEntry.groups ?? []);
+
+  // Observe the authoritative entry without triggering retrieval.
+  $effect(() => {
+    const [courseUnitId, courseOfferingId] = JSON.parse(offeringKey) as [string, string];
+    const request: StudyGroupRequest = { courseUnitId, courseOfferingId };
+    studyGroupEntry = missingEntry;
+    return runtime.entry(request).subscribe((value) => {
+      studyGroupEntry = value;
+    });
+  });
 
   let unsubscribeBlocks: (() => void) | null = null;
   let unsubscribePreview: (() => void) | null = null;
 
-  const fetchedFor = new Set<string>();
   const autoPartitionDoneFor = new Set<string>();
 
-  // Fetch once per instance (store decides if it actually fetches)
+  // LEGO explicitly needs full study groups (including historical offerings).
+  // The runtime owns request deduplication; block retrieval is independent.
   $effect(() => {
-    if (!course) return;
-    if (fetchedFor.has(course.id)) return;
-
-    fetchedFor.add(course.id);
-
-    studyGroupStore.actions.ensureFetched(course.unitId, course.id);
-    blockStore.fetchForInstance(course.id);
+    const [courseUnitId, courseOfferingId] = JSON.parse(offeringKey) as [string, string];
+    const request: StudyGroupRequest = { courseUnitId, courseOfferingId };
+    void runtime.ensure([request]).catch(() => {
+      // The entry publishes the failure for the UI and retry action.
+    });
+    void blockStore.fetchForInstance(courseOfferingId);
   });
+
+  function retryStudyGroups(): void {
+    const [courseUnitId, courseOfferingId] = JSON.parse(offeringKey) as [string, string];
+    void runtime.ensure([{ courseUnitId, courseOfferingId }]).catch(() => {
+      // Failure remains observable through the entry.
+    });
+  }
 
   // Auto-partition once when groups exist
   $effect(() => {
     if (!course) return;
     if (autoPartitionDoneFor.has(course.id)) return;
-    if (studyGroups.length === 0) return;
+    if (studyGroupEntry.groups === null || studyGroups.length === 0) return;
 
     autoPartitionDoneFor.add(course.id);
     blockStore.autoPartitionForInstance(course.id, () => studyGroups);
@@ -256,10 +281,15 @@
 
 <div class="blocks-grid">
   {#if studyGroups.length === 0}
-    {#if course && studyGroupStore.read.isLoading(course.unitId, course.id)}
+    {#if studyGroupEntry.groups !== null}
+      <div class="empty">No study groups available</div>
+    {:else if studyGroupEntry.status === "failed"}
+      <div class="empty" role="alert">Unable to load study groups.</div>
+      <button type="button" onclick={retryStudyGroups}>Retry</button>
+    {:else if studyGroupEntry.status === "loading" || studyGroupEntry.status === "queued"}
       <div class="loading">Loading study groups...</div>
     {:else}
-      <div class="empty">No study groups available</div>
+      <div class="loading">Study groups not loaded yet.</div>
     {/if}
   {:else}
     <div class="section">
