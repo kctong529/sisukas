@@ -171,11 +171,6 @@
     margin-bottom: 0.25rem;
   }
 
-  .group-meta {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-  }
-
   .updating-badge {
     font-size: 0.65rem;
     color: #059669;

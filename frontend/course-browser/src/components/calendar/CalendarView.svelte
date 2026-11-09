@@ -18,7 +18,6 @@
   import { calendarVisibilitySessionStore } from '@lib/stores/calendarVisibilitySessionStore.svelte';
   import { courseIndexStore } from '@lib/stores/courseIndexStore.svelte';
   import { plansStore } from '@lib/stores/plansStore.svelte';
-  import { studyGroupStore } from '@lib/stores/studyGroupStore.svelte';
 
   import WeekGrid from './WeekGrid.svelte';
   import WeekNavigation from './WeekNavigation.svelte';
@@ -47,7 +46,7 @@
     : []);
   function groupsForCourse(offeringId: string) {
     const course = courseIndexStore.read.resolveByInstanceId(offeringId);
-    return course ? studyGroupStore.read.getCached(course.unitId, offeringId) ?? [] : [];
+    return course ? calendarProjectionStore.readGroups(course.unitId, offeringId) ?? [] : [];
   }
   function updateVisibility(next: CalendarVisibility): void {
     if (!activePlan) return;
@@ -93,20 +92,13 @@
       .catch(error => { loadError = error instanceof Error ? error.message : String(error); });
   });
 
-  // Reactive to plan and course-index changes. Imperative fetching stays out of $derived.
-  $effect(() => {
-    if (!plansReady || !activePlan) return;
-    // Read the plan membership and course index to retry as either changes.
-    const offerings = activePlan.instanceIds.join('|');
-    const indexedCourses = courseIndexStore.state.byInstanceId.size;
-    if (offerings.length === 0 || indexedCourses === 0) return;
-    calendarProjectionStore.ensureActivePlanGroups();
-  });
+  // #173 owns default active-plan retrieval at the application boundary.
+  // The calendar observes authoritative entries and only retries on user action.
 
   function groupsForSegment(segment: WeeklyCalendarSegment) {
     const offeringId = segment.entry.source.courseOfferingId;
     const course = courseIndexStore.read.resolveByInstanceId(offeringId);
-    return course ? studyGroupStore.read.getCached(course.unitId, offeringId) : null;
+    return course ? calendarProjectionStore.readGroups(course.unitId, offeringId) : null;
   }
 
   function presentationForSegment(segment: WeeklyCalendarSegment) {
