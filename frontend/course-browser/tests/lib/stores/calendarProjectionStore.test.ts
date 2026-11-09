@@ -1,18 +1,56 @@
 import { flushSync } from "svelte";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { calendarProjectionStore } from "@lib/stores/calendarProjectionStore.svelte";
 import { courseIndexStore } from "@lib/stores/courseIndexStore.svelte";
 import { plansStore } from "@lib/stores/plansStore.svelte";
-import { studyGroupStore } from "@lib/stores/studyGroupStore.svelte";
 
 import { observeProjection } from "./projectionObserver.svelte";
 
 import type { Course } from "@domain/models/Course";
 import type { Plan } from "@domain/models/Plan";
-import type { StudyGroup } from "@modules/study-groups";
+import type { StudyGroup, StudyGroupEntry, StudyGroupRequest } from "@modules/study-groups";
 
-const key = (id: string) => `unit-${id}:${id}`;
+const fakeRuntime = vi.hoisted(() => ({
+  entries: new Map<string, unknown>(),
+  subscribers: new Map<string, Set<(entry: unknown) => void>>(),
+  ensure: vi.fn(),
+  refresh: vi.fn(),
+}));
+
+vi.mock("@modules/study-groups", () => ({
+  getStudyGroupDataRuntime: () => ({
+    entry(request: StudyGroupRequest) {
+      const key = JSON.stringify([request.courseUnitId, request.courseOfferingId]);
+      return {
+        subscribe(run: (entry: StudyGroupEntry) => void) {
+          let listeners = fakeRuntime.subscribers.get(key);
+          if (!listeners) {
+            listeners = new Set();
+            fakeRuntime.subscribers.set(key, listeners);
+          }
+          listeners.add(run as (entry: unknown) => void);
+          run((fakeRuntime.entries.get(key) ?? missingEntry()) as StudyGroupEntry);
+          return () => { listeners.delete(run as (entry: unknown) => void); };
+        },
+      };
+    },
+    ensure: fakeRuntime.ensure,
+    refresh: fakeRuntime.refresh,
+  }),
+}));
+
+function missingEntry(): StudyGroupEntry {
+  return { groups: null, status: "missing", fetchedAt: null, error: null, refreshing: false };
+}
+function setEntry(id: string, changes: Partial<StudyGroupEntry>) {
+  const key = JSON.stringify([`unit-${id}`, id]);
+  const entry = { ...missingEntry(), ...changes };
+  fakeRuntime.entries.set(key, entry);
+  for (const notify of fakeRuntime.subscribers.get(key) ?? []) notify(entry);
+  flushSync();
+}
+
 const course = (id: string) => ({
   id,
   unitId: `unit-${id}`,
@@ -31,8 +69,7 @@ function activate(p: Plan) {
 }
 
 function setFull(id: string, groups: StudyGroup[] = []) {
-  studyGroupStore.state.cache = { ...studyGroupStore.state.cache, [key(id)]: groups };
-  flushSync();
+  setEntry(id, { groups, status: "ready", fetchedAt: 1 });
 }
 
 function counts() {
@@ -47,13 +84,13 @@ beforeEach(() => {
   calendarProjectionStore.setAvailabilityPreview(null);
   courseIndexStore.actions.setCourses([]);
   courseIndexStore.actions.setHistoricalCourses([]);
-  studyGroupStore.state.cache = {};
-  studyGroupStore.state.summaryCache = {};
-  studyGroupStore.state.fallbackSummaries = {};
-  studyGroupStore.state.loadingKeys = [];
-  studyGroupStore.state.staleKeys = new Set();
-  studyGroupStore.state.error = null;
-  studyGroupStore.state.failedKeys = {};
+  fakeRuntime.entries.clear();
+  fakeRuntime.ensure.mockClear();
+  fakeRuntime.refresh.mockClear();
+  for (const [key, listeners] of fakeRuntime.subscribers) {
+    for (const listener of listeners) listener(missingEntry());
+    if (listeners.size === 0) fakeRuntime.subscribers.delete(key);
+  }
   flushSync();
 });
 
@@ -91,8 +128,7 @@ describe("calendar projection reactive store", () => {
     const observer = observeProjection();
     try {
       expect(counts().missingCourses).toBe(1);
-      studyGroupStore.state.loadingKeys = [key("a")];
-      flushSync();
+      setEntry("a", { status: "loading" });
       expect(counts().loadingCourses).toBe(1);
       setFull("a");
       expect(counts().availableCourses).toBe(1);
@@ -107,24 +143,18 @@ describe("calendar projection reactive store", () => {
     courseIndexStore.actions.setCourses([course("a"), course("b")]);
     setFull("a");
     activate(plan("p", ["a", "b"]));
-    studyGroupStore.state.failedKeys = { [key("b")]: "No response" };
-    flushSync();
+    setEntry("b", { status: "failed", error: "No response" });
     expect(counts().failedCourses).toBe(1);
     expect(counts().availableCourses).toBe(1);
-    studyGroupStore.state.loadingKeys = [key("b")];
-    flushSync();
+    setEntry("b", { status: "loading" });
     expect(counts().loadingCourses).toBe(1);
     setFull("b");
     expect(counts().availableCourses).toBe(2);
   });
-  it("does not mistake summary-only fallback for full data", () => {
+  it("does not mistake an unknown entry for successfully empty full data", () => {
     courseIndexStore.actions.setCourses([course("a")]);
     activate(plan("p", ["a"]));
-    studyGroupStore.state.fallbackSummaries = {
-      [key("a")]: [{ groupId: "g", name: "Lecture", type: "Lecture", schedule: "", eventCount: 1 }],
-    };
-    studyGroupStore.state.loadingKeys = [key("a")];
-    flushSync();
+    setEntry("a", { status: "loading" });
     expect(counts().loadingCourses).toBe(1);
     expect(counts().availableCourses).toBe(0);
   });
@@ -133,14 +163,10 @@ describe("calendar projection reactive store", () => {
     courseIndexStore.actions.setCourses([course("a")]);
     activate(plan("p", ["a"]));
     setFull("a");
-    studyGroupStore.state.staleKeys = new Set([key("a")]);
-    studyGroupStore.state.loadingKeys = [key("a")];
-    flushSync();
+    setEntry("a", { groups: [], status: "ready", fetchedAt: 1, refreshing: true });
     expect(counts().staleCourses).toBe(1);
     expect(counts().loadingCourses).toBe(0);
-    studyGroupStore.state.staleKeys = new Set();
-    studyGroupStore.state.loadingKeys = [];
-    flushSync();
+    setFull("a");
     expect(counts().availableCourses).toBe(1);
   });
 
@@ -170,6 +196,21 @@ describe("calendar projection reactive store", () => {
   });
 });
 
+
+describe("calendar explicit retry", () => {
+  it("refreshes only unavailable resolved offerings and skips in-flight work", () => {
+    courseIndexStore.actions.setCourses([course("a"), course("b"), course("c")]);
+    activate(plan("p", ["a", "b", "c"]));
+    setFull("a");
+    setEntry("b", { status: "failed", error: "Unavailable" });
+    setEntry("c", { status: "loading" });
+    calendarProjectionStore.retryUnavailableGroups();
+    expect(fakeRuntime.refresh).toHaveBeenCalledOnce();
+    expect(fakeRuntime.refresh).toHaveBeenCalledWith([
+      { courseUnitId: "unit-b", courseOfferingId: "b" },
+    ]);
+  });
+});
 
 describe("development-only group-choice preview", () => {
   const groups: StudyGroup[] = [
@@ -268,7 +309,7 @@ describe("development-only availability preview", () => {
       flushSync();
       expect(counts()[property]).toBe(1);
       expect(counts().availableCourses).toBe(1);
-      expect(studyGroupStore.read.getCached("unit-a", "a")).toEqual([]);
+      expect(calendarProjectionStore.readGroups("unit-a", "a")).toEqual([]);
     }
     calendarProjectionStore.setAvailabilityPreview(null);
     flushSync();

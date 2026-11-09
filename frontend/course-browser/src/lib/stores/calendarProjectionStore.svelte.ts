@@ -1,21 +1,59 @@
+import { createSubscriber } from "svelte/reactivity";
+import { get } from "svelte/store";
+
+import { activePlanStudyGroupRequests } from "@app/study-group-loading/activePlanRequests";
 import {
   type CalendarProjectionSources,
   projectPlanFromSources,
 } from "@application/calendar/calendarProjectionAdapter";
+import { getStudyGroupDataRuntime } from "@modules/study-groups";
 
 import { courseIndexStore } from "./courseIndexStore.svelte";
 import { plansStore } from "./plansStore.svelte";
-import { studyGroupStore } from "./studyGroupStore.svelte";
 
 import type { CalendarProjectionResult } from "@domain/services/calendar/CalendarProjection";
+import type { StudyGroupEntry, StudyGroupRequest } from "@modules/study-groups";
+
+/** Reactive reader of the authoritative runtime; no independent cache or retrieval. */
+const readers = new Map<string, () => StudyGroupEntry>();
+
+function entryFor(unitId: string, offeringId: string): StudyGroupEntry {
+  const request: StudyGroupRequest = {
+    courseUnitId: unitId,
+    courseOfferingId: offeringId,
+  };
+  const key = JSON.stringify([unitId, offeringId]);
+  let read = readers.get(key);
+  if (!read) {
+    const entry = getStudyGroupDataRuntime().entry(request);
+    const track = createSubscriber(update =>
+      entry.subscribe(() => update()),
+    );
+    read = () => {
+      track();
+      // Reads outside reactive effects must still reflect the current cache.
+      return get(entry);
+    };
+    readers.set(key, read);
+  }
+  return read();
+}
 
 const sources: CalendarProjectionSources = {
-  resolveCourse: (id) => courseIndexStore.read.resolveByInstanceId(id),
-  readGroups: (unitId, offeringId) => studyGroupStore.read.getCached(unitId, offeringId),
-  // getStatus().isLoading ignores requests if summaries exist; the calendar must not.
-  isLoading: (unitId, offeringId) => studyGroupStore.read.isLoading(unitId, offeringId),
-  isStale: (unitId, offeringId) => studyGroupStore.read.isStale(unitId, offeringId),
-  hasFailed: (unitId, offeringId) => studyGroupStore.read.hasFailed(unitId, offeringId),
+  resolveCourse: id => courseIndexStore.read.resolveByInstanceId(id),
+  readGroups: (unitId, offeringId) => entryFor(unitId, offeringId).groups,
+  isLoading: (unitId, offeringId) => {
+    const entry = entryFor(unitId, offeringId);
+    return entry.groups === null && (entry.status === "queued" || entry.status === "loading");
+  },
+  isStale: (unitId, offeringId) => {
+    const entry = entryFor(unitId, offeringId);
+    return entry.groups !== null && (entry.refreshing || entry.error !== null);
+  },
+  hasFailed: (unitId, offeringId) => {
+    const entry = entryFor(unitId, offeringId);
+    return entry.groups === null && entry.status === "failed";
+  },
 };
 
 /** Development-only choices scoped by plan and offering. No persisted plan is modified. */
@@ -94,25 +132,23 @@ export const calendarProjectionStore = {
     selectionPreview = preview;
   },
   get projection() { return projection; },
-  /** Explicit loading command: call from a mounted calendar view, not during derivation. */
+  /** Observe full groups from the same runtime used for calendar projection. */
+  readGroups(unitId: string, offeringId: string) {
+    return entryFor(unitId, offeringId).groups;
+  },
+  /** Explicit user retry; the app lifecycle owns the default loading policy. */
   retryUnavailableGroups(): void {
     const plan = plansStore.read.getActive();
     if (!plan) return;
-    const requests = [...new Set(plan.instanceIds)].flatMap(id => {
-      const course = courseIndexStore.read.resolveByInstanceId(id);
-      if (!course) return [];
-      const unitId = course.unitId;
-      if (studyGroupStore.read.getCached(unitId, id) !== null) return [];
-      return [{ courseUnitId: unitId, courseOfferingId: id }];
+    const requests = activePlanStudyGroupRequests(
+      plan,
+      id => courseIndexStore.read.resolveByInstanceId(id),
+    ).filter(request => {
+      const entry = entryFor(request.courseUnitId, request.courseOfferingId);
+      return entry.groups === null && entry.status !== "queued" && entry.status !== "loading";
     });
-    if (requests.length) void studyGroupStore.actions.forceRefreshBatch(requests);
-  },
-  ensureActivePlanGroups(): void {
-    const plan = plansStore.read.getActive();
-    if (!plan) return;
-    for (const id of new Set(plan.instanceIds)) {
-      const course = courseIndexStore.read.resolveByInstanceId(id);
-      if (course) studyGroupStore.actions.ensureFetched(course.unitId, id);
+    if (requests.length) {
+      void getStudyGroupDataRuntime().refresh(requests);
     }
   },
 };

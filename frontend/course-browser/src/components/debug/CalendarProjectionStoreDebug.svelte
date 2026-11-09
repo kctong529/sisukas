@@ -3,7 +3,7 @@
   import { calendarProjectionStore } from "../../lib/stores/calendarProjectionStore.svelte";
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { plansStore } from "../../lib/stores/plansStore.svelte";
-  import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
+  import { debugStudyGroupEntry } from "./debugStudyGroupEntry.svelte";
 
   let isOpen = $state(false);
   let showEntries = $state(false);
@@ -17,7 +17,7 @@
   const eligibleOfferings = $derived((plansStore.read.getActive()?.instanceIds ?? []).flatMap((id) => {
     const course = courseIndexStore.read.resolveByInstanceId(id);
     if (!course) return [];
-    const groups = studyGroupStore.read.getCached(course.unitId, id);
+    const groups = debugStudyGroupEntry(course.unitId, id).groups;
     if (groups === null || groups.length === 0) return [];
     return [{ id, label: `${course.code?.value ?? id} (${id})`, groups }];
   }));
@@ -61,7 +61,7 @@
   const dataOfferings = $derived((plan?.instanceIds ?? []).map(id => {
     const course = courseIndexStore.read.resolveByInstanceId(id);
     return { id, label: `${course?.code?.value ?? id} (${id})`,
-      hasFull: course ? studyGroupStore.read.getCached(course.unitId, id) !== null : false };
+      hasFull: course ? debugStudyGroupEntry(course.unitId, id).groups !== null : false };
   }));
   const activeDataOffering = $derived(dataOfferings.find(o => o.id === dataPreviewOffering) ?? dataOfferings[0]);
   const availabilityPreview = $derived(calendarProjectionStore.availabilityPreview);

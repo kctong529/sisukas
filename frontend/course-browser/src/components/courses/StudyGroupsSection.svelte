@@ -1,10 +1,10 @@
 <!-- src/components/courses/StudyGroupsSection.svelte -->
 <script lang="ts">
-  import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
-  import { formatStudyEventSchedule, formatStudyEventTime } from "../../modules/study-groups/formatters/studyGroupFormatters";
+  import { getStudyGroupDataRuntime } from "@modules/study-groups";
+  import { formatStudyEventSchedule, formatStudyEventTime } from "@modules/study-groups/formatters/studyGroupFormatters";
 
-  import type { StudyGroupSummary } from "../../lib/stores/studyGroupStore.svelte";
   import type { Course } from "@domain/models/Course";
+  import type { StudyGroupEntry, StudyGroupRequest } from "@modules/study-groups";
 
   type Props = {
     course: Course;
@@ -13,34 +13,55 @@
 
   let { course, isExpanded }: Props = $props();
 
-  const status = $derived.by(() => {
-    if (!course) {
-      return { key: "", hasFull: false, hasAny: false, isLoading: false, isStale: false };
-    }
-    return studyGroupStore.read.getStatus(course.unitId, course.id);
+  const runtime = getStudyGroupDataRuntime();
+  const missing: StudyGroupEntry = {
+    groups: null,
+    status: "missing",
+    fetchedAt: null,
+    error: null,
+    refreshing: false,
+  };
+
+  const requestKey = $derived(JSON.stringify([course.unitId, course.id]));
+  const request = $derived.by<StudyGroupRequest>(() => {
+    const [courseUnitId, courseOfferingId] = JSON.parse(requestKey) as [string, string];
+    return { courseUnitId, courseOfferingId };
   });
 
-  const groups = $derived.by(() => {
-    if (!course) return [];
-    return studyGroupStore.read.getGroups(course.unitId, course.id);
-  });
+  let entry = $state<StudyGroupEntry>(missing);
 
-  const summaries = $derived.by<StudyGroupSummary[]>(() => {
-    if (!course) return [];
-    return studyGroupStore.read.getSummaries(course.unitId, course.id);
-  });
-
-  // When expanded, ask the store to ensure it has data (store decides what that means)
+  // Observation does not fetch. Switching offerings disposes of the old subscription.
   $effect(() => {
-    if (!isExpanded || !course) return;
-    studyGroupStore.actions.ensureFetched(course.unitId, course.id);
+    const current = request;
+    entry = missing;
+    return runtime.entry(current).subscribe((value) => {
+      entry = value;
+    });
   });
+
+  // Expansion is an explicit consumer demand; default active-plan demand is
+  // managed separately by AuthenticatedDataLifecycle.
+  $effect(() => {
+    if (!isExpanded) return;
+    const current = request;
+    void runtime.ensure([current]).catch(() => {
+      // The authoritative entry publishes retrieval failure and retry state.
+    });
+  });
+
+  const groups = $derived(entry.groups ?? []);
+  const hasFullData = $derived(entry.groups !== null);
+
+  function retry(): void {
+    void runtime.ensure([request]).catch(() => {
+      // Failure is reported by the authoritative entry.
+    });
+  }
 </script>
 
 <div class="study-groups-container">
   <div class="study-groups-content">
     {#if groups.length > 0}
-      <!-- PRIORITY 1: Full data -->
       <div class="study-groups-list">
         {#each groups as group (group.groupId)}
           <div class="study-group-item">
@@ -66,38 +87,25 @@
               </details>
             {/if}
 
-            {#if status.isStale}
+            {#if entry.refreshing}
               <div class="updating-badge">Refreshing...</div>
             {/if}
           </div>
         {/each}
       </div>
 
-    {:else if summaries.length > 0}
-      <!-- PRIORITY 2: Summaries fallback -->
-      <div class="study-groups-list">
-        {#each summaries as s (s.groupId)}
-          <div class="study-group-item">
-            <div class="group-header">
-              <h4 class="group-name">{s.name}</h4>
-              <span class="group-type">{s.type}</span>
-            </div>
+    {:else if hasFullData}
+      <div class="empty">No study groups available</div>
 
-            <div class="group-schedule">{s.schedule}</div>
-            <div class="group-meta">{s.eventCount} events</div>
+    {:else if entry.status === "failed"}
+      <div class="empty" role="alert">Unable to load study groups.</div>
+      <button type="button" class="retry" onclick={retry}>Retry</button>
 
-            {#if status.isStale}
-              <div class="updating-badge">Refreshing...</div>
-            {/if}
-          </div>
-        {/each}
-      </div>
-
-    {:else if status.isLoading}
+    {:else if entry.status === "queued" || entry.status === "loading"}
       <div class="loading">Loading study groups...</div>
 
     {:else}
-      <div class="empty">No study groups available</div>
+      <div class="empty">Study groups not loaded yet.</div>
     {/if}
   </div>
 </div>
@@ -112,6 +120,12 @@
     color: var(--text-muted);
     font-style: italic;
     padding: 0.25rem 0;
+  }
+
+  .retry {
+    font-size: 0.75rem;
+    color: var(--primary);
+    cursor: pointer;
   }
 
   .study-groups-list {
@@ -155,11 +169,6 @@
     font-size: 0.7rem;
     color: var(--text-muted);
     margin-bottom: 0.25rem;
-  }
-
-  .group-meta {
-    font-size: 0.7rem;
-    color: var(--text-muted);
   }
 
   .updating-badge {

@@ -2,15 +2,16 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
+  import { loadStudyGroupsForAnalysis } from "@app/study-group-loading/loadStudyGroupsForAnalysis";
   import { buildAnalyticsPayload } from "@application/analytics/buildAnalyticsPayload";
   import { normalizeComputeSchedulePairsResponse } from "@application/analytics/normalizeComputeSchedulePairs";
   import { fetchTopKSchedulePairs } from "@infrastructure/services/AnalyticsService";
+  import { getStudyGroupDataRuntime } from "@modules/study-groups";
 
   import { useSession } from "../../lib/authClient";
   import { blockStore } from "../../lib/stores/blockStore";
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { plansStore } from "../../lib/stores/plansStore.svelte";
-  import { studyGroupStore } from "../../lib/stores/studyGroupStore.svelte";
   import AnalyticsResults from "../analytics/AnalyticsResults.svelte";
   import BlocksGrid from "./BlocksGrid.svelte";
   import PlanManager from "./PlanManager.svelte";
@@ -73,11 +74,17 @@
         ? plan.instanceIds
         : plan.instanceIds.filter((id) => !!courseIndexStore.read.getByInstanceId(id));
 
+      const courses = instanceIds.map(resolveCourse).filter((course): course is Course => !!course);
+      const getStudyGroupsForInstance = await loadStudyGroupsForAnalysis(
+        courses.map((course) => ({ courseUnitId: course.unitId, courseOfferingId: course.id })),
+        getStudyGroupDataRuntime(),
+      );
+
       const payload = buildAnalyticsPayload({
         instanceIds,
         getCourseForInstance: resolveCourse,
         getBlocksForInstance: (id) => blockStore.getCachedForInstance(id) ?? [],
-        getStudyGroupsForInstance: (unitId, offeringId) => studyGroupStore.read.getGroups(unitId, offeringId),
+        getStudyGroupsForInstance,
         topK: 20,
         scoreMode: "minMaxConcurrentThenOverlap"
       });
