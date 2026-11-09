@@ -38,18 +38,9 @@ function summary(rows) {
   };
 }
 
-// Clear only summary keys from the stored auth snapshot for cold runs.
-// Each repetition uses a new context, but server-side caches are NOT reset.
+// Each cold repetition uses a new browser context and therefore starts with
+// an empty in-memory study-group cache. Server-side caches are not reset.
 const storageState = JSON.parse(await readFile(authPath, 'utf8'));
-let removedSummaryKeys = 0;
-for (const site of storageState.origins ?? []) {
-  if (site.origin !== origin) continue;
-  site.localStorage = (site.localStorage ?? []).filter(item => {
-    if (!/study.?group/i.test(item.name)) return true;
-    removedSummaryKeys++;
-    return false;
-  });
-}
 
 function watchRequests(page, clock) {
   const tracked = new Map();
@@ -169,7 +160,9 @@ async function readState(page) {
   }
 }
 function verdict(state) {
-  if (state.plan === 'error' || state.plan === 'none') return 'invalid-plan';
+  if (state.plan === 'error') return 'invalid-plan';
+  // A missing plan can be transient during authenticated initialization.
+  if (state.plan === 'none') return null;
   if (state.plan !== 'active' || state.total === null || state.total === 0) return null;
   if (state.status === 'complete' && state.available === state.total &&
     state.loading === 0 && state.missing === 0 && state.failed === 0 && state.stale === 0) return 'complete';
@@ -184,6 +177,8 @@ async function measure(page, label, action) {
   let readyMs = null; let completeMs = null; let status = 'timeout';
   let actionProblem = null;
   let lastState = null;
+  let noPlanSince = null;
+  const noPlanGraceMs = 15_000;
   try {
     await action();
     // Stay attached until full-data evidence stabilizes, or the timeout expires.
@@ -191,6 +186,17 @@ async function measure(page, label, action) {
     let candidate = null;
     while (clock() < timeoutMs) {
       lastState = await readState(page);
+      // Allow the authenticated lifecycle to select the default plan.
+      // A persistently absent plan is still an invalid benchmark setup.
+      if (lastState.plan === 'none') {
+        noPlanSince ??= clock();
+        if (clock() - noPlanSince >= noPlanGraceMs) {
+          status = 'invalid-plan';
+          break;
+        }
+      } else {
+        noPlanSince = null;
+      }
       if (readyMs === null && lastState.workspaceVisible) readyMs = clock();
       const current = verdict(lastState);
       if (current === 'invalid-plan') { status = current; break; }
@@ -269,7 +275,7 @@ const aggregate = Object.fromEntries(['cold','reload','warm-navigation'].map(nam
 const report = {
   version: 2, generatedAt: new Date().toISOString(),
   environment: {baseOrigin: origin, repeats, timeoutMs, idleMs,
-    browser:'chromium', serviceWorkers:'blocked', removedSummaryKeyCount: removedSummaryKeys,
+    browser:'chromium', serviceWorkers:'blocked',
     completenessSource:'CalendarProjectionResult.completeness'},
   summary: aggregate, results,
 };
