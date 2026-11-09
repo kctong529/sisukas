@@ -6,7 +6,6 @@
   import { courseIndexStore } from "@lib/stores/courseIndexStore.svelte";
   import { favouritesStore } from "@lib/stores/favouritesStore";
   import { plansStore } from "@lib/stores/plansStore.svelte";
-  import { studyGroupStore } from "@lib/stores/studyGroupStore.svelte";
   import { getStudyGroupDataRuntime } from "@modules/study-groups";
 
   import { createAuthenticatedPlanLifecycle } from "./authenticatedPlanLifecycle";
@@ -21,8 +20,6 @@
       grades: courseGradeStore,
       studyGroups: {
         clear: () => {
-          // Keep both paths isolated until consumers migrate in #174.
-          studyGroupStore.actions.clear();
           getStudyGroupDataRuntime().clear();
         },
       },
