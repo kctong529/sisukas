@@ -28,6 +28,7 @@ BEGIN
       ('fallback-1500', 1500, 10),
       ('fallback-2400', 2400, 10),
       ('fallback-3500', 3500, 10),
+      ('fallback-5000', 5000, 10),
       ('fallback-1500-long-group', 1500, 500)
     ) AS scenarios(label, notice_length, group_length)
   LOOP
@@ -37,7 +38,16 @@ BEGIN
       -- JSON.stringify-compatible compact ASCII JSON for this controlled probe.
       key_text := '["fallback","offering-1","group-1",1790000000000,' ||
          '1790003600000,["room-1"],false,false,"' ||
-         repeat('x', sample.notice_length) || '"]';
+         (
+            SELECT left(
+              string_agg(md5(i::text || ':calendar-probe'), '' ORDER BY i),
+              sample.notice_length
+            )
+            FROM generate_series(
+              1,
+              (sample.notice_length + 31) / 32
+            ) AS s(i)
+          ) || '"]';
     END IF;
     BEGIN
       INSERT INTO calendar_occurrence_pk_probe
@@ -45,7 +55,16 @@ BEGIN
          occurrence_key_version, occurrence_key, visibility)
       VALUES
         ('11111111-1111-4111-8111-111111111111', 'offering-1',
-         repeat('g', sample.group_length), 1, key_text, 'hidden');
+         (
+            SELECT left(
+              string_agg(md5(i::text || ':calendar-group'), '' ORDER BY i),
+              sample.group_length
+            )
+            FROM generate_series(
+              1,
+              (sample.group_length + 31) / 32
+            ) AS s(i)
+          ), 1, key_text, 'hidden');
       RAISE NOTICE '%: PASS; key_bytes=%, group_bytes=%',
         sample.label, octet_length(key_text), sample.group_length;
     EXCEPTION WHEN OTHERS THEN
