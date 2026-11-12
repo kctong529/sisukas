@@ -178,7 +178,11 @@ export const calendarHiddenGroups = pgTable(
   },
   (t) => [
     primaryKey({ columns: [t.planId, t.courseOfferingId, t.studyGroupId] }),
-    check("calendar_hidden_groups_group_nonempty", sql`length(${t.studyGroupId}) > 0`),
+    check(
+      "calendar_hidden_groups_group_size",
+      sql`octet_length(${t.studyGroupId}) BETWEEN 1 AND 1024`,
+    ),
+    check("calendar_hidden_groups_offering_nonempty", sql`length(${t.courseOfferingId}) > 0`),
   ],
 );
 
@@ -194,7 +198,9 @@ export const calendarOccurrenceOverrides = pgTable(
     occurrenceKeyVersion: smallint("occurrence_key_version")
       .default(1)
       .notNull(),
+    // Exact serialized identity is retained; only its digest is indexed.
     occurrenceKey: text("occurrence_key").notNull(),
+    occurrenceKeyHash: varchar("occurrence_key_hash", { length: 64 }).notNull(),
     visibility: text("visibility", { enum: ["visible", "hidden"] }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .defaultNow()
@@ -207,11 +213,22 @@ export const calendarOccurrenceOverrides = pgTable(
         t.courseOfferingId,
         t.studyGroupId,
         t.occurrenceKeyVersion,
-        t.occurrenceKey,
+        t.occurrenceKeyHash,
       ],
     }),
-    check("calendar_occurrence_group_nonempty", sql`length(${t.studyGroupId}) > 0`),
-    check("calendar_occurrence_key_nonempty", sql`length(${t.occurrenceKey}) > 0`),
+    check(
+      "calendar_occurrence_group_size",
+      sql`octet_length(${t.studyGroupId}) BETWEEN 1 AND 1024`,
+    ),
+    check("calendar_occurrence_offering_nonempty", sql`length(${t.courseOfferingId}) > 0`),
+    check(
+      "calendar_occurrence_key_size",
+      sql`octet_length(${t.occurrenceKey}) BETWEEN 1 AND 65536`,
+    ),
+    check(
+      "calendar_occurrence_hash_format",
+      sql`${t.occurrenceKeyHash} ~ '^[0-9a-f]{64}$'`,
+    ),
     check("calendar_occurrence_key_version_supported", sql`${t.occurrenceKeyVersion} = 1`),
     check("calendar_occurrence_visibility_valid", sql`${t.visibility} IN ('visible', 'hidden')`),
   ],
