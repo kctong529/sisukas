@@ -177,7 +177,7 @@ export const calendarHiddenGroups = pgTable(
       .notNull(),
   },
   (t) => [
-    primaryKey({ columns: [t.planId, t.courseOfferingId, t.studyGroupId] }),
+    primaryKey({ name: "calendar_hidden_groups_pkey", columns: [t.planId, t.courseOfferingId, t.studyGroupId] }),
     check(
       "calendar_hidden_groups_group_size",
       sql`octet_length(${t.studyGroupId}) BETWEEN 1 AND 1024`,
@@ -208,6 +208,7 @@ export const calendarOccurrenceOverrides = pgTable(
   },
   (t) => [
     primaryKey({
+      name: "calendar_occurrence_overrides_pkey",
       columns: [
         t.planId,
         t.courseOfferingId,
@@ -228,6 +229,10 @@ export const calendarOccurrenceOverrides = pgTable(
     check(
       "calendar_occurrence_hash_format",
       sql`${t.occurrenceKeyHash} ~ '^[0-9a-f]{64}$'`,
+    ),
+    check(
+      "calendar_occurrence_hash_matches_key",
+      sql`${t.occurrenceKeyHash} = encode(sha256(convert_to(${t.occurrenceKey}, 'UTF8')), 'hex')`,
     ),
     check("calendar_occurrence_key_version_supported", sql`${t.occurrenceKeyVersion} = 1`),
     check("calendar_occurrence_visibility_valid", sql`${t.visibility} IN ('visible', 'hidden')`),
