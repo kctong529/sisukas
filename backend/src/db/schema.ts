@@ -1,5 +1,5 @@
 // src/db/schema.ts
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   pgTable,
   uuid,
@@ -9,6 +9,8 @@ import {
   boolean,
   index,
   primaryKey,
+  check,
+  smallint,
   integer,
   uniqueIndex,
   jsonb,
@@ -157,6 +159,86 @@ export const planInstances = pgTable(
   (t) => [primaryKey({ columns: [t.planId, t.instanceId] })],
 );
 
+/* =========================
+   Calendar preferences
+   ========================= */
+
+// Sparse preference: a row means hidden; no row means visible by default.
+export const calendarHiddenGroups = pgTable(
+  "calendar_hidden_groups",
+  {
+    planId: uuid("plan_id")
+      .notNull()
+      .references(() => plans.id, { onDelete: "cascade" }),
+    courseOfferingId: varchar("course_offering_id", { length: 100 }).notNull(),
+    studyGroupId: text("study_group_id").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    primaryKey({ name: "calendar_hidden_groups_pkey", columns: [t.planId, t.courseOfferingId, t.studyGroupId] }),
+    check(
+      "calendar_hidden_groups_group_size",
+      sql`octet_length(${t.studyGroupId}) BETWEEN 1 AND 1024`,
+    ),
+    check("calendar_hidden_groups_offering_nonempty", sql`length(${t.courseOfferingId}) > 0`),
+  ],
+);
+
+// Sparse preference: no row inherits group visibility; a row overrides it.
+export const calendarOccurrenceOverrides = pgTable(
+  "calendar_occurrence_overrides",
+  {
+    planId: uuid("plan_id")
+      .notNull()
+      .references(() => plans.id, { onDelete: "cascade" }),
+    courseOfferingId: varchar("course_offering_id", { length: 100 }).notNull(),
+    studyGroupId: text("study_group_id").notNull(),
+    occurrenceKeyVersion: smallint("occurrence_key_version")
+      .default(1)
+      .notNull(),
+    // Exact serialized identity is retained; only its digest is indexed.
+    occurrenceKey: text("occurrence_key").notNull(),
+    occurrenceKeyHash: varchar("occurrence_key_hash", { length: 64 }).notNull(),
+    visibility: text("visibility", { enum: ["visible", "hidden"] }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    primaryKey({
+      name: "calendar_occurrence_overrides_pkey",
+      columns: [
+        t.planId,
+        t.courseOfferingId,
+        t.studyGroupId,
+        t.occurrenceKeyVersion,
+        t.occurrenceKeyHash,
+      ],
+    }),
+    check(
+      "calendar_occurrence_group_size",
+      sql`octet_length(${t.studyGroupId}) BETWEEN 1 AND 1024`,
+    ),
+    check("calendar_occurrence_offering_nonempty", sql`length(${t.courseOfferingId}) > 0`),
+    check(
+      "calendar_occurrence_key_size",
+      sql`octet_length(${t.occurrenceKey}) BETWEEN 1 AND 65536`,
+    ),
+    check(
+      "calendar_occurrence_hash_format",
+      sql`${t.occurrenceKeyHash} ~ '^[0-9a-f]{64}$'`,
+    ),
+    check(
+      "calendar_occurrence_hash_matches_key",
+      sql`${t.occurrenceKeyHash} = encode(sha256(convert_to(${t.occurrenceKey}, 'UTF8')), 'hex')`,
+    ),
+    check("calendar_occurrence_key_version_supported", sql`${t.occurrenceKeyVersion} = 1`),
+    check("calendar_occurrence_visibility_valid", sql`${t.visibility} IN ('visible', 'hidden')`),
+  ],
+);
+
 export const courseGrades = pgTable(
   "course_grades",
   {
@@ -256,8 +338,30 @@ export const courseGradesRelations = relations(courseGrades, ({ one }) => ({
 export const plansRelations = relations(plans, ({ one, many }) => ({
   user: one(users, { fields: [plans.userId], references: [users.id] }),
   instances: many(planInstances),
+  hiddenCalendarGroups: many(calendarHiddenGroups),
+  calendarOccurrenceOverrides: many(calendarOccurrenceOverrides),
 }));
 
 export const planInstancesRelations = relations(planInstances, ({ one }) => ({
   plan: one(plans, { fields: [planInstances.planId], references: [plans.id] }),
 }));
+
+export const calendarHiddenGroupsRelations = relations(
+  calendarHiddenGroups,
+  ({ one }) => ({
+    plan: one(plans, {
+      fields: [calendarHiddenGroups.planId],
+      references: [plans.id],
+    }),
+  }),
+);
+
+export const calendarOccurrenceOverridesRelations = relations(
+  calendarOccurrenceOverrides,
+  ({ one }) => ({
+    plan: one(plans, {
+      fields: [calendarOccurrenceOverrides.planId],
+      references: [plans.id],
+    }),
+  }),
+);
