@@ -11,6 +11,7 @@ import { auth } from '../../src/lib/auth';
 import { extractSession } from '../../src/middleware/auth';
 import plansRoutes from '../../src/routes/plans';
 import calendarPreferencesRoutes from '../../src/routes/calendarPreferences';
+import { verifyCalendarTestDatabase } from './testDatabase';
 
 // Opt-in: creates real Better Auth users, plans, offerings, and preferences.
 const suite = process.env.CALENDAR_HTTP_TEST === 'yes' ? describe : describe.skip;
@@ -37,28 +38,6 @@ suite('Calendar preferences: authenticated HTTP integration (Supabase Test only)
   let planId: string;
   const fixtureUsers: string[] = [];
 
-  function verifyTestConnection(): void {
-    const databaseUrl = process.env.DATABASE_URL;
-    const expectedUrl = process.env.CALENDAR_TEST_DATABASE_URL;
-    const projectRef = process.env.CALENDAR_TEST_PROJECT_REF;
-    if (
-      !databaseUrl || !expectedUrl || !projectRef ||
-      databaseUrl !== expectedUrl ||
-      process.env.CALENDAR_TEST_CONFIRM !== 'sisukas-test'
-    ) {
-      throw new Error('Refusing HTTP integration test: explicit Supabase Test connection confirmation required');
-    }
-    const parsed = new URL(databaseUrl);
-    if (
-      parsed.username !== `postgres.${projectRef}` ||
-      !/pooler\.supabase\.com$/i.test(parsed.hostname)
-    ) {
-      throw new Error('Refusing HTTP integration test: expected the confirmed Supabase Test pooler URL');
-    }
-    if (!process.env.BACKEND_URL || !process.env.BETTER_AUTH_SECRET) {
-      throw new Error('Set BACKEND_URL and BETTER_AUTH_SECRET for the in-process Better Auth server');
-    }
-  }
 
   async function request(
     path: string,
@@ -122,7 +101,10 @@ suite('Calendar preferences: authenticated HTTP integration (Supabase Test only)
   }
 
   beforeAll(async () => {
-    verifyTestConnection();
+    verifyCalendarTestDatabase();
+    if (!process.env.BACKEND_URL || !process.env.BETTER_AUTH_SECRET) {
+      throw new Error('Configure BACKEND_URL and BETTER_AUTH_SECRET in backend/.env.test');
+    }
     const tables = await db.execute(sql`
       SELECT to_regclass('public.calendar_hidden_groups')::text AS hidden,
              to_regclass('public.calendar_occurrence_overrides')::text AS overrides

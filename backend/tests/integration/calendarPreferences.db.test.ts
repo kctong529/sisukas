@@ -15,6 +15,7 @@ import {
   CalendarPlanNotFoundError,
 } from '../../src/domain/calendar/preferences';
 import { InvalidOccurrenceKeyError } from '../../src/domain/calendar/occurrenceKey';
+import { verifyCalendarTestDatabase } from './testDatabase';
 
 // This suite is deliberately opt-in. The regular unit-test run must not create
 // users/plans or write to any configured database.
@@ -34,24 +35,7 @@ suite('Calendar preferences: PostgreSQL integration (Supabase Test only)', () =>
   let outsiderPlan: string;
 
   beforeAll(async () => {
-    const connection = process.env.DATABASE_URL;
-    const testUrl = process.env.CALENDAR_TEST_DATABASE_URL;
-    const expectedRef = process.env.CALENDAR_TEST_PROJECT_REF;
-    if (!connection || !testUrl || !expectedRef) {
-      throw new Error('Set DATABASE_URL, CALENDAR_TEST_DATABASE_URL and CALENDAR_TEST_PROJECT_REF explicitly');
-    }
-    if (connection !== testUrl) {
-      throw new Error('DATABASE_URL must exactly equal CALENDAR_TEST_DATABASE_URL');
-    }
-    const url = new URL(connection);
-    // Supabase pooler usernames conventionally contain postgres.<project-ref>.
-    // For direct connections (postgres user), fail closed instead of guessing.
-    if (url.username !== `postgres.${expectedRef}` || !/pooler\.supabase\.com$/i.test(url.hostname)) {
-      throw new Error('Expected Supabase Test pooler URL with explicit postgres.<project-ref> username');
-    }
-    if (process.env.CALENDAR_TEST_CONFIRM !== 'sisukas-test') {
-      throw new Error('Set CALENDAR_TEST_CONFIRM=sisukas-test after verifying project ref in dashboard');
-    }
+    verifyCalendarTestDatabase();
     const schemaCheck = await db.execute<{ hidden: string | null; overrides: string | null }>(
       // Drizzle's tagged SQL avoids interpolating user input here.
       (await import('drizzle-orm')).sql`SELECT to_regclass('public.calendar_hidden_groups')::text AS hidden,

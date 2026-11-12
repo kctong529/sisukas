@@ -1,106 +1,116 @@
 # Database and HTTP integration tests
 
-These opt-in tests exercise Calendar preference persistence against a real PostgreSQL database. They create and delete fixture data, so **run them only against Supabase Test, never Supabase Production**. They are separate from unit tests, mocked HTTP route tests, and the Supabase RLS suite.
+These opt-in tests exercise Calendar preference persistence against **Supabase Test**.
+They create and delete fixture records. Never use Supabase Production.
 
-## Test suites
+## Suites
 
-| Suite | What it exercises | HTTP server | Authentication |
+| Suite | What it tests | HTTP server | Authentication |
 | --- | --- | --- | --- |
-| `calendarPreferences.db.test.ts` | `CalendarPreferencesService` through Drizzle and PostgreSQL | Not needed | Supplies fixture user IDs directly to the service |
-| `calendarPreferences.http.test.ts` | Better Auth → Express middleware/routes → service → PostgreSQL | Starts an in-process Express server on an ephemeral loopback port | Registers isolated users through Better Auth's email/password endpoint and uses real session cookies |
+| `calendarPreferences.db.test.ts` | Service → Drizzle → PostgreSQL | None | Uses fixture user IDs directly |
+| `calendarPreferences.http.test.ts` | Better Auth → Express → service → PostgreSQL | Starts a local, in-process Express server on an ephemeral port | Creates test users through Better Auth email/password signup and sends session cookies |
 
-The HTTP suite validates **authentication and subsequent plan-ownership authorization**. It does not test Magic Link delivery or browser login. Email/password is a *test-fixture mechanism*, **not an intended user-facing signup method**. A passing test does not establish whether password signup is enabled or disabled in production; that is a separate authentication-configuration concern.
+The HTTP suite verifies authenticated session resolution and plan ownership
+**authorization**. Email/password signup is used only to create test fixtures;
+Magic Link delivery and the user-facing login flow are out of scope. This does
+not establish that email/password signup is disabled in production.
 
-## Prerequisites
+## Configuration
 
-- Install dependencies from `backend/` (`npm install`).
-- Apply `drizzle/sql/0005_calendar_visibility_preferences.sql` to **Supabase Test**. Do not apply it to Production yet.
-- Confirm the Supabase Test project reference in the Supabase dashboard and obtain its PostgreSQL **pooler** URL. The username must be `postgres.<TEST_PROJECT_REF>`.
-- For the HTTP suite, configure `BACKEND_URL` and `BETTER_AUTH_SECRET` for local/test Better Auth use, and ensure the email/password test fixture flow is available in the test environment.
+From `backend/`, configure **`.env.test`** using the *Supabase Test* project:
 
-### Database configuration (both suites)
-
-Run from `backend/`:
-
-```sh
-export CALENDAR_TEST_DATABASE_URL='postgresql://postgres.<TEST_PROJECT_REF>:<PASSWORD>@<TEST_POOLER_HOST>:6543/postgres'
-export DATABASE_URL="$CALENDAR_TEST_DATABASE_URL"
-export CALENDAR_TEST_PROJECT_REF='<TEST_PROJECT_REF>'
-export CALENDAR_TEST_CONFIRM='sisukas-test'
+```dotenv
+DATABASE_URL=postgresql://postgres.<TEST_PROJECT_REF>:<PASSWORD>@<TEST_POOLER_HOST>:6543/postgres
+CALENDAR_TEST_PROJECT_REF=<TEST_PROJECT_REF>
+BACKEND_URL=http://localhost:3000
+BETTER_AUTH_SECRET=<TEST_SECRET>
 ```
 
-These variables have distinct purposes:
+`DATABASE_URL` is the same value used by the normal Drizzle client. The test
+suites share one preflight helper that checks that the URL uses a Supabase
+pooler and a `postgres.<CALENDAR_TEST_PROJECT_REF>` username. They also verify
+that the Calendar tables from migration `0005` exist before writing fixtures.
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | Connection used by the application's Drizzle client |
-| `CALENDAR_TEST_DATABASE_URL` | Explicit expected connection for these integration suites; must equal `DATABASE_URL` |
-| `CALENDAR_TEST_PROJECT_REF` | Supabase Test project reference; must match the pooler username |
-| `CALENDAR_TEST_CONFIRM` | Explicit operator acknowledgement; must equal `sisukas-test` |
-| `CALENDAR_DB_TEST` | Opts into the database/service integration suite when set to `yes` |
-| `CALENDAR_HTTP_TEST` | Opts into the authenticated HTTP integration suite when set to `yes` |
-| `BACKEND_URL` | Better Auth base URL/origin used by the HTTP suite |
-| `BETTER_AUTH_SECRET` | Better Auth signing secret for the test environment |
+**Verify the project reference in the Supabase dashboard.** The code cannot
+independently determine whether a matching reference identifies the Test or
+Production project. Never use Production credentials, and never commit `.env.test`.
 
-Both suites verify the explicit connection values and check for the two Calendar tables before creating fixtures. They reject connections that do not use the expected Supabase pooler username and hostname. **Those checks cannot independently prove that a reference belongs to Supabase Test. Verify it yourself first.**
+Vitest automatically loads `.env.test` with `override: true`: values defined
+there take precedence over shell-exported values. Variables *absent* from
+`.env.test` can still be inherited from the shell, so set all required values
+there and avoid sourcing production credentials into your test shell.
 
-Vitest's existing configuration loads `.env.test`. Check which environment values actually take effect; don't assume that the filename guarantees the database target. Do not commit secrets or include them in issue comments.
+No duplicate database URL, confirmation string, or database-related exports
+are needed. The only command-line variables below are explicit opt-in flags.
 
-## Run the database/service suite
+## Run
 
-```sh
-export CALENDAR_DB_TEST=yes
-npx vitest run tests/integration/calendarPreferences.db.test.ts --no-file-parallelism
-```
+From `backend/`:
 
-This suite creates fixture users and plans via Drizzle and exercises the service without starting an HTTP server. It covers ownership isolation, confirmed-empty reads, idempotent mutations, offering-membership checks, dormant preferences, long and malformed occurrence keys, and cascading deletion.
-
-**Verified on Supabase Test (November 12, 2026):** 6/6 tests passed.
-
-## Run the authenticated HTTP suite
+**Database/service integration (6 tests):**
 
 ```sh
-export CALENDAR_HTTP_TEST=yes
-export BACKEND_URL='http://localhost:3000'
-export BETTER_AUTH_SECRET='<local-or-test-secret>'
-
-npx vitest run tests/integration/calendarPreferences.http.test.ts --no-file-parallelism
+CALENDAR_DB_TEST=yes npx vitest run \
+  tests/integration/calendarPreferences.db.test.ts \
+  --no-file-parallelism
 ```
 
-The test starts an **in-process Express HTTP server** on a randomly assigned loopback port. It mounts the real Better Auth handler, session middleware, Plans routes, and Calendar preference routes. It creates owner/outsider accounts and a plan/offering through HTTP, forwards genuine session cookies, checks access isolation and persistence, removes the offering, resets preferences, and deletes the fixture plan. Its cleanup deletes only the precise fixture user IDs returned by Better Auth signup.
+This suite creates fixture users, plans, and a plan offering directly in the
+test database and verifies ownership checks, sparse and idempotent mutations,
+dormant preferences, long occurrence keys, and cascading deletion. It does
+not need a running backend.
 
-**The test code does not require an independently started backend process.** In the observed local setup, the suite was run with the backend server already running; if that is consistently required, investigate the local Better Auth configuration or other process dependency rather than treating it as an intentional test prerequisite. The test does not call a deployed API URL.
+**Authenticated HTTP integration (4 tests):**
 
-The suite uses the email/password signup endpoint only to obtain test sessions without depending on Magic Link email delivery. This is sufficient for Calendar authorization testing because the Calendar API receives the resulting authenticated identity, regardless of the sign-in mechanism. It does **not** certify that password signup is appropriately disabled in production.
+```sh
+CALENDAR_HTTP_TEST=yes npx vitest run \
+  tests/integration/calendarPreferences.http.test.ts \
+  --no-file-parallelism
+```
 
-**Verified on Supabase Test (November 12, 2026):** 4/4 tests passed.
+The HTTP suite starts an **in-process** Express server on an ephemeral
+loopback port and uses the real Better Auth handler and Calendar/Plans routes.
+It does **not** intentionally require a separately running backend. If it only
+works when the development server is running, investigate the test auth/origin
+configuration rather than relying on that external process.
 
-## Regression checks
+**Build and ordinary regression tests:**
 
 ```sh
 npm run build
-
 npx vitest run \
   --exclude 'tests/rls.*.test.ts' \
   --exclude 'tests/integration/*'
 ```
 
-**Verified on November 12, 2026:** TypeScript build passed; 48/48 non-RLS unit and route tests passed.
+The RLS suite is separate: it exercises Supabase Auth and the Data API, not
+Better Auth through Drizzle.
 
-The RLS tests are a separate suite using Supabase Auth/Data API, rather than Better Auth and direct Drizzle access. Their setup and rate limits should be investigated separately.
+## Fixture lifecycle and troubleshooting
 
-## Fixtures, cleanup, and failures
+- Database suite: creates uniquely identified users, plans, and offerings via
+  Drizzle; cleanup deletes only the recorded fixture users, cascading to plans.
+- HTTP suite: signs up uniquely identified users through Better Auth, creates
+  the plan and offering through HTTP, and deletes only the returned fixture IDs.
+- Cleanup is attempted on normal test failures. Force termination or a lost
+  connection can leave fixtures. Recheck the target project before inspecting
+  or removing any leftovers. Never delete broadly by a name or email prefix.
+- If the preflight fails, compare `.env.test` against the Supabase **Test**
+  dashboard rather than bypassing the guard. If HTTP signup or session checks
+  fail, inspect Better Auth test configuration and origin/cookie handling.
+- Run test suites sequentially when they use the same test database.
 
-- **Database suite:** Creates uniquely identified users, plans, and an offering directly in PostgreSQL. Deleting fixture users cascades to their plans and preference rows.
-- **HTTP suite:** Creates two users via Better Auth and a plan/offering through the Plans API. It deletes the plan via HTTP and deletes its exact created user IDs via Drizzle during cleanup.
-- Cleanup is attempted when tests fail normally, but force termination or connection loss can leave fixtures behind.
-- Before inspecting or deleting leftovers, reconfirm that the connection points to **Supabase Test**. Look for the specific `calendar-it-owner-...`, `calendar-it-outsider-...` or `calendar-http-...@example.invalid` fixture identifiers; inspect exact records before deleting. Never run a broad prefix-based deletion.
-- When a test fails, preserve the error output and check the fixture lifecycle, authentication configuration, or connection preflight before rerunning.
+## Coverage and deployment boundary
 
-## Coverage boundaries and deployment
+These suites do **not** test production Magic Link configuration, browser
+cookies, deployed networking/CORS, frontend hydration, or Supabase RLS
+behavior. They also do not create a real SHA-256 collision; the service's
+collision path is covered separately by a mocked regression test.
 
-Passing these suites verifies the service and real-session HTTP routing against **Supabase Test**, but does not prove production Magic Link configuration, deployed networking/TLS/CORS, browser cookie handling, Supabase RLS policy behavior, or frontend Calendar hydration. The HTTP suite does not exercise the Magic Link flow, and neither suite generates a real SHA-256 collision. Collision handling should be tested separately through a deterministic test double.
+Concurrent conflicting writes are database-order dependent. Preferences may
+remain dormant when an offering is removed; this is intentional.
 
-Conflicting concurrent writes follow database execution order. A preference can become dormant when its offering is removed; this is expected by the Calendar visibility contract. The tests do not establish deterministic ordering for concurrent mutations.
-
-**Migration 0005 is deployed only to Supabase Test. Production remains unchanged.** Defer production migration and feature enablement until the backend and frontend interactions are verified end-to-end under #190, #191, and #192, then coordinate schema deployment with the application release.
+**Migration `0005` is installed on Supabase Test only.** Do not deploy it to
+Production until the Calendar frontend interactions and end-to-end acceptance
+requirements under #190, #191, and #192 are verified and deployment is
+coordinated with the application release.
