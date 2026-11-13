@@ -3,6 +3,7 @@ import { flushSync, mount, unmount } from "svelte";
 import { writable } from "svelte/store";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { calendarVisibilitySessionStore } from "@lib/stores/calendarVisibilitySessionStore.svelte";
 import { courseGradeStore } from "@lib/stores/courseGradeStore";
 import { courseIndexStore } from "@lib/stores/courseIndexStore.svelte";
 import { favouritesStore } from "@lib/stores/favouritesStore";
@@ -37,6 +38,7 @@ let component: ReturnType<typeof mount> | null;
 let session: ReturnType<typeof writable<SessionContext>>;
 let ensure: ReturnType<typeof vi.spyOn>;
 let clearRuntime: ReturnType<typeof vi.spyOn>;
+let ensurePreferences: ReturnType<typeof vi.spyOn>;
 
 function activate(value: Plan): void {
   plansStore.state.byId = new Map([[value.id, value]]);
@@ -53,6 +55,8 @@ function updateSession(next: SessionContext): void {
 
 beforeEach(() => {
   plansStore.actions.clear();
+  calendarVisibilitySessionStore.actions.clear();
+  ensurePreferences = vi.spyOn(calendarVisibilitySessionStore.actions, "ensureLoaded").mockResolvedValue();
   courseIndexStore.state.activeReady = false;
   courseIndexStore.state.byInstanceId = new Map();
   courseIndexStore.state.historicalByInstanceId = new Map();
@@ -81,6 +85,7 @@ afterEach(async () => {
   target.remove();
   vi.restoreAllMocks();
   plansStore.actions.clear();
+  calendarVisibilitySessionStore.actions.clear();
   getStudyGroupDataRuntime().clear();
 });
 
@@ -141,5 +146,62 @@ describe("authenticated study-group loading integration review", () => {
       { courseUnitId: "unit-b", courseOfferingId: "b" },
     ]);
     expect(ensure).toHaveBeenCalledTimes(originalLoads + 1);
+  });
+});
+
+
+describe("authenticated Calendar preference hydration", () => {
+  it("hydrates the active plan without requiring catalogue readiness", () => {
+    activate(plan("first", "account-a", ["a"]));
+    expect(courseIndexStore.state.activeReady).toBe(false);
+    expect(ensurePreferences).toHaveBeenCalledTimes(1);
+    expect(ensurePreferences).toHaveBeenLastCalledWith("account-a", "first");
+    expect(ensure).not.toHaveBeenCalled();
+  });
+
+  it("does not repeat hydration on unrelated plan state changes", () => {
+    activate(plan("first", "account-a", []));
+    expect(ensurePreferences).toHaveBeenCalledTimes(1);
+
+    plansStore.state.error = "unrelated";
+    flushSync();
+    updateSession({ pending: false, userId: "account-a" });
+    expect(ensurePreferences).toHaveBeenCalledTimes(1);
+  });
+
+  it("hydrates the new plan when switching A → B → A", () => {
+    activate(plan("first", "account-a", []));
+    activate(plan("second", "account-a", []));
+    activate(plan("first", "account-a", []));
+    expect(ensurePreferences.mock.calls).toEqual([
+      ["account-a", "first"],
+      ["account-a", "second"],
+      ["account-a", "first"],
+    ]);
+  });
+
+  it("does not hydrate an old plan on logout or direct account switch", () => {
+    activate(plan("first", "account-a", []));
+    ensurePreferences.mockClear();
+
+    updateSession({ pending: false, userId: "account-b" });
+    expect(ensurePreferences).not.toHaveBeenCalled();
+    expect(calendarVisibilitySessionStore.state.accountId).toBe("account-b");
+
+    activate(plan("second", "account-b", []));
+    expect(ensurePreferences).toHaveBeenCalledTimes(1);
+    expect(ensurePreferences).toHaveBeenLastCalledWith("account-b", "second");
+    updateSession({ pending: false, userId: null });
+    expect(calendarVisibilitySessionStore.state.accountId).toBeNull();
+    expect(ensurePreferences).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not restart hydration during temporarily pending authentication", () => {
+    activate(plan("first", "account-a", []));
+    ensurePreferences.mockClear();
+    updateSession({ pending: true, userId: null });
+    expect(calendarVisibilitySessionStore.state.accountId).toBe("account-a");
+    updateSession({ pending: false, userId: "account-a" });
+    expect(ensurePreferences).toHaveBeenCalledTimes(1);
   });
 });

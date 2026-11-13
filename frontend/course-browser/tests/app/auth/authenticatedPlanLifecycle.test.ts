@@ -190,3 +190,47 @@ describe("study-group cache authentication boundaries", () => {
     expect(clear).toHaveBeenCalledOnce();
   });
 });
+
+
+describe("Calendar preference account boundaries", () => {
+  function setupCalendar() {
+    const setAccount = vi.fn();
+    const plans = { clear: vi.fn(), ensureDefaultPlan: vi.fn(async () => {}) };
+    const favourites = { clear: vi.fn(), load: vi.fn(async () => {}) };
+    const grades = { clear: vi.fn(), load: vi.fn(async () => {}) };
+    const lifecycle = createAuthenticatedPlanLifecycle(plans, vi.fn(), {
+      favourites,
+      grades,
+      calendarPreferences: { setAccount },
+    });
+    return { lifecycle, setAccount, plans };
+  }
+
+  it("does not establish an account before authentication settles", () => {
+    const { lifecycle, setAccount } = setupCalendar();
+    lifecycle.update(true, "account-a");
+    lifecycle.update(true, null);
+    expect(setAccount).not.toHaveBeenCalled();
+  });
+
+  it("establishes and clears preference scope on settled transitions", () => {
+    const { lifecycle, setAccount } = setupCalendar();
+    lifecycle.update(false, "account-a");
+    lifecycle.update(false, "account-a");
+    lifecycle.update(true, null);
+    lifecycle.update(false, "account-a");
+    lifecycle.update(false, "account-b");
+    lifecycle.update(false, null);
+    expect(setAccount.mock.calls).toEqual([
+      ["account-a"],
+      ["account-b"],
+      [null],
+    ]);
+  });
+
+  it("does not hydrate plans from the account-transition helper", () => {
+    const { lifecycle, plans } = setupCalendar();
+    lifecycle.update(false, "account-a");
+    expect(plans.ensureDefaultPlan).toHaveBeenCalledOnce();
+  });
+});
