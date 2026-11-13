@@ -512,9 +512,19 @@ describe('WeekGrid selection presentation', () => {
       target.querySelectorAll('dialog [data-selection="candidate"]'),
     ).toHaveLength(4);
 
+    const dialog = target.querySelector('dialog');
+
     expect(
-      target.querySelector('dialog')?.textContent,
-    ).not.toContain('Candidate');
+        dialog?.querySelectorAll(
+            '.visually-hidden[data-selection="candidate"]',
+        ),
+    ).toHaveLength(4);
+
+    expect(
+        dialog?.querySelectorAll(
+            'li > [data-selection="candidate"]:not(.visually-hidden)',
+        ),
+    ).toHaveLength(0);
   });
 });
 

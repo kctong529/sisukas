@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import { calendarEventLocationRows } from '@application/calendar/calendarEventLocationRows';
+  import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
 
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
