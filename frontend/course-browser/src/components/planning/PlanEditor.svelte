@@ -286,7 +286,9 @@
   }
 
   .plan-count {
-    color: #1e293b;
+    color: var(--ui-text);
+    font-weight: 500;
+    line-height: 1.25;
     margin-left: 10px;
     padding-right: 0.3rem;
     white-space: nowrap;
