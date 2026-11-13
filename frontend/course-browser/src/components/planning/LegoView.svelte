@@ -347,7 +347,7 @@
   .instance-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--ui-radius-surface);
     overflow: hidden;
     transition: transform 0.2s, box-shadow 0.2s;
   }
@@ -394,7 +394,7 @@
     text-align: center;
     padding: 5rem 2rem;
     background: var(--card-bg);
-    border-radius: 16px;
+    border-radius: var(--ui-radius-feature);
     border: 2px dashed var(--border);
   }
 
@@ -570,7 +570,7 @@
   .analytics-intro {
     background: #f9fafb;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: var(--ui-radius-surface);
     padding: 1rem;
     margin-bottom: 1rem;
     font-size: 0.9rem;
@@ -641,7 +641,7 @@
 
   .alert {
     padding: 1rem;
-    border-radius: 8px;
+    border-radius: var(--ui-radius-surface);
     border: 1px solid;
   }
 

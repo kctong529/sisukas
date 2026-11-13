@@ -669,7 +669,7 @@
   .favourite-item {
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--ui-radius-surface);
     padding: 1rem;
     transition: transform 0.2s, box-shadow 0.2s;
   }
@@ -860,7 +860,7 @@
   .notes-section {
     background: #f1f5f9;
     padding: 0.6rem;
-    border-radius: 8px;
+    border-radius: var(--ui-radius-surface);
     display: flex;
     flex-direction: column;
   }
@@ -985,7 +985,7 @@
     text-align: center;
     padding: 5rem 2rem;
     background: var(--card-bg);
-    border-radius: 16px;
+    border-radius: var(--ui-radius-feature);
     border: 2px dashed var(--border);
   }
 

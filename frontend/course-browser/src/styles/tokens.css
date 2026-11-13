@@ -21,6 +21,7 @@
   --ui-radius-control: 6px;
   --ui-radius-surface: 8px;
   --ui-radius-dialog: 12px;
+  --ui-radius-feature: 16px;
 
   /* Small spacing vocabulary; specialized calendar geometry stays local. */
   --ui-space-1: 0.25rem;
