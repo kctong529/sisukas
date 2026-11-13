@@ -41,7 +41,7 @@
     white-space: nowrap;
     border: 1px solid rgb(var(--offering-rgb, 47, 127, 214));
     background: color-mix(in srgb, rgb(var(--offering-rgb, 47, 127, 214)) 14%, white);
-    color: #0f172a;
+    color: color-mix(in srgb, rgb(var(--offering-rgb, 47, 127, 214)) 60%, black);
     border-radius: 4px;
     cursor: pointer;
     padding: .34rem .55rem;

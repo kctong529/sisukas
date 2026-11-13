@@ -1,9 +1,9 @@
 // src/lib/stores/colorAllocator.ts
 import { writable } from 'svelte/store';
 
-import type { Block } from '@domain/models/Block';
-
 import { BLOCK_PALETTE_SIZE } from './blockPalette';
+
+import type { Block } from '@domain/models/Block';
 
 function computeNext(blocks: Block[]): number {
   const used = new Set<number>();

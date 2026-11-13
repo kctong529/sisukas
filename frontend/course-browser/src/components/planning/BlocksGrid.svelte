@@ -452,19 +452,6 @@
     touch-action: none;
   }
 
-  /* Match the heading to the same hue as each tinted square. */
-  .study-group-square.in-block .square-name,
-  .study-group-square.selected .square-name,
-  .study-group-square.commit-preview .square-name {
-    color: inherit;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .study-group-square:hover .square-name {
-      color: inherit;
-    }
-  }
-
   .square-name {
     font-size: 0.7rem;
     font-weight: 700;
