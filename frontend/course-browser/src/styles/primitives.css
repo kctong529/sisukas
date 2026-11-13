@@ -69,6 +69,13 @@
   background: var(--ui-surface-hover);
 }
 
+/* Toggle buttons opt in through their accessible pressed state. */
+.ui-button--secondary[aria-pressed="true"] {
+  border-color: var(--ui-primary);
+  background: var(--ui-surface-hover);
+  color: var(--ui-primary);
+}
+
 .ui-button:focus-visible,
 .ui-select:focus-visible,
 .ui-input:focus-visible {

@@ -170,7 +170,6 @@
       <button
         type="button"
         class="ui-button ui-button--secondary"
-        class:active={ui.showOlder}
         aria-pressed={ui.showOlder}
         onclick={() => (ui.showOlder = !ui.showOlder)}
         title={ui.showOlder ? "Showing active + historical" : "Showing active only"}
@@ -535,6 +534,11 @@
   .modal-close:hover {
     background: var(--bg);
     color: var(--text-main);
+  }
+
+  .modal-close:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
   }
 
   .modal-body {
