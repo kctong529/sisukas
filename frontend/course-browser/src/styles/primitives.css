@@ -9,7 +9,8 @@
 
 /* Consistent geometry and keyboard focus across opt-in toolbar controls. */
 .ui-button,
-.ui-select {
+.ui-select,
+.ui-input {
   box-sizing: border-box;
   height: 32.5px;
   min-height: 32.5px;
@@ -35,7 +36,8 @@
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-.ui-select {
+.ui-select,
+.ui-input {
   border-color: var(--ui-border);
   appearance: none;
   transition: border-color 0.2s;
@@ -68,13 +70,23 @@
 }
 
 .ui-button:focus-visible,
-.ui-select:focus-visible {
+.ui-select:focus-visible,
+.ui-input:focus-visible {
   outline: 2px solid var(--ui-focus-ring);
   outline-offset: 2px;
 }
 
 .ui-button:disabled,
-.ui-select:disabled {
+.ui-select:disabled,
+.ui-input:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+/* Square toolbar actions keep the same height as other controls. */
+.ui-button--icon {
+  width: 32.5px;
+  min-width: 32.5px;
+  padding: 0;
+  flex-shrink: 0;
 }

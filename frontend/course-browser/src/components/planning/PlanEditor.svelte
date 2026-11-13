@@ -157,14 +157,14 @@
         bind:value={editingName}
         onkeydown={handleKeydown}
         placeholder="Plan name..."
-        class="plan-input"
+        class="plan-input ui-input"
         disabled={isSaving}
       />
 
       <div class="edit-actions">
         <button
           type="button"
-          class="btn btn-primary btn-small"
+          class="btn btn-primary btn-small ui-button ui-button--primary ui-button--icon"
           onclick={savePlanName}
           disabled={isSaving || !editingName?.trim()}
           title="Save plan"
@@ -174,7 +174,7 @@
 
         <button
           type="button"
-          class="btn btn-secondary btn-small"
+          class="btn btn-secondary btn-small ui-button ui-button--secondary ui-button--icon"
           onclick={cancelEditing}
           disabled={isSaving}
           title="Cancel editing"
@@ -190,7 +190,7 @@
 
       <button
         type="button"
-        class="icon-btn edit-btn"
+        class="icon-btn edit-btn ui-button ui-button--secondary ui-button--icon"
         onclick={startEditing}
         aria-label="Edit plan"
       >
@@ -199,7 +199,7 @@
 
       <button
         type="button"
-        class="icon-btn remove-btn"
+        class="icon-btn remove-btn ui-button ui-button--secondary ui-button--icon"
         onclick={() => (isRemoving = true)}
         aria-label="Remove plan"
       >
@@ -294,37 +294,6 @@
     width: 73px;
   }
 
-  .icon-btn {
-    padding: 0.35rem 0.4rem;
-    border: 1px solid #e2e8f0;
-    background: #ffffff;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 32.5px;
-    height: 32.5px;
-    flex-shrink: 0;
-  }
-
-  .icon-btn:hover:not(:disabled) {
-    border-color: #2f7fd6;
-    background: #f1f5f9;
-  }
-
-  .icon-btn:focus:not(:disabled) {
-    outline: none;
-    border-color: #2f7fd6;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-  }
-
-  .icon-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
   .edit-btn {
     color: #2f7fd6;
   }
@@ -354,28 +323,7 @@
     height: 32.5px;
   }
 
-  .plan-input {
-    flex: 1;
-    padding: 0.5rem 0.8rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    box-sizing: border-box;
-    font-size: 0.8rem;
-    color: #1e293b;
-    background: #ffffff;
-    height: 32.5px;
-  }
-
-  .plan-input:focus {
-    outline: none;
-    border-color: #2f7fd6;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-  }
-
-  .plan-input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  .plan-input { flex: 1; min-width: 0; }
 
   .edit-actions {
     display: flex;

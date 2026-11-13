@@ -82,7 +82,7 @@
           if (planId) handleSelectPlan(planId);
         }}
         disabled={loading}
-        class="plan-select"
+        class="plan-select ui-select"
       >
         <option value="">Select a plan...</option>
         {#each plans as plan (plan.id)}
@@ -97,17 +97,17 @@
             placeholder="Plan name..."
             bind:value={newPlanName}
             onkeydown={handleKeydown}
-            class="plan-input"
+            class="plan-input ui-input"
           />
-          <button class="btn btn-primary btn-small" onclick={handleCreatePlan} disabled={!newPlanName.trim()}>
+          <button class="btn btn-primary btn-small ui-button ui-button--primary ui-button--icon" onclick={handleCreatePlan} disabled={!newPlanName.trim()}>
             ◯
           </button>
-          <button class="btn btn-secondary btn-small" onclick={() => (isCreating = false)}>
+          <button class="btn btn-secondary btn-small ui-button ui-button--secondary ui-button--icon" onclick={() => (isCreating = false)}>
             ✕
           </button>
         {:else}
           <button
-            class="icon-button"
+            class="icon-button ui-button ui-button--secondary ui-button--icon"
             onclick={() => (isCreating = true)}
             disabled={loading}
             title="Create new plan"
@@ -146,7 +146,7 @@
               placeholder="Plan name..."
               bind:value={newPlanName}
               onkeydown={handleKeydown}
-              class="plan-input"
+              class="plan-input ui-input"
             />
             <button class="btn btn-primary" onclick={handleCreatePlan} disabled={!newPlanName.trim()}>
               ◯
@@ -253,37 +253,19 @@
     height: 32.5px;
   }
 
-  /* Standardized input field */
+  /* Keep compact layout constraints local; visual styling comes from UI primitives. */
   .plan-input {
     flex: 1;
-    padding: 0.5rem 0.8rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    color: #1e293b;
-    background: #ffffff;
-    box-sizing: border-box;
-    height: 32.5px;
+    min-width: 0;
   }
 
   @media (max-width: 480px) {
-    .plan-input {
+    .plan-input,
+    .plan-select {
       flex: 0 0 auto;
     }
   }
 
-  .plan-input:focus {
-    outline: none;
-    border-color: #2f7fd6;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-  }
-
-  .plan-input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  /* Compact mode */
   .compact-header {
     display: flex;
     gap: 0.3rem;
@@ -299,41 +281,10 @@
 
   .plan-select {
     flex: 1;
-    padding: 0.5rem 0.8rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    background: #ffffff;
-    color: #1e293b;
-    appearance: none;
-    height: 32.5px;
     width: 95px;
-    box-sizing: border-box;
   }
 
-  @media (max-width: 480px) {
-    .plan-select {
-      flex: 0 0 auto;
-    }
-  }
-
-  .plan-select:hover {
-    border-color: #2f7fd6;
-  }
-
-  .plan-select:focus {
-    outline: none;
-    border-color: #2f7fd6;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-  }
-
-  .plan-select:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  /* Buttons */
+  /* Full-mode buttons retain their existing class styling until migrated. */
   .btn {
     padding: 0.4rem 0.6rem;
     border: none;
@@ -361,72 +312,22 @@
     min-width: 32.5px;
   }
 
-  .btn-expand {
-    width: 100%;
-  }
+  .btn-expand { width: 100%; }
 
-  .btn-primary {
-    background: #2f7fd6;
-    color: white;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background: #2980f1;
-  }
-
-  .btn-primary:focus:not(:disabled) {
-    outline: 2px solid #2f7fd6;
-    outline-offset: 2px;
-  }
-
+  .btn-primary { background: var(--ui-primary); color: white; }
+  .btn-primary:hover:not(:disabled) { background: var(--ui-primary-hover); }
   .btn-secondary {
-    background: #ffffff;
-    color: #1e293b;
-    border: 1px solid #e2e8f0;
+    background: var(--ui-surface);
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
   }
-
   .btn-secondary:hover:not(:disabled) {
-    border-color: #2f7fd6;
-    background: #f8fafc;
+    border-color: var(--ui-primary);
+    background: var(--ui-surface-hover);
   }
-
-  .btn-secondary:focus:not(:disabled) {
-    outline: none;
-    border-color: #2f7fd6;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-  }
-
-  .icon-button {
-    width: 32.5px;
-    height: 32.5px;
-    padding: 0;
-    min-width: 32.5px;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    background: #ffffff;
-    color: #1e293b;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .icon-button:hover:not(:disabled) {
-    border-color: #2f7fd6;
-    background: #f8fafc;
-  }
-
-  .icon-button:focus:not(:disabled) {
-    outline: none;
-    border-color: #2f7fd6;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-  }
-
-  .icon-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .btn:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
   }
 
   @media (max-width: 460px) {
