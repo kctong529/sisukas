@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import { calendarEventLocationRows } from '@application/calendar/calendarEventLocationRows';
+  import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
 
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
@@ -60,9 +60,6 @@
     {#if presentation.courseCode}<span class="event-code">{presentation.courseCode}</span>{/if}
     {#if presentation.groupLabel}<span class="event-group">{presentation.groupLabel}</span>{/if}
   </span>
-  {#if !compact}
-    <span class="selection-label" class:selected={selection === 'selected'}>{calendarSelectionLabel(selection)}</span>
-  {/if}
   <span class="event-title">
     {#if segment.continuesBefore}<span class="continuation" aria-hidden="true">↤ </span>{/if}
     {presentation.courseTitle}
@@ -76,10 +73,10 @@
       <span class="event-status">Excluded</span>
     {/if}
     {#if locationRows.location}
-      <span class="event-location"><span class="location-label">Location:</span> {locationRows.location}</span>
+      <span class="event-location">{locationRows.location}</span>
     {/if}
     {#if locationRows.building}
-      <span class="event-building"><span class="location-label">Building:</span> {locationRows.building}</span>
+      <span class="event-building">{locationRows.building}</span>
     {/if}
   {/if}
 </button>
@@ -116,8 +113,6 @@
     overflow: hidden;
     font-size: 0.9em;
   }
-  .selection-label { font-size: .72em; color: #475569; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .selection-label.selected { color: #166534; font-weight: 700; }
   .event-code { font-weight: 750; }
   .event-group { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .event-title {
@@ -144,13 +139,11 @@
     white-space: nowrap;
   }
   .event-time { font-variant-numeric: tabular-nums; }
-  .location-label { font-weight: 650; }
   .event-status { font-weight: 650; }
   .continuation { font-weight: 800; }
   .cancelled .event-title { text-decoration: line-through; }
   /* Small lanes need a concise label, not several unreadable metadata rows. */
   @container calendar-card (max-width: 125px) {
-    .selection-label { display: none; }
     .event-heading { display: block; }
     .event-group { display: none; }
   }

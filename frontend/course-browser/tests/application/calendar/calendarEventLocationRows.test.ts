@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { calendarEventLocationRows } from '@application/calendar/calendarEventLocationRows';
+
 import type { StudyEvent } from '@modules/study-groups';
 
 function event(locations: StudyEvent['locations'], location?: string): StudyEvent {

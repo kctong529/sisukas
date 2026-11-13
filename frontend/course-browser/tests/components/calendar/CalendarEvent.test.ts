@@ -55,8 +55,10 @@ describe('CalendarEvent presentation', () => {
       },
     }));
     flushSync();
-    expect(target.querySelector('.event-location')?.textContent).toContain('Location: Y202a');
-    expect(target.querySelector('.event-building')?.textContent).toContain('Building: Undergraduate Centre');
+    expect(target.querySelector('.event-location')?.textContent).toBe('Y202a');
+    expect(target.querySelector('.event-building')?.textContent).toBe('Undergraduate Centre');
+    expect(target.textContent).not.toContain('Location:');
+    expect(target.textContent).not.toContain('Building:');
     expect(target.querySelector('.calendar-event')?.getAttribute('aria-label'))
       .toContain('Building: Undergraduate Centre');
   });
@@ -77,13 +79,16 @@ describe('CalendarEvent presentation', () => {
   it('labels candidate events without suggesting a confirmed selection', () => {
     const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00');
     expect(target.querySelector('[data-selection="candidate"]')).not.toBeNull();
-    expect(target.textContent).toContain('Candidate · not selected in Sisukas');
+    expect(target.querySelector('.selection-label')).toBeNull();
+    expect(target.textContent).not.toContain('Candidate · not selected in Sisukas');
     expect(target.querySelector('.calendar-event')?.getAttribute('aria-label')).toContain('Candidate');
   });
   it('labels explicit Sisukas choices but does not claim SISU registration', () => {
     const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00', { selection: 'selected' });
     expect(target.querySelector('[data-selection="selected"]')).not.toBeNull();
-    expect(target.textContent).toContain('Selected in Sisukas');
+    expect(target.querySelector('.selection-label')).toBeNull();
+    expect(target.textContent).not.toContain('Selected in Sisukas');
+    expect(target.querySelector('.calendar-event')?.getAttribute('aria-label')).toContain('Selected in Sisukas');
     expect(target.textContent).not.toContain('Registered');
   });
   it('marks cancelled events explicitly', () => {
