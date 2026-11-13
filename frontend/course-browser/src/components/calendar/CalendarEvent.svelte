@@ -1,5 +1,6 @@
 <script lang="ts">
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
+  import { calendarEventLocationRows } from '@application/calendar/calendarEventLocationRows';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
 
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
@@ -19,7 +20,7 @@
   const instructionId = $props.id();
   const cancelled = $derived(segment.entry.source.event.cancelled);
   const excluded = $derived(segment.entry.source.event.excluded);
-  const location = $derived(presentation.locationLabel);
+  const locationRows = $derived(calendarEventLocationRows(segment.entry.source.event));
   const range = $derived(`${formatCalendarMinute(segment.startMinute)}–${formatCalendarMinute(segment.endMinute)}`);
   const compact = $derived(segment.endMinute - segment.startMinute < 45);
   const continuation = $derived([
@@ -29,7 +30,9 @@
   const accessibleText = $derived([
     presentation.courseCode, presentation.courseTitle, presentation.groupLabel, range,
     cancelled ? 'Cancelled' : excluded ? 'Excluded' : null,
-    calendarSelectionLabel(selection), location, continuation,
+    calendarSelectionLabel(selection),
+    locationRows.location ? `Location: ${locationRows.location}` : null,
+    locationRows.building ? `Building: ${locationRows.building}` : null, continuation,
   ].filter(Boolean).join(', '));
 </script>
 
@@ -72,7 +75,12 @@
     {:else if excluded}
       <span class="event-status">Excluded</span>
     {/if}
-    {#if location}<span class="event-location">{location}</span>{/if}
+    {#if locationRows.location}
+      <span class="event-location"><span class="location-label">Location:</span> {locationRows.location}</span>
+    {/if}
+    {#if locationRows.building}
+      <span class="event-building"><span class="location-label">Building:</span> {locationRows.building}</span>
+    {/if}
   {/if}
 </button>
 
@@ -128,7 +136,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .event-time, .event-location, .event-status {
+  .event-time, .event-location, .event-building, .event-status {
     display: block;
     min-width: 0;
     overflow: hidden;
@@ -136,6 +144,7 @@
     white-space: nowrap;
   }
   .event-time { font-variant-numeric: tabular-nums; }
+  .location-label { font-weight: 650; }
   .event-status { font-weight: 650; }
   .continuation { font-weight: 800; }
   .cancelled .event-title { text-decoration: line-through; }

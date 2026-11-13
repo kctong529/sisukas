@@ -35,6 +35,32 @@ describe('CalendarEvent presentation', () => {
     expect(target.textContent).toContain('10:00–11:00');
     expect(target.textContent).toContain('Room A');
   });
+  it('renders classroom and building on separate rows', () => {
+    const entry = fixed('a', '2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00');
+    entry.source.event.locations = [
+      { id: 'Y202a', name: 'Y202a', buildingName: 'Undergraduate Centre' },
+    ];
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    targets.push(target);
+    const segment = layoutCalendarWeek([entry], '2026-11-02').segments[0];
+    mounted.push(mount(CalendarEvent, {
+      target,
+      props: {
+        segment,
+        presentation: {
+          courseCode: 'MS-A0011', courseTitle: 'Matrix Algebra',
+          groupLabel: 'Exercise H01', locationLabel: 'Undergraduate Centre · Y202a',
+        },
+      },
+    }));
+    flushSync();
+    expect(target.querySelector('.event-location')?.textContent).toContain('Location: Y202a');
+    expect(target.querySelector('.event-building')?.textContent).toContain('Building: Undergraduate Centre');
+    expect(target.querySelector('.calendar-event')?.getAttribute('aria-label'))
+      .toContain('Building: Undergraduate Centre');
+  });
+
   it('preserves technical group identity without showing it as card text', () => {
     const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00');
     const description = target.querySelector('.calendar-event')?.getAttribute('aria-label') ?? '';
