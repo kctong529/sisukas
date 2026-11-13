@@ -441,7 +441,7 @@
   }
 
   .retry-button {
-    align-self: flex-start;
+    align-self: center;
   }
 
   .empty,
@@ -449,6 +449,7 @@
     font-size: 0.75rem;
     color: var(--text-muted);
     padding: 0.25rem 0;
+    text-align: center;
   }
 
   .empty {
