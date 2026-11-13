@@ -682,8 +682,8 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 0.75rem;
-    gap: 1rem;
+    margin-bottom: var(--ui-card-content-gap);
+    gap: var(--ui-space-4);
   }
 
   .code-and-info {
@@ -712,7 +712,7 @@
     font-size: 0.85rem;
     color: #333;
     line-height: 1.2;
-    margin-top: 0.1rem;
+    margin-top: var(--ui-card-title-gap);
   }
 
   .remove-btn {
@@ -739,8 +739,8 @@
   .instances-container {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    gap: var(--ui-space-2);
+    margin-bottom: var(--ui-card-content-gap);
   }
 
   .add-btn {
@@ -842,7 +842,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 0.35rem;
+    margin-top: var(--ui-card-title-gap);
     font-size: 0.7rem;
     color: var(--text-muted);
   }

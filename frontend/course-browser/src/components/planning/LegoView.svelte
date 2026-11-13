@@ -373,7 +373,7 @@
   .instance-name {
     font-size: 0.75rem;
     color: #333;
-    margin: 0.1rem 0 0 0;
+    margin: var(--ui-card-title-gap) 0 0;
     line-height: 1.2;
     word-break: break-word;
   }

@@ -33,6 +33,8 @@
   /* Course-card density is intentional: regular for detail views, compact for grids. */
   --ui-card-padding-regular: var(--ui-space-4);
   --ui-card-padding-compact: var(--ui-space-3);
+  --ui-card-title-gap: var(--ui-space-1);
+  --ui-card-content-gap: var(--ui-space-3);
 
   /* Compatibility names for existing component-specific styling. */
   --primary: var(--ui-primary);
