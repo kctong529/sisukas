@@ -413,7 +413,7 @@
   .study-group-square.in-block {
     background: color-mix(in srgb, rgb(var(--rgb)) 14%, white) !important;
     border-color: rgb(var(--rgb)) !important;
-    color: #0f172a !important;
+    color: color-mix(in srgb, rgb(var(--rgb)) 60%, black) !important;
   }
 
   /* Temporary selection previews use the same treatment as persisted blocks. */
@@ -421,7 +421,7 @@
   .study-group-square.commit-preview {
     background: color-mix(in srgb, rgb(var(--next-rgb)) 14%, white) !important;
     border-color: rgb(var(--next-rgb)) !important;
-    color: #0f172a !important;
+    color: color-mix(in srgb, rgb(var(--next-rgb)) 60%, black) !important;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -429,20 +429,20 @@
     .squares-container.dragging .study-group-square:hover {
       background: color-mix(in srgb, rgb(var(--next-rgb)) 14%, white) !important;
       border-color: rgb(var(--next-rgb)) !important;
-      color: #0f172a !important;
+      color: color-mix(in srgb, rgb(var(--next-rgb)) 60%, black) !important;
     }
 
     .squares-container:not(.dragging) .study-group-square.in-block:hover {
       background: color-mix(in srgb, rgb(var(--rgb)) 14%, white) !important;
       border-color: rgb(var(--rgb)) !important;
-      color: #0f172a !important;
+      color: color-mix(in srgb, rgb(var(--rgb)) 60%, black) !important;
     }
   }
 
   .squares-container.dragging .study-group-square.selected {
     background: color-mix(in srgb, rgb(var(--next-rgb)) 14%, white) !important;
     border-color: rgb(var(--next-rgb)) !important;
-    color: #0f172a !important;
+    color: color-mix(in srgb, rgb(var(--next-rgb)) 60%, black) !important;
   }
 
   .squares-container {
@@ -450,6 +450,19 @@
     flex-wrap: wrap;
     gap: 0.1rem;
     touch-action: none;
+  }
+
+  /* Match the heading to the same hue as each tinted square. */
+  .study-group-square.in-block .square-name,
+  .study-group-square.selected .square-name,
+  .study-group-square.commit-preview .square-name {
+    color: inherit;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .study-group-square:hover .square-name {
+      color: inherit;
+    }
   }
 
   .square-name {

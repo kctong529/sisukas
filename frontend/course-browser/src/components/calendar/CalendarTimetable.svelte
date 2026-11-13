@@ -243,7 +243,7 @@
   .event[data-offering-color="9"] { --event-rgb: 101, 163, 13; }
   .event[data-offering-color="10"] { --event-rgb: 180, 83, 9; }
   .event[data-offering-color="11"] { --event-rgb: 8, 145, 178; }
-  .event { container: calendar-card / inline-size; border: 1px solid rgb(var(--event-rgb, 47, 127, 214)); background: color-mix(in srgb, rgb(var(--event-rgb, 47, 127, 214)) 14%, white); color: #0f172a; font-size: 0.68rem; line-height: 1.25; }
+  .event { container: calendar-card / inline-size; border: 1px solid rgb(var(--event-rgb, 47, 127, 214)); background: color-mix(in srgb, rgb(var(--event-rgb, 47, 127, 214)) 14%, white); color: color-mix(in srgb, rgb(var(--event-rgb, 47, 127, 214)) 60%, black); font-size: 0.68rem; line-height: 1.25; }
   .event.occurrence-highlight { outline: 3px solid #0f766e; outline-offset: -2px; z-index: 2; }
   .event.occurrence-dim { opacity: .35; }
   .event.course-highlight { outline: 3px solid var(--calendar-primary, #2f7fd6); outline-offset: -2px; z-index: 2; }
