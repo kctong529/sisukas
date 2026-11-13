@@ -44,6 +44,17 @@ describe('WeekNavigation', () => {
     expect(handlers.onNext).toHaveBeenCalledOnce();
   });
 
+  it('uses shared secondary buttons without changing navigation behavior', () => {
+    const { target } = render('2026-11-02');
+    const buttons = [...target.querySelectorAll<HTMLButtonElement>('.controls button')];
+    expect(buttons).toHaveLength(3);
+    for (const button of buttons) {
+      expect(button.classList.contains('ui-button')).toBe(true);
+      expect(button.classList.contains('ui-button--secondary')).toBe(true);
+      expect(button.type).toBe('button');
+    }
+  });
+
   it('offers Today when displaying another week', () => {
     const otherWeek = shiftHelsinkiWeek(currentHelsinkiWeek(), -1);
     const { target, handlers } = render(otherWeek);
