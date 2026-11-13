@@ -177,7 +177,8 @@
     gap: 0.3rem;
     height: 32.5px;
     min-width: 0;
-    overflow: hidden;
+    /* Keep the focus outline visible outside the compact toolbar. */
+    overflow: visible;
   }
 
   /* Full mode */
