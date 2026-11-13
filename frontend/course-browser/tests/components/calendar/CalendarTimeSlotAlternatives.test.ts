@@ -12,13 +12,13 @@ import type { TimeSlotAlternative } from '@application/calendar/calendarTimeSlot
 const mounted: Array<ReturnType<typeof mount>> = [];
 const targets: HTMLElement[] = [];
 
-function render(visibility: 'hidden' | 'visible', canRestore = true) {
+function render(visibility: 'hidden' | 'visible', canRestore = true, locationLabel: string | null = null) {
   const start = '2026-11-02T10:00:00+02:00';
   const end = '2026-11-02T11:00:00+02:00';
   const segment = layoutCalendarWeek([fixed('alternative', start, end)], '2026-11-02').segments[0];
   const alternative: TimeSlotAlternative = {
     segment,
-    presentation: { courseCode: 'CS-A1110', courseTitle: 'Test course', groupLabel: 'Exercise H01', locationLabel: null },
+    presentation: { courseCode: 'CS-A1110', courseTitle: 'Test course', groupLabel: 'Exercise H01', locationLabel },
     hidden: visibility === 'hidden',
     canRestore,
   };
@@ -47,6 +47,14 @@ afterEach(async () => {
 });
 
 describe('Calendar time-slot alternative actions', () => {
+  it('shows both time and location for overlapping alternatives', () => {
+    const { target } = render('visible', true, 'Room A');
+    const row = target.querySelector<HTMLButtonElement>('li button')!;
+    expect(row.textContent).toContain('10:00–11:00');
+    expect(row.textContent).toContain('Room A');
+    expect(row.getAttribute('aria-label')).toContain('Room A');
+  });
+
   it('clicks a visible event row to hide it', () => {
     const { target, segment, onHide, onRestore } = render('visible');
     const button = [...target.querySelectorAll<HTMLButtonElement>('li button')][0];

@@ -141,7 +141,7 @@
   .cancelled .event-title { text-decoration: line-through; }
   /* Small lanes need a concise label, not several unreadable metadata rows. */
   @container calendar-card (max-width: 125px) {
-    .event-time, .event-location, .selection-label { display: none; }
+    .selection-label { display: none; }
     .event-heading { display: block; }
     .event-group { display: none; }
   }

@@ -33,12 +33,12 @@
 <style>
   .week-navigation { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.85rem; margin-bottom: 1rem; }
   .controls { display: flex; gap: 0.35rem; align-items: center; }
-  /* Preserve Calendar's original 34px navigation geometry. Shared UI
-     primitives own colors, borders, hover, disabled, and focus states. */
+  /* Match the shared compact toolbar height. Shared UI primitives own
+     colors, borders, hover, disabled, and focus states. */
   .controls :global(.ui-button) {
-    height: 34px;
-    min-height: 34px;
-    min-width: 34px;
+    height: 32.5px;
+    min-height: 32.5px;
+    min-width: 32.5px;
     padding: 0.4rem 0.7rem;
   }
   .week-range { margin: 0; display: flex; gap: 0.3rem 0.65rem; flex-wrap: wrap; align-items: baseline; }

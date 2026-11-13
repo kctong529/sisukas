@@ -303,7 +303,7 @@
   /* WeekNavigation owns control sizing; the header owns the bottom spacing. */
   .header-section :global(.week-navigation) { margin-bottom: 0; }
   .header-actions { margin-left: auto; justify-content: flex-end; column-gap: 0.85rem; }
-  .panel-position-button { height: 34px; min-height: 34px; padding: 0.4rem 0.7rem; font-size: 0.8rem; }
+  .panel-position-button { height: 32.5px; min-height: 32.5px; padding: 0.4rem 0.7rem; font-size: 0.8rem; }
   @media (max-width: 1000px) { .panel-position-button { display: none; } }
   .data-notice { margin: 0 0 0.5rem; font-size: 0.85rem; line-height: 1.5; }
   .data-notice.failed { color: var(--ui-danger-text); }

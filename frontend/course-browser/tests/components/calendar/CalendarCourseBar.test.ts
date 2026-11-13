@@ -30,6 +30,7 @@ describe('calendar course bar', () => {
   it('exposes accessible offering buttons and selects course context', () => {
     const { target, onSelect } = render([course('A'), course('B')]);
     expect(target.querySelectorAll('nav[aria-label="Courses active this week"] button')).toHaveLength(2);
+    expect(target.querySelector('.bar-heading')).toBeNull();
     target.querySelector<HTMLButtonElement>('button')?.click();
     expect(onSelect).toHaveBeenCalledWith('A');
   });

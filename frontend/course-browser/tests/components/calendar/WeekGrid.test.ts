@@ -514,6 +514,10 @@ describe('WeekGrid visibility actions (#92)', () => {
     flushSync();
     target.querySelector<HTMLButtonElement>('.calendar-event')?.click();
     flushSync();
+    const details = target.querySelector('.event-information dl')!;
+    expect(details.textContent).toContain('Time');
+    expect(details.textContent).not.toContain('Plan choice');
+    expect(details.textContent).not.toContain('Status');
     const buttons = [...target.querySelectorAll<HTMLButtonElement>('.visibility-actions button')];
     expect(buttons.map(button => button.textContent?.trim())).toEqual([
       'Course overview and visibility', 'Hide teaching group', 'Hide this event',

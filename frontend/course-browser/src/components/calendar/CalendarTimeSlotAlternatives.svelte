@@ -32,11 +32,12 @@
             onblur={() => onPreview(null)}
             disabled={!alternative.canRestore}
             title={alternative.canRestore ? undefined : 'This event has an ambiguous source identity'}
-            aria-label={`${alternative.hidden ? 'Show' : 'Hide'} ${alternative.presentation.courseCode ?? alternative.presentation.courseTitle}, ${alternative.presentation.groupLabel ?? alternative.segment.entry.source.studyGroupId}`}>
+            aria-label={`${alternative.hidden ? 'Show' : 'Hide'} ${alternative.presentation.courseCode ?? alternative.presentation.courseTitle}, ${alternative.presentation.groupLabel ?? alternative.segment.entry.source.studyGroupId}, ${formatCalendarMinute(alternative.segment.startMinute)}–${formatCalendarMinute(alternative.segment.endMinute)}${alternative.presentation.locationLabel ? `, ${alternative.presentation.locationLabel}` : ''}`}>
             <span class="description">
               <strong>{alternative.presentation.courseCode ? `${alternative.presentation.courseCode} · ` : ''}{alternative.presentation.courseTitle}</strong>
               <span>{alternative.presentation.groupLabel ?? alternative.segment.entry.source.studyGroupId}</span>
               <span>{formatCalendarMinute(alternative.segment.startMinute)}–{formatCalendarMinute(alternative.segment.endMinute)}</span>
+              {#if alternative.presentation.locationLabel}<span>{alternative.presentation.locationLabel}</span>{/if}
             </span>
             <span class="visibility-state" class:hidden={alternative.hidden}>{alternative.hidden ? 'Hidden' : 'Visible'}</span>
           </button>

@@ -247,7 +247,6 @@
       presentation={displayedSegment ? presentationForSegment(displayedSegment) : null}
       date={displayedSegment ? layout.days[displayedSegment.dayIndex] : null}
       isPinned={pinnedSegment !== null}
-      selection={displayedSegment ? selectionForSegment(displayedSegment) : 'candidate'}
       members={displayedSegment ? membersForSegment(displayedSegment) : []}
       onClear={() => { pinnedId = null; previewId = null; hoveredAlternativeId = null; retainedAlternativeId = null; }}
       {alternatives}
