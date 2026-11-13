@@ -384,6 +384,7 @@
           <div class="sort-box">
             <label for="sort">Sort by:</label>
             <select
+              class="ui-select"
               id="sort"
               bind:value={ui.sortBy}
             >
@@ -396,7 +397,7 @@
 
             <button
               type="button"
-              class="sort-dir"
+              class="ui-button ui-button--secondary sort-dir"
               onclick={() => {
                 ui.sortDirection = (ui.sortDirection * -1) as 1 | -1;
               }}
@@ -652,51 +653,11 @@
     font-weight: 500;
   }
 
-  select {
-    flex: 1;
-    padding: 0.5rem 0.8rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    background: #ffffff;
-    color: #1e293b;
-    appearance: none;
-    height: 32.5px;
-  }
-
-  select:hover {
-    border-color: var(--primary);
-  }
-
-  select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
-
+  /* The sort-direction control shares button styles but keeps a square shape. */
   .sort-dir {
-    padding: 0.5rem 0.7rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--card-bg);
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.8rem;
-    color: var(--text-main);
-    min-width: 32.5px;
-    text-align: center;
-  }
-
-  .sort-dir:hover {
-    border-color: var(--primary);
-    background: #f1f5f9;
-  }
-
-  .sort-dir:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    width: 2.5rem;
+    padding: 0;
+    flex: none;
   }
 
   .favourites-list {

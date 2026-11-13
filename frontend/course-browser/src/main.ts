@@ -1,7 +1,7 @@
 import "./polyfills";
+
 import "./styles/tokens.css";
 import "./styles/primitives.css";
-
 import 'bootstrap-icons/font/bootstrap-icons.css'
 
 import { mount } from 'svelte'

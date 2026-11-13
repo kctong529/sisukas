@@ -9,21 +9,42 @@
   color: var(--ui-text);
 }
 
+/* Consistent geometry and keyboard focus across opt-in toolbar controls. */
+.ui-button,
+.ui-select {
+  box-sizing: border-box;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--ui-text);
+  background: var(--ui-surface);
+  cursor: pointer;
+}
+
 .ui-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 0.8rem;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  font: inherit;
-  font-size: 0.8rem;
-  font-weight: 500;
-  line-height: normal;
   text-align: center;
   text-decoration: none;
-  cursor: pointer;
+  white-space: nowrap;
   transition: background-color 0.2s, border-color 0.2s;
+}
+
+.ui-select {
+  border-color: var(--ui-border);
+  appearance: none;
+  transition: border-color 0.2s;
+}
+
+.ui-select:hover:not(:disabled) {
+  border-color: var(--ui-primary);
 }
 
 .ui-button--primary {
@@ -48,12 +69,14 @@
   background: var(--ui-surface-hover);
 }
 
-.ui-button:focus-visible {
+.ui-button:focus-visible,
+.ui-select:focus-visible {
   outline: 2px solid var(--ui-focus-ring);
   outline-offset: 2px;
 }
 
-.ui-button:disabled {
+.ui-button:disabled,
+.ui-select:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }
