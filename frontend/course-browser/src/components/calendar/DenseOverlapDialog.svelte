@@ -3,8 +3,8 @@
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
 
-  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import type { OverlapChoice } from '@application/calendar/calendarOverlapChoice';
+  import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
@@ -35,7 +35,9 @@
   function resolveInDialog(segment: WeeklyCalendarSegment): void {
     if (!overlapChoice(segment)?.available) return;
     onResolveOverlap(segment);
-    dialogElement.close();
+    // HTMLDialogElement.close is not implemented in jsdom. Native browsers use close().
+    if (typeof dialogElement.close === 'function') dialogElement.close();
+    else { dialogElement.removeAttribute('open'); onClose(); }
   }
 
   function handleBackdropPointerDown(event: PointerEvent): void {

@@ -279,7 +279,7 @@ describe('WeekGrid alternative study-group previews', () => {
     const section = target.querySelector('.alternatives')!;
     expect(section.textContent).toContain('Exercise H02');
     expect(section.textContent).not.toContain('Lecture L01');
-    expect(section.textContent).toContain('not a study-plan selection');
+    expect(section.textContent).toContain('Hover or focus to preview');
   });
 
   it('chooses an alternative through the existing group action and exits event details', () => {
@@ -416,7 +416,7 @@ describe('WeekGrid accessibility integration', () => {
     const descriptionId = alternative.getAttribute('aria-describedby');
     expect(descriptionId).toBeTruthy();
     const instructions = document.getElementById(descriptionId!);
-    expect(instructions?.textContent).toContain('not a study-plan selection or SISU registration');
+    expect(instructions?.textContent).toContain('Hover or focus to preview');
     alternative.blur();
     flushSync();
     expect(target.querySelectorAll('.alternative-highlight')).toHaveLength(0);

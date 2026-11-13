@@ -2,6 +2,7 @@
   import { calendarGroupAlternatives } from '@application/calendar/calendarGroupAlternatives';
   import { calendarOfferingColorIndices } from '@application/calendar/calendarOfferingColors';
   import { calendarPreviewLayout } from '@application/calendar/calendarPreviewLayout';
+  import { calendarTimeSlotAlternatives } from '@application/calendar/calendarTimeSlotAlternatives';
   import { denseOverlapPresentation } from '@application/calendar/denseOverlapPresentation';
 
   import CalendarContextPanel from './CalendarContextPanel.svelte';
@@ -13,6 +14,7 @@
   import type { CalendarWeekCourse } from '@application/calendar/calendarCoursesForWeek';
   import type { OverlapChoice } from '@application/calendar/calendarOverlapChoice';
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
+  import type { TimeSlotAlternative } from '@application/calendar/calendarTimeSlotAlternatives';
   import type { CalendarVisibility } from '@application/calendar/calendarVisibility';
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
@@ -83,6 +85,7 @@
   // Course-group and occurrence hover is highlighting only, never a visibility edit.
   let courseGroupPreviewId = $state<string | null>(null);
   let courseOccurrencePreviewId = $state<string | null>(null);
+  let previewTimeSlotId = $state<string | null>(null);
   const alternatives = $derived(displayedSegment
     ? calendarGroupAlternatives(groupsForSegment(displayedSegment), displayedSegment.entry.source.studyGroupId)
     : []);
@@ -99,6 +102,20 @@
   const previewGroupId = $derived(alternatives.some(group => group.groupId === requestedAlternativeId)
     ? requestedAlternativeId : null);
   const previewOfferingId = $derived(previewGroupId ? displayedSegment?.entry.source.courseOfferingId ?? null : null);
+  const timeSlotAlternatives: TimeSlotAlternative[] = $derived(displayedSegment
+    ? calendarTimeSlotAlternatives(displayedSegment, unfilteredSegments, visibility,
+        membersForSegment, selectionForSegment, presentationForSegment)
+    : []);
+  function restoreTimeSlot(segment: WeeklyCalendarSegment): void {
+    if (membersForSegment(segment).every(member => member.occurrenceKey !== null)) {
+      onToggleOccurrence(segment, 'visible');
+    }
+  }
+  function hideTimeSlot(segment: WeeklyCalendarSegment): void {
+    if (membersForSegment(segment).every(member => member.occurrenceKey !== null)) {
+      onToggleOccurrence(segment, 'hidden');
+    }
+  }
   // Visibility-filtered entries have no rendered calendar card. During an explicit
   // group/occurrence inspection, render their positions as read-only outlines.
   // Planning exclusions (and source exclusions) are not visibility preferences.
@@ -111,6 +128,7 @@
       if (visibleEntries.has(segment.entry)) return false;
       if (segment.entry.source.event.excluded || selectionForSegment(segment) === 'excluded') return false;
       if (courseOccurrencePreviewId !== null) return segment.id === courseOccurrencePreviewId;
+      if (previewTimeSlotId !== null && segment.id === previewTimeSlotId) return true;
       return groupId !== null && offeringId !== null &&
         segment.entry.source.studyGroupId === groupId &&
         segment.entry.source.courseOfferingId === offeringId;
@@ -248,6 +266,10 @@
       onAlternativePreview={id => { hoveredAlternativeId = id; }}
       onAlternativeToggle={toggleAlternative}
       onAlternativeChoose={chooseAlternative}
+      {timeSlotAlternatives}
+      onRestoreTimeSlot={restoreTimeSlot}
+      onHideTimeSlot={hideTimeSlot}
+      onPreviewTimeSlot={segment => { previewTimeSlotId = segment?.id ?? null; }}
       alternativeContextKey={alternativeContext}
       onHideGroup={() => { if (displayedSegment) { hideGroup(displayedSegment); pinnedId = null; previewId = null; } }}
       onHideOccurrence={() => { if (displayedSegment) { hideOccurrence(displayedSegment); pinnedId = null; previewId = null; } }}

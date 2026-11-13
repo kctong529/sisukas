@@ -5,10 +5,12 @@
   import CalendarDetailsHeading from './CalendarDetailsHeading.svelte';
   import CalendarGroupAlternatives from './CalendarGroupAlternatives.svelte';
   import CalendarLocationList from './CalendarLocationList.svelte';
+  import CalendarTimeSlotAlternatives from './CalendarTimeSlotAlternatives.svelte';
 
   import type { CalendarGroupAlternative } from '@application/calendar/calendarGroupAlternatives';
   import type { OverlapChoice } from '@application/calendar/calendarOverlapChoice';
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
+  import type { TimeSlotAlternative } from '@application/calendar/calendarTimeSlotAlternatives';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
@@ -34,6 +36,10 @@
     onAlternativeToggle?: (id: string) => void;
     onAlternativeChoose?: (id: string) => void;
     alternativeContextKey?: string | null;
+    timeSlotAlternatives?: readonly TimeSlotAlternative[];
+    onRestoreTimeSlot?: (segment: WeeklyCalendarSegment) => void;
+    onHideTimeSlot?: (segment: WeeklyCalendarSegment) => void;
+    onPreviewTimeSlot?: (segment: WeeklyCalendarSegment | null) => void;
   }
   let {
     segment, presentation, date, isPinned, selection = 'candidate', onClear, onShowCourse = () => {}, members = [],
@@ -42,6 +48,7 @@
     alternatives = [], previewGroupId = null, retainedGroupId = null,
     onAlternativePreview = () => {}, onAlternativeToggle = () => {},
     onAlternativeChoose = () => {}, alternativeContextKey = null,
+    timeSlotAlternatives = [], onRestoreTimeSlot = () => {}, onHideTimeSlot = () => {}, onPreviewTimeSlot = () => {},
   }: Props = $props();
   const range = $derived(segment
     ? `${formatCalendarMinute(segment.startMinute)}–${formatCalendarMinute(segment.endMinute)}`
@@ -85,6 +92,8 @@
           </button>
         {/if}
       </div>
+      <CalendarTimeSlotAlternatives alternatives={timeSlotAlternatives}
+        onRestore={onRestoreTimeSlot} onHide={onHideTimeSlot} onPreview={onPreviewTimeSlot} />
       <CalendarGroupAlternatives
         {alternatives}
         {previewGroupId}
