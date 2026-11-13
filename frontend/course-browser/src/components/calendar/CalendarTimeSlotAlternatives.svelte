@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { calendarEventLocationRows } from '@application/calendar/calendarEventLocationRows';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
 
   import type { TimeSlotAlternative } from '@application/calendar/calendarTimeSlotAlternatives';
@@ -20,9 +21,14 @@
       <h3>Overlapping events</h3>
       <span>{alternatives.length} alternatives</span>
     </header>
-    <p class="help">Click an event to show or hide it. Hover or focus on a hidden event to preview it.</p>
+    <p class="help">Activate an event to show or hide it. Hover or focus on a hidden event to preview it. These actions do not change your study plan.</p>
     <ul>
       {#each alternatives as alternative (alternative.segment.entry)}
+        {@const locationRows = calendarEventLocationRows(alternative.segment.entry.source.event)}
+        {@const timeRange = `${formatCalendarMinute(alternative.segment.startMinute)}–${formatCalendarMinute(alternative.segment.endMinute)}`}
+        {@const action = alternative.hidden ? 'Show' : 'Hide'}
+        {@const eventLabel = `${alternative.presentation.courseCode ?? alternative.presentation.courseTitle}, ${alternative.presentation.groupLabel ?? alternative.segment.entry.source.studyGroupId}`}
+        {@const locationDescription = [locationRows.location ? `Location: ${locationRows.location}` : null, locationRows.building ? `Building: ${locationRows.building}` : null].filter(Boolean).join(', ')}
         <li>
           <button type="button" class:concealed={alternative.hidden}
             onclick={() => alternative.hidden ? onRestore(alternative.segment) : onHide(alternative.segment)}
@@ -31,13 +37,14 @@
             onfocus={() => onPreview(alternative.hidden ? alternative.segment : null)}
             onblur={() => onPreview(null)}
             disabled={!alternative.canRestore}
-            title={alternative.canRestore ? undefined : 'This event has an ambiguous source identity'}
-            aria-label={`${alternative.hidden ? 'Show' : 'Hide'} ${alternative.presentation.courseCode ?? alternative.presentation.courseTitle}, ${alternative.presentation.groupLabel ?? alternative.segment.entry.source.studyGroupId}, ${formatCalendarMinute(alternative.segment.startMinute)}–${formatCalendarMinute(alternative.segment.endMinute)}${alternative.presentation.locationLabel ? `, ${alternative.presentation.locationLabel}` : ''}`}>
+            title={alternative.canRestore ? `${action} ${eventLabel} · ${timeRange}${locationDescription ? ` · ${locationDescription}` : ''}` : 'Cannot change visibility: this event has an ambiguous source identity'}
+            aria-label={`${action} ${eventLabel}, ${timeRange}${locationDescription ? `, ${locationDescription}` : ''}`}>
             <span class="description">
               <strong>{alternative.presentation.courseCode ? `${alternative.presentation.courseCode} · ` : ''}{alternative.presentation.courseTitle}</strong>
               <span>{alternative.presentation.groupLabel ?? alternative.segment.entry.source.studyGroupId}</span>
-              <span>{formatCalendarMinute(alternative.segment.startMinute)}–{formatCalendarMinute(alternative.segment.endMinute)}</span>
-              {#if alternative.presentation.locationLabel}<span>{alternative.presentation.locationLabel}</span>{/if}
+              <span>{timeRange}</span>
+              {#if locationRows.location}<span>{locationRows.location}</span>{/if}
+              {#if locationRows.building}<span>{locationRows.building}</span>{/if}
             </span>
             <span class="visibility-state" class:hidden={alternative.hidden}>{alternative.hidden ? 'Hidden' : 'Visible'}</span>
           </button>
