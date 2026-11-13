@@ -768,15 +768,19 @@
 
   .instance {
     --offering-accent: var(--primary);
-    background: color-mix(in srgb, var(--offering-accent) 9%, white);
+    --offering-background-strength: 6%;
+    --offering-border-strength: 24%;
+    --offering-hover-background-strength: 11%;
+    --offering-hover-border-strength: 34%;
+    background: color-mix(in srgb, var(--offering-accent) var(--offering-background-strength), white);
     padding: 0.45rem;
     border-radius: 6px;
-    border: 1px solid color-mix(in srgb, var(--offering-accent) 35%, white);
+    border: 1px solid color-mix(in srgb, var(--offering-accent) var(--offering-border-strength), white);
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
     cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
   }
 
   .instance[data-timing="past"] {
@@ -788,17 +792,21 @@
   }
 
   .instance[data-timing="future"] {
-    --offering-accent: #ea580c;
+    --offering-accent: #f59e0b;
+  }
+
+  /* Selection adjusts emphasis, never the meaning of the timing color. */
+  .instance.selected {
+    --offering-background-strength: 14%;
+    --offering-border-strength: 100%;
+    --offering-hover-background-strength: 14%;
+    --offering-hover-border-strength: 100%;
   }
 
   .instance:hover {
-    background: color-mix(in srgb, var(--offering-accent) 16%, white);
+    background: color-mix(in srgb, var(--offering-accent) var(--offering-hover-background-strength), white);
+    border-color: color-mix(in srgb, var(--offering-accent) var(--offering-hover-border-strength), white);
     transform: translateY(-1px);
-  }
-
-  /* Expansion is an interaction state, not a timing status. */
-  .instance.selected {
-    box-shadow: inset 0 0 0 1px var(--ui-focus-ring);
   }
 
   .instance:focus-visible {
