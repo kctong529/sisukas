@@ -31,13 +31,21 @@
   let plansReady = $state(false);
   const activePlan = $derived(plansStore.read.getActive());
   const projection = $derived(calendarProjectionStore.projection);
-  // Legacy session visibility remains until authoritative hydration is wired in Step 4.
-  const visibility = $derived(calendarVisibilitySessionStore.read.forPlan(activePlan?.id));
+  const accountId = $derived(calendarVisibilitySessionStore.state.accountId);
+  const preferenceState = $derived(accountId && activePlan && activePlan.userId === accountId
+    ? calendarVisibilitySessionStore.read.stateFor(accountId, activePlan.id)
+    : { status: 'unknown' } as const);
+  // A local edit is displayed only after server hydration. Step 5 persists it.
+  const visibility = $derived(accountId && activePlan && activePlan.userId === accountId
+    ? calendarVisibilitySessionStore.read.displayFor(accountId, activePlan.id)
+    : null);
+  const hasTemporaryEdits = $derived(Boolean(accountId && activePlan
+    && calendarVisibilitySessionStore.read.hasSessionEdits(accountId, activePlan.id)));
   const display = $derived(projection ? aggregateCalendarDisplayEntries(projection.entries) : null);
-  const visibleEntries = $derived(display ? display.entries.filter(entry =>
+  const visibleEntries = $derived(display && visibility ? display.entries.filter(entry =>
     // A room-aggregated card is one visual occurrence; hiding it hides all its members.
     (display.membersByEntry.get(entry) ?? [entry]).some(member => calendarEntryVisible(member, visibility))) : []);
-  const layout = $derived(display ? layoutCalendarWeek(visibleEntries, weekStart) : null);
+  const layout = $derived(display && visibility ? layoutCalendarWeek(visibleEntries, weekStart) : null);
   const unfilteredLayout = $derived(display ? layoutCalendarWeek(display.entries, weekStart) : null);
   const weekCourses = $derived(activePlan && unfilteredLayout
     ? calendarCoursesForWeek(activePlan.instanceIds,
@@ -48,10 +56,11 @@
     return course ? calendarProjectionStore.readGroups(course.unitId, offeringId) ?? [] : [];
   }
   function updateVisibility(next: CalendarVisibility): void {
-    if (!activePlan) return;
+    if (!activePlan || !visibility || preferenceState.status !== 'ready') return;
     calendarVisibilitySessionStore.actions.setForPlan(activePlan.id, next);
   }
   function toggleGroup(offeringId: string, groupId: string, hidden: boolean): void {
+    if (!visibility) return;
     updateVisibility(setCalendarGroupHidden(visibility, offeringId, groupId, hidden));
   }
   function hideGroup(segment: WeeklyCalendarSegment): void {
@@ -62,6 +71,7 @@
     const members = membersForSegment(segment);
     const keys = members.map(member => member.occurrenceKey);
     if (keys.some(key => key === null)) return;
+    if (!visibility) return;
     updateVisibility(setCalendarOccurrenceVisibility(visibility, keys as string[], state));
   }
   function hideOccurrence(segment: WeeklyCalendarSegment): void {
@@ -90,6 +100,11 @@
       .then(() => { plansReady = true; })
       .catch(error => { loadError = error instanceof Error ? error.message : String(error); });
   });
+
+  function retryPreferences(): void {
+    if (!activePlan || !accountId) return;
+    void calendarVisibilitySessionStore.actions.retryLoad(accountId, activePlan.id);
+  }
 
   // #173 owns default active-plan retrieval at the application boundary.
   // The calendar observes authoritative entries and only retries on user action.
@@ -133,7 +148,15 @@
     <p role="status">Loading study plans…</p>
   {:else if !activePlan}
     <p>No active study plan. Create or select a plan in LEGO to see its calendar.</p>
-  {:else if layout}
+  {:else if preferenceState.status === 'failed'}
+    <p role="alert">Unable to load Calendar visibility preferences: {preferenceState.error}</p>
+    <button class="retry-data" onclick={retryPreferences}>Retry Calendar preferences</button>
+  {:else if preferenceState.status !== 'ready'}
+    <p role="status">Loading Calendar visibility preferences…</p>
+  {:else if layout && visibility}
+    {#if hasTemporaryEdits}
+      <p role="status">Visibility changes in this session are not saved yet. Persistent edits will be enabled in the next update.</p>
+    {/if}
     {#each notices as notice (notice.kind)}
       <p role={notice.kind === 'failed' ? 'alert' : 'status'} class={`data-notice ${notice.kind}`}>
         {notice.message}

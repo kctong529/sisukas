@@ -72,7 +72,21 @@ export function createCalendarVisibilitySessionStore(
       if (state.accountId !== userId) return UNKNOWN;
       return state.byPlan.get(planId) ?? UNKNOWN;
     },
-    // Temporary #92 interface until CalendarView consumes hydrated preferences.
+    /**
+     * Display the server-confirmed preferences, with any temporary local edits
+     * made after hydration taking precedence. Never returns a default before
+     * the caller has checked that stateFor is ready.
+     */
+    displayFor(userId: string, planId: string): CalendarVisibility | null {
+      const entry = read.stateFor(userId, planId);
+      if (entry.status !== 'ready') return null;
+      return state.sessionVisibilityByPlan.get(planId) ?? entry.visibility;
+    },
+    hasSessionEdits(userId: string, planId: string): boolean {
+      return read.stateFor(userId, planId).status === 'ready'
+        && state.sessionVisibilityByPlan.has(planId);
+    },
+    // Temporary #92 interface until persisted mutations are wired in Step 5.
     forPlan(planId: string | undefined): CalendarVisibility {
       return planId === undefined
         ? EMPTY_CALENDAR_VISIBILITY
@@ -104,7 +118,7 @@ export function createCalendarVisibilitySessionStore(
       // A retry refreshes even a ready plan. Do not replace an in-flight GET.
       return loadPlan(userId, planId);
     },
-    // Temporary #92 action. It is deliberately distinct from persisted edits.
+    // Temporary local action; Step 5 replaces it with persisted edits.
     setForPlan(planId: string, visibility: CalendarVisibility): void {
       state.sessionVisibilityByPlan = new Map(state.sessionVisibilityByPlan)
         .set(planId, visibility);
