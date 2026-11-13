@@ -285,9 +285,9 @@
       <div class="empty">No study groups available</div>
     {:else if studyGroupEntry.status === "failed"}
       <div class="empty" role="alert">Unable to load study groups.</div>
-      <button type="button" onclick={retryStudyGroups}>Retry</button>
+      <button type="button" class="ui-button ui-button--secondary retry-button" onclick={retryStudyGroups}>Retry</button>
     {:else if studyGroupEntry.status === "loading" || studyGroupEntry.status === "queued"}
-      <div class="loading">Loading study groups...</div>
+      <div class="loading" role="status">Loading study groups...</div>
     {:else}
       <div class="loading">Study groups not loaded yet.</div>
     {/if}
@@ -440,10 +440,18 @@
     width: fit-content;
   }
 
-  .empty {
+  .retry-button {
+    align-self: flex-start;
+  }
+
+  .empty,
+  .loading {
     font-size: 0.75rem;
     color: var(--text-muted);
-    font-style: italic;
     padding: 0.25rem 0;
+  }
+
+  .empty {
+    font-style: italic;
   }
 </style>
