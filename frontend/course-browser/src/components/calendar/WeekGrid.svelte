@@ -123,6 +123,19 @@
       retainedAlternativeId = id;
     }
   }
+  function chooseAlternative(id: string): void {
+    if (!displayedSegment || !alternatives.some(group => group.groupId === id)) return;
+    const sourceGroups = groupsForSegment(displayedSegment);
+    if (!sourceGroups?.some(group => group.groupId === id)) return;
+    onChooseGroup(displayedSegment.entry.source.courseOfferingId, id,
+      sourceGroups.map(group => ({ groupId: group.groupId, type: group.type })));
+    // Selecting an alternative can hide the event currently being inspected.
+    hoveredAlternativeId = null;
+    retainedAlternativeId = null;
+    retainedAlternativeContext = null;
+    previewId = null;
+    pinnedId = null;
+  }
   let selectedGroup = $state<DenseOverlapDisplay | null>(null);
   let detailsDialog: DenseOverlapDialog;
   let overlapTrigger: HTMLButtonElement | null = null;
@@ -230,6 +243,8 @@
       {retainedGroupId}
       onAlternativePreview={id => { hoveredAlternativeId = id; }}
       onAlternativeToggle={toggleAlternative}
+      onAlternativeChoose={chooseAlternative}
+      alternativeContextKey={alternativeContext}
       onHideGroup={() => { if (displayedSegment) { hideGroup(displayedSegment); pinnedId = null; previewId = null; } }}
       onHideOccurrence={() => { if (displayedSegment) { hideOccurrence(displayedSegment); pinnedId = null; previewId = null; } }}
       canHideOccurrence={displayedSegment !== null && membersForSegment(displayedSegment).every(entry => entry.occurrenceKey !== null)}

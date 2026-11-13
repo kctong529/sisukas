@@ -17,14 +17,14 @@ const at = (hour: number) => `2026-11-02T${String(hour).padStart(2, '0')}:00:00+
 const event = (id: string, start = 10, end = 11) =>
   fixed(id, at(start), at(end), { group: `Group ${id}` });
 
-function render(entries: ReturnType<typeof fixed>[], groups: StudyGroup[] | null = null, offeringIds?: string[]) {
+function render(entries: ReturnType<typeof fixed>[], groups: StudyGroup[] | null = null, offeringIds?: string[], onChooseGroup?: (offeringId: string, groupId: string, groups: readonly { groupId: string; type: string }[]) => void) {
   const target = document.createElement('div');
   document.body.appendChild(target);
   targetElements.push(target);
   const layout = layoutCalendarWeek(entries, '2026-11-02');
   mounted.push(mount(WeekGrid, {
     target,
-    props: { layout, offeringIds, groupsForSegment: () => groups, presentationForSegment: (segment: WeeklyCalendarSegment) => ({
+    props: { layout, offeringIds, groupsForSegment: () => groups, onChooseGroup, presentationForSegment: (segment: WeeklyCalendarSegment) => ({
       courseCode: null, courseTitle: segment.entry.source.studyGroupId,
       groupLabel: 'Exercise H02', locationLabel: null,
     }) },
@@ -282,11 +282,28 @@ describe('WeekGrid alternative study-group previews', () => {
     expect(section.textContent).toContain('not a study-plan selection');
   });
 
+  it('chooses an alternative through the existing group action and exits event details', () => {
+    const onChooseGroup = vi.fn();
+    const target = render([event('a', 10, 11), event('b', 12, 13)], groups, undefined, onChooseGroup);
+    target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
+    flushSync();
+    target.querySelector<HTMLButtonElement>('.alternatives .choose-mode')!.click();
+    flushSync();
+    target.querySelector<HTMLButtonElement>('.alternatives li button')!.click();
+    flushSync();
+    expect(onChooseGroup).toHaveBeenCalledWith('offering', 'Group b', [
+      { groupId: 'Group a', type: 'Exercise' },
+      { groupId: 'Group b', type: 'Exercise' },
+      { groupId: 'Group c', type: 'Lecture' },
+    ]);
+    expect(target.querySelector('.context-panel')?.textContent).toContain('Hover over an event');
+  });
+
   it('temporarily highlights alternative occurrences and restores on pointer exit', () => {
     const target = render([event('a', 10, 11), event('b', 12, 13)], groups);
     target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
     flushSync();
-    const choice = target.querySelector<HTMLButtonElement>('.alternatives button')!;
+    const choice = target.querySelector<HTMLButtonElement>('.alternatives li button')!;
     choice.dispatchEvent(new Event('pointerenter'));
     flushSync();
     const cards = [...target.querySelectorAll<HTMLElement>('.event')];
@@ -302,7 +319,7 @@ describe('WeekGrid alternative study-group previews', () => {
     const target = render([event('a', 10, 11), event('b', 12, 13)], groups);
     target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
     flushSync();
-    const choice = target.querySelector<HTMLButtonElement>('.alternatives button')!;
+    const choice = target.querySelector<HTMLButtonElement>('.alternatives li button')!;
     choice.click();
     flushSync();
     expect(choice.getAttribute('aria-pressed')).toBe('true');
@@ -391,7 +408,7 @@ describe('WeekGrid accessibility integration', () => {
     const target = render([event('a', 10, 11), event('b', 12, 13)], groups);
     target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
     flushSync();
-    const alternative = target.querySelector<HTMLButtonElement>('.alternatives button')!;
+    const alternative = target.querySelector<HTMLButtonElement>('.alternatives li button')!;
     alternative.focus();
     flushSync();
     expect(target.querySelectorAll('.alternative-highlight')).toHaveLength(1);
@@ -698,7 +715,7 @@ describe('WeekGrid hidden visibility previews (#92)', () => {
     const target = renderFiltered([a], [a, b]);
     target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
     flushSync();
-    const alternative = target.querySelector<HTMLButtonElement>('.alternatives button')!;
+    const alternative = target.querySelector<HTMLButtonElement>('.alternatives li button')!;
     alternative.dispatchEvent(new Event('pointerenter'));
     flushSync();
     expect(target.querySelectorAll('.hidden-preview')).toHaveLength(1);
@@ -714,7 +731,7 @@ describe('WeekGrid hidden visibility previews (#92)', () => {
     const target = renderFiltered([a], [a, b], { excludeGroup: 'Group b' });
     target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
     flushSync();
-    target.querySelector<HTMLButtonElement>('.alternatives button')!
+    target.querySelector<HTMLButtonElement>('.alternatives li button')!
       .dispatchEvent(new Event('pointerenter'));
     flushSync();
     expect(target.querySelectorAll('.hidden-preview')).toHaveLength(0);
