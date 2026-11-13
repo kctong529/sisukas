@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { NotificationService, notifications } from '@infrastructure/services/NotificationService';
+import { notifications, NotificationService } from '@infrastructure/services/NotificationService';
 
 describe('NotificationService actionable errors', () => {
   afterEach(() => {

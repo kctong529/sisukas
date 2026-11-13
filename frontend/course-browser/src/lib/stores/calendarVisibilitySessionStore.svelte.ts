@@ -236,6 +236,10 @@ export function createCalendarVisibilitySessionStore(
     },
     retryLoad(userId: string, planId: string): Promise<void> {
       if (state.accountId !== userId) return Promise.resolve();
+      // Never replace the confirmed snapshot while optimistic writes exist.
+      // Otherwise a PUT can finish while status is "loading" and its
+      // confirmed result is discarded. Keep failed local intent retryable.
+      if ((state.mutationsByPlan.get(planId)?.size ?? 0) > 0) return Promise.resolve();
       // A retry refreshes even a ready plan. Do not replace an in-flight GET.
       return loadPlan(userId, planId);
     },
