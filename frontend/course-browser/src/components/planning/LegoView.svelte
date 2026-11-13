@@ -118,7 +118,7 @@
   });
 </script>
 
-<div class="lego-view">
+<div class="lego-view ui-page-shell">
   {#if !isSignedIn}
     <div class="state-card">
       <div class="icon-circle">🔐</div>
@@ -136,7 +136,7 @@
     <div class="state-card error">
       <h2>Something went wrong</h2>
       <p>{ui.plansError || plansStore.state.error}</p>
-      <button onclick={loadPlans} class="btn btn-secondary">Try Again</button>
+      <button onclick={loadPlans} class="ui-button ui-button--secondary">Try Again</button>
     </div>
 
   {:else if plans.length === 0}
@@ -163,13 +163,13 @@
         {/if}
       </div>
 
-      <button class="btn btn-analytics" onclick={showAnalysis} disabled={ui.running}>
+      <button class="ui-button ui-button--secondary" onclick={showAnalysis} disabled={ui.running}>
         {ui.running ? "Running..." : "Compute Schedules"}
       </button>
 
       <button
         type="button"
-        class="btn btn-analytics"
+        class="ui-button ui-button--secondary"
         class:active={ui.showOlder}
         aria-pressed={ui.showOlder}
         onclick={() => (ui.showOlder = !ui.showOlder)}
@@ -275,29 +275,12 @@
 {/if}
 
 <style>
-  :root {
-    --primary: #2f7fd6;
-    --primary-hover: #2980f1;
-    --bg: #f8fafc;
-    --card-bg: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --border: #e2e8f0;
-    --success: #10b981;
-  }
 
   .muted {
     font-size: 0.75rem;
     color: var(--text-muted);
   }
 
-  .lego-view {
-    max-width: 1400px;
-    margin: 1.5rem auto;
-    padding: 0 1rem;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--text-main);
-  }
 
   .header-section {
     display: flex;
@@ -452,50 +435,6 @@
     text-align: center;
   }
 
-  .btn {
-    padding: 0.6rem 1rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-  }
-
-  .btn-secondary {
-    background: var(--card-bg);
-    color: var(--text-main);
-    border: 1px solid var(--border);
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--primary);
-    background: #f1f5f9;
-  }
-
-  .btn-analytics {
-    background: var(--card-bg);
-    color: var(--text-main);
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.5rem 0.8rem;
-    transition: all 0.2s;
-  }
-
-  .btn-analytics:hover {
-    border-color: var(--primary);
-    background: #f1f5f9;
-  }
-
-  .btn-analytics:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
 
   /* Modal Styles */
   .modal-backdrop {

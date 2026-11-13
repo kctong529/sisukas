@@ -322,7 +322,7 @@
   }
 </script>
 
-<div class="favourites-container">
+<div class="favourites-container ui-page-shell">
   {#if !isSignedIn}
     <div class="state-card">
       <div class="icon-circle">👤</div>
@@ -340,7 +340,7 @@
     <div class="state-card error">
       <h2>Something went wrong</h2>
       <p>{favState.error}</p>
-      <button class="btn btn-secondary" onclick={() => favouritesStore.load()}>
+      <button class="ui-button ui-button--secondary" onclick={() => favouritesStore.load()}>
         Try Again
       </button>
     </div>
@@ -361,7 +361,7 @@
       <div class="icon-circle">♥</div>
       <h2>Your list is empty</h2>
       <p>Start exploring courses and click the heart icon to add them here.</p>
-      <a href="/" class="btn btn-primary">Browse Courses</a>
+      <a href="/" class="ui-button ui-button--primary">Browse Courses</a>
     </div>
 
   {:else}
@@ -377,7 +377,7 @@
 
       <div class="controls">
         {#if ui.removeMode}
-          <button class="btn btn-secondary" onclick={exitRemoveMode}>
+          <button class="ui-button ui-button--secondary" onclick={exitRemoveMode}>
             Done
           </button>
         {:else}
@@ -408,7 +408,7 @@
 
           <button
             type="button"
-            class="btn btn-secondary older-btn"
+            class="ui-button ui-button--secondary older-btn"
             class:active={source === "all"}
             aria-pressed={source === "all"}
             onclick={toggleAll}
@@ -419,7 +419,7 @@
 
           <button
             type="button"
-            class="btn btn-secondary remove-btn-sec"
+            class="ui-button ui-button--secondary remove-btn-sec"
             onclick={() => { ui.removeMode = true; }}
           >
             Remove
@@ -592,26 +592,6 @@
 </div>
 
 <style>
-  :root {
-    --primary: #2f7fd6;
-    --primary-hover: #2980f1;
-    --bg: #f8fafc;
-    --card-bg: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --danger: #ef4444;
-    --border: #e2e8f0;
-    --success: #10b981;
-  }
-
-  .favourites-container {
-    max-width: 1400px;
-    margin: 1.5rem auto;
-    padding: 0 1rem;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--text-main);
-  }
-
   .header-section {
     display: flex;
     justify-content: space-between;
@@ -1104,53 +1084,6 @@
     text-align: center;
   }
 
-  .btn {
-    display: inline-block;
-    padding: 0.6rem 1.25rem;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    text-decoration: none;
-  }
-
-  .btn-primary {
-    background: var(--primary);
-    color: white;
-    border: none;
-  }
-
-  .btn-primary:hover {
-    background: var(--primary-hover);
-  }
-
-  .btn-primary:focus {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-
-  .btn-secondary {
-    background: var(--card-bg);
-    color: var(--text-main);
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.5rem 0.8rem;
-    transition: all 0.2s;
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--primary);
-    background: #f1f5f9;
-  }
-
-  .btn-secondary:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
 
   @media (max-width: 410px) {
     .header-section {

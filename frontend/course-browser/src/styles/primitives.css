@@ -1,0 +1,59 @@
+/* Explicit opt-in classes: no implicit styling of all buttons/pages. */
+.ui-page-shell {
+  width: 100%;
+  max-width: var(--ui-page-max-width);
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ui-text);
+}
+
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: normal;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.ui-button--primary {
+  color: white;
+  background: var(--ui-primary);
+  border-color: var(--ui-primary);
+}
+
+.ui-button--primary:hover:not(:disabled) {
+  background: var(--ui-primary-hover);
+  border-color: var(--ui-primary-hover);
+}
+
+.ui-button--secondary {
+  color: var(--ui-text);
+  background: var(--ui-surface);
+  border-color: var(--ui-border);
+}
+
+.ui-button--secondary:hover:not(:disabled) {
+  border-color: var(--ui-primary);
+  background: var(--ui-surface-hover);
+}
+
+.ui-button:focus-visible {
+  outline: 2px solid var(--ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.ui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
