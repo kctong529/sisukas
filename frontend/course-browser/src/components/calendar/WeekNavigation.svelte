@@ -38,6 +38,15 @@
     padding: 0.4rem 0.7rem;
   }
   .week-range { margin: 0; display: flex; gap: 0.3rem 0.65rem; flex-wrap: wrap; align-items: baseline; }
-  .dates { font-weight: 600; font-size: 0.9rem; }
+  /* ISO dates always have the same number of characters. Tabular numerals
+     prevent the navigation width shifting as the week changes. */
+  .dates {
+    display: inline-block;
+    width: 23ch;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
   .timezone { font-size: 0.8rem; color: var(--calendar-muted, #64748b); }
 </style>
