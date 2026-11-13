@@ -1,6 +1,6 @@
 <!-- src/components/planning/LegoView.svelte -->
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import { loadStudyGroupsForAnalysis } from "@app/study-group-loading/loadStudyGroupsForAnalysis";
   import { buildAnalyticsPayload } from "@application/analytics/buildAnalyticsPayload";
@@ -8,6 +8,7 @@
   import { fetchTopKSchedulePairs } from "@infrastructure/services/AnalyticsService";
   import { getStudyGroupDataRuntime } from "@modules/study-groups";
 
+  import { trapModalTab } from "../../lib/accessibility/trapModalTab";
   import { useSession } from "../../lib/authClient";
   import { blockStore } from "../../lib/stores/blockStore";
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
@@ -35,6 +36,10 @@
     showOlder: false, // default: active-only
   });
 
+  let analyticsDialog = $state<HTMLDivElement>();
+  let analyticsCloseButton = $state<HTMLButtonElement>();
+  let focusBeforeModal: HTMLElement | null = null;
+
   const activePlan = $derived.by(() => plansStore.read.getActive());
   const plans = $derived.by(() => plansStore.read.getAll());
 
@@ -58,6 +63,8 @@
     ui.showAnalyticsModal = false;
     ui.analyticsResp = null;
     ui.analyticsError = null;
+    focusBeforeModal?.focus();
+    focusBeforeModal = null;
   }
 
   async function showAnalysis() {
@@ -67,7 +74,10 @@
 
     ui.running = true;
     ui.analyticsError = null;
+    focusBeforeModal = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     ui.showAnalyticsModal = true;
+    await tick();
+    analyticsCloseButton?.focus();
 
     try {
       const instanceIds = ui.showOlder
@@ -110,6 +120,8 @@
       if (e.key === "Escape") {
         e.preventDefault();
         closeAnalyticsModal();
+      } else if (e.key === "Tab" && analyticsDialog) {
+        trapModalTab(analyticsDialog, e);
       }
     };
 
@@ -225,14 +237,22 @@
       type="button"
       class="modal-overlay-close"
       aria-label="Close analytics modal"
+      tabindex="-1"
       onclick={closeAnalyticsModal}
     ></button>
 
-    <div class="modal-content" role="dialog" aria-modal="true" aria-label="Analytics results">
+    <div
+      class="modal-content"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="analytics-dialog-title"
+      tabindex="-1"
+      bind:this={analyticsDialog}
+    >
       <div class="modal-header">
-        <div class="modal-title">Compute Schedules</div>
+        <div class="modal-title" id="analytics-dialog-title">Compute Schedules</div>
 
-        <button type="button" class="modal-close" aria-label="Close" onclick={closeAnalyticsModal}>
+        <button type="button" class="modal-close" aria-label="Close analytics results" bind:this={analyticsCloseButton} onclick={closeAnalyticsModal}>
           ✕
         </button>
       </div>
