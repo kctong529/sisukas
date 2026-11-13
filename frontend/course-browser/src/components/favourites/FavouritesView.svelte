@@ -628,6 +628,8 @@
   .controls {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    margin-left: auto;
     gap: 0.3rem;
     color: var(--text-main);
     font-size: 0.8rem;
