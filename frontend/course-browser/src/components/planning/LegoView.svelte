@@ -167,7 +167,7 @@
     </div>
 
   {:else}
-    <div class="header-section">
+    <div class="header-section ui-view-header">
       <div class="title-group">
         <h2>LEGO Composition</h2>
         {#if courseIndexStore.state.historicalLoading}
@@ -175,19 +175,22 @@
         {/if}
       </div>
 
-      <button class="ui-button ui-button--secondary" onclick={showAnalysis} disabled={ui.running}>
-        {ui.running ? "Running..." : "Compute Schedules"}
-      </button>
+      <div class="lego-header-actions ui-view-header__actions">
+        <button class="ui-button ui-button--secondary" onclick={showAnalysis} disabled={ui.running}>
+          {ui.running ? "Running..." : "Compute Schedules"}
+        </button>
 
-      <button
-        type="button"
-        class="ui-button ui-button--secondary"
-        aria-pressed={ui.showOlder}
-        onclick={() => (ui.showOlder = !ui.showOlder)}
-        title={ui.showOlder ? "Showing active + historical" : "Showing active only"}
-      >
-        {ui.showOlder ? "See Active" : "See Older"}
-      </button>
+        <button
+          type="button"
+          class="ui-button ui-button--secondary"
+          aria-pressed={ui.showOlder}
+          onclick={() => (ui.showOlder = !ui.showOlder)}
+          title={ui.showOlder ? "Showing active + historical" : "Showing active only"}
+        >
+          {ui.showOlder ? "See Active" : "See Older"}
+        </button>
+
+      </div>
 
       <PlanManager compact={true} />
 
@@ -301,20 +304,9 @@
   }
 
 
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
 
-  .title-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
+  .title-group { display: flex; flex-direction: column; gap: 0.25rem; }
+  .lego-header-actions { margin-left: auto; }
 
   h2 {
     font-size: 1.3rem;

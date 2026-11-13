@@ -7,6 +7,22 @@
   color: var(--ui-text);
 }
 
+/* Shared view-header rhythm. Individual views own their toolbar contents. */
+.ui-view-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ui-space-4);
+  margin-bottom: var(--ui-space-4);
+}
+
+.ui-view-header__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+
 /* Consistent geometry and keyboard focus across opt-in toolbar controls. */
 .ui-button,
 .ui-select,

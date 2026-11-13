@@ -275,7 +275,7 @@
   });
 </script>
 
-<section class="period-timeline">
+<section class="period-timeline ui-page-shell">
   {#if !isSignedIn}
     <div class="state-card">
       <div class="icon-circle">📋</div>
@@ -283,9 +283,9 @@
       <p>You need to be logged in to see your year timeline.</p>
     </div>
   {:else}
-    <div class="header-section">
-      <div class="title-group">
-        <h2>Year Timeline</h2>
+    <div class="header-section ui-view-header">
+      <h2>Year Timeline</h2>
+      <div class="timeline-year-details ui-view-header__actions">
         {#if activeYear}
           <div class="yearSwitcher">
             <button
@@ -319,11 +319,12 @@
         {/if}
       </div>
 
-      <button class="btn btn-secondary" type="button" onclick={openImportModal}>
-        Import Transcript
-      </button>
-
-      <PlanManager compact={true} />
+      <div class="timeline-header-actions ui-view-header__actions">
+        <button class="ui-button ui-button--secondary" type="button" onclick={openImportModal}>
+          Import Transcript
+        </button>
+        <PlanManager compact={true} />
+      </div>
     </div>
 
 
@@ -651,13 +652,7 @@
 </section>
 
 <style>
-  .period-timeline {
-    max-width: 1400px;
-    margin: 1.5rem auto;
-    padding: 0 1rem;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--text-main);
-  }
+  .period-timeline { color: var(--text-main); }
 
   h2 {
     font-size: 1.3rem;
@@ -669,21 +664,9 @@
     margin: 0;
   }
 
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .title-group {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-  }
+  .timeline-year-details { gap: var(--ui-space-3); }
+  .timeline-header-actions { margin-left: auto; }
+  .yearStats { white-space: nowrap; }
 
   .yearSwitcher {
     display: flex;
@@ -718,7 +701,7 @@
   }
 
   .yearStats {
-    margin-left: 8px;
+    margin-left: 0;
     font-size: 0.9rem;
     color: #888;
     font-weight: 500;
@@ -1246,39 +1229,6 @@
     .modal-body {
       padding: 12px;
     }
-  }
-
-  .btn {
-    display: inline-block;
-    padding: 0.6rem 1.25rem;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    text-decoration: none;
-  }
-
-  .btn-secondary {
-    background: var(--card-bg);
-    color: var(--text-main);
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.5rem 0.8rem;
-    transition: all 0.2s;
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--primary);
-    background: #f1f5f9;
-  }
-
-  .btn-secondary:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
   }
 
   .import-status {

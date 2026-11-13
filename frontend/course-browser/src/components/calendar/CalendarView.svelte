@@ -219,11 +219,11 @@
   data-benchmark-missing={projection?.completeness.missingCourses ?? -1}
   data-benchmark-loading={projection?.completeness.loadingCourses ?? -1}
   data-benchmark-failed={projection?.completeness.failedCourses ?? -1}>
-  <header class="header-section">
+  <header class="header-section ui-view-header">
     <div class="title-group">
       <h1 id="calendar-title">Weekly calendar</h1>
     </div>
-    <div class="header-actions">
+    <div class="header-actions ui-view-header__actions">
       <PlanManager compact={true} />
       <WeekNavigation
         {weekStart}
@@ -298,19 +298,11 @@
     color: var(--calendar-text);
   }
   /* Match the title/action header structure used by Favourites and LEGO. */
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: 1rem;
-  }
   .title-group { display: flex; flex-direction: column; gap: 0.5rem; }
   h1 { margin: 0; font-size: 1.3rem; font-weight: 600; }
   /* WeekNavigation owns control sizing; the header owns the bottom spacing. */
   .header-section :global(.week-navigation) { margin-bottom: 0; }
-  .header-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.5rem 0.85rem; }
+  .header-actions { margin-left: auto; justify-content: flex-end; column-gap: 0.85rem; }
   .panel-position-button { height: 34px; min-height: 34px; padding: 0.4rem 0.7rem; font-size: 0.8rem; }
   @media (max-width: 1000px) { .panel-position-button { display: none; } }
   .data-notice { margin: 0 0 0.5rem; font-size: 0.85rem; line-height: 1.5; }

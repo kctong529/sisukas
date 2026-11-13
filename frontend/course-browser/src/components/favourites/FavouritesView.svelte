@@ -346,7 +346,7 @@
     </div>
 
   {:else if favState.favourites.length === 0}
-    <div class="header-section">
+    <div class="header-section ui-view-header">
       <div class="title-group">
         <h2>Your Favourites</h2>
       </div>
@@ -365,7 +365,7 @@
     </div>
 
   {:else}
-    <div class="header-section">
+    <div class="header-section ui-view-header">
       <div class="title-group">
         <h2>Your Favourites</h2>
       </div>
@@ -593,14 +593,6 @@
 </div>
 
 <style>
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
 
   .title-group {
     display: flex;
