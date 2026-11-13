@@ -1,5 +1,6 @@
 <script lang="ts">
   import { displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
+  import { calendarEventLocationRows } from '@application/calendar/calendarEventLocationRows';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
 
@@ -66,12 +67,20 @@
         {@const members = membersForSegment(segment)}
         {@const locations = members.length > 1 ? displayEntryLocations(members) : []}
         {@const choice = overlapChoice(segment)}
+        {@const locationRows = calendarEventLocationRows(segment.entry.source.event)}
         <li>
           <strong>{info.courseCode ? `${info.courseCode} · ` : ''}{info.courseTitle}</strong>
           {#if info.groupLabel}<span>{info.groupLabel}</span>{/if}
-          <span data-selection={selectionForSegment(segment)}>{calendarSelectionLabel(selectionForSegment(segment))}</span>
-          <span>{formatCalendarMinute(segment.startMinute)}–{formatCalendarMinute(segment.endMinute)}</span>
-          {#if info.locationLabel}<span>{info.locationLabel}</span>{/if}
+          <span class="visually-hidden" data-selection={selectionForSegment(segment)}>{calendarSelectionLabel(selectionForSegment(segment))}</span>
+          <dl class="overlap-fields">
+            <dt>Time</dt><dd>{formatCalendarMinute(segment.startMinute)}–{formatCalendarMinute(segment.endMinute)}</dd>
+            {#if locationRows.location}
+              <dt>Location</dt><dd>{locationRows.location}</dd>
+            {/if}
+            {#if locationRows.building}
+              <dt>Building</dt><dd>{locationRows.building}</dd>
+            {/if}
+          </dl>
           {#if choice}
             <button type="button" class="resolve-overlap" onclick={() => resolveInDialog(segment)}
               disabled={!choice.available} title={choice.reason ?? undefined}>
@@ -90,7 +99,7 @@
 </dialog>
 
 <style>
-  .event-details { border: 1px solid var(--calendar-border, #e2e8f0); border-radius: var(--ui-radius-dialog); padding: 1.25rem; max-width: min(560px, calc(100vw - 32px)); width: 100%; max-height: min(75vh, 650px); overflow-y: auto; color: var(--calendar-text, #1e293b); background: var(--calendar-card, #fff); box-shadow: 0 16px 42px #0f172a40; }
+  .event-details { border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 12px; padding: 1.25rem; max-width: min(560px, calc(100vw - 32px)); width: 100%; max-height: min(75vh, 650px); overflow-y: auto; color: var(--calendar-text, #1e293b); background: var(--calendar-card, #fff); box-shadow: 0 16px 42px #0f172a40; }
   .event-details::backdrop { background: #0f172a80; }
   .event-details header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
   .event-details h2 { font-size: 1.1rem; margin: 0 0 4px; }
@@ -106,5 +115,8 @@
   .event-details .resolve-overlap:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
   .event-details .rooms { list-style: disc; padding-left: 20px; margin-top: 6px; }
   .event-details .rooms li { display: list-item; padding: 0; background: transparent; }
-  .event-details li span { color: #475569; font-variant-numeric: tabular-nums; }
+  .overlap-fields { display: grid; grid-template-columns: 65px minmax(0, 1fr); gap: 0.3rem 0.6rem; margin: 0.25rem 0; font-size: 0.8rem; }
+  .overlap-fields dt { color: var(--calendar-muted, #64748b); }
+  .overlap-fields dd { margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 </style>

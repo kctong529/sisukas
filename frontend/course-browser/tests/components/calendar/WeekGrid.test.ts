@@ -480,16 +480,41 @@ describe('WeekGrid aggregated room details', () => {
 
 
 describe('WeekGrid selection presentation', () => {
-  it('shows candidate states on cards, details and dense disclosures', () => {
-    const target = render([event('a'), event('b'), event('c'), event('d')]);
-    expect(target.querySelectorAll('[data-selection="candidate"].calendar-event')).toHaveLength(4);
+  it('preserves candidate semantics without redundant visible labels', () => {
+    const target = render([
+      event('a'),
+      event('b'),
+      event('c'),
+      event('d'),
+    ]);
+
+    const cards = target.querySelectorAll<HTMLButtonElement>(
+      '.calendar-event[data-selection="candidate"]',
+    );
+
+    expect(cards).toHaveLength(4);
+
+    for (const card of cards) {
+      expect(card.getAttribute('aria-label')).toContain('Candidate');
+    }
+
     target.querySelector<HTMLButtonElement>('.calendar-event')?.click();
     flushSync();
-    expect(target.querySelector('.context-panel [data-selection="candidate"]')?.textContent)
-      .toContain('Candidate');
+
+    expect(
+      target.querySelector('.context-panel')?.textContent,
+    ).not.toContain('Candidate');
+
     target.querySelector<HTMLButtonElement>('.cluster button')?.click();
     flushSync();
-    expect(target.querySelectorAll('dialog [data-selection="candidate"]')).toHaveLength(4);
+
+    expect(
+      target.querySelectorAll('dialog [data-selection="candidate"]'),
+    ).toHaveLength(4);
+
+    expect(
+      target.querySelector('dialog')?.textContent,
+    ).not.toContain('Candidate');
   });
 });
 
@@ -528,7 +553,11 @@ describe('WeekGrid visibility actions (#92)', () => {
     flushSync();
     expect(hideOccurrence).toHaveBeenCalledTimes(1);
     expect(hideGroup).not.toHaveBeenCalled();
-    expect(target.textContent).toContain('Candidate');
+    expect(
+      target.querySelector<HTMLButtonElement>(
+        '.calendar-event[data-selection="candidate"]',
+      )?.getAttribute('aria-label'),
+    ).toContain('Candidate');
   });
 
   it('does not expose an unsafe per-occurrence operation for unresolved identities', () => {

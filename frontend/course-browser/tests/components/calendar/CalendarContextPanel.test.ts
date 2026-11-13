@@ -39,18 +39,19 @@ afterEach(async () => {
 });
 
 describe('Calendar context panel location rows', () => {
-  it('shows classroom and building in separate unprefixed rows', () => {
+  it('shows labeled classroom and building rows', () => {
     const target = render([{ id: 'Y202a', name: 'Y202a', buildingName: 'Undergraduate Centre' }]);
     const rows = [...target.querySelectorAll<HTMLElement>('.location-row')];
     expect(rows.map(row => row.textContent?.trim())).toEqual(['Y202a', 'Undergraduate Centre']);
     expect(target.querySelector('dl')?.textContent).not.toContain('Old combined label');
-    expect(target.querySelector('dt.visually-hidden')?.textContent).toBe('Location');
+    expect([...target.querySelectorAll('dl dt')].map(row => row.textContent?.trim())).toEqual(['Date', 'Time', 'Location', 'Building']);
   });
 
   it('omits building when none is provided', () => {
     const target = render([{ id: 'Y202a', name: 'Y202a' }]);
     expect([...target.querySelectorAll('.location-row')].map(row => row.textContent?.trim()))
       .toEqual(['Y202a']);
+    expect(target.querySelector('dl')?.textContent).not.toContain('Building');
   });
 
   it('supports legacy free-text rooms without inferring a building', () => {

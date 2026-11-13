@@ -64,11 +64,11 @@
         <dt>Date</dt><dd>{date}</dd>
         <dt>Time</dt><dd>{range} · Europe/Helsinki</dd>
         {#if locationRows?.location}
-          <dt class="visually-hidden">Location</dt>
+          <dt>Location</dt>
           <dd class="location-row">{locationRows.location}</dd>
         {/if}
         {#if locationRows?.building}
-          <dt class="visually-hidden">Building</dt>
+          <dt>Building</dt>
           <dd class="location-row">{locationRows.building}</dd>
         {/if}
         {#if segment.entry.source.event.notice}
@@ -120,18 +120,6 @@
   dl { display: grid; grid-template-columns: 65px minmax(0, 1fr); gap: 0.6rem; font-size: 0.8rem; margin: 0; }
   dt { color: var(--calendar-muted, #64748b); }
   dd { margin: 0; overflow-wrap: anywhere; }
-  .location-row { grid-column: 1 / -1; }
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
   .empty, .hint, .continuation { font-size: 0.8rem; line-height: 1.5; color: var(--calendar-muted, #64748b); }
   .hint { margin: 0.75rem 0 0; }
   @media (max-width: 1000px) { .context-panel { margin-top: 4px; } }
