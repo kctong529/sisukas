@@ -499,7 +499,7 @@
     z-index: 1;
     cursor: default;
     background: var(--card-bg);
-    border-radius: 12px;
+    border-radius: var(--ui-radius-dialog);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     width: 95vw;
     max-width: 1200px;

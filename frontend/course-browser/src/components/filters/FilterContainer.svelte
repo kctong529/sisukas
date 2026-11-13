@@ -263,7 +263,7 @@
     padding: 2rem;
     background: var(--bg);
     border: 2px dashed var(--border);
-    border-radius: 8px;
+    border-radius: var(--ui-radius-surface);
     color: var(--text-muted);
   }
 

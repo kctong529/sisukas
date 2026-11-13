@@ -187,7 +187,7 @@
     flex-direction: column;
     gap: 0.25rem;
     border: 1px solid #e0e0e0;
-    border-radius: 6px;
+    border-radius: var(--ui-radius-control);
     overflow: hidden;
     background: white;
   }
@@ -196,7 +196,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: var(--ui-space-3) var(--ui-space-4);
     border: none;
     background: white;
     border-bottom: 1px solid #f0f0f0;
@@ -289,7 +289,7 @@
   .btn {
     padding: 0.4rem 0.6rem;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--ui-radius-control);
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 500;

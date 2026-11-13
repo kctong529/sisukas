@@ -112,11 +112,11 @@
 </aside>
 
 <style>
-  .visibility-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
-  .visibility-actions button { border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 6px; background: var(--calendar-card, #fff); color: var(--calendar-primary, #2f7fd6); padding: 0.4rem 0.6rem; font: inherit; font-size: 0.75rem; cursor: pointer; }
+  .visibility-actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); margin-top: 0.85rem; }
+  .visibility-actions button { border: 1px solid var(--calendar-border, #e2e8f0); border-radius: var(--ui-radius-control); background: var(--calendar-card, #fff); color: var(--calendar-primary, #2f7fd6); padding: 0.4rem 0.6rem; font: inherit; font-size: 0.75rem; cursor: pointer; }
   .visibility-actions button:disabled { opacity: .55; cursor: not-allowed; }
   .visibility-actions button:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
-  .context-panel { box-sizing: border-box; min-width: 0; padding: 1rem; border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 8px; background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); }
+  .context-panel { box-sizing: border-box; min-width: 0; padding: var(--ui-space-4); border: 1px solid var(--calendar-border, #e2e8f0); border-radius: var(--ui-radius-surface); background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); }
   .group { font-weight: 600; font-size: 0.85rem; margin: 0 0 0.75rem; }
   dl { display: grid; grid-template-columns: 65px minmax(0, 1fr); gap: 0.6rem; font-size: 0.8rem; margin: 0; }
   dt { color: var(--calendar-muted, #64748b); }

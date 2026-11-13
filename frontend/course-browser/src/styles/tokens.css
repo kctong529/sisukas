@@ -17,6 +17,18 @@
   --ui-focus-ring: #2f7fd6;
   --ui-page-max-width: 1400px;
 
+  /* Geometry tokens: values intentionally match the existing UI. */
+  --ui-radius-control: 6px;
+  --ui-radius-surface: 8px;
+  --ui-radius-dialog: 12px;
+
+  /* Small spacing vocabulary; specialized calendar geometry stays local. */
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-6: 1.5rem;
+
   /* Compatibility names for existing component-specific styling. */
   --primary: var(--ui-primary);
   --primary-hover: var(--ui-primary-hover);

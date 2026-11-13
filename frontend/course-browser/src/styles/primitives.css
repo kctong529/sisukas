@@ -1,8 +1,8 @@
 /* Explicit opt-in classes: no implicit styling of all buttons/pages. */
 .ui-page-shell {
   max-width: var(--ui-page-max-width);
-  margin: 1.5rem auto;
-  padding: 0 1rem;
+  margin: var(--ui-space-6) auto;
+  padding: 0 var(--ui-space-4);
   font-family: 'Inter', system-ui, sans-serif;
   color: var(--ui-text);
 }
@@ -16,7 +16,7 @@
   min-height: 32.5px;
   padding: 0.5rem 0.8rem;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--ui-radius-control);
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 500;
