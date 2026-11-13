@@ -22,7 +22,6 @@
   </div>
   <p class="week-range" aria-live="polite">
     <span class="dates">{week.days[0]} – {week.days[6]}</span>
-    <span class="timezone">Europe/Helsinki</span>
   </p>
 </nav>
 
@@ -48,5 +47,4 @@
     font-weight: 600;
     font-size: 0.9rem;
   }
-  .timezone { font-size: 0.8rem; color: var(--calendar-muted, #64748b); }
 </style>

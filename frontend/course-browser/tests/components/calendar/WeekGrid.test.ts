@@ -17,14 +17,14 @@ const at = (hour: number) => `2026-11-02T${String(hour).padStart(2, '0')}:00:00+
 const event = (id: string, start = 10, end = 11) =>
   fixed(id, at(start), at(end), { group: `Group ${id}` });
 
-function render(entries: ReturnType<typeof fixed>[], groups: StudyGroup[] | null = null, offeringIds?: string[], onChooseGroup?: (offeringId: string, groupId: string, groups: readonly { groupId: string; type: string }[]) => void) {
+function render(entries: ReturnType<typeof fixed>[], groups: StudyGroup[] | null = null, offeringIds?: string[], onChooseGroup?: (offeringId: string, groupId: string, groups: readonly { groupId: string; type: string }[]) => void, panelSide: 'left' | 'right' = 'left') {
   const target = document.createElement('div');
   document.body.appendChild(target);
   targetElements.push(target);
   const layout = layoutCalendarWeek(entries, '2026-11-02');
   mounted.push(mount(WeekGrid, {
     target,
-    props: { layout, offeringIds, groupsForSegment: () => groups, onChooseGroup, presentationForSegment: (segment: WeeklyCalendarSegment) => ({
+    props: { layout, offeringIds, panelSide, groupsForSegment: () => groups, onChooseGroup, presentationForSegment: (segment: WeeklyCalendarSegment) => ({
       courseCode: null, courseTitle: segment.entry.source.studyGroupId,
       groupLabel: 'Exercise H02', locationLabel: null,
     }) },
@@ -148,19 +148,18 @@ describe('WeekGrid dense overlap disclosure', () => {
 
 
 describe('WeekGrid contextual event inspection', () => {
-  it('defaults to a left panel and lets the user switch sides', () => {
-    const target = render([]);
-    const workspace = target.querySelector<HTMLElement>('.calendar-workspace')!;
-    const toggle = target.querySelector<HTMLButtonElement>('.panel-position-button')!;
-    expect(workspace.getAttribute('data-panel-side')).toBe('left');
-    expect(toggle.getAttribute('aria-label')).toBe('Move event details panel to the right');
-    toggle.click();
-    flushSync();
-    expect(workspace.getAttribute('data-panel-side')).toBe('right');
-    expect(toggle.getAttribute('aria-label')).toBe('Move event details panel to the left');
-    toggle.click();
-    flushSync();
-    expect(workspace.getAttribute('data-panel-side')).toBe('left');
+  it('renders the event details panel on the requested side', () => {
+    const left = render([]);
+    expect(left.querySelector('.calendar-workspace')?.getAttribute('data-panel-side'))
+      .toBe('left');
+
+    const right = render([], null, undefined, undefined, 'right');
+    expect(right.querySelector('.calendar-workspace')?.getAttribute('data-panel-side'))
+      .toBe('right');
+
+    // The panel-position control now belongs to CalendarView.
+    expect(left.querySelector('.panel-position-button')).toBeNull();
+    expect(right.querySelector('.panel-position-button')).toBeNull();
   });
 
   it('previews on pointer hover and restores the pinned event afterward', () => {

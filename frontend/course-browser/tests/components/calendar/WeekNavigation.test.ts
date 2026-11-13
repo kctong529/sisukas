@@ -30,10 +30,11 @@ afterEach(async () => {
 });
 
 describe('WeekNavigation', () => {
-  it('shows the seven-day range and timezone', () => {
+  it('shows the seven-day range across the year boundary', () => {
     const { target } = render('2025-12-29');
+
     expect(target.textContent).toContain('2025-12-29 – 2026-01-04');
-    expect(target.textContent).toContain('Europe/Helsinki');
+    expect(target.textContent).not.toContain('Europe/Helsinki');
   });
 
   it('provides accessible previous and next controls', () => {

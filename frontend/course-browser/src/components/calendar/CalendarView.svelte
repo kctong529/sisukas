@@ -18,6 +18,7 @@
   import { courseIndexStore } from '@lib/stores/courseIndexStore.svelte';
   import { plansStore } from '@lib/stores/plansStore.svelte';
 
+  import PlanManager from '../planning/PlanManager.svelte';
   import WeekGrid from './WeekGrid.svelte';
   import WeekNavigation from './WeekNavigation.svelte';
 
@@ -25,6 +26,7 @@
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
 
   let weekStart = $state(currentHelsinkiWeek());
+  let panelSide = $state<'left' | 'right'>('left');
   const todayWeek = currentHelsinkiWeek;
   let loadError = $state<string | null>(null);
   let plansReady = $state(false);
@@ -221,12 +223,23 @@
     <div class="title-group">
       <h1 id="calendar-title">Weekly calendar</h1>
     </div>
-    <WeekNavigation
-      {weekStart}
-      onPrevious={() => { weekStart = shiftHelsinkiWeek(weekStart, -1); }}
-      onNext={() => { weekStart = shiftHelsinkiWeek(weekStart, 1); }}
-      onToday={() => { weekStart = todayWeek(); }}
-    />
+    <div class="header-actions">
+      <PlanManager compact={true} />
+      <WeekNavigation
+        {weekStart}
+        onPrevious={() => { weekStart = shiftHelsinkiWeek(weekStart, -1); }}
+        onNext={() => { weekStart = shiftHelsinkiWeek(weekStart, 1); }}
+        onToday={() => { weekStart = todayWeek(); }}
+      />
+      <button
+        type="button"
+        class="ui-button ui-button--secondary panel-position-button"
+        onclick={() => { panelSide = panelSide === 'left' ? 'right' : 'left'; }}
+        aria-label={panelSide === 'left' ? 'Move event details panel to the right' : 'Move event details panel to the left'}
+      >
+        {panelSide === 'left' ? 'Move panel right' : 'Move panel left'}
+      </button>
+    </div>
   </header>
 
   {#if loadError}
@@ -260,8 +273,7 @@
     {#if unresolvedSelections > 0}
       <p role="status">{unresolvedSelections} explicit teaching-group choice reference(s) could not be found in the available source data.</p>
     {/if}
-    <p class="selection-explanation">Candidate and selected labels describe Sisukas planning choices, not SISU registration.</p>
-    <WeekGrid {layout} {colorByOffering} {presentationForSegment} {groupsForSegment} {membersForSegment} {selectionForSegment}
+    <WeekGrid {panelSide} {layout} {colorByOffering} {presentationForSegment} {groupsForSegment} {membersForSegment} {selectionForSegment}
       {hideGroup} {hideOccurrence} {overlapChoice} {resolveOverlap} {weekCourses} {groupsForCourse} {visibility}
       unfilteredSegments={unfilteredLayout?.segments ?? []}
       onToggleGroup={toggleGroup} onToggleOccurrence={toggleOccurrence}
@@ -298,7 +310,9 @@
   h1 { margin: 0; font-size: 1.3rem; font-weight: 600; }
   /* WeekNavigation owns control sizing; the header owns the bottom spacing. */
   .header-section :global(.week-navigation) { margin-bottom: 0; }
-  .selection-explanation { margin: 0 0 0.75rem; color: var(--calendar-muted); font-size: 0.8rem; line-height: 1.45; }
+  .header-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.5rem 0.85rem; }
+  .panel-position-button { height: 34px; min-height: 34px; padding: 0.4rem 0.7rem; font-size: 0.8rem; }
+  @media (max-width: 1000px) { .panel-position-button { display: none; } }
   .data-notice { margin: 0 0 0.5rem; font-size: 0.85rem; line-height: 1.5; }
   .data-notice.failed { color: var(--ui-danger-text); }
   .data-notice.stale { color: #854d0e; }

@@ -27,6 +27,7 @@
 
   interface Props {
     layout: WeeklyCalendarLayoutResult;
+    panelSide?: 'left' | 'right';
     offeringIds?: readonly string[];
     colorByOffering?: Readonly<Record<string, number>>;
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
@@ -47,7 +48,7 @@
     onToggleOccurrence?: (segment: WeeklyCalendarSegment, state: 'hidden' | 'visible' | null) => void;
   }
   let {
-    layout, offeringIds, colorByOffering: assignedColors, presentationForSegment, groupsForSegment = () => null,
+    layout, panelSide = 'left', offeringIds, colorByOffering: assignedColors, presentationForSegment, groupsForSegment = () => null,
     membersForSegment = segment => [segment.entry],
     selectionForSegment = () => 'candidate', hideGroup = () => {}, hideOccurrence = () => {},
     overlapChoice = () => null, resolveOverlap = () => {},
@@ -77,7 +78,6 @@
   const courseSegments = $derived(displayedCourse ? [...new Map(unfilteredSegments
     .filter(segment => segment.entry.source.courseOfferingId === displayedCourse.offeringId)
     .map(segment => [segment.entry, segment] as const)).values()] : []);
-  let panelSide = $state<'left' | 'right'>('left');
   const previewSegment = $derived(layout.segments.find(segment => segment.id === previewId) ?? null);
   const pinnedSegment = $derived(layout.segments.find(segment => segment.id === pinnedId) ?? null);
   const displayedSegment = $derived(previewSegment ?? pinnedSegment);
@@ -213,16 +213,6 @@
   onSelect={id => { selectedOfferingId = id; pinnedId = null; previewId = null; courseGroupPreviewId = null; courseOccurrencePreviewId = null; }}
   onPreview={id => { previewCourseId = id; courseGroupPreviewId = null; courseOccurrencePreviewId = null; }} />
 </div>
-<div class="calendar-panel-controls">
-  <button
-    type="button"
-    class="panel-position-button"
-    onclick={() => { panelSide = panelSide === 'left' ? 'right' : 'left'; }}
-    aria-label={panelSide === 'left' ? 'Move event details panel to the right' : 'Move event details panel to the left'}
-  >
-    {panelSide === 'left' ? 'Move panel right' : 'Move panel left'}
-  </button>
-</div>
 <div bind:this={workspaceElement} class="calendar-workspace" class:panel-right={panelSide === 'right'} data-panel-side={panelSide}>
   <div class="calendar-grid-pane">
     <CalendarTimetable
@@ -296,10 +286,6 @@
 />
 
 <style>
-  .calendar-panel-controls { display: flex; justify-content: flex-end; margin-bottom: 0.5rem; }
-  .panel-position-button { border: 1px solid var(--calendar-border, #e2e8f0); background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); border-radius: 6px; padding: 0.4rem 0.7rem; cursor: pointer; font: inherit; font-size: 0.8rem; }
-  .panel-position-button:hover { border-color: var(--calendar-primary, #2f7fd6); background: #f1f5f9; }
-  .panel-position-button:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
   .calendar-workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 0.75rem; align-items: start; }
   .calendar-grid-pane { min-width: 0; order: 2; }
   .calendar-panel-pane { min-width: 0; order: 1; }
@@ -322,9 +308,5 @@
       order: 2;
     }
 
-    /* Left/right positioning is not applicable to the stacked layout. */
-    .calendar-panel-controls {
-      display: none;
-    }
   }
 </style>
