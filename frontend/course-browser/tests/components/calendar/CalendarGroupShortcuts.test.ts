@@ -17,6 +17,7 @@ function render() {
   targets.push(target);
   const onChooseGroup = vi.fn();
   const onShowAll = vi.fn();
+  const onToggleGroup = vi.fn();
   const course: CalendarWeekCourse = {
     offeringId: 'offer', code: 'CS-1000', title: 'Course',
     course: {} as CalendarWeekCourse['course'],
@@ -34,12 +35,15 @@ function render() {
       segments: [],
       visibility: { hiddenGroups: [calendarGroupKey('offer', 'e2')], occurrenceOverrides: {} },
       membersForSegment: () => [],
-      onToggleGroup: vi.fn(), onToggleOccurrence: vi.fn(),
+      onToggleGroup, onToggleOccurrence: vi.fn(),
       onChooseGroup, onShowAll, onClear: vi.fn(),
     },
   }));
   flushSync();
-  return { target, onChooseGroup, onShowAll };
+  const choose = () => target.querySelector<HTMLButtonElement>('.choose-mode')!;
+  const group = (name: string) => [...target.querySelectorAll<HTMLButtonElement>('.group-preview')]
+    .find(element => element.textContent?.trim() === name)!;
+  return { target, onChooseGroup, onShowAll, onToggleGroup, choose, group };
 }
 
 afterEach(async () => {
@@ -48,23 +52,52 @@ afterEach(async () => {
 });
 
 describe('Calendar group shortcuts (#101)', () => {
-  it('shows Only for equivalent exercises, not for a single lecture', () => {
-    const { target, onChooseGroup } = render();
-    const buttons = [...target.querySelectorAll<HTMLButtonElement>('.choose-group')];
-    expect(buttons).toHaveLength(2);
-    buttons[0].click();
+  it('selects a group through Choose mode, then returns to normal toggling', () => {
+    const { target, onChooseGroup, onToggleGroup, choose, group } = render();
+    expect(target.querySelector('.choose-group')).toBeNull();
+    expect(choose().textContent?.trim()).toBe('Choose');
+    choose().click();
+    flushSync();
+    expect(choose().getAttribute('aria-pressed')).toBe('true');
+    expect(choose().textContent?.trim()).toBe('Cancel');
+    expect(group('H01').getAttribute('aria-label')).toContain('Choose H01');
+
+    group('H01').click();
+    flushSync();
+    expect(onChooseGroup).toHaveBeenCalledTimes(1);
     expect(onChooseGroup).toHaveBeenCalledWith('offer', 'e1', [
       { groupId: 'e1', type: 'Exercises' },
       { groupId: 'e2', type: 'Exercises' },
       { groupId: 'l1', type: 'Lectures' },
     ]);
+    expect(onToggleGroup).not.toHaveBeenCalled();
+    expect(choose().textContent?.trim()).toBe('Choose');
+
+    group('H02').click();
+    expect(onToggleGroup).toHaveBeenCalledWith('offer', 'e2', false);
   });
 
-  it('provides an enabled Show all action for a hidden group', () => {
-    const { target, onShowAll } = render();
+  it('cancels Choose mode without changing visibility', () => {
+    const { choose, onChooseGroup, onToggleGroup, group } = render();
+    choose().click();
+    flushSync();
+    choose().click();
+    flushSync();
+    expect(choose().getAttribute('aria-pressed')).toBe('false');
+    group('H01').click();
+    expect(onChooseGroup).not.toHaveBeenCalled();
+    expect(onToggleGroup).toHaveBeenCalledWith('offer', 'e1', true);
+  });
+
+  it('provides Show all and leaves Choose mode when invoked', () => {
+    const { target, choose, onShowAll } = render();
     const button = target.querySelector<HTMLButtonElement>('.show-all')!;
     expect(button.disabled).toBe(false);
+    choose().click();
+    flushSync();
     button.click();
+    flushSync();
     expect(onShowAll).toHaveBeenCalledWith('offer');
+    expect(choose().textContent?.trim()).toBe('Choose');
   });
 });

@@ -29,6 +29,33 @@
   let { course, isPinned, groups, segments, visibility, membersForSegment, onToggleGroup, onToggleOccurrence, onClear,
     onGroupPreview = () => {}, onOccurrencePreview = () => {},
     onChooseGroup = () => {}, onShowAll = () => {} }: Props = $props();
+  let choosingGroup = $state(false);
+  // A preview can reuse this component for another offering. Never carry
+  // the selection mode over to a different course.
+  let previousOfferingId: string | undefined;
+
+  $effect(() => {
+      const currentOfferingId = course.offeringId;
+
+      if (
+          previousOfferingId !== undefined &&
+          currentOfferingId !== previousOfferingId
+      ) {
+          choosingGroup = false;
+      }
+
+      previousOfferingId = currentOfferingId;
+  });
+  function activateGroup(groupId: string, hidden: boolean): void {
+    if (choosingGroup) {
+      onChooseGroup(course.offeringId, groupId, groupDetails.map(item => ({
+        groupId: item.id, type: typeHeading(item.type),
+      })));
+      choosingGroup = false;
+      return;
+    }
+    onToggleGroup(course.offeringId, groupId, !hidden);
+  }
   const groupIds = $derived([...new Set([
     ...groups.map(group => group.groupId),
     ...segments.map(segment => segment.entry.source.studyGroupId),
@@ -120,46 +147,52 @@
     <p class="help">Manage timetable visibility only. These controls do not change attendance or registration.</p>
     <div class="group-controls">
       <h4>Teaching groups</h4>
-      <button type="button" class="show-all" onclick={() => onShowAll(course.offeringId)}
-        disabled={!offeringHasVisibilityChanges(course.offeringId, visibility)}>
-        Show all
-      </button>
+      <div class="group-control-actions">
+        <button type="button" class="choose-mode" class:active={choosingGroup}
+          aria-pressed={choosingGroup}
+          title={choosingGroup ? 'Cancel group selection' : 'Choose one group and hide alternatives of the same type'}
+          onclick={() => { choosingGroup = !choosingGroup; }}>
+          {choosingGroup ? 'Cancel' : 'Choose'}
+        </button>
+        <button type="button" class="show-all"
+          onclick={() => { choosingGroup = false; onShowAll(course.offeringId); }}
+          disabled={!offeringHasVisibilityChanges(course.offeringId, visibility)}>
+          Show all
+        </button>
+      </div>
     </div>
+    {#if choosingGroup}
+      <p class="choose-hint" role="status">Select a teaching group to hide the other groups of the same type.</p>
+    {/if}
     {#if groupedDetails.length}
       {#each groupedDetails as section (section.heading)}
         <section class="group-type" aria-label={section.heading}>
           <h5>{section.heading}</h5>
           {#each section.groups as group (group.id)}
-            <div class="group" role="group" aria-label={`${group.name}, ${group.type}`}
+            <div class="group" class:choosing={choosingGroup} role="group" aria-label={`${group.name}, ${group.type}`}
               onpointerenter={() => onGroupPreview(group.id)}
               onpointerleave={() => onGroupPreview(null)}>
               <button type="button" class="group-preview" class:group-hidden={group.hidden}
-                  aria-pressed={group.hidden}
-                  aria-label={`${group.name}, ${group.type}, ${group.hidden ? 'hidden' : 'visible'}. Click to ${group.hidden ? 'show' : 'hide'} group; hover or focus to highlight its visible events this week.`}
-                  title={`${group.name} · ${group.hidden ? 'Hidden' : 'Visible'} · Click to ${group.hidden ? 'show' : 'hide'} group`}
+                  aria-pressed={choosingGroup ? undefined : group.hidden}
+                  aria-label={choosingGroup
+                    ? `Choose ${group.name}, ${group.type}, and hide alternatives of the same type`
+                    : `${group.name}, ${group.type}, ${group.hidden ? 'hidden' : 'visible'}. Click to ${group.hidden ? 'show' : 'hide'} group; hover or focus to highlight its visible events this week.`}
+                  title={choosingGroup
+                    ? `Choose ${group.name} and hide other ${typeHeading(group.type).toLowerCase()}`
+                    : `${group.name} · ${group.hidden ? 'Hidden' : 'Visible'} · Click to ${group.hidden ? 'show' : 'hide'} group`}
                   onfocus={() => onGroupPreview(group.id)}
                   onblur={() => onGroupPreview(null)}
-                  onclick={() => onToggleGroup(course.offeringId, group.id, !group.hidden)}>
+                  onclick={() => activateGroup(group.id, group.hidden)}>
                   <strong>{group.name}</strong>
                 </button>
               <span class="group-label-space" aria-hidden="true"></span>
-              {#if section.groups.length > 1}
-                <button type="button" class="choose-group"
-                  aria-label={`Show only ${group.name} among ${section.heading.toLowerCase()}`}
-                  title={`Show only ${group.name} (${section.heading})`}
-                  onclick={() => onChooseGroup(course.offeringId, group.id, groupDetails.map(item => ({
-                    groupId: item.id, type: typeHeading(item.type),
-                  })))}>
-                  Only
-                </button>
-              {/if}
               {#each group.occurrences as segment (segment.id)}
                     <button type="button" class="occurrence"
                       class:dimmed={!isVisible(segment)}
                       class:explicit={overrideFor(segment) !== null}
                       class:override-hidden={overrideFor(segment) === 'hidden'}
                       class:override-shown={overrideFor(segment) === 'visible'}
-                      disabled={!mayChange(segment)}
+                      disabled={choosingGroup || !mayChange(segment)}
                       aria-label={`${weekday(segment)} ${exactTime(segment)}. ${overrideDescription(segment)}. ${isVisible(segment) ? 'Visible' : 'Hidden'}. Click to ${nextDescription(segment)}.`}
                       title={mayChange(segment) ? `${weekday(segment)} ${exactTime(segment)} · ${overrideDescription(segment)} · Click to ${nextDescription(segment)}` : 'Cannot override an ambiguous occurrence'}
                       onpointerenter={() => onOccurrencePreview(segment.id)}
@@ -185,8 +218,10 @@
   .help { margin: .35rem 0 .6rem; color: var(--calendar-muted, #64748b); font-size: .74rem; line-height: 1.4; }
   h4 { font-size: .85rem; margin: 0; }
   .group-controls { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 .4rem; }
-  .choose-group { position: relative; z-index: 1; flex: 0 0 auto; }
+  .group-control-actions { display: flex; align-items: center; gap: .35rem; }
   .show-all { flex: 0 0 auto; }
+  .choose-mode.active { background: var(--calendar-primary, #2f7fd6); color: #fff; border-color: var(--calendar-primary, #2f7fd6); }
+  .choose-hint { margin: .35rem 0 .6rem; font-size: .74rem; color: var(--calendar-muted, #64748b); }
   .group-type { margin-top: .75rem; }
   h5 { margin: 0 0 .3rem; padding-bottom: .3rem; border-bottom: 1px solid var(--calendar-border, #e2e8f0); font-size: .77rem; font-weight: 700; color: var(--calendar-muted, #64748b); }
   /* The group toggle is the full-card hit target. Occurrence buttons are
@@ -204,6 +239,8 @@
     border-radius: 6px;
     background: #f8fafc;
   }
+  .group.choosing { border-style: dashed; cursor: pointer; }
+  .group.choosing .group-preview { cursor: pointer; }
   .group:hover, .group:focus-within {
     border-color: var(--calendar-primary, #2f7fd6);
     background: #eff6ff;
