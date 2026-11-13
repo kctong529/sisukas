@@ -30,6 +30,10 @@
   --ui-space-4: 1rem;
   --ui-space-6: 1.5rem;
 
+  /* Course-card density is intentional: regular for detail views, compact for grids. */
+  --ui-card-padding-regular: var(--ui-space-4);
+  --ui-card-padding-compact: var(--ui-space-3);
+
   /* Compatibility names for existing component-specific styling. */
   --primary: var(--ui-primary);
   --primary-hover: var(--ui-primary-hover);

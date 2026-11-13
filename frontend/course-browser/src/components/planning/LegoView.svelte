@@ -351,7 +351,7 @@
   .instance-header {
     display: flex;
     align-items: center;
-    padding: 0.7rem 0.7rem;
+    padding: var(--ui-card-padding-compact);
     padding-bottom: 0;
     background: var(--card-bg);
     color: var(--text-main);
@@ -379,7 +379,7 @@
   }
 
   .instance-content {
-    padding: 0.5rem 0.5rem;
+    padding: var(--ui-space-2) var(--ui-card-padding-compact);
   }
 
   .state-card {

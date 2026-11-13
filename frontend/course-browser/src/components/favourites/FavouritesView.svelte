@@ -664,7 +664,7 @@
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: var(--ui-radius-surface);
-    padding: 1rem;
+    padding: var(--ui-card-padding-regular);
     transition: transform 0.2s, box-shadow 0.2s;
   }
 

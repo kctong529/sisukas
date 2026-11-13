@@ -760,7 +760,7 @@
   }
 
   .periodCard--header {
-    padding: 12px;
+    padding: var(--ui-space-3);
     border-bottom: none;
   }
 
