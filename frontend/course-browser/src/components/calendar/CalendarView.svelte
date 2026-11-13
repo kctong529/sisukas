@@ -5,6 +5,7 @@
   import { calendarDataNotices, calendarEmptyMessage } from '@application/calendar/calendarDataStates';
   import { aggregateCalendarDisplayEntries, displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
   import { weekAwareOfferingColorIndices } from '@application/calendar/calendarOfferingColors';
+  import { chooseOverlappingOccurrence } from '@application/calendar/calendarOverlapChoice';
   import { calendarEventPresentation } from '@application/calendar/calendarPresentation';
   import { calendarEntryVisible } from '@application/calendar/calendarVisibility';
   import { chooseCalendarGroup, showAllCalendarGroups } from '@application/calendar/calendarVisibilityShortcuts';
@@ -132,6 +133,33 @@
   function hideOccurrence(segment: WeeklyCalendarSegment): void {
     toggleOccurrence(segment, 'hidden');
   }
+  function overlapChoice(segment: WeeklyCalendarSegment) {
+    if (!display || !visibility) return null;
+    if (projection?.selectionByGroup[segment.entry.source.courseOfferingId]?.[segment.entry.source.studyGroupId] === 'excluded') return null;
+    const chosen = { entry: segment.entry, members: membersForSegment(segment) };
+    const candidates = display.entries
+      .filter(entry => projection?.selectionByGroup[entry.source.courseOfferingId]?.[entry.source.studyGroupId] !== 'excluded')
+      .map(entry => ({
+        entry, members: display.membersByEntry.get(entry) ?? [entry],
+      }));
+    const choice = chooseOverlappingOccurrence(chosen, candidates, visibility);
+    return !choice.available && choice.reason === 'No visible overlapping events to hide.'
+      ? null : choice;
+  }
+  function resolveOverlap(segment: WeeklyCalendarSegment): void {
+    if (!accountId || !activePlan || preferenceState.status !== 'ready') return;
+    const choice = overlapChoice(segment);
+    if (!choice?.available) return;
+    // Apply the entire intent synchronously in the optimistic session store.
+    // Existing per-identity PUT queues and retry notifications handle persistence.
+    for (const key of choice.keysToShow) {
+      calendarVisibilitySessionStore.actions.setOccurrenceVisibility(accountId, activePlan.id, key, 'visible');
+    }
+    for (const key of choice.keysToHide) {
+      calendarVisibilitySessionStore.actions.setOccurrenceVisibility(accountId, activePlan.id, key, 'hidden');
+    }
+  }
+
   // Depends on full projection, not weekStart; navigation only reads this map.
   const colorByOffering = $derived(activePlan && projection
     ? weekAwareOfferingColorIndices(activePlan.instanceIds, projection.entries)
@@ -230,7 +258,7 @@
     {/if}
     <p class="selection-explanation">Candidate and selected labels describe Sisukas planning choices, not SISU registration.</p>
     <WeekGrid {layout} {colorByOffering} {presentationForSegment} {groupsForSegment} {membersForSegment} {selectionForSegment}
-      {hideGroup} {hideOccurrence} {weekCourses} {groupsForCourse} {visibility}
+      {hideGroup} {hideOccurrence} {overlapChoice} {resolveOverlap} {weekCourses} {groupsForCourse} {visibility}
       unfilteredSegments={unfilteredLayout?.segments ?? []}
       onToggleGroup={toggleGroup} onToggleOccurrence={toggleOccurrence}
       onChooseGroup={chooseGroup} onShowAll={showAll} />

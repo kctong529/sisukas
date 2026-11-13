@@ -5,9 +5,12 @@
   import CalendarDetailsHeading from './CalendarDetailsHeading.svelte';
   import CalendarGroupAlternatives from './CalendarGroupAlternatives.svelte';
   import CalendarLocationList from './CalendarLocationList.svelte';
+  import CalendarTimeSlotAlternatives from './CalendarTimeSlotAlternatives.svelte';
 
   import type { CalendarGroupAlternative } from '@application/calendar/calendarGroupAlternatives';
+  import type { OverlapChoice } from '@application/calendar/calendarOverlapChoice';
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
+  import type { TimeSlotAlternative } from '@application/calendar/calendarTimeSlotAlternatives';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
@@ -23,6 +26,8 @@
     onHideGroup?: () => void;
     onHideOccurrence?: () => void;
     canHideOccurrence?: boolean;
+    overlapChoice?: OverlapChoice | null;
+    onResolveOverlap?: () => void;
     members?: readonly CalendarEntry[];
     alternatives?: readonly CalendarGroupAlternative[];
     previewGroupId?: string | null;
@@ -31,13 +36,19 @@
     onAlternativeToggle?: (id: string) => void;
     onAlternativeChoose?: (id: string) => void;
     alternativeContextKey?: string | null;
+    timeSlotAlternatives?: readonly TimeSlotAlternative[];
+    onRestoreTimeSlot?: (segment: WeeklyCalendarSegment) => void;
+    onHideTimeSlot?: (segment: WeeklyCalendarSegment) => void;
+    onPreviewTimeSlot?: (segment: WeeklyCalendarSegment | null) => void;
   }
   let {
     segment, presentation, date, isPinned, selection = 'candidate', onClear, onShowCourse = () => {}, members = [],
     onHideGroup = () => {}, onHideOccurrence = () => {}, canHideOccurrence = true,
+    overlapChoice = null, onResolveOverlap = () => {},
     alternatives = [], previewGroupId = null, retainedGroupId = null,
     onAlternativePreview = () => {}, onAlternativeToggle = () => {},
     onAlternativeChoose = () => {}, alternativeContextKey = null,
+    timeSlotAlternatives = [], onRestoreTimeSlot = () => {}, onHideTimeSlot = () => {}, onPreviewTimeSlot = () => {},
   }: Props = $props();
   const range = $derived(segment
     ? `${formatCalendarMinute(segment.startMinute)}–${formatCalendarMinute(segment.endMinute)}`
@@ -74,7 +85,15 @@
         <button type="button" onclick={onShowCourse}>Course overview and visibility</button>
         <button type="button" onclick={onHideGroup}>Hide teaching group</button>
         <button type="button" onclick={onHideOccurrence} disabled={!canHideOccurrence} title={canHideOccurrence ? undefined : 'This event has no unambiguous source identity'}>Hide this event</button>
+        {#if overlapChoice}
+          <button type="button" class="resolve-overlap" onclick={onResolveOverlap}
+            disabled={!overlapChoice.available} title={overlapChoice.reason ?? undefined}>
+            {overlapChoice.available ? `Keep this · Hide ${overlapChoice.overlapCount} overlapping ${overlapChoice.overlapCount === 1 ? 'event' : 'events'}` : 'Cannot resolve overlaps'}
+          </button>
+        {/if}
       </div>
+      <CalendarTimeSlotAlternatives alternatives={timeSlotAlternatives}
+        onRestore={onRestoreTimeSlot} onHide={onHideTimeSlot} onPreview={onPreviewTimeSlot} />
       <CalendarGroupAlternatives
         {alternatives}
         {previewGroupId}

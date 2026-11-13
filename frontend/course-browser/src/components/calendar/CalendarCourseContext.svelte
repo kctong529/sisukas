@@ -155,9 +155,12 @@
         </button>
       </div>
     </div>
-    <p class="choose-hint" class:inactive={!choosingGroup}
-      aria-hidden={!choosingGroup} role="status">
-      Select a teaching group to hide the other groups of the same type.
+    <p class="choose-hint">
+      {#if choosingGroup}
+        Select a group to hide other groups of the same type.
+      {:else}
+        Click a group to show or hide it.
+      {/if}
     </p>
     {#if groupedDetails.length}
       {#each groupedDetails as section (section.heading)}
@@ -223,7 +226,6 @@
     line-height: 1.4;
     color: var(--calendar-muted, #64748b);
   }
-  .choose-hint.inactive { visibility: hidden; }
   .group-type { margin-top: .75rem; }
   h5 { margin: 0 0 .3rem; padding-bottom: .3rem; border-bottom: 1px solid var(--calendar-border, #e2e8f0); font-size: .77rem; font-weight: 700; color: var(--calendar-muted, #64748b); }
   /* The group toggle is the full-card hit target. Occurrence buttons are

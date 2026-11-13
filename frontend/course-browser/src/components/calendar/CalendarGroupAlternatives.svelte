@@ -41,9 +41,13 @@
         {choosingGroup ? 'Cancel' : 'Choose'}
       </button>
     </div>
-    <p id={instructionId} class="explanation">{choosingGroup
-      ? 'Select an alternative group to hide other groups of the same type.'
-      : 'Hover or focus to preview a group; click to keep the preview. This is not a study-plan selection or SISU registration.'}</p>
+    <p id={instructionId} class="explanation">
+      {#if choosingGroup}
+        Select a group to hide other groups of the same type.
+      {:else}
+        Hover or focus to preview; click a group to keep the preview.
+      {/if}
+    </p>
     <ul>
       {#each alternatives as alternative (alternative.groupId)}
         <li>
@@ -65,9 +69,6 @@
         </li>
       {/each}
     </ul>
-    {#if !choosingGroup}
-      <p class="explanation">Groups with no events this week cannot be highlighted.</p>
-    {/if}
   </section>
 {/if}
 
@@ -78,7 +79,7 @@
   button.choose-mode { width: auto; flex: 0 0 auto; padding: 0.3rem 0.55rem; }
   .choose-mode.active { border-color: var(--calendar-primary, #2f7fd6); background: #dbeafe; }
   button.choosing { border-style: dashed; cursor: pointer; }
-  .explanation { color: var(--calendar-muted, #64748b); font-size: 0.78rem; line-height: 1.45; margin: 0.3rem 0 0.65rem; }
+  .explanation { min-height: 2.8em; color: var(--calendar-muted, #64748b); font-size: 0.78rem; line-height: 1.45; margin: 0.3rem 0 0.65rem; }
   ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
   button { width: 100%; background: #f8fafc; color: var(--calendar-text, #1e293b); border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 6px; padding: 0.45rem 0.6rem; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 0.2rem; font: inherit; font-size: 0.8rem; }
   button:hover { border-color: var(--calendar-primary, #2f7fd6); background: #eff6ff; }

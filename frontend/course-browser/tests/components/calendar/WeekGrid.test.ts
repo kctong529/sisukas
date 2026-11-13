@@ -279,7 +279,7 @@ describe('WeekGrid alternative study-group previews', () => {
     const section = target.querySelector('.alternatives')!;
     expect(section.textContent).toContain('Exercise H02');
     expect(section.textContent).not.toContain('Lecture L01');
-    expect(section.textContent).toContain('not a study-plan selection');
+    expect(section.textContent).toContain('Hover or focus to preview');
   });
 
   it('chooses an alternative through the existing group action and exits event details', () => {
@@ -416,7 +416,7 @@ describe('WeekGrid accessibility integration', () => {
     const descriptionId = alternative.getAttribute('aria-describedby');
     expect(descriptionId).toBeTruthy();
     const instructions = document.getElementById(descriptionId!);
-    expect(instructions?.textContent).toContain('not a study-plan selection or SISU registration');
+    expect(instructions?.textContent).toContain('Hover or focus to preview');
     alternative.blur();
     flushSync();
     expect(target.querySelectorAll('.alternative-highlight')).toHaveLength(0);
@@ -735,5 +735,77 @@ describe('WeekGrid hidden visibility previews (#92)', () => {
       .dispatchEvent(new Event('pointerenter'));
     flushSync();
     expect(target.querySelectorAll('.hidden-preview')).toHaveLength(0);
+  });
+});
+
+
+describe('WeekGrid one-click occurrence conflict resolution (#103)', () => {
+  it('shows the affected count and dispatches the selected occurrence', () => {
+    const resolveOverlap = vi.fn();
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    targetElements.push(target);
+    mounted.push(mount(WeekGrid, { target, props: {
+      layout: layoutCalendarWeek([event('a', 10, 12), event('b', 11, 13)], '2026-11-02'),
+      overlapChoice: () => ({ available: true, reason: null, overlapCount: 1, keysToHide: ['b'], keysToShow: [] }),
+      resolveOverlap,
+      presentationForSegment: segment => ({ courseCode: null, courseTitle: segment.entry.source.studyGroupId, groupLabel: null, locationLabel: null }),
+    } }));
+    flushSync();
+    target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
+    flushSync();
+    const action = target.querySelector<HTMLButtonElement>('.resolve-overlap')!;
+    expect(action.textContent).toContain('Hide 1 overlapping event');
+    expect(action.disabled).toBe(false);
+    action.click();
+    flushSync();
+    expect(resolveOverlap).toHaveBeenCalledOnce();
+    expect(resolveOverlap.mock.calls[0][0].entry).toBeDefined();
+  });
+  it('disables unsafe overlap resolution with a reason', () => {
+    const resolveOverlap = vi.fn();
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    targetElements.push(target);
+    mounted.push(mount(WeekGrid, { target, props: {
+      layout: layoutCalendarWeek([event('a', 10, 12), event('b', 11, 13)], '2026-11-02'),
+      overlapChoice: () => ({ available: false, reason: 'An overlapping event has an ambiguous source identity.', overlapCount: 0, keysToHide: [], keysToShow: [] }),
+      resolveOverlap,
+      presentationForSegment: segment => ({ courseCode: null, courseTitle: segment.entry.source.studyGroupId, groupLabel: null, locationLabel: null }),
+    } }));
+    flushSync();
+    target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
+    flushSync();
+    const action = target.querySelector<HTMLButtonElement>('.resolve-overlap')!;
+    expect(action.disabled).toBe(true);
+    expect(action.title).toContain('ambiguous');
+    action.click();
+    expect(resolveOverlap).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('Dense overlap selection action (#103)', () => {
+  it('lets users resolve an individual event from a four-way disclosure', () => {
+    const resolveOverlap = vi.fn();
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    targetElements.push(target);
+    mounted.push(mount(WeekGrid, { target, props: {
+      layout: layoutCalendarWeek([event('a'), event('b'), event('c'), event('d')], '2026-11-02'),
+      overlapChoice: () => ({ available: true, reason: null, overlapCount: 3, keysToHide: ['b', 'c', 'd'], keysToShow: [] }),
+      resolveOverlap,
+      presentationForSegment: segment => ({ courseCode: null, courseTitle: segment.entry.source.studyGroupId, groupLabel: null, locationLabel: null }),
+    } }));
+    flushSync();
+    target.querySelector<HTMLButtonElement>('.cluster button')!.click();
+    flushSync();
+    const buttons = target.querySelectorAll<HTMLButtonElement>('dialog .resolve-overlap');
+    expect(buttons).toHaveLength(4);
+    expect(buttons[0].textContent).toContain('Hide 3 overlapping events');
+    buttons[0].click();
+    flushSync();
+    expect(resolveOverlap).toHaveBeenCalledOnce();
+    expect(target.querySelector('dialog')?.hasAttribute('open')).toBe(false);
   });
 });

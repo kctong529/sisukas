@@ -44,6 +44,23 @@ describe('Calendar alternative Choose mode (#101)', () => {
     expect(onTogglePreview).not.toHaveBeenCalled();
     expect(target.querySelector<HTMLButtonElement>('.choose-mode')!.textContent).toContain('Choose');
   });
+  it('updates the explanation without removing its layout slot', () => {
+    const { target } = render();
+    const hint = target.querySelector<HTMLElement>('.alternatives .explanation')!;
+    expect(hint.textContent).toContain('Hover or focus to preview');
+    expect(target.querySelectorAll('.alternatives .explanation')).toHaveLength(1);
+
+    target.querySelector<HTMLButtonElement>('.choose-mode')!.click();
+    flushSync();
+    expect(target.querySelector<HTMLElement>('.alternatives .explanation')).toBe(hint);
+    expect(hint.textContent).toContain('Select a group to hide');
+    expect(target.querySelectorAll('.alternatives .explanation')).toHaveLength(1);
+
+    target.querySelector<HTMLButtonElement>('.choose-mode')!.click();
+    flushSync();
+    expect(target.querySelector<HTMLElement>('.alternatives .explanation')).toBe(hint);
+    expect(hint.textContent).toContain('Hover or focus to preview');
+  });
   it('cancels without choosing or toggling preview', () => {
     const { target, onTogglePreview, onChoose } = render();
     const mode = target.querySelector<HTMLButtonElement>('.choose-mode')!;
