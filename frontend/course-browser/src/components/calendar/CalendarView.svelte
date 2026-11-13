@@ -6,11 +6,7 @@
   import { aggregateCalendarDisplayEntries, displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
   import { weekAwareOfferingColorIndices } from '@application/calendar/calendarOfferingColors';
   import { calendarEventPresentation } from '@application/calendar/calendarPresentation';
-  import {
-    calendarEntryVisible,
-    type CalendarVisibility, setCalendarGroupHidden,
-    setCalendarOccurrenceVisibility,
-  } from '@application/calendar/calendarVisibility';
+  import { calendarEntryVisible } from '@application/calendar/calendarVisibility';
   import { currentHelsinkiWeek } from '@application/calendar/currentHelsinkiWeek';
   import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
   import { layoutCalendarWeek } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
@@ -39,6 +35,9 @@
   const visibility = $derived(accountId && activePlan && activePlan.userId === accountId
     ? calendarVisibilitySessionStore.read.displayFor(accountId, activePlan.id)
     : null);
+  const writeStatus = $derived(accountId && activePlan
+    ? calendarVisibilitySessionStore.read.writesFor(accountId, activePlan.id)
+    : { pending: 0, failed: 0 });
   const hasTemporaryEdits = $derived(Boolean(accountId && activePlan
     && calendarVisibilitySessionStore.read.hasSessionEdits(accountId, activePlan.id)));
   const display = $derived(projection ? aggregateCalendarDisplayEntries(projection.entries) : null);
@@ -55,24 +54,26 @@
     const course = courseIndexStore.read.resolveByInstanceId(offeringId);
     return course ? calendarProjectionStore.readGroups(course.unitId, offeringId) ?? [] : [];
   }
-  function updateVisibility(next: CalendarVisibility): void {
-    if (!activePlan || !visibility || preferenceState.status !== 'ready') return;
-    calendarVisibilitySessionStore.actions.setForPlan(activePlan.id, next);
-  }
   function toggleGroup(offeringId: string, groupId: string, hidden: boolean): void {
-    if (!visibility) return;
-    updateVisibility(setCalendarGroupHidden(visibility, offeringId, groupId, hidden));
+    if (!accountId || !activePlan || preferenceState.status !== 'ready') return;
+    calendarVisibilitySessionStore.actions.setGroupHidden(
+      accountId, activePlan.id, { courseOfferingId: offeringId, studyGroupId: groupId }, hidden,
+    );
   }
   function hideGroup(segment: WeeklyCalendarSegment): void {
     const { courseOfferingId, studyGroupId } = segment.entry.source;
     toggleGroup(courseOfferingId, studyGroupId, true);
   }
   function toggleOccurrence(segment: WeeklyCalendarSegment, state: 'hidden' | 'visible' | null): void {
-    const members = membersForSegment(segment);
-    const keys = members.map(member => member.occurrenceKey);
+    if (!accountId || !activePlan || preferenceState.status !== 'ready') return;
+    const keys = membersForSegment(segment).map(member => member.occurrenceKey);
     if (keys.some(key => key === null)) return;
-    if (!visibility) return;
-    updateVisibility(setCalendarOccurrenceVisibility(visibility, keys as string[], state));
+    // One visual card may contain several distinct source occurrence identities.
+    for (const key of new Set(keys as string[])) {
+      calendarVisibilitySessionStore.actions.setOccurrenceVisibility(
+        accountId, activePlan.id, key, state,
+      );
+    }
   }
   function hideOccurrence(segment: WeeklyCalendarSegment): void {
     toggleOccurrence(segment, 'hidden');
@@ -154,8 +155,17 @@
   {:else if preferenceState.status !== 'ready'}
     <p role="status">Loading Calendar visibility preferences…</p>
   {:else if layout && visibility}
+    {#if writeStatus.pending > 0}
+      <p role="status">Saving Calendar visibility preferences…</p>
+    {/if}
+    {#if writeStatus.failed > 0}
+      <p role="alert">{writeStatus.failed} Calendar visibility change(s) could not be saved. Your changes are kept locally for this session.</p>
+      <button class="retry-data" onclick={() => {
+        if (accountId && activePlan) calendarVisibilitySessionStore.actions.retryFailedWrites(accountId, activePlan.id);
+      }}>Retry saving preferences</button>
+    {/if}
     {#if hasTemporaryEdits}
-      <p role="status">Visibility changes in this session are not saved yet. Persistent edits will be enabled in the next update.</p>
+      <p role="status">There are older session-only visibility changes. They are not saved.</p>
     {/if}
     {#each notices as notice (notice.kind)}
       <p role={notice.kind === 'failed' ? 'alert' : 'status'} class={`data-notice ${notice.kind}`}>
