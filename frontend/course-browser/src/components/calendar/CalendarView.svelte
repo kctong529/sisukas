@@ -6,14 +6,11 @@
   import { aggregateCalendarDisplayEntries, displayEntryLocations } from '@application/calendar/calendarDisplayAggregation';
   import { weekAwareOfferingColorIndices } from '@application/calendar/calendarOfferingColors';
   import { calendarEventPresentation } from '@application/calendar/calendarPresentation';
-  import {
-    calendarEntryVisible,
-    type CalendarVisibility, setCalendarGroupHidden,
-    setCalendarOccurrenceVisibility,
-  } from '@application/calendar/calendarVisibility';
+  import { calendarEntryVisible } from '@application/calendar/calendarVisibility';
   import { currentHelsinkiWeek } from '@application/calendar/currentHelsinkiWeek';
   import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
   import { layoutCalendarWeek } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
+  import { NotificationService } from '@infrastructure/services/NotificationService';
   import { calendarProjectionStore } from '@lib/stores/calendarProjectionStore.svelte';
   import { calendarVisibilitySessionStore } from '@lib/stores/calendarVisibilitySessionStore.svelte';
   import { courseIndexStore } from '@lib/stores/courseIndexStore.svelte';
@@ -31,14 +28,55 @@
   let plansReady = $state(false);
   const activePlan = $derived(plansStore.read.getActive());
   const projection = $derived(calendarProjectionStore.projection);
-  // Session-scoped and keyed by plan: survives view remounts and A -> B -> A switching.
-  // Deliberately not persisted across reloads (#93).
-  const visibility = $derived(calendarVisibilitySessionStore.forPlan(activePlan?.id));
+  const accountId = $derived(calendarVisibilitySessionStore.state.accountId);
+  const preferenceState = $derived(accountId && activePlan && activePlan.userId === accountId
+    ? calendarVisibilitySessionStore.read.stateFor(accountId, activePlan.id)
+    : { status: 'unknown' } as const);
+  // A local edit is displayed only after server hydration. Step 5 persists it.
+  const visibility = $derived(accountId && activePlan && activePlan.userId === accountId
+    ? calendarVisibilitySessionStore.read.displayFor(accountId, activePlan.id)
+    : null);
+  const writeStatus = $derived(accountId && activePlan
+    ? calendarVisibilitySessionStore.read.writesFor(accountId, activePlan.id)
+    : { pending: 0, failed: 0 });
+  // A failure notification is tied to one authenticated plan and dismissed
+  // when the failure resolves or the user changes account/plan.
+  let failedWriteNotification: { id: string; scope: string } | null = null;
+  $effect(() => {
+    const currentAccount = accountId;
+    const currentPlan = activePlan;
+    const failed = writeStatus.failed;
+    const scope = currentAccount && currentPlan && currentPlan.userId === currentAccount
+      ? JSON.stringify([currentAccount, currentPlan.id])
+      : null;
+
+    if (failedWriteNotification && (failed === 0 || failedWriteNotification.scope !== scope)) {
+      NotificationService.dismiss(failedWriteNotification.id);
+      failedWriteNotification = null;
+    }
+    if (scope && currentAccount && currentPlan && failed > 0 && !failedWriteNotification) {
+      const account = currentAccount;
+      const plan = currentPlan.id;
+      const id = NotificationService.errorWithAction(
+        `${failed} Calendar visibility change(s) could not be saved. Changes remain in this session.`,
+        'Retry',
+        () => {
+          if (calendarVisibilitySessionStore.state.accountId !== account) return;
+          calendarVisibilitySessionStore.actions.retryFailedWrites(account, plan);
+        },
+      );
+      failedWriteNotification = { id, scope };
+    }
+  });
+
+  onMount(() => () => {
+    if (failedWriteNotification) NotificationService.dismiss(failedWriteNotification.id);
+  });
   const display = $derived(projection ? aggregateCalendarDisplayEntries(projection.entries) : null);
-  const visibleEntries = $derived(display ? display.entries.filter(entry =>
+  const visibleEntries = $derived(display && visibility ? display.entries.filter(entry =>
     // A room-aggregated card is one visual occurrence; hiding it hides all its members.
     (display.membersByEntry.get(entry) ?? [entry]).some(member => calendarEntryVisible(member, visibility))) : []);
-  const layout = $derived(display ? layoutCalendarWeek(visibleEntries, weekStart) : null);
+  const layout = $derived(display && visibility ? layoutCalendarWeek(visibleEntries, weekStart) : null);
   const unfilteredLayout = $derived(display ? layoutCalendarWeek(display.entries, weekStart) : null);
   const weekCourses = $derived(activePlan && unfilteredLayout
     ? calendarCoursesForWeek(activePlan.instanceIds,
@@ -48,22 +86,26 @@
     const course = courseIndexStore.read.resolveByInstanceId(offeringId);
     return course ? calendarProjectionStore.readGroups(course.unitId, offeringId) ?? [] : [];
   }
-  function updateVisibility(next: CalendarVisibility): void {
-    if (!activePlan) return;
-    calendarVisibilitySessionStore.setForPlan(activePlan.id, next);
-  }
   function toggleGroup(offeringId: string, groupId: string, hidden: boolean): void {
-    updateVisibility(setCalendarGroupHidden(visibility, offeringId, groupId, hidden));
+    if (!accountId || !activePlan || preferenceState.status !== 'ready') return;
+    calendarVisibilitySessionStore.actions.setGroupHidden(
+      accountId, activePlan.id, { courseOfferingId: offeringId, studyGroupId: groupId }, hidden,
+    );
   }
   function hideGroup(segment: WeeklyCalendarSegment): void {
     const { courseOfferingId, studyGroupId } = segment.entry.source;
     toggleGroup(courseOfferingId, studyGroupId, true);
   }
   function toggleOccurrence(segment: WeeklyCalendarSegment, state: 'hidden' | 'visible' | null): void {
-    const members = membersForSegment(segment);
-    const keys = members.map(member => member.occurrenceKey);
+    if (!accountId || !activePlan || preferenceState.status !== 'ready') return;
+    const keys = membersForSegment(segment).map(member => member.occurrenceKey);
     if (keys.some(key => key === null)) return;
-    updateVisibility(setCalendarOccurrenceVisibility(visibility, keys as string[], state));
+    // One visual card may contain several distinct source occurrence identities.
+    for (const key of new Set(keys as string[])) {
+      calendarVisibilitySessionStore.actions.setOccurrenceVisibility(
+        accountId, activePlan.id, key, state,
+      );
+    }
   }
   function hideOccurrence(segment: WeeklyCalendarSegment): void {
     toggleOccurrence(segment, 'hidden');
@@ -91,6 +133,11 @@
       .then(() => { plansReady = true; })
       .catch(error => { loadError = error instanceof Error ? error.message : String(error); });
   });
+
+  function retryPreferences(): void {
+    if (!activePlan || !accountId) return;
+    void calendarVisibilitySessionStore.actions.retryLoad(accountId, activePlan.id);
+  }
 
   // #173 owns default active-plan retrieval at the application boundary.
   // The calendar observes authoritative entries and only retries on user action.
@@ -134,7 +181,12 @@
     <p role="status">Loading study plans…</p>
   {:else if !activePlan}
     <p>No active study plan. Create or select a plan in LEGO to see its calendar.</p>
-  {:else if layout}
+  {:else if preferenceState.status === 'failed'}
+    <p role="alert">Unable to load Calendar visibility preferences: {preferenceState.error}</p>
+    <button class="retry-data" onclick={retryPreferences}>Retry Calendar preferences</button>
+  {:else if preferenceState.status !== 'ready'}
+    <p role="status">Loading Calendar visibility preferences…</p>
+  {:else if layout && visibility}
     {#each notices as notice (notice.kind)}
       <p role={notice.kind === 'failed' ? 'alert' : 'status'} class={`data-notice ${notice.kind}`}>
         {notice.message}

@@ -2,6 +2,7 @@
   import { untrack } from "svelte";
 
   import { activePlanStudyGroupRequests } from "@app/study-group-loading/activePlanRequests";
+  import { calendarVisibilitySessionStore } from "@lib/stores/calendarVisibilitySessionStore.svelte";
   import { courseGradeStore } from "@lib/stores/courseGradeStore";
   import { courseIndexStore } from "@lib/stores/courseIndexStore.svelte";
   import { favouritesStore } from "@lib/stores/favouritesStore";
@@ -18,6 +19,7 @@
     {
       favourites: favouritesStore,
       grades: courseGradeStore,
+      calendarPreferences: calendarVisibilitySessionStore.actions,
       studyGroups: {
         clear: () => {
           getStudyGroupDataRuntime().clear();
@@ -31,6 +33,26 @@
     const currentPending = pending;
     const currentUserId = userId;
     untrack(() => lifecycle.update(currentPending, currentUserId));
+  });
+
+  // Calendar preferences depend on the authenticated account and active plan,
+  // not on course-index or study-group availability.
+  const calendarPreferenceKey = $derived.by(() => {
+    if (pending || !userId || !plansStore.state.loaded) return null;
+
+    const plan = plansStore.read.getActive();
+    if (!plan || plan.userId !== userId) return null;
+
+    return JSON.stringify([userId, plan.id]);
+  });
+
+  $effect(() => {
+    if (!calendarPreferenceKey) return;
+
+    // The primitive key prevents unrelated updates from triggering hydration.
+    // The store deduplicates requests and discards obsolete account responses.
+    const [accountId, planId] = JSON.parse(calendarPreferenceKey) as [string, string];
+    void calendarVisibilitySessionStore.actions.ensureLoaded(accountId, planId);
   });
 
   // Derive requested offering identities from the plan and catalogue. The

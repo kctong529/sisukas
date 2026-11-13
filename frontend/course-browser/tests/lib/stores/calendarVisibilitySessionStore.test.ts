@@ -1,4 +1,3 @@
-
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -12,27 +11,27 @@ describe('calendar session visibility store (#92)', () => {
     const store = createCalendarVisibilitySessionStore();
 
     const aHidden = setCalendarGroupHidden(
-      store.forPlan('A'),
+      store.read.forPlan('A'),
       'offering-A',
       'exercise',
       true,
     );
-    store.setForPlan('A', aHidden);
+    store.actions.setForPlan('A', aHidden);
 
-    expect(store.forPlan('B').hiddenGroups).toEqual([]);
+    expect(store.read.forPlan('B').hiddenGroups).toEqual([]);
 
     const bHidden = setCalendarGroupHidden(
-      store.forPlan('B'),
+      store.read.forPlan('B'),
       'offering-B',
       'lecture',
       true,
     );
-    store.setForPlan('B', bHidden);
+    store.actions.setForPlan('B', bHidden);
 
-    expect(store.forPlan('A').hiddenGroups).toEqual([
+    expect(store.read.forPlan('A').hiddenGroups).toEqual([
       calendarGroupKey('offering-A', 'exercise'),
     ]);
-    expect(store.forPlan('B').hiddenGroups).toEqual([
+    expect(store.read.forPlan('B').hiddenGroups).toEqual([
       calendarGroupKey('offering-B', 'lecture'),
     ]);
   });
@@ -40,38 +39,38 @@ describe('calendar session visibility store (#92)', () => {
   it('maintains state across consumers but resets when a new session is created', () => {
     const session = createCalendarVisibilitySessionStore();
 
-    session.setForPlan(
+    session.actions.setForPlan(
       'plan',
       setCalendarGroupHidden(
-        session.forPlan('plan'),
+        session.read.forPlan('plan'),
         'offering',
         'group',
         true,
       ),
     );
 
-    expect(session.forPlan('plan').hiddenGroups).toHaveLength(1);
-    expect(session.forPlan('plan').hiddenGroups).toHaveLength(1);
+    expect(session.read.forPlan('plan').hiddenGroups).toHaveLength(1);
+    expect(session.read.forPlan('plan').hiddenGroups).toHaveLength(1);
 
     expect(
-      createCalendarVisibilitySessionStore().forPlan('plan').hiddenGroups,
+      createCalendarVisibilitySessionStore().read.forPlan('plan').hiddenGroups,
     ).toEqual([]);
 
-    expect(session.forPlan(undefined).hiddenGroups).toEqual([]);
+    expect(session.read.forPlan(undefined).hiddenGroups).toEqual([]);
   });
 
   it('treats prototype-like plan IDs as independent identifiers', () => {
     const store = createCalendarVisibilitySessionStore();
 
     for (const planId of ['__proto__', 'constructor', 'toString']) {
-      expect(store.forPlan(planId).hiddenGroups).toEqual([]);
+      expect(store.read.forPlan(planId).hiddenGroups).toEqual([]);
     }
 
     for (const planId of ['__proto__', 'constructor', 'toString']) {
-      store.setForPlan(
+      store.actions.setForPlan(
         planId,
         setCalendarGroupHidden(
-          store.forPlan(planId),
+          store.read.forPlan(planId),
           `offering-${planId}`,
           'exercise',
           true,
@@ -80,34 +79,34 @@ describe('calendar session visibility store (#92)', () => {
     }
 
     for (const planId of ['__proto__', 'constructor', 'toString']) {
-      expect(store.forPlan(planId).hiddenGroups).toEqual([
+      expect(store.read.forPlan(planId).hiddenGroups).toEqual([
         calendarGroupKey(`offering-${planId}`, 'exercise'),
       ]);
     }
 
-    expect(store.forPlan('unrelated').hiddenGroups).toEqual([]);
+    expect(store.read.forPlan('unrelated').hiddenGroups).toEqual([]);
   });
 
   it('updates one plan without modifying another plan', () => {
     const store = createCalendarVisibilitySessionStore();
 
-    store.setForPlan(
+    store.actions.setForPlan(
       'A',
-      setCalendarGroupHidden(store.forPlan('A'), 'offering', 'G01', true),
+      setCalendarGroupHidden(store.read.forPlan('A'), 'offering', 'G01', true),
     );
 
-    store.setForPlan(
+    store.actions.setForPlan(
       'B',
-      setCalendarGroupHidden(store.forPlan('B'), 'offering', 'G02', true),
+      setCalendarGroupHidden(store.read.forPlan('B'), 'offering', 'G02', true),
     );
 
-    store.setForPlan(
+    store.actions.setForPlan(
       'A',
-      setCalendarGroupHidden(store.forPlan('A'), 'offering', 'G01', false),
+      setCalendarGroupHidden(store.read.forPlan('A'), 'offering', 'G01', false),
     );
 
-    expect(store.forPlan('A').hiddenGroups).toEqual([]);
-    expect(store.forPlan('B').hiddenGroups).toEqual([
+    expect(store.read.forPlan('A').hiddenGroups).toEqual([]);
+    expect(store.read.forPlan('B').hiddenGroups).toEqual([
       calendarGroupKey('offering', 'G02'),
     ]);
   });
