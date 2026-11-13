@@ -250,7 +250,7 @@
   .event.course-dim { opacity: .28; }
   .event.alternative-highlight { outline: 3px solid #0f766e; outline-offset: -2px; z-index: 2; }
   .event.alternative-dim { opacity: .38; }
-  .event:hover, .event:focus-within { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 1px; z-index: 2; }
+  .event:hover, .event:focus-within { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: -2px; z-index: 2; }
   .event.inactive { border-style: dashed; border-color: #94a3b8; background: #f1f5f9; color: #475569; }
   .event.cancelled { border-color: var(--ui-danger); background: var(--ui-danger-surface); color: var(--ui-danger-text); }
   .cluster {
