@@ -749,7 +749,7 @@ describe('WeekGrid one-click occurrence conflict resolution (#103)', () => {
       layout: layoutCalendarWeek([event('a', 10, 12), event('b', 11, 13)], '2026-11-02'),
       overlapChoice: () => ({ available: true, reason: null, overlapCount: 1, keysToHide: ['b'], keysToShow: [] }),
       resolveOverlap,
-      presentationForSegment: segment => ({ courseCode: null, courseTitle: segment.entry.source.studyGroupId, groupLabel: null, locationLabel: null }),
+      presentationForSegment: (segment: WeeklyCalendarSegment) => ({ courseCode: null, courseTitle: segment.entry.source.studyGroupId, groupLabel: null, locationLabel: null }),
     } }));
     flushSync();
     target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
@@ -771,7 +771,7 @@ describe('WeekGrid one-click occurrence conflict resolution (#103)', () => {
       layout: layoutCalendarWeek([event('a', 10, 12), event('b', 11, 13)], '2026-11-02'),
       overlapChoice: () => ({ available: false, reason: 'An overlapping event has an ambiguous source identity.', overlapCount: 0, keysToHide: [], keysToShow: [] }),
       resolveOverlap,
-      presentationForSegment: segment => ({ courseCode: null, courseTitle: segment.entry.source.studyGroupId, groupLabel: null, locationLabel: null }),
+      presentationForSegment: (segment: WeeklyCalendarSegment) => ({ courseCode: null, courseTitle: segment.entry.source.studyGroupId, groupLabel: null, locationLabel: null }),
     } }));
     flushSync();
     target.querySelector<HTMLButtonElement>('.calendar-event')!.click();
@@ -795,7 +795,7 @@ describe('Dense overlap selection action (#103)', () => {
       layout: layoutCalendarWeek([event('a'), event('b'), event('c'), event('d')], '2026-11-02'),
       overlapChoice: () => ({ available: true, reason: null, overlapCount: 3, keysToHide: ['b', 'c', 'd'], keysToShow: [] }),
       resolveOverlap,
-      presentationForSegment: segment => ({ courseCode: null, courseTitle: segment.entry.source.studyGroupId, groupLabel: null, locationLabel: null }),
+      presentationForSegment: (segment: WeeklyCalendarSegment) => ({ courseCode: null, courseTitle: segment.entry.source.studyGroupId, groupLabel: null, locationLabel: null }),
     } }));
     flushSync();
     target.querySelector<HTMLButtonElement>('.cluster button')!.click();
