@@ -8,6 +8,11 @@
     <div class="filter-notification {n.type}">
       <i class="bi {n.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-circle'}"></i>
       <span>{n.message}</span>
+      {#if n.action}
+        <button type="button" class="notification-action" onclick={n.action.run}>
+          {n.action.label}
+        </button>
+      {/if}
     </div>
   {/each}
 </div>
@@ -46,6 +51,23 @@
     background: #efe;
     border-left: 4px solid #3c3;
     color: #3c3;
+  }
+
+  .notification-action {
+    border: 1px solid currentColor;
+    border-radius: 5px;
+    background: transparent;
+    color: inherit;
+    padding: 4px 8px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .notification-action:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
   }
 
   /* Icon Sizing */

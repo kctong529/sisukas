@@ -10,6 +10,7 @@
   import { currentHelsinkiWeek } from '@application/calendar/currentHelsinkiWeek';
   import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
   import { layoutCalendarWeek } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
+  import { NotificationService } from '@infrastructure/services/NotificationService';
   import { calendarProjectionStore } from '@lib/stores/calendarProjectionStore.svelte';
   import { calendarVisibilitySessionStore } from '@lib/stores/calendarVisibilitySessionStore.svelte';
   import { courseIndexStore } from '@lib/stores/courseIndexStore.svelte';
@@ -38,8 +39,39 @@
   const writeStatus = $derived(accountId && activePlan
     ? calendarVisibilitySessionStore.read.writesFor(accountId, activePlan.id)
     : { pending: 0, failed: 0 });
-  const hasTemporaryEdits = $derived(Boolean(accountId && activePlan
-    && calendarVisibilitySessionStore.read.hasSessionEdits(accountId, activePlan.id)));
+  // A failure notification is tied to one authenticated plan and dismissed
+  // when the failure resolves or the user changes account/plan.
+  let failedWriteNotification: { id: string; scope: string } | null = null;
+  $effect(() => {
+    const currentAccount = accountId;
+    const currentPlan = activePlan;
+    const failed = writeStatus.failed;
+    const scope = currentAccount && currentPlan && currentPlan.userId === currentAccount
+      ? JSON.stringify([currentAccount, currentPlan.id])
+      : null;
+
+    if (failedWriteNotification && (failed === 0 || failedWriteNotification.scope !== scope)) {
+      NotificationService.dismiss(failedWriteNotification.id);
+      failedWriteNotification = null;
+    }
+    if (scope && currentAccount && currentPlan && failed > 0 && !failedWriteNotification) {
+      const account = currentAccount;
+      const plan = currentPlan.id;
+      const id = NotificationService.errorWithAction(
+        `${failed} Calendar visibility change(s) could not be saved. Changes remain in this session.`,
+        'Retry',
+        () => {
+          if (calendarVisibilitySessionStore.state.accountId !== account) return;
+          calendarVisibilitySessionStore.actions.retryFailedWrites(account, plan);
+        },
+      );
+      failedWriteNotification = { id, scope };
+    }
+  });
+
+  onMount(() => () => {
+    if (failedWriteNotification) NotificationService.dismiss(failedWriteNotification.id);
+  });
   const display = $derived(projection ? aggregateCalendarDisplayEntries(projection.entries) : null);
   const visibleEntries = $derived(display && visibility ? display.entries.filter(entry =>
     // A room-aggregated card is one visual occurrence; hiding it hides all its members.
@@ -155,18 +187,6 @@
   {:else if preferenceState.status !== 'ready'}
     <p role="status">Loading Calendar visibility preferences…</p>
   {:else if layout && visibility}
-    {#if writeStatus.pending > 0}
-      <p role="status">Saving Calendar visibility preferences…</p>
-    {/if}
-    {#if writeStatus.failed > 0}
-      <p role="alert">{writeStatus.failed} Calendar visibility change(s) could not be saved. Your changes are kept locally for this session.</p>
-      <button class="retry-data" onclick={() => {
-        if (accountId && activePlan) calendarVisibilitySessionStore.actions.retryFailedWrites(accountId, activePlan.id);
-      }}>Retry saving preferences</button>
-    {/if}
-    {#if hasTemporaryEdits}
-      <p role="status">There are older session-only visibility changes. They are not saved.</p>
-    {/if}
     {#each notices as notice (notice.kind)}
       <p role={notice.kind === 'failed' ? 'alert' : 'status'} class={`data-notice ${notice.kind}`}>
         {notice.message}
