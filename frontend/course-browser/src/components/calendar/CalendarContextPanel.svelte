@@ -7,6 +7,7 @@
   import CalendarLocationList from './CalendarLocationList.svelte';
 
   import type { CalendarGroupAlternative } from '@application/calendar/calendarGroupAlternatives';
+  import type { OverlapChoice } from '@application/calendar/calendarOverlapChoice';
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
@@ -23,6 +24,8 @@
     onHideGroup?: () => void;
     onHideOccurrence?: () => void;
     canHideOccurrence?: boolean;
+    overlapChoice?: OverlapChoice | null;
+    onResolveOverlap?: () => void;
     members?: readonly CalendarEntry[];
     alternatives?: readonly CalendarGroupAlternative[];
     previewGroupId?: string | null;
@@ -35,6 +38,7 @@
   let {
     segment, presentation, date, isPinned, selection = 'candidate', onClear, onShowCourse = () => {}, members = [],
     onHideGroup = () => {}, onHideOccurrence = () => {}, canHideOccurrence = true,
+    overlapChoice = null, onResolveOverlap = () => {},
     alternatives = [], previewGroupId = null, retainedGroupId = null,
     onAlternativePreview = () => {}, onAlternativeToggle = () => {},
     onAlternativeChoose = () => {}, alternativeContextKey = null,
@@ -74,6 +78,12 @@
         <button type="button" onclick={onShowCourse}>Course overview and visibility</button>
         <button type="button" onclick={onHideGroup}>Hide teaching group</button>
         <button type="button" onclick={onHideOccurrence} disabled={!canHideOccurrence} title={canHideOccurrence ? undefined : 'This event has no unambiguous source identity'}>Hide this event</button>
+        {#if overlapChoice}
+          <button type="button" class="resolve-overlap" onclick={onResolveOverlap}
+            disabled={!overlapChoice.available} title={overlapChoice.reason ?? undefined}>
+            {overlapChoice.available ? `Keep this · Hide ${overlapChoice.overlapCount} overlapping ${overlapChoice.overlapCount === 1 ? 'event' : 'events'}` : 'Cannot resolve overlaps'}
+          </button>
+        {/if}
       </div>
       <CalendarGroupAlternatives
         {alternatives}

@@ -11,6 +11,7 @@
   import DenseOverlapDialog from './DenseOverlapDialog.svelte';
 
   import type { CalendarWeekCourse } from '@application/calendar/calendarCoursesForWeek';
+  import type { OverlapChoice } from '@application/calendar/calendarOverlapChoice';
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import type { CalendarVisibility } from '@application/calendar/calendarVisibility';
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
@@ -32,6 +33,8 @@
     selectionForSegment?: (segment: WeeklyCalendarSegment) => CalendarGroupSelection;
     hideGroup?: (segment: WeeklyCalendarSegment) => void;
     hideOccurrence?: (segment: WeeklyCalendarSegment) => void;
+    overlapChoice?: (segment: WeeklyCalendarSegment) => OverlapChoice | null;
+    resolveOverlap?: (segment: WeeklyCalendarSegment) => void;
     weekCourses?: readonly CalendarWeekCourse[];
     groupsForCourse?: (offeringId: string) => readonly StudyGroup[];
     unfilteredSegments?: readonly WeeklyCalendarSegment[];
@@ -45,6 +48,7 @@
     layout, offeringIds, colorByOffering: assignedColors, presentationForSegment, groupsForSegment = () => null,
     membersForSegment = segment => [segment.entry],
     selectionForSegment = () => 'candidate', hideGroup = () => {}, hideOccurrence = () => {},
+    overlapChoice = () => null, resolveOverlap = () => {},
     weekCourses = [], groupsForCourse = () => [], unfilteredSegments = [],
     visibility = { hiddenGroups: [], occurrenceOverrides: {} },
     onToggleGroup = () => {}, onToggleOccurrence = () => {},
@@ -248,6 +252,8 @@
       onHideGroup={() => { if (displayedSegment) { hideGroup(displayedSegment); pinnedId = null; previewId = null; } }}
       onHideOccurrence={() => { if (displayedSegment) { hideOccurrence(displayedSegment); pinnedId = null; previewId = null; } }}
       canHideOccurrence={displayedSegment !== null && membersForSegment(displayedSegment).every(entry => entry.occurrenceKey !== null)}
+      overlapChoice={displayedSegment ? overlapChoice(displayedSegment) : null}
+      onResolveOverlap={() => { if (displayedSegment) { resolveOverlap(displayedSegment); pinnedId = null; previewId = null; } }}
       onShowCourse={() => {
         if (displayedSegment) { selectedOfferingId = displayedSegment.entry.source.courseOfferingId; pinnedId = null; previewId = null; }
       }}
@@ -263,6 +269,7 @@
   {presentationForSegment}
   {membersForSegment}
   {selectionForSegment}
+  {overlapChoice} onResolveOverlap={resolveOverlap}
   onClose={closeGroup}
 />
 

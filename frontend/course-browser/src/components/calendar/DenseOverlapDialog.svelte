@@ -4,6 +4,7 @@
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
 
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
+  import type { OverlapChoice } from '@application/calendar/calendarOverlapChoice';
   import type { DenseOverlapDisplay } from '@application/calendar/denseOverlapPresentation';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
   import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
@@ -14,11 +15,13 @@
     layout: WeeklyCalendarLayoutResult;
     presentationForSegment: (segment: WeeklyCalendarSegment) => CalendarEventPresentation;
     onClose: () => void;
+    overlapChoice?: (segment: WeeklyCalendarSegment) => OverlapChoice | null;
+    onResolveOverlap?: (segment: WeeklyCalendarSegment) => void;
     membersForSegment?: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
     selectionForSegment?: (segment: WeeklyCalendarSegment) => CalendarGroupSelection;
   }
 
-  let { group: selectedGroup, layout, presentationForSegment, onClose, membersForSegment = segment => [segment.entry], selectionForSegment = () => 'candidate' }: Props = $props();
+  let { group: selectedGroup, layout, presentationForSegment, onClose, membersForSegment = segment => [segment.entry], selectionForSegment = () => 'candidate', overlapChoice = () => null, onResolveOverlap = () => {} }: Props = $props();
   let dialogElement: HTMLDialogElement;
 
   export function showModal(): void {
@@ -27,6 +30,12 @@
 
   export function isOpen(): boolean {
     return dialogElement?.open ?? false;
+  }
+
+  function resolveInDialog(segment: WeeklyCalendarSegment): void {
+    if (!overlapChoice(segment)?.available) return;
+    onResolveOverlap(segment);
+    dialogElement.close();
   }
 
   function handleBackdropPointerDown(event: PointerEvent): void {
@@ -54,12 +63,19 @@
         {@const info = presentationForSegment(segment)}
         {@const members = membersForSegment(segment)}
         {@const locations = members.length > 1 ? displayEntryLocations(members) : []}
+        {@const choice = overlapChoice(segment)}
         <li>
           <strong>{info.courseCode ? `${info.courseCode} · ` : ''}{info.courseTitle}</strong>
           {#if info.groupLabel}<span>{info.groupLabel}</span>{/if}
           <span data-selection={selectionForSegment(segment)}>{calendarSelectionLabel(selectionForSegment(segment))}</span>
           <span>{formatCalendarMinute(segment.startMinute)}–{formatCalendarMinute(segment.endMinute)}</span>
           {#if info.locationLabel}<span>{info.locationLabel}</span>{/if}
+          {#if choice}
+            <button type="button" class="resolve-overlap" onclick={() => resolveInDialog(segment)}
+              disabled={!choice.available} title={choice.reason ?? undefined}>
+              {choice.available ? `Keep this · Hide ${choice.overlapCount} overlapping ${choice.overlapCount === 1 ? 'event' : 'events'}` : 'Cannot resolve overlaps'}
+            </button>
+          {/if}
           {#if members.length > 1}
             <details><summary>{members.length} source events · Show listed rooms</summary>
               <ul class="rooms">{#each locations as room (room)}<li>{room}</li>{/each}</ul>
@@ -83,6 +99,9 @@
   .event-details ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
   .event-details li { display: flex; flex-direction: column; gap: 2px; padding: 10px; background: #f1f5f9; border-radius: 6px; font-size: 0.85rem; }
   .event-details li strong { overflow-wrap: anywhere; }
+  .event-details .resolve-overlap { align-self: flex-start; margin-top: 0.4rem; border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 6px; background: var(--calendar-card, #fff); color: var(--calendar-primary, #2f7fd6); padding: 0.4rem 0.6rem; font: inherit; font-size: 0.75rem; cursor: pointer; }
+  .event-details .resolve-overlap:disabled { opacity: 0.55; cursor: not-allowed; }
+  .event-details .resolve-overlap:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
   .event-details .rooms { list-style: disc; padding-left: 20px; margin-top: 6px; }
   .event-details .rooms li { display: list-item; padding: 0; background: transparent; }
   .event-details li span { color: #475569; font-variant-numeric: tabular-nums; }
