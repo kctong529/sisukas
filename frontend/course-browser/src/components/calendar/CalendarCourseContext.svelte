@@ -1,6 +1,7 @@
 <script lang="ts">
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import { calendarEntryVisible, calendarGroupKey } from '@application/calendar/calendarVisibility';
+  import { offeringHasVisibilityChanges } from '@application/calendar/calendarVisibilityShortcuts';
 
   import CalendarDetailsHeading from './CalendarDetailsHeading.svelte';
 
@@ -18,13 +19,37 @@
     visibility: CalendarVisibility;
     membersForSegment: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
     onToggleGroup: (offeringId: string, groupId: string, hidden: boolean) => void;
+    onChooseGroup?: (offeringId: string, groupId: string, groups: readonly { groupId: string; type: string }[]) => void;
+    onShowAll?: (offeringId: string) => void;
     onToggleOccurrence: (segment: WeeklyCalendarSegment, state: 'hidden' | 'visible' | null) => void;
     onClear: () => void;
     onGroupPreview?: (groupId: string | null) => void;
     onOccurrencePreview?: (segmentId: string | null) => void;
   }
   let { course, isPinned, groups, segments, visibility, membersForSegment, onToggleGroup, onToggleOccurrence, onClear,
-    onGroupPreview = () => {}, onOccurrencePreview = () => {} }: Props = $props();
+    onGroupPreview = () => {}, onOccurrencePreview = () => {},
+    onChooseGroup = () => {}, onShowAll = () => {} }: Props = $props();
+  let choosingGroup = $state(false);
+  // A preview can reuse this component for another offering. Never carry
+  // the selection mode over to a different course.
+  let previousOfferingId: string | undefined;
+  $effect(() => {
+    const currentOfferingId = course.offeringId;
+    if (previousOfferingId !== undefined && currentOfferingId !== previousOfferingId) {
+      choosingGroup = false;
+    }
+    previousOfferingId = currentOfferingId;
+  });
+  function activateGroup(groupId: string, hidden: boolean): void {
+    if (choosingGroup) {
+      onChooseGroup(course.offeringId, groupId, groupDetails.map(item => ({
+        groupId: item.id, type: typeHeading(item.type),
+      })));
+      choosingGroup = false;
+      return;
+    }
+    onToggleGroup(course.offeringId, groupId, !hidden);
+  }
   const groupIds = $derived([...new Set([
     ...groups.map(group => group.groupId),
     ...segments.map(segment => segment.entry.source.studyGroupId),
@@ -114,22 +139,45 @@
   <div class="course-information">
     {#if !isPinned}<p class="hint">Previewing · Click the course to pin its details here.</p>{/if}
     <p class="help">Manage timetable visibility only. These controls do not change attendance or registration.</p>
-    <h4>Teaching groups</h4>
+    <div class="group-controls">
+      <h4>Teaching groups</h4>
+      <div class="group-control-actions">
+        <button type="button" class="choose-mode" class:active={choosingGroup}
+          aria-pressed={choosingGroup}
+          title={choosingGroup ? 'Cancel group selection' : 'Choose one group and hide alternatives of the same type'}
+          onclick={() => { choosingGroup = !choosingGroup; }}>
+          {choosingGroup ? 'Cancel' : 'Choose'}
+        </button>
+        <button type="button" class="show-all"
+          onclick={() => { choosingGroup = false; onShowAll(course.offeringId); }}
+          disabled={!offeringHasVisibilityChanges(course.offeringId, visibility)}>
+          Show all
+        </button>
+      </div>
+    </div>
+    <p class="choose-hint" class:inactive={!choosingGroup}
+      aria-hidden={!choosingGroup} role="status">
+      Select a teaching group to hide the other groups of the same type.
+    </p>
     {#if groupedDetails.length}
       {#each groupedDetails as section (section.heading)}
         <section class="group-type" aria-label={section.heading}>
           <h5>{section.heading}</h5>
           {#each section.groups as group (group.id)}
-            <div class="group" role="group" aria-label={`${group.name}, ${group.type}`}
+            <div class="group" class:choosing={choosingGroup} role="group" aria-label={`${group.name}, ${group.type}`}
               onpointerenter={() => onGroupPreview(group.id)}
               onpointerleave={() => onGroupPreview(null)}>
               <button type="button" class="group-preview" class:group-hidden={group.hidden}
-                  aria-pressed={group.hidden}
-                  aria-label={`${group.name}, ${group.type}, ${group.hidden ? 'hidden' : 'visible'}. Click to ${group.hidden ? 'show' : 'hide'} group; hover or focus to highlight its visible events this week.`}
-                  title={`${group.name} · ${group.hidden ? 'Hidden' : 'Visible'} · Click to ${group.hidden ? 'show' : 'hide'} group`}
+                  aria-pressed={choosingGroup ? undefined : group.hidden}
+                  aria-label={choosingGroup
+                    ? `Choose ${group.name}, ${group.type}, and hide alternatives of the same type`
+                    : `${group.name}, ${group.type}, ${group.hidden ? 'hidden' : 'visible'}. Click to ${group.hidden ? 'show' : 'hide'} group; hover or focus to highlight its visible events this week.`}
+                  title={choosingGroup
+                    ? `Choose ${group.name} and hide other ${typeHeading(group.type).toLowerCase()}`
+                    : `${group.name} · ${group.hidden ? 'Hidden' : 'Visible'} · Click to ${group.hidden ? 'show' : 'hide'} group`}
                   onfocus={() => onGroupPreview(group.id)}
                   onblur={() => onGroupPreview(null)}
-                  onclick={() => onToggleGroup(course.offeringId, group.id, !group.hidden)}>
+                  onclick={() => activateGroup(group.id, group.hidden)}>
                   <strong>{group.name}</strong>
                 </button>
               <span class="group-label-space" aria-hidden="true"></span>
@@ -139,7 +187,7 @@
                       class:explicit={overrideFor(segment) !== null}
                       class:override-hidden={overrideFor(segment) === 'hidden'}
                       class:override-shown={overrideFor(segment) === 'visible'}
-                      disabled={!mayChange(segment)}
+                      disabled={choosingGroup || !mayChange(segment)}
                       aria-label={`${weekday(segment)} ${exactTime(segment)}. ${overrideDescription(segment)}. ${isVisible(segment) ? 'Visible' : 'Hidden'}. Click to ${nextDescription(segment)}.`}
                       title={mayChange(segment) ? `${weekday(segment)} ${exactTime(segment)} · ${overrideDescription(segment)} · Click to ${nextDescription(segment)}` : 'Cannot override an ambiguous occurrence'}
                       onpointerenter={() => onOccurrencePreview(segment.id)}
@@ -163,7 +211,19 @@
   .context-panel { box-sizing: border-box; min-width: 0; padding: 1rem; border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 8px; background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); }
   .hint { margin: 0 0 .7rem; font-size: .8rem; line-height: 1.5; color: var(--calendar-muted, #64748b); }
   .help { margin: .35rem 0 .6rem; color: var(--calendar-muted, #64748b); font-size: .74rem; line-height: 1.4; }
-  h4 { font-size: .85rem; margin: 1rem 0 .4rem; }
+  h4 { font-size: .85rem; margin: 0; }
+  .group-controls { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 .4rem; }
+  .group-control-actions { display: flex; align-items: center; gap: .35rem; }
+  .show-all { flex: 0 0 auto; }
+  .choose-mode.active { background: var(--calendar-primary, #2f7fd6); color: #fff; border-color: var(--calendar-primary, #2f7fd6); }
+  .choose-hint {
+    min-height: 2.8em;
+    margin: .35rem 0 .6rem;
+    font-size: .74rem;
+    line-height: 1.4;
+    color: var(--calendar-muted, #64748b);
+  }
+  .choose-hint.inactive { visibility: hidden; }
   .group-type { margin-top: .75rem; }
   h5 { margin: 0 0 .3rem; padding-bottom: .3rem; border-bottom: 1px solid var(--calendar-border, #e2e8f0); font-size: .77rem; font-weight: 700; color: var(--calendar-muted, #64748b); }
   /* The group toggle is the full-card hit target. Occurrence buttons are
@@ -181,6 +241,8 @@
     border-radius: 6px;
     background: #f8fafc;
   }
+  .group.choosing { border-style: dashed; cursor: pointer; }
+  .group.choosing .group-preview { cursor: pointer; }
   .group:hover, .group:focus-within {
     border-color: var(--calendar-primary, #2f7fd6);
     background: #eff6ff;

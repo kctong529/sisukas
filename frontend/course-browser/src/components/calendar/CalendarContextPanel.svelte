@@ -29,12 +29,15 @@
     retainedGroupId?: string | null;
     onAlternativePreview?: (id: string | null) => void;
     onAlternativeToggle?: (id: string) => void;
+    onAlternativeChoose?: (id: string) => void;
+    alternativeContextKey?: string | null;
   }
   let {
     segment, presentation, date, isPinned, selection = 'candidate', onClear, onShowCourse = () => {}, members = [],
     onHideGroup = () => {}, onHideOccurrence = () => {}, canHideOccurrence = true,
     alternatives = [], previewGroupId = null, retainedGroupId = null,
     onAlternativePreview = () => {}, onAlternativeToggle = () => {},
+    onAlternativeChoose = () => {}, alternativeContextKey = null,
   }: Props = $props();
   const range = $derived(segment
     ? `${formatCalendarMinute(segment.startMinute)}–${formatCalendarMinute(segment.endMinute)}`
@@ -78,6 +81,8 @@
         {retainedGroupId}
         onPreview={onAlternativePreview}
         onTogglePreview={onAlternativeToggle}
+        onChoose={onAlternativeChoose}
+        contextKey={alternativeContextKey}
       />
     </div>
   {:else}

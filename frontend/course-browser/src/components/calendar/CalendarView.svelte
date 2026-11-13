@@ -7,6 +7,7 @@
   import { weekAwareOfferingColorIndices } from '@application/calendar/calendarOfferingColors';
   import { calendarEventPresentation } from '@application/calendar/calendarPresentation';
   import { calendarEntryVisible } from '@application/calendar/calendarVisibility';
+  import { chooseCalendarGroup, showAllCalendarGroups } from '@application/calendar/calendarVisibilityShortcuts';
   import { currentHelsinkiWeek } from '@application/calendar/currentHelsinkiWeek';
   import { shiftHelsinkiWeek } from '@application/calendar/weekNavigation';
   import { layoutCalendarWeek } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
@@ -91,6 +92,27 @@
     calendarVisibilitySessionStore.actions.setGroupHidden(
       accountId, activePlan.id, { courseOfferingId: offeringId, studyGroupId: groupId }, hidden,
     );
+  }
+  // The offering scope is passed explicitly; avoid relying on the displayed week.
+  function performVisibilityChanges(offeringId: string, changes: ReturnType<typeof chooseCalendarGroup>): void {
+    if (!accountId || !activePlan || preferenceState.status !== 'ready') return;
+    for (const group of changes.groups) {
+      calendarVisibilitySessionStore.actions.setGroupHidden(accountId, activePlan.id, {
+        courseOfferingId: offeringId, studyGroupId: group.groupId,
+      }, group.hidden);
+    }
+    for (const key of changes.occurrenceKeysToReset) {
+      calendarVisibilitySessionStore.actions.setOccurrenceVisibility(accountId, activePlan.id, key, null);
+    }
+  }
+  function chooseGroup(offeringId: string, groupId: string, groups: readonly { groupId: string; type: string }[]): void {
+    if (!visibility) return;
+    performVisibilityChanges(offeringId, chooseCalendarGroup(offeringId, groupId,
+      groups.map(group => ({ id: group.groupId, type: group.type })), visibility));
+  }
+  function showAll(offeringId: string): void {
+    if (!visibility) return;
+    performVisibilityChanges(offeringId, showAllCalendarGroups(offeringId, visibility));
   }
   function hideGroup(segment: WeeklyCalendarSegment): void {
     const { courseOfferingId, studyGroupId } = segment.entry.source;
@@ -210,7 +232,8 @@
     <WeekGrid {layout} {colorByOffering} {presentationForSegment} {groupsForSegment} {membersForSegment} {selectionForSegment}
       {hideGroup} {hideOccurrence} {weekCourses} {groupsForCourse} {visibility}
       unfilteredSegments={unfilteredLayout?.segments ?? []}
-      onToggleGroup={toggleGroup} onToggleOccurrence={toggleOccurrence} />
+      onToggleGroup={toggleGroup} onToggleOccurrence={toggleOccurrence}
+      onChooseGroup={chooseGroup} onShowAll={showAll} />
 
   {/if}
 </section>
