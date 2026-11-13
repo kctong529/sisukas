@@ -12,6 +12,7 @@
 
   import { useSession } from '../../lib/authClient';
   import { COURSE_PREFIX_RGB } from "../../lib/coursePrefixColors";
+  import { formatFinnishDate } from '../../lib/periodTimeline/formatFinnishDate';
   import { computeYearStats, formatAvg } from '../../lib/periodTimeline/yearStats';
   import { academicPeriodStore } from '../../lib/stores/academicPeriodStore';
   import { courseGradeStore } from "../../lib/stores/courseGradeStore";
@@ -464,9 +465,9 @@
                 </div>
 
                 <div class="periodCard__dates">
-                  {col.period.dateRange.start.toLocaleDateString()}
+                  {formatFinnishDate(col.period.dateRange.start)}
                   –
-                  {col.period.dateRange.end.toLocaleDateString()}
+                  {formatFinnishDate(col.period.dateRange.end)}
                 </div>
               </div>
             {/each}

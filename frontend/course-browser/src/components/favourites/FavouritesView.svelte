@@ -692,6 +692,7 @@
 
   .course-code {
     color: var(--primary);
+    font-size: var(--ui-course-code-regular);
   }
 
   .course-code-link {
@@ -709,7 +710,7 @@
   }
 
   .course-name {
-    font-size: 0.85rem;
+    font-size: var(--ui-course-title-regular);
     color: #333;
     line-height: 1.2;
     margin-top: var(--ui-card-title-gap);
@@ -843,7 +844,7 @@
     justify-content: space-between;
     align-items: center;
     margin-top: var(--ui-card-title-gap);
-    font-size: 0.7rem;
+    font-size: var(--ui-course-metadata);
     color: var(--text-muted);
   }
 

@@ -365,13 +365,13 @@
   .instance-id {
     color: var(--primary);
     margin: 0;
-    font-size: 0.9rem;
+    font-size: var(--ui-course-code-compact);
     font-weight: 700;
     line-height: 1.1;
   }
 
   .instance-name {
-    font-size: 0.75rem;
+    font-size: var(--ui-course-title-compact);
     color: #333;
     margin: var(--ui-card-title-gap) 0 0;
     line-height: 1.2;
