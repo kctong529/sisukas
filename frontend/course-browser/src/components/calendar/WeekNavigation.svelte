@@ -12,6 +12,11 @@
   let { weekStart, onPrevious, onNext, onToday }: Props = $props();
   const week = $derived(resolveHelsinkiWeek(weekStart));
   const isCurrentWeek = $derived(weekStart === currentHelsinkiWeek());
+
+  function formatDisplayDate(isoDate: string): string {
+    const [year, month, day] = isoDate.split('-');
+    return `${day}.${month}.${year}`;
+  }
 </script>
 
 <nav class="week-navigation" aria-label="Calendar week navigation">
@@ -21,7 +26,7 @@
     <button type="button" class="ui-button ui-button--secondary" onclick={onToday} disabled={isCurrentWeek}>Today</button>
   </div>
   <p class="week-range" aria-live="polite">
-    <span class="dates">{week.days[0]} – {week.days[6]}</span>
+    <span class="dates">{formatDisplayDate(week.days[0])} – {formatDisplayDate(week.days[6])}</span>
   </p>
 </nav>
 
@@ -37,7 +42,7 @@
     padding: 0.4rem 0.7rem;
   }
   .week-range { margin: 0; display: flex; gap: 0.3rem 0.65rem; flex-wrap: wrap; align-items: baseline; }
-  /* ISO dates always have the same number of characters. Tabular numerals
+  /* DD.MM.YYYY dates always have the same number of characters. Tabular numerals
      prevent the navigation width shifting as the week changes. */
   .dates {
     display: inline-block;

@@ -30,10 +30,9 @@ afterEach(async () => {
 });
 
 describe('WeekNavigation', () => {
-  it('shows the seven-day range across the year boundary', () => {
+  it('shows the seven-day range in DD.MM.YYYY format across the year boundary', () => {
     const { target } = render('2025-12-29');
-
-    expect(target.textContent).toContain('2025-12-29 – 2026-01-04');
+    expect(target.textContent).toContain('29.12.2025 – 04.01.2026');
     expect(target.textContent).not.toContain('Europe/Helsinki');
   });
 
