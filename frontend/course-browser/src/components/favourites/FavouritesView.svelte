@@ -655,7 +655,7 @@
 
   /* The sort-direction control shares button styles but keeps a square shape. */
   .sort-dir {
-    width: 2.5rem;
+    width: 32.5px;
     padding: 0;
     flex: none;
   }

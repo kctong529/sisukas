@@ -1,10 +1,8 @@
 /* Explicit opt-in classes: no implicit styling of all buttons/pages. */
 .ui-page-shell {
-  width: 100%;
   max-width: var(--ui-page-max-width);
   margin: 1.5rem auto;
   padding: 0 1rem;
-  box-sizing: border-box;
   font-family: 'Inter', system-ui, sans-serif;
   color: var(--ui-text);
 }
@@ -13,8 +11,8 @@
 .ui-button,
 .ui-select {
   box-sizing: border-box;
-  height: 2.5rem;
-  min-height: 2.5rem;
+  height: 32.5px;
+  min-height: 32.5px;
   padding: 0.5rem 0.8rem;
   border: 1px solid transparent;
   border-radius: 6px;
