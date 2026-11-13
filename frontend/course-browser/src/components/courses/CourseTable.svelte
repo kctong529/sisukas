@@ -1010,10 +1010,9 @@
     border-color: var(--primary);
   }
 
-  .mobile-sort-select:focus {
-    border-color: #2f7fd6;
-    box-shadow: 0 0 5px rgb(74 144 226 / 50%);
-    outline: none;
+  .mobile-sort-select:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
   }
 
   .sort-direction-btn {
@@ -1034,11 +1033,13 @@
     background: #f0f0f0;
   }
 
-  .sort-direction-btn:active,
-  .sort-direction-btn:focus {
-    border-color: #2f7fd6;
-    box-shadow: 0 0 5px rgb(74 144 226 / 50%);
-    outline: none;
+  .sort-direction-btn:active {
+    border-color: var(--ui-primary);
+  }
+
+  .sort-direction-btn:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
   }
 
   /* Mobile Pagination */
