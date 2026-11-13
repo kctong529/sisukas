@@ -33,18 +33,12 @@
   // A preview can reuse this component for another offering. Never carry
   // the selection mode over to a different course.
   let previousOfferingId: string | undefined;
-
   $effect(() => {
-      const currentOfferingId = course.offeringId;
-
-      if (
-          previousOfferingId !== undefined &&
-          currentOfferingId !== previousOfferingId
-      ) {
-          choosingGroup = false;
-      }
-
-      previousOfferingId = currentOfferingId;
+    const currentOfferingId = course.offeringId;
+    if (previousOfferingId !== undefined && currentOfferingId !== previousOfferingId) {
+      choosingGroup = false;
+    }
+    previousOfferingId = currentOfferingId;
   });
   function activateGroup(groupId: string, hidden: boolean): void {
     if (choosingGroup) {
@@ -161,9 +155,10 @@
         </button>
       </div>
     </div>
-    {#if choosingGroup}
-      <p class="choose-hint" role="status">Select a teaching group to hide the other groups of the same type.</p>
-    {/if}
+    <p class="choose-hint" class:inactive={!choosingGroup}
+      aria-hidden={!choosingGroup} role="status">
+      Select a teaching group to hide the other groups of the same type.
+    </p>
     {#if groupedDetails.length}
       {#each groupedDetails as section (section.heading)}
         <section class="group-type" aria-label={section.heading}>
@@ -221,7 +216,14 @@
   .group-control-actions { display: flex; align-items: center; gap: .35rem; }
   .show-all { flex: 0 0 auto; }
   .choose-mode.active { background: var(--calendar-primary, #2f7fd6); color: #fff; border-color: var(--calendar-primary, #2f7fd6); }
-  .choose-hint { margin: .35rem 0 .6rem; font-size: .74rem; color: var(--calendar-muted, #64748b); }
+  .choose-hint {
+    min-height: 2.8em;
+    margin: .35rem 0 .6rem;
+    font-size: .74rem;
+    line-height: 1.4;
+    color: var(--calendar-muted, #64748b);
+  }
+  .choose-hint.inactive { visibility: hidden; }
   .group-type { margin-top: .75rem; }
   h5 { margin: 0 0 .3rem; padding-bottom: .3rem; border-bottom: 1px solid var(--calendar-border, #e2e8f0); font-size: .77rem; font-weight: 700; color: var(--calendar-muted, #64748b); }
   /* The group toggle is the full-card hit target. Occurrence buttons are
