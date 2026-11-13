@@ -31,9 +31,8 @@
   let plansReady = $state(false);
   const activePlan = $derived(plansStore.read.getActive());
   const projection = $derived(calendarProjectionStore.projection);
-  // Session-scoped and keyed by plan: survives view remounts and A -> B -> A switching.
-  // Deliberately not persisted across reloads (#93).
-  const visibility = $derived(calendarVisibilitySessionStore.forPlan(activePlan?.id));
+  // Legacy session visibility remains until authoritative hydration is wired in Step 4.
+  const visibility = $derived(calendarVisibilitySessionStore.read.forPlan(activePlan?.id));
   const display = $derived(projection ? aggregateCalendarDisplayEntries(projection.entries) : null);
   const visibleEntries = $derived(display ? display.entries.filter(entry =>
     // A room-aggregated card is one visual occurrence; hiding it hides all its members.
@@ -50,7 +49,7 @@
   }
   function updateVisibility(next: CalendarVisibility): void {
     if (!activePlan) return;
-    calendarVisibilitySessionStore.setForPlan(activePlan.id, next);
+    calendarVisibilitySessionStore.actions.setForPlan(activePlan.id, next);
   }
   function toggleGroup(offeringId: string, groupId: string, hidden: boolean): void {
     updateVisibility(setCalendarGroupHidden(visibility, offeringId, groupId, hidden));
