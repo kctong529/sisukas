@@ -115,6 +115,7 @@
   let firstSelectedIndex = $state(-1);
   let selectedGroupIds = $state<string[]>([]);
   let committingIds = $state<string[]>([]);
+  const keyboardPending = new Set<string>();
 
   function computeGroupColorIndexMap(bs: Block[]) {
     const map: Record<string, number> = {};
@@ -192,22 +193,10 @@
     const ids = [...selectedGroupIds];
     const firstId = ids[0];
 
-    // CLICK (no drag)
+    // CLICK (no drag): share the persisted toggle with keyboard activation.
     if (!hasDragged) {
-      const removed = await blockStore.removeBlockIfGroupIsAssigned(course.id, firstId);
       endSelection(true);
-      committingIds = [];
-
-      if (!removed) {
-        committingIds = [firstId];
-        try {
-          await createBlockFromSelection([firstId]);
-        } catch (err) {
-          console.error("Failed to create block:", err);
-        } finally {
-          await clearCommitBridgeAfterPaint();
-        }
-      }
+      await toggleSingleGroup(firstId);
       return;
     }
 
@@ -222,6 +211,39 @@
       console.error("Failed to create block:", err);
     } finally {
       await clearCommitBridgeAfterPaint();
+    }
+  }
+
+  async function toggleSingleGroup(groupId: string) {
+    if (!course) return;
+    const removed = await blockStore.removeBlockIfGroupIsAssigned(course.id, groupId);
+    committingIds = [];
+    if (removed) return;
+
+    committingIds = [groupId];
+    try {
+      await createBlockFromSelection([groupId]);
+    } catch (err) {
+      console.error("Failed to create block:", err);
+    } finally {
+      await clearCommitBridgeAfterPaint();
+    }
+  }
+
+  async function handleGroupKeyDown(groupId: string, event: KeyboardEvent) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    event.preventDefault(); // Space must not scroll the page.
+    if (!course || isSelecting || keyboardPending.has(groupId)) return;
+
+    keyboardPending.add(groupId);
+    try {
+      await blockStore.beginDragSelect(course.id);
+      await toggleSingleGroup(groupId);
+    } catch (err) {
+      console.error("Failed to toggle study group:", err);
+    } finally {
+      keyboardPending.delete(groupId);
     }
   }
 
@@ -308,12 +330,13 @@
             data-index={idx}
             onmousedown={(e) => handleMouseDown(idx, group.groupId, e)}
             onmouseenter={() => handleMouseOver(idx)}
-            onfocus={() => handleMouseOver(idx)}
+            onkeydown={(e) => handleGroupKeyDown(group.groupId, e)}
             ontouchstart={(e) => handleTouchStart(idx, group.groupId, e)}
             ontouchmove={handleTouchMove}
             ontouchend={handleTouchEnd}
             ontouchcancel={handleTouchCancel}
             role="button"
+            aria-pressed={groupColorIndexById[group.groupId] !== undefined}
             tabindex="0"
           >
             <div class="square-name">{group.name}</div>
@@ -370,6 +393,11 @@
     transition: none;
   }
 
+  .study-group-square:focus-visible {
+    outline: 2px solid var(--ui-focus, #2f7fd6);
+    outline-offset: 2px;
+  }
+
   .study-group-square.in-block {
     background: color-mix(in srgb, rgb(var(--rgb)), white 88%) !important;
     border-color: rgb(var(--rgb)) !important;
@@ -377,14 +405,12 @@
   }
 
   .study-group-square.selected:not(.in-block) {
-    outline: none;
     background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
     border-color: rgb(var(--next-rgb)) !important;
     color: rgb(var(--next-rgb)) !important;
   }
 
   .study-group-square.commit-preview {
-    outline: none;
     background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
     border-color: rgb(var(--next-rgb)) !important;
     color: rgb(var(--next-rgb)) !important;
@@ -392,8 +418,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     .study-group-square:hover {
-      outline: none;
-      background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
+        background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
       border-color: rgb(var(--next-rgb)) !important;
       color: rgb(var(--next-rgb)) !important;
     }
