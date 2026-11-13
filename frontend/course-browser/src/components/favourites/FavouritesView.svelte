@@ -3,6 +3,7 @@
   import { NotificationService } from '@infrastructure/services/NotificationService';
 
   import { useSession } from '../../lib/authClient';
+  import { offeringTiming } from '../../lib/favourites/offeringTiming';
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { favouritesStore } from '../../lib/stores/favouritesStore';
   import { plansStore } from "../../lib/stores/plansStore.svelte";
@@ -502,6 +503,7 @@
 
                 <div
                   class="instance {isExpanded ? 'selected' : ''} {inPlan ? 'in-plan' : ''}"
+                  data-timing={offeringTiming(course.courseDate.start, course.courseDate.end)}
                   role="button"
                   tabindex="0"
                   onclick={(e) => {
@@ -765,10 +767,11 @@
   }
 
   .instance {
-    background: #f9fafb;
+    --offering-accent: var(--primary);
+    background: color-mix(in srgb, var(--offering-accent) 9%, white);
     padding: 0.45rem;
     border-radius: 6px;
-    border: 1px solid #f0f0f0;
+    border: 1px solid color-mix(in srgb, var(--offering-accent) 35%, white);
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
@@ -776,14 +779,31 @@
     transition: background 0.2s, transform 0.2s;
   }
 
+  .instance[data-timing="past"] {
+    --offering-accent: var(--ui-danger);
+  }
+
+  .instance[data-timing="current"] {
+    --offering-accent: #15803d;
+  }
+
+  .instance[data-timing="future"] {
+    --offering-accent: #ea580c;
+  }
+
   .instance:hover {
-    background: #eff6ff;
+    background: color-mix(in srgb, var(--offering-accent) 16%, white);
     transform: translateY(-1px);
   }
 
+  /* Expansion is an interaction state, not a timing status. */
   .instance.selected {
-    background: rgb(205, 255, 205);
-    border-color: var(--primary);
+    box-shadow: inset 0 0 0 1px var(--ui-focus-ring);
+  }
+
+  .instance:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
   }
 
   .instance-top {
