@@ -1346,13 +1346,13 @@
   }
 
   /* Hide mobile matrix on desktop / hide desktop grid on mobile */
-  @media (max-width: 520) {
+  @media (max-width: 520px) {
     .timelineGrid {
       display: none;
     }
   }
 
-  @media (min-width: 521) {
+  @media (min-width: 521px) {
     .mobileMatrix {
       display: none;
     }
