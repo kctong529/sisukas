@@ -30,7 +30,7 @@
   {/if}
 </nav>
 <style>
-  .course-bar { display: flex; align-items: center; min-width: 0; gap: .65rem; border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 8px; padding: .4rem .65rem; margin-bottom: .7rem; background: var(--calendar-card, white); }
+  .course-bar { display: flex; align-items: center; min-width: 0; gap: .65rem; border: 1px solid var(--calendar-border, #e2e8f0); border-radius: var(--ui-radius-surface); padding: .4rem .65rem; margin-bottom: .7rem; background: var(--calendar-card, white); }
   .bar-heading { font-size: .8rem; font-weight: 700; flex: 0 0 auto; }
   .course-list { display: flex; gap: .4rem; overflow-x: auto; min-width: 0; padding: .1rem; scrollbar-width: thin; }
   /* Match calendar event cards: shared palette, full-color border, and 14% tint. */

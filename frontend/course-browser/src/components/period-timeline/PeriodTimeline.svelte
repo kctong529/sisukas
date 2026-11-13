@@ -456,7 +456,10 @@
           >
             <!-- Row 1: headers -->
             {#each model.columns as col, colIndex (col.period.id)}
-              <div class="periodCard periodCard--header" style="grid-column: {colIndex + 1};">
+              <div class="periodCard periodCard--header"
+                class:periodCard--first={colIndex === 0}
+                class:periodCard--last={colIndex === model.columns.length - 1}
+                style="grid-column: {colIndex + 1};">
                 <div class="periodCard__top">
                   <div class="periodCard__title">Period {col.period.name}</div>
                   <div class="periodCard__credits" title="Total credits in this period">
@@ -474,7 +477,10 @@
 
             <!-- Row 2: period bodies -->
             {#each model.columns as col, colIndex (col.period.id)}
-              <div class="periodCard periodCard--body" style="grid-column: {colIndex + 1};">
+              <div class="periodCard periodCard--body"
+                class:periodCard--first={colIndex === 0}
+                class:periodCard--last={colIndex === model.columns.length - 1}
+                style="grid-column: {colIndex + 1};">
                 <div class="periodBody__inner">
                   {#if laneCount === 0}
                     <div class="periodBody__empty">No courses</div>
@@ -765,6 +771,20 @@
     border-bottom: none;
   }
 
+  /* Round only the outside corners of the continuous period grid. */
+  .periodCard--header.periodCard--first {
+    border-top-left-radius: var(--ui-radius-surface);
+  }
+  .periodCard--header.periodCard--last {
+    border-top-right-radius: var(--ui-radius-surface);
+  }
+  .periodCard--body.periodCard--first {
+    border-bottom-left-radius: var(--ui-radius-surface);
+  }
+  .periodCard--body.periodCard--last {
+    border-bottom-right-radius: var(--ui-radius-surface);
+  }
+
   .periodCard__top {
     display: flex;
     align-items: baseline;
@@ -1019,7 +1039,7 @@
     -webkit-overflow-scrolling: touch;
 
     /* optional: looks nicer */
-    border-radius: 12px;
+    border-radius: var(--ui-radius-surface);
     padding-bottom: 6px; /* space for scrollbar */
   }
 
@@ -1042,7 +1062,7 @@
     overflow-x: auto;
     padding: 6px;
     border: 1px solid #eee;
-    border-radius: 10px;
+    border-radius: var(--ui-radius-surface);
     background: #fff;
 
     -webkit-overflow-scrolling: touch;
@@ -1078,7 +1098,7 @@
 
     border: 1px solid #b1b1b1;
     background: #ffffff;
-    border-radius: 10px;
+    border-radius: var(--ui-radius-surface);
 
     position: relative;
     overflow: hidden;
@@ -1195,7 +1215,7 @@
 
     background: #fff;
     border: 1px solid rgba(0, 0, 0, 0.12);
-    border-radius: 14px;
+    border-radius: var(--ui-radius-dialog);
     box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
 
     overflow: hidden;
@@ -1250,7 +1270,7 @@
   .import-error {
     margin-top: 10px;
     padding: 10px;
-    border-radius: 10px;
+    border-radius: var(--ui-radius-surface);
     border: 1px solid var(--ui-danger-border);
     background: var(--ui-danger-surface);
     color: var(--ui-danger-text);
@@ -1259,7 +1279,7 @@
   .import-summary {
     margin-top: 12px;
     border: 1px solid #eee;
-    border-radius: 12px;
+    border-radius: var(--ui-radius-surface);
     padding: 12px;
     background: #fff;
   }
@@ -1293,7 +1313,7 @@
   .import-info {
     background: #f9fafb;
     border: 1px solid #e5e7eb;
-    border-radius: 10px;
+    border-radius: var(--ui-radius-surface);
     padding: 12px;
     margin-bottom: 14px;
     font-size: 0.92rem;

@@ -150,7 +150,7 @@
     overflow: auto;
     overscroll-behavior: contain;
     border: 1px solid var(--calendar-border, #e2e8f0);
-    border-radius: 8px;
+    border-radius: var(--ui-radius-surface);
     background: var(--calendar-card, #fff);
   }
   .week-scroll:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }

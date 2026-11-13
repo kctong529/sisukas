@@ -90,7 +90,7 @@
 </dialog>
 
 <style>
-  .event-details { border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 12px; padding: 1.25rem; max-width: min(560px, calc(100vw - 32px)); width: 100%; max-height: min(75vh, 650px); overflow-y: auto; color: var(--calendar-text, #1e293b); background: var(--calendar-card, #fff); box-shadow: 0 16px 42px #0f172a40; }
+  .event-details { border: 1px solid var(--calendar-border, #e2e8f0); border-radius: var(--ui-radius-dialog); padding: 1.25rem; max-width: min(560px, calc(100vw - 32px)); width: 100%; max-height: min(75vh, 650px); overflow-y: auto; color: var(--calendar-text, #1e293b); background: var(--calendar-card, #fff); box-shadow: 0 16px 42px #0f172a40; }
   .event-details::backdrop { background: #0f172a80; }
   .event-details header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
   .event-details h2 { font-size: 1.1rem; margin: 0 0 4px; }
