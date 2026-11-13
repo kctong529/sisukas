@@ -230,6 +230,11 @@
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
+  input:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
+
   .submit-btn {
     display: flex;
     align-items: center;

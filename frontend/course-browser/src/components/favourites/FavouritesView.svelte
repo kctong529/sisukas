@@ -766,6 +766,12 @@
     outline: none;
   }
 
+  .add-btn:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--ui-radius-control);
+  }
+
   .instance {
     --offering-accent: var(--primary);
     --offering-background-strength: 6%;

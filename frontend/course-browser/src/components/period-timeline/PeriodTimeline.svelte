@@ -979,6 +979,11 @@
     text-underline-offset: 2px;
   }
 
+  .gradePill:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
+
   .gradeInput {
     width: 1.8ch;
     padding: 0;
@@ -1001,6 +1006,11 @@
   .gradeInput:focus {
     outline: none;
     border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+  }
+
+  .gradeInput:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
   }
 
   .timelineScroll {
