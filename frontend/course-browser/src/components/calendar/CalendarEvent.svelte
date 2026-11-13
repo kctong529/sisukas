@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { calendarEventLocationRows } from '@application/calendar/calendarEventLocationRows';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
+  import { calendarEventLocationRows } from '@application/calendar/calendarEventLocationRows';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
 
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
@@ -27,6 +27,12 @@
     segment.continuesBefore ? 'Continues from earlier' : null,
     segment.continuesAfter ? 'Continues later' : null,
   ].filter(Boolean).join('; '));
+  const tooltipText = $derived([
+    presentation.courseCode, presentation.courseTitle, presentation.groupLabel, range,
+    cancelled ? 'Cancelled' : excluded ? 'Excluded' : null,
+    locationRows.location ? `Location: ${locationRows.location}` : null,
+    locationRows.building ? `Building: ${locationRows.building}` : null, continuation,
+  ].filter(Boolean).join(', '));
   const accessibleText = $derived([
     presentation.courseCode, presentation.courseTitle, presentation.groupLabel, range,
     cancelled ? 'Cancelled' : excluded ? 'Excluded' : null,
@@ -47,7 +53,7 @@
   class:compact
   class:cancelled
   class:excluded
-  title={accessibleText}
+  title={tooltipText}
   aria-label={accessibleText}
   aria-describedby={instructionId}
   data-compact={compact}

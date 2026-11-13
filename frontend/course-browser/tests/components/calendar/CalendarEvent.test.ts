@@ -82,13 +82,16 @@ describe('CalendarEvent presentation', () => {
     expect(target.querySelector('.selection-label')).toBeNull();
     expect(target.textContent).not.toContain('Candidate · not selected in Sisukas');
     expect(target.querySelector('.calendar-event')?.getAttribute('aria-label')).toContain('Candidate');
+    expect(target.querySelector('.calendar-event')?.getAttribute('title')).not.toContain('Candidate');
+    expect(target.querySelector('.calendar-event')?.getAttribute('title')).not.toContain('Sisukas');
   });
   it('labels explicit Sisukas choices but does not claim SISU registration', () => {
     const target = render('2026-11-02T10:00:00+02:00', '2026-11-02T11:00:00+02:00', { selection: 'selected' });
     expect(target.querySelector('[data-selection="selected"]')).not.toBeNull();
     expect(target.querySelector('.selection-label')).toBeNull();
-    expect(target.textContent).not.toContain('Selected in Sisukas');
-    expect(target.querySelector('.calendar-event')?.getAttribute('aria-label')).toContain('Selected in Sisukas');
+    expect(target.textContent).not.toContain('Selected');
+    expect(target.querySelector('.calendar-event')?.getAttribute('aria-label')).toContain('Selected');
+    expect(target.querySelector('.calendar-event')?.getAttribute('title')).not.toContain('Selected');
     expect(target.textContent).not.toContain('Registered');
   });
   it('marks cancelled events explicitly', () => {
