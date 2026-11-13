@@ -421,12 +421,12 @@
   }
 
   .state-card.error {
-    background: #fef2f2;
-    border-color: #fecaca;
+    background: var(--ui-danger-surface);
+    border-color: var(--ui-danger-border);
   }
 
   .state-card.error h2 {
-    color: #ef4444;
+    color: var(--ui-danger);
   }
 
   .spinner {
@@ -646,9 +646,9 @@
   }
 
   .alert-error {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #991b1b;
+    background: var(--ui-danger-surface);
+    border-color: var(--ui-danger-border);
+    color: var(--ui-danger-text);
   }
 
   .alert h3 {

@@ -252,7 +252,7 @@
   .event.alternative-dim { opacity: .38; }
   .event:hover, .event:focus-within { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 1px; z-index: 2; }
   .event.inactive { border-style: dashed; border-color: #94a3b8; background: #f1f5f9; color: #475569; }
-  .event.cancelled { border-color: #b91c1c; background: #fee2e2; color: #7f1d1d; }
+  .event.cancelled { border-color: var(--ui-danger); background: var(--ui-danger-surface); color: var(--ui-danger-text); }
   .cluster {
     z-index: 3;
     right: 3px;

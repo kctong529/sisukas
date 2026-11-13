@@ -607,8 +607,6 @@
     --primary-hover: #1d4ed8;
     --primary-soft: #eff6ff;
     --success: #10b981;
-    --danger: #ef4444;
-    
     --bg-app: #f8fafc;
     --surface: #ffffff;
     
@@ -756,7 +754,7 @@
     border: none;
     background: none;
     cursor: pointer;
-    color: #d9534f;
+    color: var(--ui-danger);
     padding: 6px 0;
     transition: transform 0.2s, color 0.2s;
     display: flex;
@@ -770,11 +768,11 @@
   }
   
   .favourite-btn.favourited {
-    color: #d9534f;
+    color: var(--ui-danger);
   }
   
   .favourite-btn:focus {
-    outline: 2px solid #d9534f;
+    outline: 2px solid var(--ui-danger);
     outline-offset: -2px;
   }
 
@@ -794,7 +792,7 @@
   }
   
   a:hover {
-    color: #d9534f;
+    color: var(--ui-danger);
   }
   
   a:active {
@@ -912,7 +910,7 @@
     background: none;
     cursor: pointer;
     font-size: 0.9rem;
-    color: #d9534f;
+    color: var(--ui-danger);
     padding: 0;
     margin: 0;
     margin-right: 5px;
@@ -928,11 +926,11 @@
   }
 
   .favourite-btn-mobile.favourited {
-    color: #d9534f;
+    color: var(--ui-danger);
   }
 
   .favourite-btn-mobile:focus {
-    outline: 2px solid #d9534f;
+    outline: 2px solid var(--ui-danger);
     outline-offset: -1px;
   }
   

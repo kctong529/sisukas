@@ -323,9 +323,9 @@
   }
 
   .error {
-    color: #991b1b;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    color: var(--ui-danger-text);
+    background: var(--ui-danger-surface);
+    border: 1px solid var(--ui-danger-border);
     border-radius: 12px;
     padding: 10px 12px;
     white-space: pre-wrap;

@@ -8,7 +8,11 @@
   --ui-text-muted: #64748b;
   --ui-border: #e2e8f0;
   --ui-surface-hover: #f1f5f9;
-  --ui-danger: #ef4444;
+  --ui-danger: #d9534f;
+  --ui-danger-hover: color-mix(in srgb, var(--ui-danger) 88%, black);
+  --ui-danger-text: #991b1b;
+  --ui-danger-surface: #fef2f2;
+  --ui-danger-border: #fecaca;
   --ui-success: #10b981;
   --ui-focus-ring: #2f7fd6;
   --ui-page-max-width: 1400px;

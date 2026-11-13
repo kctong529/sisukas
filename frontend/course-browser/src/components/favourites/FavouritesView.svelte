@@ -680,8 +680,8 @@
   }
 
   .favourite-item.remove-mode {
-    background: #fef2f2;
-    border-color: #fecaca;
+    background: var(--ui-danger-surface);
+    border-color: var(--ui-danger-border);
   }
 
   .item-header {
@@ -733,7 +733,7 @@
   }
 
   .remove-btn:hover {
-    color: #991b1b;
+    color: var(--ui-danger-text);
     transform: scale(1.1);
   }
 
@@ -830,8 +830,8 @@
   }
 
   .format-badge[data-format="exam"] {
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--ui-danger-surface);
+    color: var(--ui-danger-text);
   }
 
   .format-badge[data-format="thesis"] {
@@ -976,7 +976,7 @@
   }
 
   .remove-btn-sec:hover:not(:disabled) {
-    background-color: #d9534f;
+    background-color: var(--ui-danger);
     color: white;
     border-color: white;
   }
@@ -1012,12 +1012,12 @@
   }
 
   .state-card.error {
-    background: #fef2f2;
-    border-color: #fecaca;
+    background: var(--ui-danger-surface);
+    border-color: var(--ui-danger-border);
   }
 
   .state-card.error h2 {
-    color: #ef4444;
+    color: var(--ui-danger);
   }
 
   .spinner {

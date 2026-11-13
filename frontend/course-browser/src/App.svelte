@@ -464,7 +464,7 @@
   }
 
   :global(h2 a:hover) {
-    color: #d9534f;
+    color: var(--ui-danger);
   }
 
   #main-content {

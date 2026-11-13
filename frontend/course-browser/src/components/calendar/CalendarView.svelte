@@ -284,7 +284,7 @@
   h1 { margin: 0 0 1rem; font-size: 1.3rem; font-weight: 600; }
   .selection-explanation { margin: 0 0 0.75rem; color: var(--calendar-muted); font-size: 0.8rem; line-height: 1.45; }
   .data-notice { margin: 0 0 0.5rem; font-size: 0.85rem; line-height: 1.5; }
-  .data-notice.failed { color: #991b1b; }
+  .data-notice.failed { color: var(--ui-danger-text); }
   .data-notice.stale { color: #854d0e; }
   .retry-data {
     margin: 0 0 0.75rem;

@@ -1290,9 +1290,9 @@
     margin-top: 10px;
     padding: 10px;
     border-radius: 10px;
-    border: 1px solid #fecaca;
-    background: #fef2f2;
-    color: #991b1b;
+    border: 1px solid var(--ui-danger-border);
+    background: var(--ui-danger-surface);
+    color: var(--ui-danger-text);
   }
 
   .import-summary {

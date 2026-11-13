@@ -160,7 +160,7 @@
   }
   
   .filter-rule.period-active {
-    background: #ffeeee;
+    background: var(--ui-danger-surface);
   }
 
   .filter-boolean {

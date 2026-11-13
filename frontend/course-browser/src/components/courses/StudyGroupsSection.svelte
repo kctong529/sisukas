@@ -197,7 +197,7 @@
     padding-top: 0.15rem;
   }
 
-  .group-events summary:hover { color: #d9534f; }
+  .group-events summary:hover { color: var(--ui-danger); }
 
   .events-list {
     display: flex;

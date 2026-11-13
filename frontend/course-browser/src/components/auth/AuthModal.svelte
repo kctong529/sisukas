@@ -260,13 +260,13 @@
   .message {
     padding: 0.8rem;
     border-radius: 6px;
-    background: #fff5f5;
-    color: #d9534f;
+    background: var(--ui-danger-surface);
+    color: var(--ui-danger);
     font-size: 0.9rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    border: 1px solid #ffdede;
+    border: 1px solid var(--ui-danger-border);
   }
 
   .message.success {
