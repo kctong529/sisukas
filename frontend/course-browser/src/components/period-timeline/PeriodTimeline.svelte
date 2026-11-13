@@ -893,7 +893,7 @@
 
     padding: 8px 10px 8px 12px;
     border-radius: 8px;
-    border: 1px solid #b1b1b1;
+    border: 1px solid #d1d5db;
     background: #ffffff;
     color: #111827;
 
@@ -912,13 +912,13 @@
     left: 0;
     top: 0;
     bottom: 0;
-    width: 8px;
+    width: 5px;
     background: rgb(var(--chip-rgb));
     opacity: 0.6;
   }
 
   .course-chip:hover {
-    border-color: #d1d5db;
+    border-color: #9ca3af;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
   }
@@ -934,7 +934,7 @@
     color: #777;
     background: rgba(var(--chip-rgb), 0.18);
     padding: 2px 5px;
-    border-radius: 3px;
+    border-radius: 4px;
     width: 30px;
     text-align: center;
     flex-shrink: 0;
@@ -967,7 +967,7 @@
     min-width: 1ch;
     padding: 0 2px;
 
-    color: rgba(189, 189, 189, 0.75);
+    color: #6b7280;
     font-size: 0.9em;
     line-height: 1;
 
@@ -1096,7 +1096,7 @@
     grid-column: calc(var(--lane) + 1);
     grid-row: var(--p-start) / var(--p-end);
 
-    border: 1px solid #b1b1b1;
+    border: 1px solid #d1d5db;
     background: #ffffff;
     border-radius: var(--ui-radius-surface);
 
