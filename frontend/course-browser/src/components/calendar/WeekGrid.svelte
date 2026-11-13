@@ -37,6 +37,8 @@
     unfilteredSegments?: readonly WeeklyCalendarSegment[];
     visibility?: CalendarVisibility;
     onToggleGroup?: (offeringId: string, groupId: string, hidden: boolean) => void;
+    onChooseGroup?: (offeringId: string, groupId: string, groups: readonly { groupId: string; type: string }[]) => void;
+    onShowAll?: (offeringId: string) => void;
     onToggleOccurrence?: (segment: WeeklyCalendarSegment, state: 'hidden' | 'visible' | null) => void;
   }
   let {
@@ -46,6 +48,7 @@
     weekCourses = [], groupsForCourse = () => [], unfilteredSegments = [],
     visibility = { hiddenGroups: [], occurrenceOverrides: {} },
     onToggleGroup = () => {}, onToggleOccurrence = () => {},
+    onChooseGroup = () => {}, onShowAll = () => {},
   }: Props = $props();
 
   // Callers supply the whole active plan so colors do not change with the week.
@@ -209,7 +212,7 @@
     {#if showCourse && displayedCourse}
       <CalendarCourseContext course={displayedCourse} isPinned={coursePinned} groups={groupsForCourse(displayedCourse.offeringId)}
         segments={courseSegments} {visibility} {membersForSegment}
-        {onToggleGroup} {onToggleOccurrence}
+        {onToggleGroup} {onToggleOccurrence} {onChooseGroup} {onShowAll}
         onGroupPreview={id => { courseGroupPreviewId = id; courseOccurrencePreviewId = null; }}
         onOccurrencePreview={id => { courseOccurrencePreviewId = id; }}
         onClear={() => { selectedOfferingId = null; previewCourseId = null; }} />

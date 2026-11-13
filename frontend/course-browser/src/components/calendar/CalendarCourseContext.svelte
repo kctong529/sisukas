@@ -1,6 +1,7 @@
 <script lang="ts">
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import { calendarEntryVisible, calendarGroupKey } from '@application/calendar/calendarVisibility';
+  import { offeringHasVisibilityChanges } from '@application/calendar/calendarVisibilityShortcuts';
 
   import CalendarDetailsHeading from './CalendarDetailsHeading.svelte';
 
@@ -18,13 +19,16 @@
     visibility: CalendarVisibility;
     membersForSegment: (segment: WeeklyCalendarSegment) => readonly CalendarEntry[];
     onToggleGroup: (offeringId: string, groupId: string, hidden: boolean) => void;
+    onChooseGroup?: (offeringId: string, groupId: string, groups: readonly { groupId: string; type: string }[]) => void;
+    onShowAll?: (offeringId: string) => void;
     onToggleOccurrence: (segment: WeeklyCalendarSegment, state: 'hidden' | 'visible' | null) => void;
     onClear: () => void;
     onGroupPreview?: (groupId: string | null) => void;
     onOccurrencePreview?: (segmentId: string | null) => void;
   }
   let { course, isPinned, groups, segments, visibility, membersForSegment, onToggleGroup, onToggleOccurrence, onClear,
-    onGroupPreview = () => {}, onOccurrencePreview = () => {} }: Props = $props();
+    onGroupPreview = () => {}, onOccurrencePreview = () => {},
+    onChooseGroup = () => {}, onShowAll = () => {} }: Props = $props();
   const groupIds = $derived([...new Set([
     ...groups.map(group => group.groupId),
     ...segments.map(segment => segment.entry.source.studyGroupId),
@@ -114,7 +118,13 @@
   <div class="course-information">
     {#if !isPinned}<p class="hint">Previewing · Click the course to pin its details here.</p>{/if}
     <p class="help">Manage timetable visibility only. These controls do not change attendance or registration.</p>
-    <h4>Teaching groups</h4>
+    <div class="group-controls">
+      <h4>Teaching groups</h4>
+      <button type="button" class="show-all" onclick={() => onShowAll(course.offeringId)}
+        disabled={!offeringHasVisibilityChanges(course.offeringId, visibility)}>
+        Show all
+      </button>
+    </div>
     {#if groupedDetails.length}
       {#each groupedDetails as section (section.heading)}
         <section class="group-type" aria-label={section.heading}>
@@ -133,6 +143,16 @@
                   <strong>{group.name}</strong>
                 </button>
               <span class="group-label-space" aria-hidden="true"></span>
+              {#if section.groups.length > 1}
+                <button type="button" class="choose-group"
+                  aria-label={`Show only ${group.name} among ${section.heading.toLowerCase()}`}
+                  title={`Show only ${group.name} (${section.heading})`}
+                  onclick={() => onChooseGroup(course.offeringId, group.id, groupDetails.map(item => ({
+                    groupId: item.id, type: typeHeading(item.type),
+                  })))}>
+                  Only
+                </button>
+              {/if}
               {#each group.occurrences as segment (segment.id)}
                     <button type="button" class="occurrence"
                       class:dimmed={!isVisible(segment)}
@@ -163,7 +183,10 @@
   .context-panel { box-sizing: border-box; min-width: 0; padding: 1rem; border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 8px; background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); }
   .hint { margin: 0 0 .7rem; font-size: .8rem; line-height: 1.5; color: var(--calendar-muted, #64748b); }
   .help { margin: .35rem 0 .6rem; color: var(--calendar-muted, #64748b); font-size: .74rem; line-height: 1.4; }
-  h4 { font-size: .85rem; margin: 1rem 0 .4rem; }
+  h4 { font-size: .85rem; margin: 0; }
+  .group-controls { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: 1rem 0 .4rem; }
+  .choose-group { position: relative; z-index: 1; flex: 0 0 auto; }
+  .show-all { flex: 0 0 auto; }
   .group-type { margin-top: .75rem; }
   h5 { margin: 0 0 .3rem; padding-bottom: .3rem; border-bottom: 1px solid var(--calendar-border, #e2e8f0); font-size: .77rem; font-weight: 700; color: var(--calendar-muted, #64748b); }
   /* The group toggle is the full-card hit target. Occurrence buttons are
