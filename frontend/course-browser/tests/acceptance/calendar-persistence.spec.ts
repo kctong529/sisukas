@@ -223,3 +223,83 @@ test('E03: visibility preferences remain isolated across plans A → B → A', a
     }
   }
 });
+
+
+// E05 intercepts only the temporary plan's first group PUT. The backend
+// remains real for fixture setup, the retry, fresh GET hydration, and cleanup.
+test('E05: failed visibility save shows an actionable error and retries successfully', async ({ page }) => {
+  let fixture: Awaited<ReturnType<typeof prepareFixture>> | undefined;
+  const failedPutRoute = '**/api/plans/*/calendar/groups';
+  let failureInjected = false;
+  try {
+    fixture = await prepareFixture(page);
+    const { origin, fixtureId } = fixture;
+    await apiJson(page.request, origin, `/api/plans/${fixtureId}/instances`, 'POST', {
+      instanceId: offeringId,
+    });
+    await page.reload();
+
+    const group = await openFixtureGroup(page);
+    await expect(group).toHaveAttribute('aria-pressed', 'false');
+
+    await page.route(failedPutRoute, async route => {
+      const request = route.request();
+      if (!failureInjected && isGroupPut(request.url(), request.method()) &&
+          new URL(request.url()).pathname === `/api/plans/${fixtureId}/calendar/groups`) {
+        failureInjected = true;
+        await route.fulfill({
+          status: 500,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'Injected Calendar write failure for E05' }),
+        });
+      } else {
+        await route.continue();
+      }
+    });
+
+    const failedResponse = page.waitForResponse(response =>
+      isGroupPut(response.url(), response.request().method()) &&
+      new URL(response.url()).pathname === `/api/plans/${fixtureId}/calendar/groups` &&
+      response.status() === 500);
+    await group.click();
+    await failedResponse;
+    expect(failureInjected).toBe(true);
+
+    // The UI retains the unsaved local intent and provides an explicit retry.
+    await expect(group).toHaveAttribute('aria-pressed', 'true');
+    const notification = page.locator('#notification-container .filter-notification.error')
+      .filter({ hasText: 'Calendar visibility change(s) could not be saved' });
+    await expect(notification).toBeVisible();
+    const retryButton = notification.getByRole('button', { name: 'Retry', exact: true });
+    await expect(retryButton).toBeVisible();
+
+    // No request reached the backend for the failed PUT.
+    const unsaved = await apiJson<{ hiddenGroups: { courseOfferingId: string;
+      studyGroupId: string }[] }>(page.request, origin,
+      `/api/plans/${fixtureId}/calendar`, 'GET');
+    expect(unsaved.hiddenGroups).not.toContainEqual({
+      courseOfferingId: offeringId, studyGroupId: groupId,
+    });
+
+    // Remove the interception before retrying: this PUT must reach staging.
+    await page.unroute(failedPutRoute);
+    const savedResponse = page.waitForResponse(response =>
+      isGroupPut(response.url(), response.request().method()) &&
+      new URL(response.url()).pathname === `/api/plans/${fixtureId}/calendar/groups` &&
+      response.ok());
+    await retryButton.click();
+    await savedResponse;
+    await expect(notification).toHaveCount(0);
+    await reloadAndExpect(page, true);
+  } finally {
+    await page.unroute(failedPutRoute);
+    if (fixture) {
+      const { origin, activeId, fixtureId } = fixture;
+      try {
+        await apiJson(page.request, origin, `/api/plans/${activeId}/activate`, 'PATCH');
+      } finally {
+        await apiJson(page.request, origin, `/api/plans/${fixtureId}`, 'DELETE');
+      }
+    }
+  }
+});
