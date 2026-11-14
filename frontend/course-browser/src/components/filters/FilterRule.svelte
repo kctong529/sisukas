@@ -144,7 +144,7 @@
   {/if}
   
   <button
-    class="delete-btn"
+    class="ui-button ui-button--secondary delete-btn"
     on:click={() => dispatch('remove')}
     aria-label="Remove filter rule"
     title="Remove filter rule"
@@ -154,30 +154,22 @@
 </div>
 
 <style>
-  :root {
-    --primary: #2f7fd6;
-    --primary-hover: #2980f1;
-    --text-main: #1e293b;
-    --border: #e2e8f0;
-    --danger: #d9534f;
-  }
-
   .filter-rule {
     margin-bottom: 0.3em;
     position: relative;
   }
   
   .filter-rule.period-active {
-    background: #ffeeee;
+    background: var(--ui-danger-surface);
   }
 
   .filter-boolean {
     position: absolute;
   }
   
-  .filter-input, button, select, input {
+  .filter-input, select, input {
     display: inline-block;
-    background-color: #fff;
+    background-color: var(--ui-surface);
     appearance: none;
     font-size: 0.75rem;
     cursor: pointer;
@@ -186,14 +178,13 @@
     text-align: start;
   }
 
-  button, select, .filter-input {
+  select, .filter-input {
     margin: 0 0.1em;
   }
 
-  button, select, input {
+  select, input {
     box-sizing: border-box;
-    /* box-shadow: 0 2px 5px rgb(0 0 0 / 10%); */
-    border: 1px solid #ddd;
+    border: 1px solid var(--ui-border);
     border-radius: 4px;
     padding-left: 0.7em;
     padding-right: 0.7em;
@@ -234,50 +225,34 @@
   .filter-relation:hover,
   .filter-input input:hover,
   .filter-input select:hover {
-    border-color: var(--primary);
+    border-color: var(--ui-primary);
   }
 
-  .filter-boolean:focus,
-  .filter-field:focus,
-  .filter-relation:focus,
-  .filter-input input:focus,
-  .filter-input select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  .filter-boolean:focus-visible,
+  .filter-field:focus-visible,
+  .filter-relation:focus-visible,
+  .filter-input input:focus-visible,
+  .filter-input select:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
   }
-  
-  /* Delete button */
+
+  /* Keep the original 32.5px square action and danger treatment. */
   .delete-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     width: 32.5px;
+    min-width: 32.5px;
     height: 32.5px;
+    min-height: 32.5px;
     padding: 0;
-    border: 1px solid var(--border);
-    background: #ffffff;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #d9534f;
+    margin: 0 0.1em;
+    color: var(--ui-danger);
     flex-shrink: 0;
   }
 
-  .delete-btn:hover {
-    background-color: #d9534f;
+  .delete-btn:hover:not(:disabled) {
+    background-color: var(--ui-danger);
     color: white;
-    border-color: #d9534f;
-  }
-
-  .delete-btn:focus {
-    outline: none;
-    border-color: #d9534f;
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-  }
-
-  .delete-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    border-color: var(--ui-danger);
   }
 
   /* Adjust widths for smaller screens */

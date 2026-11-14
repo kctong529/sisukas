@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { calendarEventLocationRows } from '@application/calendar/calendarEventLocationRows';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
   import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
 
@@ -19,17 +20,25 @@
   const instructionId = $props.id();
   const cancelled = $derived(segment.entry.source.event.cancelled);
   const excluded = $derived(segment.entry.source.event.excluded);
-  const location = $derived(presentation.locationLabel);
+  const locationRows = $derived(calendarEventLocationRows(segment.entry.source.event));
   const range = $derived(`${formatCalendarMinute(segment.startMinute)}–${formatCalendarMinute(segment.endMinute)}`);
   const compact = $derived(segment.endMinute - segment.startMinute < 45);
   const continuation = $derived([
     segment.continuesBefore ? 'Continues from earlier' : null,
     segment.continuesAfter ? 'Continues later' : null,
   ].filter(Boolean).join('; '));
+  const tooltipText = $derived([
+    presentation.courseCode, presentation.courseTitle, presentation.groupLabel, range,
+    cancelled ? 'Cancelled' : excluded ? 'Excluded' : null,
+    locationRows.location ? `Location: ${locationRows.location}` : null,
+    locationRows.building ? `Building: ${locationRows.building}` : null, continuation,
+  ].filter(Boolean).join(', '));
   const accessibleText = $derived([
     presentation.courseCode, presentation.courseTitle, presentation.groupLabel, range,
     cancelled ? 'Cancelled' : excluded ? 'Excluded' : null,
-    calendarSelectionLabel(selection), location, continuation,
+    calendarSelectionLabel(selection),
+    locationRows.location ? `Location: ${locationRows.location}` : null,
+    locationRows.building ? `Building: ${locationRows.building}` : null, continuation,
   ].filter(Boolean).join(', '));
 </script>
 
@@ -44,7 +53,7 @@
   class:compact
   class:cancelled
   class:excluded
-  title={accessibleText}
+  title={tooltipText}
   aria-label={accessibleText}
   aria-describedby={instructionId}
   data-compact={compact}
@@ -57,9 +66,6 @@
     {#if presentation.courseCode}<span class="event-code">{presentation.courseCode}</span>{/if}
     {#if presentation.groupLabel}<span class="event-group">{presentation.groupLabel}</span>{/if}
   </span>
-  {#if !compact}
-    <span class="selection-label" class:selected={selection === 'selected'}>{calendarSelectionLabel(selection)}</span>
-  {/if}
   <span class="event-title">
     {#if segment.continuesBefore}<span class="continuation" aria-hidden="true">↤ </span>{/if}
     {presentation.courseTitle}
@@ -72,7 +78,12 @@
     {:else if excluded}
       <span class="event-status">Excluded</span>
     {/if}
-    {#if location}<span class="event-location">{location}</span>{/if}
+    {#if locationRows.location}
+      <span class="event-location">{locationRows.location}</span>
+    {/if}
+    {#if locationRows.building}
+      <span class="event-building">{locationRows.building}</span>
+    {/if}
   {/if}
 </button>
 
@@ -108,8 +119,6 @@
     overflow: hidden;
     font-size: 0.9em;
   }
-  .selection-label { font-size: .72em; color: #475569; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .selection-label.selected { color: #166534; font-weight: 700; }
   .event-code { font-weight: 750; }
   .event-group { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .event-title {
@@ -128,7 +137,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .event-time, .event-location, .event-status {
+  .event-time, .event-location, .event-building, .event-status {
     display: block;
     min-width: 0;
     overflow: hidden;
@@ -141,7 +150,6 @@
   .cancelled .event-title { text-decoration: line-through; }
   /* Small lanes need a concise label, not several unreadable metadata rows. */
   @container calendar-card (max-width: 125px) {
-    .event-time, .event-location, .selection-label { display: none; }
     .event-heading { display: block; }
     .event-group { display: none; }
   }

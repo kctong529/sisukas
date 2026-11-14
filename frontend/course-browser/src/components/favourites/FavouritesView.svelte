@@ -3,6 +3,7 @@
   import { NotificationService } from '@infrastructure/services/NotificationService';
 
   import { useSession } from '../../lib/authClient';
+  import { offeringTiming } from '../../lib/favourites/offeringTiming';
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { favouritesStore } from '../../lib/stores/favouritesStore';
   import { plansStore } from "../../lib/stores/plansStore.svelte";
@@ -322,7 +323,7 @@
   }
 </script>
 
-<div class="favourites-container">
+<div class="favourites-container ui-page-shell">
   {#if !isSignedIn}
     <div class="state-card">
       <div class="icon-circle">👤</div>
@@ -340,13 +341,13 @@
     <div class="state-card error">
       <h2>Something went wrong</h2>
       <p>{favState.error}</p>
-      <button class="btn btn-secondary" onclick={() => favouritesStore.load()}>
+      <button class="ui-button ui-button--secondary" onclick={() => favouritesStore.load()}>
         Try Again
       </button>
     </div>
 
   {:else if favState.favourites.length === 0}
-    <div class="header-section">
+    <div class="header-section ui-view-header">
       <div class="title-group">
         <h2>Your Favourites</h2>
       </div>
@@ -361,11 +362,11 @@
       <div class="icon-circle">♥</div>
       <h2>Your list is empty</h2>
       <p>Start exploring courses and click the heart icon to add them here.</p>
-      <a href="/" class="btn btn-primary">Browse Courses</a>
+      <a href="/" class="ui-button ui-button--primary">Browse Courses</a>
     </div>
 
   {:else}
-    <div class="header-section">
+    <div class="header-section ui-view-header">
       <div class="title-group">
         <h2>Your Favourites</h2>
       </div>
@@ -377,13 +378,14 @@
 
       <div class="controls">
         {#if ui.removeMode}
-          <button class="btn btn-secondary" onclick={exitRemoveMode}>
+          <button class="ui-button ui-button--secondary" onclick={exitRemoveMode}>
             Done
           </button>
         {:else}
           <div class="sort-box">
             <label for="sort">Sort by:</label>
             <select
+              class="ui-select"
               id="sort"
               bind:value={ui.sortBy}
             >
@@ -396,7 +398,7 @@
 
             <button
               type="button"
-              class="sort-dir"
+              class="ui-button ui-button--secondary sort-dir"
               onclick={() => {
                 ui.sortDirection = (ui.sortDirection * -1) as 1 | -1;
               }}
@@ -408,7 +410,7 @@
 
           <button
             type="button"
-            class="btn btn-secondary older-btn"
+            class="ui-button ui-button--secondary older-btn"
             class:active={source === "all"}
             aria-pressed={source === "all"}
             onclick={toggleAll}
@@ -419,7 +421,7 @@
 
           <button
             type="button"
-            class="btn btn-secondary remove-btn-sec"
+            class="ui-button ui-button--secondary remove-btn-sec"
             onclick={() => { ui.removeMode = true; }}
           >
             Remove
@@ -501,6 +503,7 @@
 
                 <div
                   class="instance {isExpanded ? 'selected' : ''} {inPlan ? 'in-plan' : ''}"
+                  data-timing={offeringTiming(course.courseDate.start, course.courseDate.end)}
                   role="button"
                   tabindex="0"
                   onclick={(e) => {
@@ -592,34 +595,6 @@
 </div>
 
 <style>
-  :root {
-    --primary: #2f7fd6;
-    --primary-hover: #2980f1;
-    --bg: #f8fafc;
-    --card-bg: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --danger: #ef4444;
-    --border: #e2e8f0;
-    --success: #10b981;
-  }
-
-  .favourites-container {
-    max-width: 1400px;
-    margin: 1.5rem auto;
-    padding: 0 1rem;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--text-main);
-  }
-
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
 
   .title-group {
     display: flex;
@@ -633,12 +608,6 @@
     align-items: flex-start;
     flex-wrap: wrap;
     min-width: 0;
-  }
-
-  h2 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
   }
 
   h3 {
@@ -655,6 +624,8 @@
   .controls {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    margin-left: auto;
     gap: 0.3rem;
     color: var(--text-main);
     font-size: 0.8rem;
@@ -672,51 +643,11 @@
     font-weight: 500;
   }
 
-  select {
-    flex: 1;
-    padding: 0.5rem 0.8rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    cursor: pointer;
-    background: #ffffff;
-    color: #1e293b;
-    appearance: none;
-    height: 32.5px;
-  }
-
-  select:hover {
-    border-color: var(--primary);
-  }
-
-  select:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
-
+  /* The sort-direction control shares button styles but keeps a square shape. */
   .sort-dir {
-    padding: 0.5rem 0.7rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--card-bg);
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.8rem;
-    color: var(--text-main);
-    min-width: 32.5px;
-    text-align: center;
-  }
-
-  .sort-dir:hover {
-    border-color: var(--primary);
-    background: #f1f5f9;
-  }
-
-  .sort-dir:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    width: 32.5px;
+    padding: 0;
+    flex: none;
   }
 
   .favourites-list {
@@ -728,8 +659,8 @@
   .favourite-item {
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 1rem;
+    border-radius: var(--ui-radius-surface);
+    padding: var(--ui-card-padding-regular);
     transition: transform 0.2s, box-shadow 0.2s;
   }
 
@@ -739,16 +670,16 @@
   }
 
   .favourite-item.remove-mode {
-    background: #fef2f2;
-    border-color: #fecaca;
+    background: var(--ui-danger-surface);
+    border-color: var(--ui-danger-border);
   }
 
   .item-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 0.75rem;
-    gap: 1rem;
+    margin-bottom: var(--ui-card-content-gap);
+    gap: var(--ui-space-4);
   }
 
   .code-and-info {
@@ -757,6 +688,7 @@
 
   .course-code {
     color: var(--primary);
+    font-size: var(--ui-course-code-regular);
   }
 
   .course-code-link {
@@ -774,10 +706,10 @@
   }
 
   .course-name {
-    font-size: 0.85rem;
+    font-size: var(--ui-course-title-regular);
     color: #333;
     line-height: 1.2;
-    margin-top: 0.1rem;
+    margin-top: var(--ui-card-title-gap);
   }
 
   .remove-btn {
@@ -792,7 +724,7 @@
   }
 
   .remove-btn:hover {
-    color: #991b1b;
+    color: var(--ui-danger-text);
     transform: scale(1.1);
   }
 
@@ -804,8 +736,8 @@
   .instances-container {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    gap: var(--ui-space-2);
+    margin-bottom: var(--ui-card-content-gap);
   }
 
   .add-btn {
@@ -828,26 +760,58 @@
     outline: none;
   }
 
+  .add-btn:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--ui-radius-control);
+  }
+
   .instance {
-    background: #f9fafb;
+    --offering-accent: var(--primary);
+    --offering-background-strength: 6%;
+    --offering-border-strength: 24%;
+    --offering-hover-background-strength: 11%;
+    --offering-hover-border-strength: 34%;
+    background: color-mix(in srgb, var(--offering-accent) var(--offering-background-strength), white);
     padding: 0.45rem;
     border-radius: 6px;
-    border: 1px solid #f0f0f0;
+    border: 1px solid color-mix(in srgb, var(--offering-accent) var(--offering-border-strength), white);
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
     cursor: pointer;
-    transition: background 0.2s, transform 0.2s;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  }
+
+  .instance[data-timing="past"] {
+    --offering-accent: var(--ui-danger);
+  }
+
+  .instance[data-timing="current"] {
+    --offering-accent: #15803d;
+  }
+
+  .instance[data-timing="future"] {
+    --offering-accent: #f59e0b;
+  }
+
+  /* Selection adjusts emphasis, never the meaning of the timing color. */
+  .instance.selected {
+    --offering-background-strength: 14%;
+    --offering-border-strength: 100%;
+    --offering-hover-background-strength: 14%;
+    --offering-hover-border-strength: 100%;
   }
 
   .instance:hover {
-    background: #eff6ff;
+    background: color-mix(in srgb, var(--offering-accent) var(--offering-hover-background-strength), white);
+    border-color: color-mix(in srgb, var(--offering-accent) var(--offering-hover-border-strength), white);
     transform: translateY(-1px);
   }
 
-  .instance.selected {
-    background: rgb(205, 255, 205);
-    border-color: var(--primary);
+  .instance:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
   }
 
   .instance-top {
@@ -889,8 +853,8 @@
   }
 
   .format-badge[data-format="exam"] {
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--ui-danger-surface);
+    color: var(--ui-danger-text);
   }
 
   .format-badge[data-format="thesis"] {
@@ -907,8 +871,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 0.35rem;
-    font-size: 0.7rem;
+    margin-top: var(--ui-card-title-gap);
+    font-size: var(--ui-course-metadata);
     color: var(--text-muted);
   }
 
@@ -919,7 +883,7 @@
   .notes-section {
     background: #f1f5f9;
     padding: 0.6rem;
-    border-radius: 8px;
+    border-radius: var(--ui-radius-surface);
     display: flex;
     flex-direction: column;
   }
@@ -1035,7 +999,7 @@
   }
 
   .remove-btn-sec:hover:not(:disabled) {
-    background-color: #d9534f;
+    background-color: var(--ui-danger);
     color: white;
     border-color: white;
   }
@@ -1044,7 +1008,7 @@
     text-align: center;
     padding: 5rem 2rem;
     background: var(--card-bg);
-    border-radius: 16px;
+    border-radius: var(--ui-radius-feature);
     border: 2px dashed var(--border);
   }
 
@@ -1062,7 +1026,8 @@
 
   .state-card h2 {
     font-size: 1.4rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
   }
 
   .state-card p {
@@ -1071,12 +1036,12 @@
   }
 
   .state-card.error {
-    background: #fef2f2;
-    border-color: #fecaca;
+    background: var(--ui-danger-surface);
+    border-color: var(--ui-danger-border);
   }
 
   .state-card.error h2 {
-    color: #ef4444;
+    color: var(--ui-danger);
   }
 
   .spinner {
@@ -1102,65 +1067,5 @@
     justify-content: center;
     padding: 4rem;
     text-align: center;
-  }
-
-  .btn {
-    display: inline-block;
-    padding: 0.6rem 1.25rem;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    text-decoration: none;
-  }
-
-  .btn-primary {
-    background: var(--primary);
-    color: white;
-    border: none;
-  }
-
-  .btn-primary:hover {
-    background: var(--primary-hover);
-  }
-
-  .btn-primary:focus {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-
-  .btn-secondary {
-    background: var(--card-bg);
-    color: var(--text-main);
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.5rem 0.8rem;
-    transition: all 0.2s;
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--primary);
-    background: #f1f5f9;
-  }
-
-  .btn-secondary:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
-
-  @media (max-width: 410px) {
-    .header-section {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .plan-controls {
-      flex-direction: column;
-      width: 100%;
-    }
   }
 </style>

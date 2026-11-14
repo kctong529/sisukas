@@ -115,6 +115,7 @@
   let firstSelectedIndex = $state(-1);
   let selectedGroupIds = $state<string[]>([]);
   let committingIds = $state<string[]>([]);
+  const keyboardPending = new Set<string>();
 
   function computeGroupColorIndexMap(bs: Block[]) {
     const map: Record<string, number> = {};
@@ -192,22 +193,10 @@
     const ids = [...selectedGroupIds];
     const firstId = ids[0];
 
-    // CLICK (no drag)
+    // CLICK (no drag): share the persisted toggle with keyboard activation.
     if (!hasDragged) {
-      const removed = await blockStore.removeBlockIfGroupIsAssigned(course.id, firstId);
       endSelection(true);
-      committingIds = [];
-
-      if (!removed) {
-        committingIds = [firstId];
-        try {
-          await createBlockFromSelection([firstId]);
-        } catch (err) {
-          console.error("Failed to create block:", err);
-        } finally {
-          await clearCommitBridgeAfterPaint();
-        }
-      }
+      await toggleSingleGroup(firstId);
       return;
     }
 
@@ -222,6 +211,39 @@
       console.error("Failed to create block:", err);
     } finally {
       await clearCommitBridgeAfterPaint();
+    }
+  }
+
+  async function toggleSingleGroup(groupId: string) {
+    if (!course) return;
+    const removed = await blockStore.removeBlockIfGroupIsAssigned(course.id, groupId);
+    committingIds = [];
+    if (removed) return;
+
+    committingIds = [groupId];
+    try {
+      await createBlockFromSelection([groupId]);
+    } catch (err) {
+      console.error("Failed to create block:", err);
+    } finally {
+      await clearCommitBridgeAfterPaint();
+    }
+  }
+
+  async function handleGroupKeyDown(groupId: string, event: KeyboardEvent) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.repeat || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    event.preventDefault(); // Space must not scroll the page.
+    if (!course || isSelecting || keyboardPending.has(groupId)) return;
+
+    keyboardPending.add(groupId);
+    try {
+      await blockStore.beginDragSelect(course.id);
+      await toggleSingleGroup(groupId);
+    } catch (err) {
+      console.error("Failed to toggle study group:", err);
+    } finally {
+      keyboardPending.delete(groupId);
     }
   }
 
@@ -285,9 +307,9 @@
       <div class="empty">No study groups available</div>
     {:else if studyGroupEntry.status === "failed"}
       <div class="empty" role="alert">Unable to load study groups.</div>
-      <button type="button" onclick={retryStudyGroups}>Retry</button>
+      <button type="button" class="ui-button ui-button--secondary retry-button" onclick={retryStudyGroups}>Retry</button>
     {:else if studyGroupEntry.status === "loading" || studyGroupEntry.status === "queued"}
-      <div class="loading">Loading study groups...</div>
+      <div class="loading" role="status">Loading study groups...</div>
     {:else}
       <div class="loading">Study groups not loaded yet.</div>
     {/if}
@@ -308,12 +330,13 @@
             data-index={idx}
             onmousedown={(e) => handleMouseDown(idx, group.groupId, e)}
             onmouseenter={() => handleMouseOver(idx)}
-            onfocus={() => handleMouseOver(idx)}
+            onkeydown={(e) => handleGroupKeyDown(group.groupId, e)}
             ontouchstart={(e) => handleTouchStart(idx, group.groupId, e)}
             ontouchmove={handleTouchMove}
             ontouchend={handleTouchEnd}
             ontouchcancel={handleTouchCancel}
             role="button"
+            aria-pressed={groupColorIndexById[group.groupId] !== undefined}
             tabindex="0"
           >
             <div class="square-name">{group.name}</div>
@@ -340,6 +363,12 @@
     --c3: 2, 132, 199;
     --c4: 245, 158, 11;
     --c5: 219, 39, 119;
+    --c6: 13, 148, 136;
+    --c7: 79, 70, 229;
+    --c8: 190, 24, 93;
+    --c9: 101, 163, 13;
+    --c10: 180, 83, 9;
+    --c11: 8, 145, 178;
 
     width: 100%;
     display: flex;
@@ -353,6 +382,12 @@
   .study-group-square[data-color="3"] { --rgb: var(--c3); }
   .study-group-square[data-color="4"] { --rgb: var(--c4); }
   .study-group-square[data-color="5"] { --rgb: var(--c5); }
+  .study-group-square[data-color="6"] { --rgb: var(--c6); }
+  .study-group-square[data-color="7"] { --rgb: var(--c7); }
+  .study-group-square[data-color="8"] { --rgb: var(--c8); }
+  .study-group-square[data-color="9"] { --rgb: var(--c9); }
+  .study-group-square[data-color="10"] { --rgb: var(--c10); }
+  .study-group-square[data-color="11"] { --rgb: var(--c11); }
 
   .study-group-square {
     display: flex;
@@ -370,51 +405,44 @@
     transition: none;
   }
 
+  .study-group-square:focus-visible {
+    outline: 2px solid var(--ui-focus, #2f7fd6);
+    outline-offset: 2px;
+  }
+
   .study-group-square.in-block {
-    background: color-mix(in srgb, rgb(var(--rgb)), white 88%) !important;
+    background: color-mix(in srgb, rgb(var(--rgb)) 14%, white) !important;
     border-color: rgb(var(--rgb)) !important;
-    color: rgb(var(--rgb)) !important;
+    color: color-mix(in srgb, rgb(var(--rgb)) 60%, black) !important;
   }
 
-  .study-group-square.selected:not(.in-block) {
-    outline: none;
-    background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
-    border-color: rgb(var(--next-rgb)) !important;
-    color: rgb(var(--next-rgb)) !important;
-  }
-
+  /* Temporary selection previews use the same treatment as persisted blocks. */
+  .study-group-square.selected:not(.in-block),
   .study-group-square.commit-preview {
-    outline: none;
-    background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
+    background: color-mix(in srgb, rgb(var(--next-rgb)) 14%, white) !important;
     border-color: rgb(var(--next-rgb)) !important;
-    color: rgb(var(--next-rgb)) !important;
+    color: color-mix(in srgb, rgb(var(--next-rgb)) 60%, black) !important;
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .study-group-square:hover {
-      outline: none;
-      background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
+    .study-group-square:hover,
+    .squares-container.dragging .study-group-square:hover {
+      background: color-mix(in srgb, rgb(var(--next-rgb)) 14%, white) !important;
       border-color: rgb(var(--next-rgb)) !important;
-      color: rgb(var(--next-rgb)) !important;
+      color: color-mix(in srgb, rgb(var(--next-rgb)) 60%, black) !important;
     }
 
     .squares-container:not(.dragging) .study-group-square.in-block:hover {
-      background: color-mix(in srgb, rgb(var(--rgb)), white 85%) !important;
+      background: color-mix(in srgb, rgb(var(--rgb)) 14%, white) !important;
       border-color: rgb(var(--rgb)) !important;
-      color: rgb(var(--rgb)) !important;
-    }
-
-    .squares-container.dragging .study-group-square:hover {
-      background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
-      border-color: rgb(var(--next-rgb)) !important;
-      color: rgb(var(--next-rgb)) !important;
+      color: color-mix(in srgb, rgb(var(--rgb)) 60%, black) !important;
     }
   }
 
   .squares-container.dragging .study-group-square.selected {
-    background-color: color-mix(in srgb, rgb(var(--next-rgb)), white 85%) !important;
+    background: color-mix(in srgb, rgb(var(--next-rgb)) 14%, white) !important;
     border-color: rgb(var(--next-rgb)) !important;
-    color: rgb(var(--next-rgb)) !important;
+    color: color-mix(in srgb, rgb(var(--next-rgb)) 60%, black) !important;
   }
 
   .squares-container {
@@ -440,10 +468,19 @@
     width: fit-content;
   }
 
-  .empty {
+  .retry-button {
+    align-self: center;
+  }
+
+  .empty,
+  .loading {
     font-size: 0.75rem;
     color: var(--text-muted);
-    font-style: italic;
     padding: 0.25rem 0;
+    text-align: center;
+  }
+
+  .empty {
+    font-style: italic;
   }
 </style>

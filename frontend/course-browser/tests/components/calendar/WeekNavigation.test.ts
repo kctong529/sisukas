@@ -30,10 +30,10 @@ afterEach(async () => {
 });
 
 describe('WeekNavigation', () => {
-  it('shows the seven-day range and timezone', () => {
+  it('shows the seven-day range in DD.MM.YYYY format across the year boundary', () => {
     const { target } = render('2025-12-29');
-    expect(target.textContent).toContain('2025-12-29 – 2026-01-04');
-    expect(target.textContent).toContain('Europe/Helsinki');
+    expect(target.textContent).toContain('29.12.2025 – 04.01.2026');
+    expect(target.textContent).not.toContain('Europe/Helsinki');
   });
 
   it('provides accessible previous and next controls', () => {
@@ -42,6 +42,17 @@ describe('WeekNavigation', () => {
     click(target, 'Next week');
     expect(handlers.onPrevious).toHaveBeenCalledOnce();
     expect(handlers.onNext).toHaveBeenCalledOnce();
+  });
+
+  it('uses shared secondary buttons without changing navigation behavior', () => {
+    const { target } = render('2026-11-02');
+    const buttons = [...target.querySelectorAll<HTMLButtonElement>('.controls button')];
+    expect(buttons).toHaveLength(3);
+    for (const button of buttons) {
+      expect(button.classList.contains('ui-button')).toBe(true);
+      expect(button.classList.contains('ui-button--secondary')).toBe(true);
+      expect(button.type).toBe('button');
+    }
   });
 
   it('offers Today when displaying another week', () => {

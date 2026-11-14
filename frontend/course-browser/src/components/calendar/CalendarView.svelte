@@ -18,6 +18,7 @@
   import { courseIndexStore } from '@lib/stores/courseIndexStore.svelte';
   import { plansStore } from '@lib/stores/plansStore.svelte';
 
+  import PlanManager from '../planning/PlanManager.svelte';
   import WeekGrid from './WeekGrid.svelte';
   import WeekNavigation from './WeekNavigation.svelte';
 
@@ -25,6 +26,7 @@
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
 
   let weekStart = $state(currentHelsinkiWeek());
+  let panelSide = $state<'left' | 'right'>('left');
   const todayWeek = currentHelsinkiWeek;
   let loadError = $state<string | null>(null);
   let plansReady = $state(false);
@@ -217,13 +219,30 @@
   data-benchmark-missing={projection?.completeness.missingCourses ?? -1}
   data-benchmark-loading={projection?.completeness.loadingCourses ?? -1}
   data-benchmark-failed={projection?.completeness.failedCourses ?? -1}>
-  <h1 id="calendar-title">Weekly calendar</h1>
-  <WeekNavigation
-    {weekStart}
-    onPrevious={() => { weekStart = shiftHelsinkiWeek(weekStart, -1); }}
-    onNext={() => { weekStart = shiftHelsinkiWeek(weekStart, 1); }}
-    onToday={() => { weekStart = todayWeek(); }}
-  />
+  <header class="header-section ui-view-header">
+    <div class="title-group">
+      <h2 id="calendar-title">Weekly calendar</h2>
+    </div>
+    <div class="header-actions ui-view-header__actions">
+      <div class="calendar-plan-manager">
+        <PlanManager compact={true} />
+      </div>
+      <WeekNavigation
+        {weekStart}
+        onPrevious={() => { weekStart = shiftHelsinkiWeek(weekStart, -1); }}
+        onNext={() => { weekStart = shiftHelsinkiWeek(weekStart, 1); }}
+        onToday={() => { weekStart = todayWeek(); }}
+      />
+      <button
+        type="button"
+        class="ui-button ui-button--secondary panel-position-button"
+        onclick={() => { panelSide = panelSide === 'left' ? 'right' : 'left'; }}
+        aria-label={panelSide === 'left' ? 'Move event details panel to the right' : 'Move event details panel to the left'}
+      >
+        {panelSide === 'left' ? 'Move panel right' : 'Move panel left'}
+      </button>
+    </div>
+  </header>
 
   {#if loadError}
     <p role="alert">Unable to load study plans: {loadError}</p>
@@ -233,7 +252,7 @@
     <p>No active study plan. Create or select a plan in LEGO to see its calendar.</p>
   {:else if preferenceState.status === 'failed'}
     <p role="alert">Unable to load Calendar visibility preferences: {preferenceState.error}</p>
-    <button class="retry-data" onclick={retryPreferences}>Retry Calendar preferences</button>
+    <button type="button" class="ui-button ui-button--secondary retry-data" onclick={retryPreferences}>Retry Calendar preferences</button>
   {:else if preferenceState.status !== 'ready'}
     <p role="status">Loading Calendar visibility preferences…</p>
   {:else if layout && visibility}
@@ -243,7 +262,7 @@
       </p>
     {/each}
     {#if projection && (projection.completeness.failedCourses > 0 || projection.completeness.missingCourses > 0)}
-      <button class="retry-data" onclick={() => calendarProjectionStore.retryUnavailableGroups()}>
+      <button type="button" class="ui-button ui-button--secondary retry-data" onclick={() => calendarProjectionStore.retryUnavailableGroups()}>
         Retry unavailable study-group data
       </button>
     {/if}
@@ -256,8 +275,7 @@
     {#if unresolvedSelections > 0}
       <p role="status">{unresolvedSelections} explicit teaching-group choice reference(s) could not be found in the available source data.</p>
     {/if}
-    <p class="selection-explanation">Candidate and selected labels describe Sisukas planning choices, not SISU registration.</p>
-    <WeekGrid {layout} {colorByOffering} {presentationForSegment} {groupsForSegment} {membersForSegment} {selectionForSegment}
+    <WeekGrid {panelSide} {layout} {colorByOffering} {presentationForSegment} {groupsForSegment} {membersForSegment} {selectionForSegment}
       {hideGroup} {hideOccurrence} {overlapChoice} {resolveOverlap} {weekCourses} {groupsForCourse} {visibility}
       unfilteredSegments={unfilteredLayout?.segments ?? []}
       onToggleGroup={toggleGroup} onToggleOccurrence={toggleOccurrence}
@@ -281,24 +299,28 @@
     font-family: 'Inter', system-ui, sans-serif;
     color: var(--calendar-text);
   }
-  h1 { margin: 0 0 1rem; font-size: 1.3rem; font-weight: 600; }
-  .selection-explanation { margin: 0 0 0.75rem; color: var(--calendar-muted); font-size: 0.8rem; line-height: 1.45; }
+  /* Match the title/action header structure used by Favourites and LEGO. */
+  .title-group { display: flex; flex-direction: column; gap: 0.5rem; }
+  /* WeekNavigation owns control sizing; the header owns the bottom spacing. */
+  .header-section :global(.week-navigation) { margin-bottom: 0; }
+  .header-actions { margin-left: auto; justify-content: flex-end; column-gap: 0.85rem; }
+  .panel-position-button { height: 32.5px; min-height: 32.5px; padding: 0.4rem 0.7rem; font-size: 0.8rem; }
+  @media (max-width: 1000px) { .panel-position-button { display: none; } }
+  @media (max-width: 809px) { .calendar-plan-manager { display: none; } }
   .data-notice { margin: 0 0 0.5rem; font-size: 0.85rem; line-height: 1.5; }
-  .data-notice.failed { color: #991b1b; }
+  .data-notice.failed { color: var(--ui-danger-text); }
   .data-notice.stale { color: #854d0e; }
+  /* Keep the original Calendar retry geometry and blue text; shared primitives
+     own the border, background, hover, and keyboard-focus treatment. */
   .retry-data {
+    height: auto;
+    min-height: 0;
     margin: 0 0 0.75rem;
     padding: 0.45rem 0.8rem;
-    border: 1px solid var(--calendar-border);
-    border-radius: 6px;
-    background: var(--calendar-card);
     color: var(--calendar-primary);
-    font: inherit;
     font-size: 0.8rem;
     font-weight: 600;
-    cursor: pointer;
+    line-height: normal;
   }
-  .retry-data:hover { border-color: var(--calendar-primary); background: #eff6ff; }
-  .retry-data:focus-visible { outline: 2px solid var(--calendar-primary); outline-offset: 2px; }
   [role='status'] { color: var(--calendar-muted); font-size: 0.85rem; margin-bottom: 0.75rem; }
 </style>

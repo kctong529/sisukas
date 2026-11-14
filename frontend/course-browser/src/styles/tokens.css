@@ -1,0 +1,56 @@
+/* Shared UI foundation. Existing aliases remain until all views migrate. */
+:root {
+  --ui-primary: #2f7fd6;
+  --ui-primary-hover: #2980f1;
+  --ui-canvas: #f8fafc;
+  --ui-surface: #ffffff;
+  --ui-text: #1e293b;
+  --ui-text-muted: #64748b;
+  --ui-border: #e2e8f0;
+  --ui-surface-hover: #f1f5f9;
+  --ui-danger: #d9534f;
+  --ui-danger-hover: color-mix(in srgb, var(--ui-danger) 88%, black);
+  --ui-danger-text: #991b1b;
+  --ui-danger-surface: #fef2f2;
+  --ui-danger-border: #fecaca;
+  --ui-success: #10b981;
+  --ui-focus-ring: #2f7fd6;
+  --ui-page-max-width: 1400px;
+
+  /* Geometry tokens: values intentionally match the existing UI. */
+  --ui-radius-control: 6px;
+  --ui-radius-surface: 8px;
+  --ui-radius-dialog: 12px;
+  --ui-radius-feature: 16px;
+
+  /* Small spacing vocabulary; specialized calendar geometry stays local. */
+  --ui-space-1: 0.25rem;
+  --ui-space-2: 0.5rem;
+  --ui-space-3: 0.75rem;
+  --ui-space-4: 1rem;
+  --ui-space-6: 1.5rem;
+
+  /* Course-card density is intentional: regular for detail views, compact for grids. */
+  --ui-card-padding-regular: var(--ui-space-4);
+  --ui-card-padding-compact: var(--ui-space-3);
+  --ui-card-title-gap: var(--ui-space-1);
+  --ui-card-content-gap: var(--ui-space-3);
+
+  /* Course typography: regular detail cards versus compact composition cards. */
+  --ui-course-code-regular: 1rem;
+  --ui-course-code-compact: 0.9rem;
+  --ui-course-title-regular: 0.85rem;
+  --ui-course-title-compact: 0.75rem;
+  --ui-course-metadata: 0.7rem;
+
+  /* Compatibility names for existing component-specific styling. */
+  --primary: var(--ui-primary);
+  --primary-hover: var(--ui-primary-hover);
+  --bg: var(--ui-canvas);
+  --card-bg: var(--ui-surface);
+  --text-main: var(--ui-text);
+  --text-muted: var(--ui-text-muted);
+  --border: var(--ui-border);
+  --danger: var(--ui-danger);
+  --success: var(--ui-success);
+}

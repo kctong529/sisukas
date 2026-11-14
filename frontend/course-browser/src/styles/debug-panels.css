@@ -24,7 +24,7 @@
   --dbg-blue: #0d6efd;
   --dbg-green: #198754;
   --dbg-yellow: #ffc107;
-  --dbg-red: #d9534f;
+  --dbg-red: var(--ui-danger);
 
   --dbg-warn-bg: #fff3cd;
   --dbg-warn-border: #ffe69c;
@@ -351,7 +351,7 @@
   color: white;
 }
 .action-btn.danger:hover:not(:disabled) {
-  background: #c82333;
+  background: var(--ui-danger-hover);
 }
 
 .action-btn.success {

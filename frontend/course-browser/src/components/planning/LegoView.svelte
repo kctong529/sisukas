@@ -1,6 +1,6 @@
 <!-- src/components/planning/LegoView.svelte -->
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
 
   import { loadStudyGroupsForAnalysis } from "@app/study-group-loading/loadStudyGroupsForAnalysis";
   import { buildAnalyticsPayload } from "@application/analytics/buildAnalyticsPayload";
@@ -8,6 +8,7 @@
   import { fetchTopKSchedulePairs } from "@infrastructure/services/AnalyticsService";
   import { getStudyGroupDataRuntime } from "@modules/study-groups";
 
+  import { trapModalTab } from "../../lib/accessibility/trapModalTab";
   import { useSession } from "../../lib/authClient";
   import { blockStore } from "../../lib/stores/blockStore";
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
@@ -35,6 +36,10 @@
     showOlder: false, // default: active-only
   });
 
+  let analyticsDialog = $state<HTMLDivElement>();
+  let analyticsCloseButton = $state<HTMLButtonElement>();
+  let focusBeforeModal: HTMLElement | null = null;
+
   const activePlan = $derived.by(() => plansStore.read.getActive());
   const plans = $derived.by(() => plansStore.read.getAll());
 
@@ -58,6 +63,8 @@
     ui.showAnalyticsModal = false;
     ui.analyticsResp = null;
     ui.analyticsError = null;
+    focusBeforeModal?.focus();
+    focusBeforeModal = null;
   }
 
   async function showAnalysis() {
@@ -67,7 +74,10 @@
 
     ui.running = true;
     ui.analyticsError = null;
+    focusBeforeModal = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     ui.showAnalyticsModal = true;
+    await tick();
+    analyticsCloseButton?.focus();
 
     try {
       const instanceIds = ui.showOlder
@@ -110,6 +120,8 @@
       if (e.key === "Escape") {
         e.preventDefault();
         closeAnalyticsModal();
+      } else if (e.key === "Tab" && analyticsDialog) {
+        trapModalTab(analyticsDialog, e);
       }
     };
 
@@ -118,7 +130,7 @@
   });
 </script>
 
-<div class="lego-view">
+<div class="lego-view ui-page-shell">
   {#if !isSignedIn}
     <div class="state-card">
       <div class="icon-circle">🔐</div>
@@ -136,7 +148,7 @@
     <div class="state-card error">
       <h2>Something went wrong</h2>
       <p>{ui.plansError || plansStore.state.error}</p>
-      <button onclick={loadPlans} class="btn btn-secondary">Try Again</button>
+      <button onclick={loadPlans} class="ui-button ui-button--secondary">Try Again</button>
     </div>
 
   {:else if plans.length === 0}
@@ -155,7 +167,7 @@
     </div>
 
   {:else}
-    <div class="header-section">
+    <div class="header-section ui-view-header">
       <div class="title-group">
         <h2>LEGO Composition</h2>
         {#if courseIndexStore.state.historicalLoading}
@@ -163,20 +175,22 @@
         {/if}
       </div>
 
-      <button class="btn btn-analytics" onclick={showAnalysis} disabled={ui.running}>
-        {ui.running ? "Running..." : "Compute Schedules"}
-      </button>
+      <div class="lego-header-actions ui-view-header__actions">
+        <button class="ui-button ui-button--secondary" onclick={showAnalysis} disabled={ui.running}>
+          {ui.running ? "Running..." : "Compute Schedules"}
+        </button>
 
-      <button
-        type="button"
-        class="btn btn-analytics"
-        class:active={ui.showOlder}
-        aria-pressed={ui.showOlder}
-        onclick={() => (ui.showOlder = !ui.showOlder)}
-        title={ui.showOlder ? "Showing active + historical" : "Showing active only"}
-      >
-        {ui.showOlder ? "See Active" : "See Older"}
-      </button>
+        <button
+          type="button"
+          class="ui-button ui-button--secondary"
+          aria-pressed={ui.showOlder}
+          onclick={() => (ui.showOlder = !ui.showOlder)}
+          title={ui.showOlder ? "Showing active + historical" : "Showing active only"}
+        >
+          {ui.showOlder ? "See Active" : "See Older"}
+        </button>
+
+      </div>
 
       <PlanManager compact={true} />
 
@@ -226,14 +240,22 @@
       type="button"
       class="modal-overlay-close"
       aria-label="Close analytics modal"
+      tabindex="-1"
       onclick={closeAnalyticsModal}
     ></button>
 
-    <div class="modal-content" role="dialog" aria-modal="true" aria-label="Analytics results">
+    <div
+      class="modal-content"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="analytics-dialog-title"
+      tabindex="-1"
+      bind:this={analyticsDialog}
+    >
       <div class="modal-header">
-        <div class="modal-title">Compute Schedules</div>
+        <div class="modal-title" id="analytics-dialog-title">Compute Schedules</div>
 
-        <button type="button" class="modal-close" aria-label="Close" onclick={closeAnalyticsModal}>
+        <button type="button" class="modal-close" aria-label="Close analytics results" bind:this={analyticsCloseButton} onclick={closeAnalyticsModal}>
           ✕
         </button>
       </div>
@@ -275,50 +297,16 @@
 {/if}
 
 <style>
-  :root {
-    --primary: #2f7fd6;
-    --primary-hover: #2980f1;
-    --bg: #f8fafc;
-    --card-bg: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --border: #e2e8f0;
-    --success: #10b981;
-  }
 
   .muted {
     font-size: 0.75rem;
     color: var(--text-muted);
   }
 
-  .lego-view {
-    max-width: 1400px;
-    margin: 1.5rem auto;
-    padding: 0 1rem;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--text-main);
-  }
 
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
 
-  .title-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  h2 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
-  }
+  .title-group { display: flex; flex-direction: column; gap: 0.25rem; }
+  .lego-header-actions { margin-left: auto; }
 
   h3 {
     margin: 0;
@@ -345,7 +333,7 @@
   .instance-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--ui-radius-surface);
     overflow: hidden;
     transition: transform 0.2s, box-shadow 0.2s;
   }
@@ -357,7 +345,7 @@
   .instance-header {
     display: flex;
     align-items: center;
-    padding: 0.7rem 0.7rem;
+    padding: var(--ui-card-padding-compact);
     padding-bottom: 0;
     background: var(--card-bg);
     color: var(--text-main);
@@ -371,28 +359,28 @@
   .instance-id {
     color: var(--primary);
     margin: 0;
-    font-size: 0.9rem;
+    font-size: var(--ui-course-code-compact);
     font-weight: 700;
     line-height: 1.1;
   }
 
   .instance-name {
-    font-size: 0.75rem;
+    font-size: var(--ui-course-title-compact);
     color: #333;
-    margin: 0.1rem 0 0 0;
+    margin: var(--ui-card-title-gap) 0 0;
     line-height: 1.2;
     word-break: break-word;
   }
 
   .instance-content {
-    padding: 0.5rem 0.5rem;
+    padding: var(--ui-space-2) var(--ui-card-padding-compact);
   }
 
   .state-card {
     text-align: center;
     padding: 5rem 2rem;
     background: var(--card-bg);
-    border-radius: 16px;
+    border-radius: var(--ui-radius-feature);
     border: 2px dashed var(--border);
   }
 
@@ -410,7 +398,8 @@
 
   .state-card h2 {
     font-size: 1.4rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
   }
 
   .state-card p {
@@ -419,12 +408,12 @@
   }
 
   .state-card.error {
-    background: #fef2f2;
-    border-color: #fecaca;
+    background: var(--ui-danger-surface);
+    border-color: var(--ui-danger-border);
   }
 
   .state-card.error h2 {
-    color: #ef4444;
+    color: var(--ui-danger);
   }
 
   .spinner {
@@ -452,50 +441,6 @@
     text-align: center;
   }
 
-  .btn {
-    padding: 0.6rem 1rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-  }
-
-  .btn-secondary {
-    background: var(--card-bg);
-    color: var(--text-main);
-    border: 1px solid var(--border);
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--primary);
-    background: #f1f5f9;
-  }
-
-  .btn-analytics {
-    background: var(--card-bg);
-    color: var(--text-main);
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.5rem 0.8rem;
-    transition: all 0.2s;
-  }
-
-  .btn-analytics:hover {
-    border-color: var(--primary);
-    background: #f1f5f9;
-  }
-
-  .btn-analytics:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
 
   /* Modal Styles */
   .modal-backdrop {
@@ -541,7 +486,7 @@
     z-index: 1;
     cursor: default;
     background: var(--card-bg);
-    border-radius: 12px;
+    border-radius: var(--ui-radius-dialog);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     width: 95vw;
     max-width: 1200px;
@@ -598,6 +543,11 @@
     color: var(--text-main);
   }
 
+  .modal-close:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
+
   .modal-body {
     overflow-y: auto;
     flex: 1;
@@ -607,7 +557,7 @@
   .analytics-intro {
     background: #f9fafb;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: var(--ui-radius-surface);
     padding: 1rem;
     margin-bottom: 1rem;
     font-size: 0.9rem;
@@ -678,14 +628,14 @@
 
   .alert {
     padding: 1rem;
-    border-radius: 8px;
+    border-radius: var(--ui-radius-surface);
     border: 1px solid;
   }
 
   .alert-error {
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #991b1b;
+    background: var(--ui-danger-surface);
+    border-color: var(--ui-danger-border);
+    color: var(--ui-danger-text);
   }
 
   .alert h3 {

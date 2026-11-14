@@ -1,18 +1,18 @@
 // src/lib/stores/colorAllocator.ts
 import { writable } from 'svelte/store';
 
-import type { Block } from '@domain/models/Block';
+import { BLOCK_PALETTE_SIZE } from './blockPalette';
 
-const PALETTE_SIZE = 6;
+import type { Block } from '@domain/models/Block';
 
 function computeNext(blocks: Block[]): number {
   const used = new Set<number>();
   for (const b of blocks) used.add(b.colorIndex);
 
-  for (let i = 0; i < PALETTE_SIZE; i++) {
+  for (let i = 0; i < BLOCK_PALETTE_SIZE; i++) {
     if (!used.has(i)) return i;
   }
-  return blocks.length % PALETTE_SIZE;
+  return blocks.length % BLOCK_PALETTE_SIZE;
 }
 
 // Tiny reactive signal: bump whenever reservations change

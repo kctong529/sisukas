@@ -230,6 +230,11 @@
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
   }
 
+  input:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
+
   .submit-btn {
     display: flex;
     align-items: center;
@@ -260,13 +265,13 @@
   .message {
     padding: 0.8rem;
     border-radius: 6px;
-    background: #fff5f5;
-    color: #d9534f;
+    background: var(--ui-danger-surface);
+    color: var(--ui-danger);
     font-size: 0.9rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    border: 1px solid #ffdede;
+    border: 1px solid var(--ui-danger-border);
   }
 
   .message.success {

@@ -196,6 +196,11 @@
     background: #fff;
   }
 
+  .input:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
+
   .input:disabled {
     opacity: 0.7;
     background: #f6f6f6;

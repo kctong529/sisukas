@@ -1,6 +1,6 @@
 <script lang="ts">
+  import { calendarEventLocationRows } from '@application/calendar/calendarEventLocationRows';
   import { formatCalendarMinute } from '@application/calendar/calendarPresentation';
-  import { calendarSelectionLabel } from '@application/calendar/calendarSelectionPresentation';
 
   import CalendarDetailsHeading from './CalendarDetailsHeading.svelte';
   import CalendarGroupAlternatives from './CalendarGroupAlternatives.svelte';
@@ -12,7 +12,6 @@
   import type { CalendarEventPresentation } from '@application/calendar/calendarPresentation';
   import type { TimeSlotAlternative } from '@application/calendar/calendarTimeSlotAlternatives';
   import type { CalendarEntry } from '@domain/models/CalendarEntry';
-  import type { CalendarGroupSelection } from '@domain/services/calendar/CalendarProjection';
   import type { WeeklyCalendarSegment } from '@domain/services/calendar/layout/WeeklyCalendarLayout';
 
   interface Props {
@@ -20,7 +19,6 @@
     presentation: CalendarEventPresentation | null;
     date: string | null;
     isPinned: boolean;
-    selection?: CalendarGroupSelection;
     onClear: () => void;
     onShowCourse?: () => void;
     onHideGroup?: () => void;
@@ -42,7 +40,7 @@
     onPreviewTimeSlot?: (segment: WeeklyCalendarSegment | null) => void;
   }
   let {
-    segment, presentation, date, isPinned, selection = 'candidate', onClear, onShowCourse = () => {}, members = [],
+    segment, presentation, date, isPinned, onClear, onShowCourse = () => {}, members = [],
     onHideGroup = () => {}, onHideOccurrence = () => {}, canHideOccurrence = true,
     overlapChoice = null, onResolveOverlap = () => {},
     alternatives = [], previewGroupId = null, retainedGroupId = null,
@@ -50,6 +48,7 @@
     onAlternativeChoose = () => {}, alternativeContextKey = null,
     timeSlotAlternatives = [], onRestoreTimeSlot = () => {}, onHideTimeSlot = () => {}, onPreviewTimeSlot = () => {},
   }: Props = $props();
+  const locationRows = $derived(segment ? calendarEventLocationRows(segment.entry.source.event) : null);
   const range = $derived(segment
     ? `${formatCalendarMinute(segment.startMinute)}–${formatCalendarMinute(segment.endMinute)}`
     : null);
@@ -64,12 +63,14 @@
       <dl>
         <dt>Date</dt><dd>{date}</dd>
         <dt>Time</dt><dd>{range} · Europe/Helsinki</dd>
-        {#if presentation.locationLabel}
-          <dt>Location</dt><dd>{presentation.locationLabel}</dd>
+        {#if locationRows?.location}
+          <dt>Location</dt>
+          <dd class="location-row">{locationRows.location}</dd>
         {/if}
-        <dt>Plan choice</dt><dd data-selection={selection}>{calendarSelectionLabel(selection)}</dd>
-        <dt>Status</dt>
-        <dd>{segment.entry.source.event.cancelled ? 'Cancelled' : segment.entry.source.event.excluded ? 'Excluded' : 'Scheduled occurrence'}</dd>
+        {#if locationRows?.building}
+          <dt>Building</dt>
+          <dd class="location-row">{locationRows.building}</dd>
+        {/if}
         {#if segment.entry.source.event.notice}
           <dt>Notice</dt><dd>{segment.entry.source.event.notice}</dd>
         {/if}
@@ -82,11 +83,11 @@
       {/if}
       {#if !isPinned}<p class="hint">Previewing · Click the event to pin its details here.</p>{/if}
       <div class="visibility-actions" aria-label="Calendar visibility">
-        <button type="button" onclick={onShowCourse}>Course overview and visibility</button>
-        <button type="button" onclick={onHideGroup}>Hide teaching group</button>
-        <button type="button" onclick={onHideOccurrence} disabled={!canHideOccurrence} title={canHideOccurrence ? undefined : 'This event has no unambiguous source identity'}>Hide this event</button>
+        <button type="button" class="ui-button ui-button--secondary" onclick={onShowCourse}>Course overview and visibility</button>
+        <button type="button" class="ui-button ui-button--secondary" onclick={onHideGroup}>Hide teaching group</button>
+        <button type="button" class="ui-button ui-button--secondary" onclick={onHideOccurrence} disabled={!canHideOccurrence} title={canHideOccurrence ? undefined : 'This event has no unambiguous source identity'}>Hide this event</button>
         {#if overlapChoice}
-          <button type="button" class="resolve-overlap" onclick={onResolveOverlap}
+          <button type="button" class="ui-button ui-button--secondary resolve-overlap" onclick={onResolveOverlap}
             disabled={!overlapChoice.available} title={overlapChoice.reason ?? undefined}>
             {overlapChoice.available ? `Keep this · Hide ${overlapChoice.overlapCount} overlapping ${overlapChoice.overlapCount === 1 ? 'event' : 'events'}` : 'Cannot resolve overlaps'}
           </button>
@@ -112,11 +113,9 @@
 </aside>
 
 <style>
-  .visibility-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
-  .visibility-actions button { border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 6px; background: var(--calendar-card, #fff); color: var(--calendar-primary, #2f7fd6); padding: 0.4rem 0.6rem; font: inherit; font-size: 0.75rem; cursor: pointer; }
-  .visibility-actions button:disabled { opacity: .55; cursor: not-allowed; }
-  .visibility-actions button:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
-  .context-panel { box-sizing: border-box; min-width: 0; padding: 1rem; border: 1px solid var(--calendar-border, #e2e8f0); border-radius: 8px; background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); }
+  .visibility-actions { display: flex; flex-wrap: wrap; gap: var(--ui-space-2); margin-top: 0.85rem; }
+  .visibility-actions .ui-button { height: auto; min-height: 32.5px; padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: normal; }
+  .context-panel { box-sizing: border-box; min-width: 0; padding: var(--ui-space-4); border: 1px solid var(--calendar-border, #e2e8f0); border-radius: var(--ui-radius-surface); background: var(--calendar-card, #fff); color: var(--calendar-text, #1e293b); }
   .group { font-weight: 600; font-size: 0.85rem; margin: 0 0 0.75rem; }
   dl { display: grid; grid-template-columns: 65px minmax(0, 1fr); gap: 0.6rem; font-size: 0.8rem; margin: 0; }
   dt { color: var(--calendar-muted, #64748b); }

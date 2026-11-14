@@ -12,6 +12,7 @@
 
   import { useSession } from '../../lib/authClient';
   import { COURSE_PREFIX_RGB } from "../../lib/coursePrefixColors";
+  import { formatFinnishDate } from '../../lib/periodTimeline/formatFinnishDate';
   import { computeYearStats, formatAvg } from '../../lib/periodTimeline/yearStats';
   import { academicPeriodStore } from '../../lib/stores/academicPeriodStore';
   import { courseGradeStore } from "../../lib/stores/courseGradeStore";
@@ -275,7 +276,7 @@
   });
 </script>
 
-<section class="period-timeline">
+<section class="period-timeline ui-page-shell">
   {#if !isSignedIn}
     <div class="state-card">
       <div class="icon-circle">📋</div>
@@ -283,9 +284,9 @@
       <p>You need to be logged in to see your year timeline.</p>
     </div>
   {:else}
-    <div class="header-section">
-      <div class="title-group">
-        <h2>Year Timeline</h2>
+    <div class="header-section ui-view-header">
+      <h2>Year Timeline</h2>
+      <div class="timeline-year-details ui-view-header__actions">
         {#if activeYear}
           <div class="yearSwitcher">
             <button
@@ -319,11 +320,12 @@
         {/if}
       </div>
 
-      <button class="btn btn-secondary" type="button" onclick={openImportModal}>
-        Import Transcript
-      </button>
-
-      <PlanManager compact={true} />
+      <div class="timeline-header-actions ui-view-header__actions">
+        <button class="ui-button ui-button--secondary" type="button" onclick={openImportModal}>
+          Import Transcript
+        </button>
+        <PlanManager compact={true} />
+      </div>
     </div>
 
 
@@ -454,7 +456,10 @@
           >
             <!-- Row 1: headers -->
             {#each model.columns as col, colIndex (col.period.id)}
-              <div class="periodCard periodCard--header" style="grid-column: {colIndex + 1};">
+              <div class="periodCard periodCard--header"
+                class:periodCard--first={colIndex === 0}
+                class:periodCard--last={colIndex === model.columns.length - 1}
+                style="grid-column: {colIndex + 1};">
                 <div class="periodCard__top">
                   <div class="periodCard__title">Period {col.period.name}</div>
                   <div class="periodCard__credits" title="Total credits in this period">
@@ -463,16 +468,19 @@
                 </div>
 
                 <div class="periodCard__dates">
-                  {col.period.dateRange.start.toLocaleDateString()}
+                  {formatFinnishDate(col.period.dateRange.start)}
                   –
-                  {col.period.dateRange.end.toLocaleDateString()}
+                  {formatFinnishDate(col.period.dateRange.end)}
                 </div>
               </div>
             {/each}
 
             <!-- Row 2: period bodies -->
             {#each model.columns as col, colIndex (col.period.id)}
-              <div class="periodCard periodCard--body" style="grid-column: {colIndex + 1};">
+              <div class="periodCard periodCard--body"
+                class:periodCard--first={colIndex === 0}
+                class:periodCard--last={colIndex === model.columns.length - 1}
+                style="grid-column: {colIndex + 1};">
                 <div class="periodBody__inner">
                   {#if laneCount === 0}
                     <div class="periodBody__empty">No courses</div>
@@ -651,39 +659,15 @@
 </section>
 
 <style>
-  .period-timeline {
-    max-width: 1400px;
-    margin: 1.5rem auto;
-    padding: 0 1rem;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--text-main);
-  }
-
-  h2 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
-  }
+  .period-timeline { color: var(--text-main); }
 
   p {
     margin: 0;
   }
 
-  .header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .title-group {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-  }
+  .timeline-year-details { gap: var(--ui-space-3); }
+  .timeline-header-actions { margin-left: auto; }
+  .yearStats { white-space: nowrap; }
 
   .yearSwitcher {
     display: flex;
@@ -718,7 +702,7 @@
   }
 
   .yearStats {
-    margin-left: 8px;
+    margin-left: 0;
     font-size: 0.9rem;
     color: #888;
     font-weight: 500;
@@ -734,7 +718,8 @@
 
   .state-card h2 {
     font-size: 1.4rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
   }
 
   .state-card p {
@@ -777,8 +762,22 @@
   }
 
   .periodCard--header {
-    padding: 12px;
+    padding: var(--ui-space-3);
     border-bottom: none;
+  }
+
+  /* Round only the outside corners of the continuous period grid. */
+  .periodCard--header.periodCard--first {
+    border-top-left-radius: var(--ui-radius-surface);
+  }
+  .periodCard--header.periodCard--last {
+    border-top-right-radius: var(--ui-radius-surface);
+  }
+  .periodCard--body.periodCard--first {
+    border-bottom-left-radius: var(--ui-radius-surface);
+  }
+  .periodCard--body.periodCard--last {
+    border-bottom-right-radius: var(--ui-radius-surface);
   }
 
   .periodCard__top {
@@ -889,7 +888,7 @@
 
     padding: 8px 10px 8px 12px;
     border-radius: 8px;
-    border: 1px solid #b1b1b1;
+    border: 1px solid #d1d5db;
     background: #ffffff;
     color: #111827;
 
@@ -908,13 +907,13 @@
     left: 0;
     top: 0;
     bottom: 0;
-    width: 8px;
+    width: 5px;
     background: rgb(var(--chip-rgb));
     opacity: 0.6;
   }
 
   .course-chip:hover {
-    border-color: #d1d5db;
+    border-color: #9ca3af;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
     transform: translateY(-1px);
   }
@@ -930,7 +929,7 @@
     color: #777;
     background: rgba(var(--chip-rgb), 0.18);
     padding: 2px 5px;
-    border-radius: 3px;
+    border-radius: 4px;
     width: 30px;
     text-align: center;
     flex-shrink: 0;
@@ -963,7 +962,7 @@
     min-width: 1ch;
     padding: 0 2px;
 
-    color: rgba(189, 189, 189, 0.75);
+    color: #6b7280;
     font-size: 0.9em;
     line-height: 1;
 
@@ -995,6 +994,11 @@
     text-underline-offset: 2px;
   }
 
+  .gradePill:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
+
   .gradeInput {
     width: 1.8ch;
     padding: 0;
@@ -1019,13 +1023,18 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.25);
   }
 
+  .gradeInput:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
+
   .timelineScroll {
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
 
     /* optional: looks nicer */
-    border-radius: 12px;
+    border-radius: var(--ui-radius-surface);
     padding-bottom: 6px; /* space for scrollbar */
   }
 
@@ -1048,7 +1057,7 @@
     overflow-x: auto;
     padding: 6px;
     border: 1px solid #eee;
-    border-radius: 10px;
+    border-radius: var(--ui-radius-surface);
     background: #fff;
 
     -webkit-overflow-scrolling: touch;
@@ -1082,9 +1091,9 @@
     grid-column: calc(var(--lane) + 1);
     grid-row: var(--p-start) / var(--p-end);
 
-    border: 1px solid #b1b1b1;
+    border: 1px solid #d1d5db;
     background: #ffffff;
-    border-radius: 10px;
+    border-radius: var(--ui-radius-surface);
 
     position: relative;
     overflow: hidden;
@@ -1201,7 +1210,7 @@
 
     background: #fff;
     border: 1px solid rgba(0, 0, 0, 0.12);
-    border-radius: 14px;
+    border-radius: var(--ui-radius-dialog);
     box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
 
     overflow: hidden;
@@ -1248,39 +1257,6 @@
     }
   }
 
-  .btn {
-    display: inline-block;
-    padding: 0.6rem 1.25rem;
-    border-radius: 8px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-    text-decoration: none;
-  }
-
-  .btn-secondary {
-    background: var(--card-bg);
-    color: var(--text-main);
-    font-size: 0.8rem;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.5rem 0.8rem;
-    transition: all 0.2s;
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--primary);
-    background: #f1f5f9;
-  }
-
-  .btn-secondary:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
-
   .import-status {
     margin-top: 10px;
     color: #555;
@@ -1289,16 +1265,16 @@
   .import-error {
     margin-top: 10px;
     padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #fecaca;
-    background: #fef2f2;
-    color: #991b1b;
+    border-radius: var(--ui-radius-surface);
+    border: 1px solid var(--ui-danger-border);
+    background: var(--ui-danger-surface);
+    color: var(--ui-danger-text);
   }
 
   .import-summary {
     margin-top: 12px;
     border: 1px solid #eee;
-    border-radius: 12px;
+    border-radius: var(--ui-radius-surface);
     padding: 12px;
     background: #fff;
   }
@@ -1332,7 +1308,7 @@
   .import-info {
     background: #f9fafb;
     border: 1px solid #e5e7eb;
-    border-radius: 10px;
+    border-radius: var(--ui-radius-surface);
     padding: 12px;
     margin-bottom: 14px;
     font-size: 0.92rem;
@@ -1365,13 +1341,13 @@
   }
 
   /* Hide mobile matrix on desktop / hide desktop grid on mobile */
-  @media (max-width: 520) {
+  @media (max-width: 520px) {
     .timelineGrid {
       display: none;
     }
   }
 
-  @media (min-width: 521) {
+  @media (min-width: 521px) {
     .mobileMatrix {
       display: none;
     }

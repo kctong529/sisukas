@@ -357,11 +357,11 @@
   }
   
   .sign-out-btn {
-    background: #d9534f;
+    background: var(--ui-danger);
   }
   
   .sign-out-btn:hover {
-    background: #c82333;
+    background: var(--ui-danger-hover);
   }
   
   /* Mobile Menu Toggle */
@@ -439,12 +439,12 @@
   }
   
   .mobile-nav-link.sign-out {
-    background: #d9534f;
+    background: var(--ui-danger);
     color: white;
   }
   
   /* Responsive */
-  @media (max-width: 870px) {
+  @media (max-width: 960px) {
     .nav-links span,
     .nav-user span {
       display: none;
@@ -473,7 +473,7 @@
     }
   }
 
-  @media (max-width: 460px) {
+  @media (max-width: 435px) {
     .nav-links,
     .nav-user {
       display: none;

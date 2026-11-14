@@ -150,7 +150,7 @@
     overflow: auto;
     overscroll-behavior: contain;
     border: 1px solid var(--calendar-border, #e2e8f0);
-    border-radius: 8px;
+    border-radius: var(--ui-radius-surface);
     background: var(--calendar-card, #fff);
   }
   .week-scroll:focus-visible { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 2px; }
@@ -201,7 +201,6 @@
   }
   .small-screen-hint { display: none; }
   @media (max-width: 700px) {
-    .week-scroll { max-height: min(70vh, 640px); }
     .week-grid {
       grid-template-columns: 52px repeat(7, minmax(175px, 1fr));
       min-width: 1277px;
@@ -243,16 +242,16 @@
   .event[data-offering-color="9"] { --event-rgb: 101, 163, 13; }
   .event[data-offering-color="10"] { --event-rgb: 180, 83, 9; }
   .event[data-offering-color="11"] { --event-rgb: 8, 145, 178; }
-  .event { container: calendar-card / inline-size; border: 1px solid rgb(var(--event-rgb, 47, 127, 214)); background: color-mix(in srgb, rgb(var(--event-rgb, 47, 127, 214)) 14%, white); color: #0f172a; font-size: 0.68rem; line-height: 1.25; }
+  .event { container: calendar-card / inline-size; border: 1px solid rgb(var(--event-rgb, 47, 127, 214)); background: color-mix(in srgb, rgb(var(--event-rgb, 47, 127, 214)) 14%, white); color: color-mix(in srgb, rgb(var(--event-rgb, 47, 127, 214)) 60%, black); font-size: 0.68rem; line-height: 1.25; }
   .event.occurrence-highlight { outline: 3px solid #0f766e; outline-offset: -2px; z-index: 2; }
   .event.occurrence-dim { opacity: .35; }
   .event.course-highlight { outline: 3px solid var(--calendar-primary, #2f7fd6); outline-offset: -2px; z-index: 2; }
   .event.course-dim { opacity: .28; }
   .event.alternative-highlight { outline: 3px solid #0f766e; outline-offset: -2px; z-index: 2; }
   .event.alternative-dim { opacity: .38; }
-  .event:hover, .event:focus-within { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: 1px; z-index: 2; }
+  .event:hover, .event:focus-within { outline: 2px solid var(--calendar-primary, #2f7fd6); outline-offset: -2px; z-index: 2; }
   .event.inactive { border-style: dashed; border-color: #94a3b8; background: #f1f5f9; color: #475569; }
-  .event.cancelled { border-color: #b91c1c; background: #fee2e2; color: #7f1d1d; }
+  .event.cancelled { border-color: var(--ui-danger); background: var(--ui-danger-surface); color: var(--ui-danger-text); }
   .cluster {
     z-index: 3;
     right: 3px;

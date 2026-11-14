@@ -347,9 +347,9 @@
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
     border: 1px solid;
-    background: #fef2f2;
-    border-color: #fecaca;
-    color: #991b1b;
+    background: var(--ui-danger-surface);
+    border-color: var(--ui-danger-border);
+    color: var(--ui-danger-text);
   }
 
   .alert .font-semibold {

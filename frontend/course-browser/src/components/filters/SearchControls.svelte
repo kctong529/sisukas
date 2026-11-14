@@ -17,7 +17,7 @@
 <div class="search-controls">
   <div class="button-group">
     <button
-      class="btn btn-secondary"
+      class="ui-button ui-button--secondary search-button"
       on:click={() => dispatch('addRule')}
       aria-label="Add Rule"
       title="Add a new search rule"
@@ -27,7 +27,7 @@
     </button>
     
     <button
-      class="btn btn-primary"
+      class="ui-button ui-button--primary search-button"
       on:click={() => dispatch('search')}
       aria-label="Search"
       title="Execute search"
@@ -50,21 +50,20 @@
     </label>
 
     <button
-      class="btn btn-secondary"
+      class="ui-button ui-button--secondary search-button"
       on:click={toggleSource}
-      class:active={source === "all"}
       aria-label={source === 'active' ? 'See Older' : 'See Active'}
       aria-pressed={source === "all"}
       title={source === "all" ? 'Showing historical course instances' : 'Showing active course instances'}
     >
-      <i class="bi bi-database"></i>
+      <i class="bi bi-database" aria-hidden="true"></i>
       <span class="button-text">
         {source === "active" ? "See Older" : "See Active"}
       </span>
     </button>
     
     <button
-      class="btn btn-secondary"
+      class="ui-button ui-button--secondary search-button"
       on:click={() => dispatch('save')}
       aria-label="Save"
       title="Save current search"
@@ -74,7 +73,7 @@
     </button>
 
     <button
-      class="btn btn-secondary"
+      class="ui-button ui-button--secondary search-button"
       on:click={() => dispatch('load')}
       aria-label="Load"
       title="Load a saved search"
@@ -86,16 +85,6 @@
 </div>
 
 <style>
-  :root {
-    --primary: #2f7fd6;
-    --primary-hover: #2980f1;
-    --bg: #f8fafc;
-    --card-bg: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --border: #e2e8f0;
-  }
-
   .search-controls {
     display: flex;
     flex-wrap: wrap;
@@ -113,70 +102,14 @@
     flex-wrap: wrap;
   }
 
-  /* Base button styles */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  /* Retain the original compact toolbar spacing; appearance is shared. */
+  .search-button {
     gap: 0.4rem;
     padding: 0.4rem 0.6rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    height: 32.5px;
-    box-sizing: border-box;
-    white-space: nowrap;
-  }
-
-  .btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  /* Primary button */
-  .btn-primary {
-    background: var(--primary);
-    color: white;
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background: var(--primary-hover);
-  }
-
-  .btn-primary:focus:not(:disabled) {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-
-  /* Secondary button */
-  .btn-secondary {
-    background: var(--card-bg);
-    color: var(--text-main);
-    border: 1px solid var(--border);
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    border-color: var(--primary);
-    background: #f8fafc;
-  }
-
-  .btn-secondary:focus:not(:disabled) {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-  }
-
-  .btn-secondary.active {
-    background: #e3f2fd;
-    border-color: var(--primary);
-    color: var(--primary);
   }
 
   /* Icon styling */
-  .btn i {
+  .search-button i {
     font-size: 0.9rem;
   }
 
@@ -218,7 +151,7 @@
       padding: 0.5rem 0.75rem;
     }
 
-    .btn {
+    .search-button {
       padding: 0.4rem 0.5rem;
     }
   }
@@ -228,7 +161,7 @@
       display: none;
     }
 
-    .btn {
+    .search-button {
       min-width: 32.5px;
       padding: 0;
       justify-content: center;

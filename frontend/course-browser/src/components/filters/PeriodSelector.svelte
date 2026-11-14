@@ -210,10 +210,9 @@
     background: #f8fafc;
   }
 
-  .period:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+  .period:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
   }
 
   /* Selected state */
@@ -228,9 +227,9 @@
     border-color: var(--primary-hover);
   }
 
-  .period.selected:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+  .period.selected:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
   }
 
   .abbreviated-text {
