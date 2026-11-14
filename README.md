@@ -84,20 +84,21 @@ A **Plan** is a workspace, not a decision.
 
 ### Phase 3: Calendar (Attendance Decisions)
 
-**Question:** *Which courses and teaching activities do I actually intend to attend?*
+**Question:** *How can I adapt my schedule to what I actually want to attend?*
 
-> [!TIP]
-> Some overlaps are unavoidable. The calendar supports explicit attendance decisions rather than assuming a conflict-free timetable.
+SISU's calendar is rigid. Sisukas aims to make schedules flexible and personal, without changing the underlying study plan.
 
-The **study calendar** is the student's editable working timetable. An assembly candidate may propose active courses and default study-group selections, but it does not dictate attendance.
+- Compare alternative teaching schedules
+- Hide unwanted teaching groups or individual events
+- Customize attendance according to personal preferences
+- Preserve calendar preferences across sessions
 
-- Generating candidates does not change the calendar
-- Applying a candidate is an explicit action, with proposed changes previewed before confirmation
-- Compatible attendance preferences and event overrides should be preserved when applying a candidate
+> [!TIP]\
+> A study plan defines what you intend to study. The calendar helps you decide when and how to attend.
 
 📘 Docs: [https://docs.sisukas.eu/under-dev/study-calendar/](https://docs.sisukas.eu/under-dev/study-calendar/)
 
-**Status:** 📋 Under development; assembly application is proposed
+**Status:** 🟡 Weekly calendar and visibility customization implemented; flexible attendance and alternative schedule integration planned.
 
 ## Current Implementation Status
 
@@ -106,7 +107,7 @@ The **study calendar** is the student's editable working timetable. An assembly 
 | Phase 0 | Filtering      | ✅ Live      |
 | Phase 1 | Plans          | ✅ Live      |
 | Phase 2 | Assemblies     | 🟡 Existing scheduler; new model proposed |
-| Phase 3 | Study Calendar | 📋 Under development |
+| Phase 3 | Study Calendar | 🟡 Weekly view and saved visibility controls implemented; further workflows planned |
 
 > [!NOTE]
 > The project is developed iteratively. Conceptual clarity takes priority over shipping incomplete abstractions.
