@@ -137,6 +137,16 @@ async function reloadAndExpect(page: Page, hidden: boolean) {
   await expect(await openFixtureGroup(page)).toHaveAttribute('aria-pressed', String(hidden));
 }
 
+
+async function activateFixturePlan(page: Page, origin: string, planId: string) {
+  await apiJson(page.request, origin, `/api/plans/${planId}/activate`, 'PATCH');
+  // Reload to make the Svelte plan store and Calendar projection observe the
+  // server-selected plan. This is deliberately not just a UI-state assertion.
+  await page.reload();
+  const plans = await apiJson<Plan[]>(page.request, origin, '/api/plans', 'GET');
+  expect(plans.find(plan => plan.isActive)?.id).toBe(planId);
+}
+
 test('E01–E02: teaching-group hide and restore survive server hydration', async ({ page }) => {
   let fixture: Awaited<ReturnType<typeof prepareFixture>> | undefined;
   try {
@@ -158,6 +168,57 @@ test('E01–E02: teaching-group hide and restore survive server hydration', asyn
         await apiJson(page.request, origin, `/api/plans/${activeId}/activate`, 'PATCH');
       } finally {
         await apiJson(page.request, origin, `/api/plans/${fixtureId}`, 'DELETE');
+      }
+    }
+  }
+});
+
+
+// E03 uses the same offering in two separate temporary plans so that only
+// plan identity can explain the different persisted visibility state.
+test('E03: visibility preferences remain isolated across plans A → B → A', async ({ page }) => {
+  let fixture: Awaited<ReturnType<typeof prepareFixture>> | undefined;
+  const createdPlanIds: string[] = [];
+  try {
+    fixture = await prepareFixture(page);
+    const { origin, fixtureId: planA } = fixture;
+    createdPlanIds.push(planA);
+
+    const planB = (await apiJson<Plan>(page.request, origin, '/api/plans', 'POST', {
+      name: `Playwright #192 E03 B ${Date.now()}`,
+    })).id;
+    createdPlanIds.push(planB);
+
+    for (const planId of [planA, planB]) {
+      await apiJson(page.request, origin, `/api/plans/${planId}/instances`, 'POST', {
+        instanceId: offeringId,
+      });
+    }
+
+    // The same L01 group is hidden in A but inherited/visible in B.
+    await activateFixturePlan(page, origin, planA);
+    await setHidden(page, true);
+    await reloadAndExpect(page, true);
+
+    await activateFixturePlan(page, origin, planB);
+    await expect(await openFixtureGroup(page)).toHaveAttribute('aria-pressed', 'false');
+    await reloadAndExpect(page, false);
+
+    await activateFixturePlan(page, origin, planA);
+    await reloadAndExpect(page, true);
+
+    await activateFixturePlan(page, origin, planB);
+    await reloadAndExpect(page, false);
+  } finally {
+    if (fixture) {
+      const { origin, activeId } = fixture;
+      // Never delete the original plan, even if an earlier assertion failed.
+      try {
+        await apiJson(page.request, origin, `/api/plans/${activeId}/activate`, 'PATCH');
+      } finally {
+        for (const planId of [...createdPlanIds].reverse()) {
+          await apiJson(page.request, origin, `/api/plans/${planId}`, 'DELETE');
+        }
       }
     }
   }
