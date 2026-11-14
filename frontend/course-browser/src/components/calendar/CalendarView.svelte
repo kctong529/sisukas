@@ -221,10 +221,12 @@
   data-benchmark-failed={projection?.completeness.failedCourses ?? -1}>
   <header class="header-section ui-view-header">
     <div class="title-group">
-      <h1 id="calendar-title">Weekly calendar</h1>
+      <h2 id="calendar-title">Weekly calendar</h2>
     </div>
     <div class="header-actions ui-view-header__actions">
-      <PlanManager compact={true} />
+      <div class="calendar-plan-manager">
+        <PlanManager compact={true} />
+      </div>
       <WeekNavigation
         {weekStart}
         onPrevious={() => { weekStart = shiftHelsinkiWeek(weekStart, -1); }}
@@ -299,12 +301,13 @@
   }
   /* Match the title/action header structure used by Favourites and LEGO. */
   .title-group { display: flex; flex-direction: column; gap: 0.5rem; }
-  h1 { margin: 0; font-size: 1.3rem; font-weight: 600; }
+  .title-group h2 { margin: 0; font-size: 1.3rem; font-weight: 600; }
   /* WeekNavigation owns control sizing; the header owns the bottom spacing. */
   .header-section :global(.week-navigation) { margin-bottom: 0; }
   .header-actions { margin-left: auto; justify-content: flex-end; column-gap: 0.85rem; }
   .panel-position-button { height: 32.5px; min-height: 32.5px; padding: 0.4rem 0.7rem; font-size: 0.8rem; }
   @media (max-width: 1000px) { .panel-position-button { display: none; } }
+  @media (max-width: 809px) { .calendar-plan-manager { display: none; } }
   .data-notice { margin: 0 0 0.5rem; font-size: 0.85rem; line-height: 1.5; }
   .data-notice.failed { color: var(--ui-danger-text); }
   .data-notice.stale { color: #854d0e; }

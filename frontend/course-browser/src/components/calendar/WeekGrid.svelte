@@ -207,7 +207,7 @@
 
 <svelte:window onkeydown={handleCalendarKeydown} />
 
-<div bind:this={courseBarElement}>
+<div class="calendar-course-bar-container" bind:this={courseBarElement}>
 <CalendarCourseBar courses={weekCourses} {colorByOffering}
   {selectedOfferingId}
   onSelect={id => { selectedOfferingId = id; pinnedId = null; previewId = null; courseGroupPreviewId = null; courseOccurrencePreviewId = null; }}
@@ -285,6 +285,9 @@
 />
 
 <style>
+  @media (max-width: 599px) {
+    .calendar-course-bar-container { display: none; }
+  }
   .calendar-workspace { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 0.75rem; align-items: start; }
   .calendar-grid-pane { min-width: 0; order: 2; }
   .calendar-panel-pane { min-width: 0; order: 1; }

@@ -444,7 +444,7 @@
   }
   
   /* Responsive */
-  @media (max-width: 870px) {
+  @media (max-width: 960px) {
     .nav-links span,
     .nav-user span {
       display: none;
@@ -473,7 +473,7 @@
     }
   }
 
-  @media (max-width: 460px) {
+  @media (max-width: 440px) {
     .nav-links,
     .nav-user {
       display: none;

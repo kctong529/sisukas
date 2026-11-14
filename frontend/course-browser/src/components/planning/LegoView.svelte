@@ -308,7 +308,7 @@
   .title-group { display: flex; flex-direction: column; gap: 0.25rem; }
   .lego-header-actions { margin-left: auto; }
 
-  h2 {
+  .title-group h2 {
     font-size: 1.3rem;
     font-weight: 600;
     margin: 0;

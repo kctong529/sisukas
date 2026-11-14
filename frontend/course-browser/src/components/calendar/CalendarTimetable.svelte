@@ -201,7 +201,6 @@
   }
   .small-screen-hint { display: none; }
   @media (max-width: 700px) {
-    .week-scroll { max-height: min(70vh, 640px); }
     .week-grid {
       grid-template-columns: 52px repeat(7, minmax(175px, 1fr));
       min-width: 1277px;
