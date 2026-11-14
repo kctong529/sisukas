@@ -91,6 +91,54 @@ describe('Calendar persistence race hardening (#191)', () => {
     expect(store.read.writesFor('A', 'plan')).toEqual({ pending: 0, failed: 0 });
   });
 
+  it('keeps successful identities confirmed when another write fails', async () => {
+    const write = vi.fn((_: string, group: typeof GROUP) =>
+      group.studyGroupId === 'group'
+        ? Promise.reject(new Error('temporary failure'))
+        : Promise.resolve());
+    const store = createCalendarVisibilitySessionStore(async () => EMPTY, write);
+    store.actions.setAccount('A');
+    await store.actions.ensureLoaded('A', 'plan');
+    store.actions.setGroupHidden('A', 'plan', GROUP, true);
+    store.actions.setGroupHidden('A', 'plan', OTHER, true);
+    await settle();
+
+    expect(store.read.writesFor('A', 'plan')).toEqual({ pending: 0, failed: 1 });
+    const displayed = store.read.displayFor('A', 'plan');
+    expect(displayed?.hiddenGroups).toContain(calendarGroupKey('offering', 'group'));
+    expect(displayed?.hiddenGroups).toContain(calendarGroupKey('offering', 'other'));
+
+    // A fresh GET must not erase the failed local intent or repeat the
+    // independently confirmed write.
+    store.actions.retryFailedWrites('A', 'plan');
+    await settle();
+    expect(write).toHaveBeenCalledTimes(3);
+    expect(write.mock.calls.filter(([, group]) => group.studyGroupId === 'other')).toHaveLength(1);
+    expect(store.read.writesFor('A', 'plan')).toEqual({ pending: 0, failed: 1 });
+  });
+
+  it('keeps simultaneous plan writes isolated when switching between plans', async () => {
+    const blocked = deferred<void>();
+    const write = vi.fn((planId: string) =>
+      planId === 'first-plan' ? blocked.promise : Promise.resolve());
+    const store = createCalendarVisibilitySessionStore(async () => EMPTY, write);
+    store.actions.setAccount('A');
+    await store.actions.ensureLoaded('A', 'first-plan');
+    await store.actions.ensureLoaded('A', 'second-plan');
+    store.actions.setGroupHidden('A', 'first-plan', GROUP, true);
+    store.actions.setGroupHidden('A', 'second-plan', OTHER, true);
+    await settle();
+    expect(store.read.writesFor('A', 'first-plan')).toEqual({ pending: 1, failed: 0 });
+    expect(store.read.writesFor('A', 'second-plan')).toEqual({ pending: 0, failed: 0 });
+    blocked.resolve();
+    await settle();
+    expect(store.read.writesFor('A', 'first-plan')).toEqual({ pending: 0, failed: 0 });
+    expect(store.read.displayFor('A', 'first-plan')?.hiddenGroups)
+      .toContain(calendarGroupKey('offering', 'group'));
+    expect(store.read.displayFor('A', 'second-plan')?.hiddenGroups)
+      .toContain(calendarGroupKey('offering', 'other'));
+  });
+
   it('keeps later account data isolated when an old PUT rejects', async () => {
     const oldWrite = deferred<void>();
     const store = createCalendarVisibilitySessionStore(async () => EMPTY, () => oldWrite.promise);

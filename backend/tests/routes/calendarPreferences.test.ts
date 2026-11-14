@@ -80,6 +80,27 @@ describe('Calendar preferences API', () => {
     expect(operations.getPreferences).not.toHaveBeenCalled();
   });
 
+  it('rejects unauthenticated writes before touching preference storage', async () => {
+    isAuthenticated = false;
+    expect((await put('/groups', { ...group, hidden: true })).status).toBe(401);
+    expect((await put('/occurrences', { ...occurrence, visibility: 'hidden' })).status).toBe(401);
+    expect(operations.setGroupHidden).not.toHaveBeenCalled();
+    expect(operations.setOccurrenceVisibility).not.toHaveBeenCalled();
+    expect(operations.resetOccurrenceVisibility).not.toHaveBeenCalled();
+  });
+
+  it('rejects invalid plan IDs without consulting preference storage', async () => {
+    const invalidRoot = root.replace(planId, 'not-a-valid-uuid');
+    expect((await fetch(invalidRoot)).status).toBe(400);
+    expect((await fetch(`${invalidRoot}/groups`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ...group, hidden: true }),
+    })).status).toBe(400);
+    expect(operations.getPreferences).not.toHaveBeenCalled();
+    expect(operations.setGroupHidden).not.toHaveBeenCalled();
+  });
+
   it('writes and restores group state with a boolean flag', async () => {
     const response = await put('/groups', { ...group, hidden: false });
     expect(response.status).toBe(204);
