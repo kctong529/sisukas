@@ -1,6 +1,6 @@
 // src/infrastructure/services/PlansService.ts
 
-import type { Plan } from '../../domain/models/Plan';
+import type { Plan } from '@domain/models/Plan';
 
 const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 

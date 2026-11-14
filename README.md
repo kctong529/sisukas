@@ -29,7 +29,7 @@ Sisukas is structured around a multi-phase planning model.
 Each phase answers a different question students face when assembling a semester.
 
 ```
-Discover → Plan → Optimize → Decide
+Discover → Plan → Assemble → Calendar
 ```
 
 This lifecycle is the conceptual backbone of the system.
@@ -67,43 +67,38 @@ A **Plan** is a workspace, not a decision.
 
 **Status:** ✅ Mostly implemented
 
-### Phase 2: Optimization (Schedule Pairs)
+### Phase 2: Assembly (LEGO Blocks)
 
-**Question:** *Given these courses, what are the best ways to combine their study groups?*
+**Question:** *Given these LEGO blocks, what scheduling configurations could work?*
 
-- Study groups are partitioned into **blocks** (user-defined, with sensible defaults)
-- All valid combinations are generated
-- Combinations are ranked by overlap and overall schedule fit
+- Students select LEGO blocks as inputs to the assembler
+- The assembler returns ordered assembly candidates; its algorithm and ranking criteria may evolve
+- Candidates may contain unavoidable overlaps or differ in which courses they schedule
 
 > [!IMPORTANT]
 > Sisukas does not choose for the student. It makes trade-offs visible.
 
-📘 Docs: [https://docs.sisukas.eu/concepts/schedule-pairs/](https://docs.sisukas.eu/concepts/schedule-pairs/)
+📘 Docs: [https://docs.sisukas.eu/concepts/assemblies/](https://docs.sisukas.eu/concepts/assemblies/)
 
-**Status:** 🟡 Backend implemented, UI in progress
+**Status:** 🟡 Existing scheduling implementation; revised assembly model proposed
 
-### Phase 3: Resolution (Decision Slots)
+### Phase 3: Calendar (Attendance Decisions)
 
-**Question:** *Where conflicts remain, what am I actually going to do?*
+**Question:** *How can I adapt my schedule to what I actually want to attend?*
 
-> [!TIP]
-> Some overlaps are unavoidable. Sisukas treats them as conscious decisions, not noise.
+SISU's calendar is rigid. Sisukas aims to make schedules flexible and personal, without changing the underlying study plan.
 
-A **Decision Slot** is a time interval where selected study groups overlap.
-For each slot, the student explicitly marks:
+- Compare alternative teaching schedules
+- Hide unwanted teaching groups or individual events
+- Customize attendance according to personal preferences
+- Preserve calendar preferences across sessions
 
-- **Primary** event (attending)
-- **Secondary** event(s) (recording, self-study, negotiation, etc)
+> [!TIP]\
+> A study plan defines what you intend to study. The calendar helps you decide when and how to attend.
 
-This produces:
+📘 Docs: [https://docs.sisukas.eu/under-dev/study-calendar/](https://docs.sisukas.eu/under-dev/study-calendar/)
 
-- a calendar that reflects the *real* plan
-- a record of trade-offs made
-- data for later reflection and workload analysis
-
-📘 Docs: [https://docs.sisukas.eu/concepts/decision-slots/](https://docs.sisukas.eu/concepts/decision-slots/)
-
-**Status:** 📋 Designed, not yet implemented
+**Status:** 🟡 Weekly calendar and visibility customization implemented; flexible attendance and alternative schedule integration planned.
 
 ## Current Implementation Status
 
@@ -111,8 +106,8 @@ This produces:
 | ------- | -------------- | ------------ |
 | Phase 0 | Filtering      | ✅ Live      |
 | Phase 1 | Plans          | ✅ Live      |
-| Phase 2 | Schedule Pairs | 🟡 Partial   |
-| Phase 3 | Decision Slots | 📋 Designed  |
+| Phase 2 | Assemblies     | 🟡 Existing scheduler; new model proposed |
+| Phase 3 | Study Calendar | 🟡 Weekly view and saved visibility controls implemented; further workflows planned |
 
 > [!NOTE]
 > The project is developed iteratively. Conceptual clarity takes priority over shipping incomplete abstractions.

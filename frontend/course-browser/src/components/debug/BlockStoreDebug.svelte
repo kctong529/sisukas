@@ -1,9 +1,12 @@
 <!-- src/components/BlockStoreDebug.svelte -->
 <script lang="ts">
+  import { getStudyGroupDataRuntime } from '@modules/study-groups';
+
   import { blockStore } from '../../lib/stores/blockStore';
-  import { studyGroupStore } from '../../lib/stores/studyGroupStore.svelte';
+  import { courseIndexStore } from '../../lib/stores/courseIndexStore.svelte';
+  import { debugStudyGroupEntry } from './debugStudyGroupEntry.svelte';
+
   import type { Block } from '../../domain/models/Block';
-  import type { StudyGroup } from '../../domain/models/StudyGroup';
   
   interface BlockStoreState {
     blocksByCourseInstance: Record<string, Block[]>;
@@ -38,7 +41,7 @@
   }
 
   function clearStudyGroups() {
-    studyGroupStore.actions.clear();
+    getStudyGroupDataRuntime().clear();
   }
 
   function invalidateInstance(instanceId: string) {
@@ -103,32 +106,16 @@
     return counts;
   }
 
-  // ---------- StudyGroup cache helpers (UI-only) ----------
-  const studyGroupKeyByInstanceId = $derived.by(() => {
-    const map = new Map<string, string>();
-    const instanceIds = Object.keys(storeState?.blocksByCourseInstance ?? {});
-    for (const instanceId of instanceIds) {
-      void instanceId;
-    }
-    return map;
-  });
-
-  function findStudyGroupCacheKeyForInstance(instanceId: string): string | null {
-    return studyGroupKeyByInstanceId.get(instanceId) ?? null;
-  }
-
-  function getStudyGroupsForInstance(instanceId: string): StudyGroup[] {
-    const key = findStudyGroupCacheKeyForInstance(instanceId);
-    if (!key) return [];
-    const [unitId, offeringId] = key.split(":");
-    if (!unitId || !offeringId) return [];
-    return studyGroupStore.read.getGroups(unitId, offeringId);
+  // Debug controls must never treat unavailable full data as an empty result.
+  function getStudyGroupEntryForInstance(instanceId: string) {
+    const course = courseIndexStore.read.resolveByInstanceId(instanceId);
+    return course ? debugStudyGroupEntry(course.unitId, instanceId) : null;
   }
 
   async function autoPartition(instanceId: string) {
-    await blockStore.autoPartitionForInstance(instanceId, () =>
-      getStudyGroupsForInstance(instanceId)
-    );
+    const entry = getStudyGroupEntryForInstance(instanceId);
+    if (!entry || entry.groups === null || entry.groups.length === 0) return;
+    await blockStore.autoPartitionForInstance(instanceId, () => entry.groups ?? []);
   }
 </script>
 
@@ -195,8 +182,8 @@
               {@const uniq = uniqueGroupsInInstance(blocks ?? [])}
               {@const dups = findDuplicateGroupIds(blocks ?? [])}
               {@const colorCounts = blockColorSummary(blocks ?? [])}
-              {@const cachedStudyGroups = getStudyGroupsForInstance(instanceId)}
-              {@const hasSG = cachedStudyGroups.length > 0}
+              {@const sgEntry = getStudyGroupEntryForInstance(instanceId)}
+              {@const hasSG = sgEntry?.groups !== null && (sgEntry?.groups.length ?? 0) > 0}
 
               <div class="instance-item">
                 <!-- REFACTORED: Use .header-toggle instead of .instance-header -->
@@ -215,7 +202,7 @@
                   <span class="pill">unique: {uniq.size}</span>
 
                   <span class="pill" class:warn={!hasSG} class:ok={hasSG}>
-                    studyGroups cached: {cachedStudyGroups.length}
+                    studyGroups: {sgEntry?.groups === null || !sgEntry ? (sgEntry?.status ?? "unresolved") : `${sgEntry.groups.length} cached`}
                   </span>
 
                   <span class="pill">
@@ -270,7 +257,7 @@
                   <button
                     class="action-btn primary"
                     onclick={() => autoPartition(instanceId)}
-                    title="Auto-partition this instance (requires study groups cached)"
+                    title="Auto-partition this instance (requires authoritative full study groups)"
                     disabled={!hasSG}
                   >
                     Auto Partition
@@ -299,7 +286,7 @@
 
       <div class="actions">
         <button class="action-btn danger" onclick={clearStore}>Clear Block Store</button>
-        <button class="action-btn danger" onclick={clearStudyGroups}>Clear Study Groups</button>
+        <button class="action-btn danger" onclick={clearStudyGroups}>Clear Runtime Cache</button>
       </div>
     </div>
   {/if}

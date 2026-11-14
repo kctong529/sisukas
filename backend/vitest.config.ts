@@ -1,7 +1,8 @@
 import { defineConfig } from 'vitest/config'
 import dotenv from 'dotenv'
 
-dotenv.config({ path: '.env.test' })
+// Prefer the dedicated test environment over previously exported shell values.
+dotenv.config({ path: '.env.test', override: true })
 
 export default defineConfig({
   test: {

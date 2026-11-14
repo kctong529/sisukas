@@ -1,7 +1,8 @@
+import { DateRangeFilterRule, type DateRangeFilterRuleConfig, type DateRangeRelation } from '../rules/DateRangeFilterRule';
+
 // src/domain/filters/blueprints/DateRangeRuleBlueprints.ts
 import type { Course } from '../../models/Course';
 import type { DateRange } from '../../valueObjects/DateRange';
-import { DateRangeFilterRule, type DateRangeRelation, type DateRangeFilterRuleConfig } from '../rules/DateRangeFilterRule';
 import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
 
 export abstract class DateRangeRuleBlueprint implements BaseRuleBlueprint {

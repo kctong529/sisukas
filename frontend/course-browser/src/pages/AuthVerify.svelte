@@ -1,6 +1,7 @@
 <!-- src/pages/AuthVerify.svelte -->
 <script lang="ts">
   import { onMount } from "svelte";
+
   import { authClient } from "../lib/authClient";
 
   let token = "";
@@ -93,8 +94,8 @@
     background: #ccc;
   }
   .error-banner {
-    color: #d9534f;
-    background: #fff5f5;
+    color: var(--ui-danger);
+    background: var(--ui-danger-surface);
     padding: 0.75rem;
     border-radius: 6px;
     margin-bottom: 1rem;

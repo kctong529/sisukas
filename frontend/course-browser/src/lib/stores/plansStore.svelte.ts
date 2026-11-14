@@ -1,7 +1,8 @@
 // src/lib/stores/plansStore.svelte.ts
 
-import { plansService } from '../../infrastructure/services/PlansService';
-import type { Plan } from '../../domain/models/Plan';
+import { plansService } from '@infrastructure/services/PlansService';
+
+import type { Plan } from '@domain/models/Plan';
 
 const state = $state({
   byId: new Map<string, Plan>(),
@@ -34,6 +35,20 @@ const read = {
 
 let loadPromise: Promise<void> | null = null;
 let ensureDefaultPromise: Promise<void> | null = null;
+let generation = 0;
+
+class PlanOperationCancelledError extends Error {
+  constructor() {
+    super('Plan operation invalidated by store reset');
+    this.name = 'PlanOperationCancelledError';
+  }
+}
+
+function assertCurrentGeneration(expected: number): void {
+  if (generation !== expected) {
+    throw new PlanOperationCancelledError();
+  }
+}
 
 function normalizeActive(activeId: string | null) {
   // Pick a fallback if activeId is null but we have plans
@@ -59,28 +74,54 @@ const actions = {
     if (state.loaded) return;
     if (loadPromise) return loadPromise;
 
+    const currentGeneration = generation;
+
     state.loading = true;
-    loadPromise = (async () => {
+    state.error = null;
+
+    const operation = (async () => {
       try {
         const plans = await plansService.loadAll();
+
+        // Ignore results from a previous store lifecycle.
+        if (currentGeneration !== generation) return;
+
         state.byId = new Map(plans.map(p => [p.id, p]));
         state.ids = plans.map(p => p.id);
 
-        // if backend sends multiple actives, choose one deterministically
-        const serverActiveIds = plans.filter(p => p.isActive).map(p => p.id);
+        const serverActiveIds = plans
+          .filter(p => p.isActive)
+          .map(p => p.id);
+
         normalizeActive(serverActiveIds[0] ?? null);
 
         state.loaded = true;
       } catch (err) {
-        state.error = err instanceof Error ? err.message : 'Failed to load plans';
+        if (currentGeneration !== generation) return;
+
+        state.error =
+          err instanceof Error
+            ? err.message
+            : 'Failed to load plans';
+
         throw err;
       } finally {
-        state.loading = false;
-        loadPromise = null;
+        if (currentGeneration === generation) {
+          state.loading = false;
+        }
       }
     })();
 
-    return loadPromise;
+    loadPromise = operation;
+
+    try {
+      await operation;
+    } finally {
+      // Do not remove a newer operation's promise.
+      if (loadPromise === operation) {
+        loadPromise = null;
+      }
+    }
   },
 
   /**
@@ -88,154 +129,244 @@ const actions = {
    * Concurrency-safe: multiple callers share the same in-flight promise.
    */
   async ensureDefaultPlan(): Promise<void> {
-    // Fast-path: already has at least one plan and active plan
     if (state.ids.length > 0 && state.activePlanId) return;
-
     if (ensureDefaultPromise) return ensureDefaultPromise;
 
-    ensureDefaultPromise = (async () => {
-      await actions.ensureLoaded();
+    const currentGeneration = generation;
 
-      // Re-check after load (important)
+    const operation = (async () => {
+      await actions.ensureLoaded();
+      assertCurrentGeneration(currentGeneration);
+
       const plans = read.getAll();
       const active = read.getActive();
 
       if (plans.length === 0) {
-        const p = await actions.create("Default");
-        await actions.setActive(p.id);
+        const plan = await actions.create('Default');
+        assertCurrentGeneration(currentGeneration);
+
+        await actions.setActive(plan.id);
+        assertCurrentGeneration(currentGeneration);
         return;
       }
 
       if (!active) {
         await actions.setActive(plans[0].id);
+        assertCurrentGeneration(currentGeneration);
       }
-    })().finally(() => {
-      ensureDefaultPromise = null;
-    });
+    })();
 
-    return ensureDefaultPromise;
+    ensureDefaultPromise = operation;
+
+    try {
+      await operation;
+    } finally {
+      if (ensureDefaultPromise === operation) {
+        ensureDefaultPromise = null;
+      }
+    }
   },
 
   async create(name: string): Promise<Plan> {
+    const currentGeneration = generation;
     state.error = null;
+
     try {
       const newPlan = await plansService.create(name);
+
+      assertCurrentGeneration(currentGeneration);
+
       state.byId = new Map(state.byId).set(newPlan.id, newPlan);
       state.ids = [...state.ids, newPlan.id];
+
       return newPlan;
     } catch (err) {
-      state.error = err instanceof Error ? err.message : 'Failed to create plan';
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to create plan';
+      }
+
       throw err;
     }
   },
 
   async setActive(planId: string): Promise<void> {
+    const currentGeneration = generation;
     state.error = null;
-    const updatedPlan = await plansService.setActive(planId);
-    
-    // Update the server-returned plan
-    state.byId = new Map(state.byId).set(planId, updatedPlan);
 
-    // Enforce invariant locally regardless of what else is in memory
-    normalizeActive(planId);
+    try {
+      const updatedPlan = await plansService.setActive(planId);
+
+      assertCurrentGeneration(currentGeneration);
+
+      state.byId = new Map(state.byId).set(planId, updatedPlan);
+      normalizeActive(planId);
+    } catch (err) {
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to activate plan';
+      }
+
+      throw err;
+    }
   },
 
   async addInstanceToActivePlan(instanceId: string): Promise<void> {
+    const currentGeneration = generation;
+    const planId = state.activePlanId;
+
     state.error = null;
-    if (!state.activePlanId) {
+
+    if (!planId) {
       state.error = 'No active plan';
       throw new Error('No active plan');
     }
 
     try {
-      const updatedPlan = await plansService.addInstance(state.activePlanId, instanceId);
-      state.byId = new Map(state.byId).set(state.activePlanId, updatedPlan);
+      const updatedPlan = await plansService.addInstance(
+        planId,
+        instanceId,
+      );
+
+      assertCurrentGeneration(currentGeneration);
+
+      state.byId = new Map(state.byId).set(planId, updatedPlan);
     } catch (err) {
-      state.error = err instanceof Error ? err.message : 'Failed to add instance';
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to add instance';
+      }
+
       throw err;
     }
   },
 
   async removeInstanceFromActivePlan(instanceId: string): Promise<void> {
+    const currentGeneration = generation;
+    const planId = state.activePlanId;
+
     state.error = null;
-    if (!state.activePlanId) {
+
+    if (!planId) {
       state.error = 'No active plan';
       throw new Error('No active plan');
     }
 
     try {
-      const updatedPlan = await plansService.removeInstance(state.activePlanId, instanceId);
-      state.byId = new Map(state.byId).set(state.activePlanId, updatedPlan);
+      const updatedPlan = await plansService.removeInstance(
+        planId,
+        instanceId,
+      );
+
+      assertCurrentGeneration(currentGeneration);
+
+      state.byId = new Map(state.byId).set(planId, updatedPlan);
     } catch (err) {
-      state.error = err instanceof Error ? err.message : 'Failed to remove instance';
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to remove instance';
+      }
+
       throw err;
     }
   },
 
-  async updatePlanName(planId: string, newName: string): Promise<void> {
+  async updatePlanName(
+    planId: string,
+    newName: string,
+  ): Promise<void> {
+    const currentGeneration = generation;
     state.error = null;
+
     try {
-      const updatedPlan = await plansService.updatePlanName(planId, newName);
+      const updatedPlan = await plansService.updatePlanName(
+        planId,
+        newName,
+      );
+
+      assertCurrentGeneration(currentGeneration);
+
       state.byId = new Map(state.byId).set(planId, updatedPlan);
     } catch (err) {
-      state.error = err instanceof Error ? err.message : 'Failed to update plan';
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to update plan';
+      }
+
       throw err;
     }
   },
   
   async removePlan(planId: string): Promise<void> {
+    const currentGeneration = generation;
     state.error = null;
 
     try {
-      // Make sure we have a consistent baseline
       await actions.ensureLoaded();
+      assertCurrentGeneration(currentGeneration);
 
-      const isLastPlan = state.ids.length === 1 && state.ids[0] === planId;
+      const isLastPlan =
+        state.ids.length === 1 && state.ids[0] === planId;
       const wasActive = state.activePlanId === planId;
 
-      // If the user is removing the last remaining plan,
-      // create a replacement FIRST (server + local), activate it,
-      // then delete the old plan.
       if (isLastPlan) {
-        const replacement = await actions.create("Empty");
+        // Create and activate a replacement before deletion.
+        const replacement = await actions.create('Empty');
+        assertCurrentGeneration(currentGeneration);
+
         await actions.setActive(replacement.id);
-        // now we are guaranteed to have at least one plan besides `planId`
+        assertCurrentGeneration(currentGeneration);
       } else if (wasActive) {
-        // If deleting the active plan and it's not the last one,
-        // switch active to a fallback BEFORE deleting to keep UI stable.
-        const fallbackId = state.ids.find((id) => id !== planId) ?? null;
-        if (fallbackId) await actions.setActive(fallbackId);
-        else normalizeActive(null); // defensive, should not happen since !isLastPlan
+        const fallbackId =
+          state.ids.find(id => id !== planId) ?? null;
+
+        if (fallbackId) {
+          await actions.setActive(fallbackId);
+          assertCurrentGeneration(currentGeneration);
+        } else {
+          normalizeActive(null);
+        }
       }
 
-      // Now delete on server
-      await plansService.removePlan(planId);
+      assertCurrentGeneration(currentGeneration);
 
-      // Remove locally
+      await plansService.removePlan(planId);
+      assertCurrentGeneration(currentGeneration);
+
       const nextById = new Map(state.byId);
       nextById.delete(planId);
-      state.byId = nextById;
-      state.ids = state.ids.filter((id) => id !== planId);
 
-      // Final safety: ensure active points to an existing plan and flags are consistent
-      if (state.activePlanId && !state.byId.has(state.activePlanId)) {
+      state.byId = nextById;
+      state.ids = state.ids.filter(id => id !== planId);
+
+      if (
+        state.activePlanId &&
+        !state.byId.has(state.activePlanId)
+      ) {
         normalizeActive(state.ids[0] ?? null);
       } else {
         normalizeActive(state.activePlanId);
       }
     } catch (err) {
-      state.error = err instanceof Error ? err.message : "Failed to remove plan";
+      if (currentGeneration === generation) {
+        state.error =
+          err instanceof Error ? err.message : 'Failed to remove plan';
+      }
+
       throw err;
     }
   },
 
   clear() {
+    generation += 1;
+
     state.byId = new Map();
     state.ids = [];
     state.activePlanId = null;
     state.loading = false;
     state.loaded = false;
     state.error = null;
+
     loadPromise = null;
     ensureDefaultPromise = null;
   },

@@ -1,6 +1,6 @@
 // src/domain/filters/helpers/DefaultValueInitializer.ts
 
-import { BaseRuleBlueprint } from '../blueprints/BaseRuleBlueprint';
+import type { BaseRuleBlueprint } from '../blueprints/BaseRuleBlueprint';
 
 type DefaultValue = string | { start: string; end: string };
 

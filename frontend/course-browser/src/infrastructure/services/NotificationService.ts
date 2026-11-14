@@ -8,11 +8,12 @@ export type Notification = {
   id: string;
   type: NotificationType;
   message: string;
+  action?: { label: string; run: () => void };
 };
 
 const NOTIFICATION_DURATION = {
   success: 3000,
-  error: 5000
+  error: 5000,
 };
 
 const MAX_NOTIFICATIONS = 3;
@@ -22,41 +23,54 @@ export const notifications = writable<Notification[]>([]);
 export class NotificationService {
   private static timeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
-  private static remove(id: string) {
-    const t = this.timeouts.get(id);
-    if (t) {
-      clearTimeout(t);
+  static dismiss(id: string): void {
+    const timer = this.timeouts.get(id);
+    if (timer) {
+      clearTimeout(timer);
       this.timeouts.delete(id);
     }
-
-    notifications.update(n => n.filter(x => x.id !== id));
+    notifications.update(items => items.filter(item => item.id !== id));
   }
 
-  private static push(type: NotificationType, message: string) {
+  private static push(
+    type: NotificationType,
+    message: string,
+    action?: Notification['action'],
+  ): string {
     const id = crypto.randomUUID();
+    let evicted: string | undefined;
 
-    notifications.update(n => {
-      if (n.length >= MAX_NOTIFICATIONS) {
-        const oldest = n[0];
-        if (oldest) this.remove(oldest.id);
-        n = n.slice(1);
+    notifications.update(items => {
+      if (items.length >= MAX_NOTIFICATIONS) {
+        evicted = items[0]?.id;
+        items = items.slice(1);
       }
-
-      return [...n, { id, type, message }];
+      return [...items, { id, type, message, ...(action ? { action } : {}) }];
     });
+    if (evicted) {
+      const timer = this.timeouts.get(evicted);
+      if (timer) clearTimeout(timer);
+      this.timeouts.delete(evicted);
+    }
 
-    const timeout = setTimeout(() => {
-      this.remove(id);
-    }, NOTIFICATION_DURATION[type]);
-
-    this.timeouts.set(id, timeout);
+    // Actionable errors remain available until resolved or explicitly dismissed.
+    if (!action) {
+      this.timeouts.set(id, setTimeout(() => {
+        this.dismiss(id);
+      }, NOTIFICATION_DURATION[type]));
+    }
+    return id;
   }
 
-  static success(message: string) {
+  static success(message: string): void {
     this.push('success', message);
   }
 
-  static error(message: string) {
+  static error(message: string): void {
     this.push('error', message);
+  }
+
+  static errorWithAction(message: string, label: string, run: () => void): string {
+    return this.push('error', message, { label, run });
   }
 }

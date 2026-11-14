@@ -1,8 +1,9 @@
+import { includes } from '../../valueObjects/DateRange';
+
 // src/domain/filters/rules/DateFilterRule.ts
 import type { Course } from '../../models/Course';
-import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 import type { DateRange } from '../../valueObjects/DateRange';
-import { includes } from '../../valueObjects/DateRange';
+import type { FilterRule, FilterRuleJSON } from '../core/FilterRule';
 
 export type DateFieldSelector = (course: Course) => Date;
 

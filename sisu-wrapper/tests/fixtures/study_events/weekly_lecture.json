@@ -1,0 +1,76 @@
+{
+  "id": "aalto-SE-ASIO-9000815-7339722",
+  "primaryCourseUnitRealisationId": "aalto-cur-P-c235941a-0fd6-11f1-8c99-0050569455c9",
+  "locationIds": [
+    "aalto-TILA-457"
+  ],
+  "recursEvery": "WEEKLY",
+  "startTime": "2026-08-31T10:15:00",
+  "duration": "PT1H45M",
+  "recursUntil": "2026-10-05",
+  "exceptions": [],
+  "cancellations": [],
+  "overrides": [],
+  "events": [
+    {
+      "start": "2026-08-31T10:15:00",
+      "end": "2026-08-31T12:00:00",
+      "duration": "PT1H45M",
+      "excluded": false,
+      "cancelled": false,
+      "irregularLocationIds": null,
+      "irregularTeacherIds": null,
+      "notice": null
+    },
+    {
+      "start": "2026-09-07T10:15:00",
+      "end": "2026-09-07T12:00:00",
+      "duration": "PT1H45M",
+      "excluded": false,
+      "cancelled": false,
+      "irregularLocationIds": null,
+      "irregularTeacherIds": null,
+      "notice": null
+    },
+    {
+      "start": "2026-09-14T10:15:00",
+      "end": "2026-09-14T12:00:00",
+      "duration": "PT1H45M",
+      "excluded": false,
+      "cancelled": false,
+      "irregularLocationIds": null,
+      "irregularTeacherIds": null,
+      "notice": null
+    },
+    {
+      "start": "2026-09-21T10:15:00",
+      "end": "2026-09-21T12:00:00",
+      "duration": "PT1H45M",
+      "excluded": false,
+      "cancelled": false,
+      "irregularLocationIds": null,
+      "irregularTeacherIds": null,
+      "notice": null
+    },
+    {
+      "start": "2026-09-28T10:15:00",
+      "end": "2026-09-28T12:00:00",
+      "duration": "PT1H45M",
+      "excluded": false,
+      "cancelled": false,
+      "irregularLocationIds": null,
+      "irregularTeacherIds": null,
+      "notice": null
+    },
+    {
+      "start": "2026-10-05T10:15:00",
+      "end": "2026-10-05T12:00:00",
+      "duration": "PT1H45M",
+      "excluded": false,
+      "cancelled": false,
+      "irregularLocationIds": null,
+      "irregularTeacherIds": null,
+      "notice": null
+    }
+  ]
+}

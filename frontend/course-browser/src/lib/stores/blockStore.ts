@@ -1,9 +1,12 @@
 // src/lib/stores/blockStore.ts
-import { writable, get, derived } from 'svelte/store';
-import { blockService } from '../../infrastructure/services/BlockService';
-import type { Block } from '../../domain/models/Block';
-import type { StudyGroup } from '../../domain/models/StudyGroup';
+import { derived, get, writable } from 'svelte/store';
+
+import { blockService } from '@infrastructure/services/BlockService';
+
 import { colorAllocator, colorAllocatorVersion } from './colorAllocator';
+
+import type { Block } from '@domain/models/Block';
+import type { StudyGroup } from '@modules/study-groups';
 
 // ========== Store State Types ==========
 
@@ -237,7 +240,7 @@ function createBlockStore() {
     },
 
     /**
-     * Convenience wrapper that keeps blockStore decoupled from studyGroupStore.
+     * Convenience wrapper that keeps blockStore independent of retrieval.
      * Caller supplies a provider (from cache, fetch, etc).
      */
     async autoPartitionForInstance(

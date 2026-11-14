@@ -12,6 +12,7 @@ import adminRoutes from './routes/admin';
 import usersRoutes from './routes/users';
 import favouritesRoutes from './routes/favourites';
 import plansRoutes from './routes/plans';
+import calendarPreferencesRoutes from './routes/calendarPreferences';
 import analyticsRoutes from './routes/analytics';
 import gradesRoutes from "./routes/grades";
 import transcriptRoutes from "./routes/transcript";
@@ -87,6 +88,7 @@ app.use('/api/users', usersRoutes);
 app.use(extractSession);
 app.use('/api/favourites', favouritesRoutes);
 app.use('/api/plans', plansRoutes);
+app.use('/api/plans/:planId/calendar', calendarPreferencesRoutes);
 app.use("/api/grades", gradesRoutes);
 app.use("/api/transcript", transcriptRoutes);
 

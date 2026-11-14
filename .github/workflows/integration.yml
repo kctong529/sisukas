@@ -12,6 +12,8 @@ on:
 
 env:
   NODE_VERSION: '20'
+  PYTHON_VERSION: '3.12'
+  UV_VERSION: '0.9.7'
 
 jobs:
   test-setup:
@@ -32,7 +34,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
-          version: "latest"
+          version: ${{ env.UV_VERSION }}
 
       - name: Verify tools installation
         run: make check-tools
@@ -80,7 +82,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
-          version: "latest"
+          version: ${{ env.UV_VERSION }}
 
       - name: Setup all components
         run: make setup
@@ -117,10 +119,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
       - name: Install uv
         uses: astral-sh/setup-uv@v4
         with:
-          version: "latest"
+          version: ${{ env.UV_VERSION }}
+      
+      - name: Inspect compilation environment
+        run: |
+          uv --version
+          uv python find
+          python3 --version
+          uname -m
+          env | sort | grep -E '^(UV_|VIRTUAL_ENV|PYTHON)' || true
 
       - name: Compile requirements
         run: make compile-requirements

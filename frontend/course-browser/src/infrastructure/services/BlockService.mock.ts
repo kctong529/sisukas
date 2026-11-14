@@ -1,7 +1,9 @@
 // src/infrastructure/services/BlockService.mock.ts
 
-import type { Block } from '../../domain/models/Block';
-import type { StudyGroup } from '../../domain/models/StudyGroup';
+import { BLOCK_PALETTE_SIZE } from '@lib/stores/blockPalette';
+
+import type { Block } from '@domain/models/Block';
+import type { StudyGroup } from '@modules/study-groups';
 
 interface UpdateBlockRequest {
   label?: string;
@@ -14,9 +16,6 @@ interface MockConfig {
   mutationDelayMs?: number;
   errorRate?: number; // 0 to 1
 }
-
-// Keep this in sync with your CSS palette size
-const PALETTE_SIZE = 6;
 
 /**
  * Auto-partition study groups by their type.
@@ -45,7 +44,7 @@ function autoPartitionByType(courseInstanceId: string, studyGroups: StudyGroup[]
         studyGroupIds: groups.map(g => g.groupId),
         order: index,
         // ✅ stable colors for default blocks
-        colorIndex: index % PALETTE_SIZE,
+        colorIndex: index % BLOCK_PALETTE_SIZE,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -103,7 +102,7 @@ class MockBlockStorage {
       label,
       studyGroupIds,
       order,
-      colorIndex: ((colorIndex % PALETTE_SIZE) + PALETTE_SIZE) % PALETTE_SIZE,
+      colorIndex: ((colorIndex % BLOCK_PALETTE_SIZE) + BLOCK_PALETTE_SIZE) % BLOCK_PALETTE_SIZE,
       createdAt: now,
       updatedAt: now,
     };

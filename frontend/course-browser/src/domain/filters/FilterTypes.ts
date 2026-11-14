@@ -1,6 +1,6 @@
+import type { Course } from '../models/Course';
 // src/domain/filters/types.ts
 import type { FilterRule } from './core/FilterRule';
-import type { Course } from '../models/Course';
 
 /**
  * Configuration for a single filter rule in the UI

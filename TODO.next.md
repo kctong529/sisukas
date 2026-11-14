@@ -14,7 +14,11 @@
 * [ ] Advanced filter composition and presets.
 * [ ] Course browser history mode (historical instances).
 
-## Scheduling Algorithm
+## Scheduling Algorithm and Assembly Integration
+
+* [ ] Define the assembler input/output contract independently of the current Schedule Pair implementation.
+* [ ] Define an explicit preview/reconciliation operation for applying a candidate to the calendar; generation must not mutate calendar state.
+* [ ] Evaluate saved assemblies after the initial generate-and-apply workflow is usable.
 
 * [ ] Implement Hard Constraints component (validity tier).
 * [ ] Cost function with user customization.

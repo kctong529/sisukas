@@ -109,3 +109,25 @@ run `scripts/validate_disjoint_datasets.py` on the proposed active and
 historical files. See [issue #120](https://github.com/kctong529/sisukas/issues/120)
 for the date-format hotfix and [issue #64](https://github.com/kctong529/sisukas/issues/64)
 for longer-term dataset transition safety.
+
+## Optional manual archival audit
+
+After reconciling, run the independent consistency check with the **same**
+`--as-of` date and input datasets used by reconciliation:
+
+```bash
+python3 scripts/audit_archive_candidates.py \
+  --previous courses.json \
+  --latest latest.json \
+  --active artifacts/courses.next.json \
+  --candidates artifacts/archive_candidates.json \
+  --retained artifacts/carried_forward.json \
+  --as-of YYYY-MM-DD \
+  --output artifacts/archive_audit.csv
+```
+
+Replace `YYYY-MM-DD` with the reconciliation date (UTC if using its default).
+The script fails on inconsistent IDs or altered records and otherwise produces
+an inspectable CSV. It **does not** prove that an upstream omission is genuine,
+validate historical merges, or publish anything. Inspect the candidates and
+complete the existing publication checks before approving an archival change.

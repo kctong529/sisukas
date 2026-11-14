@@ -1,0 +1,416 @@
+[
+  {
+    "offeringId": "aalto-CU-1151001415-20260801:aalto-cur-P-c235e995-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4520-219305-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T08:00:00+02:00",
+    "endIso": "2026-12-01T21:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-3314876-7329630",
+    "locations": [
+      {
+        "id": "aalto-TILA-40329",
+        "name": "Exam-studios - Exam-studios",
+        "building_id": "aalto-RAKENNUS-R999",
+        "building_name": "Virtuaali",
+        "address": ""
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f578-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4517-218101-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007815-7391225",
+    "locations": [
+      {
+        "id": "aalto-TILA-44",
+        "name": "U2 - U157",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f578-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4517-218101-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007815-7391228",
+    "locations": [
+      {
+        "id": "aalto-TILA-76",
+        "name": "D-sali - Y122",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f578-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4517-218101-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007815-7391231",
+    "locations": [
+      {
+        "id": "aalto-TILA-77",
+        "name": "E-sali - Y124",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f578-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4517-218101-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007815-7391234",
+    "locations": [
+      {
+        "id": "aalto-TILA-83",
+        "name": "A-sali (Aalto-sali) - Y202a",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f578-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4517-218101-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007815-7391237",
+    "locations": [
+      {
+        "id": "aalto-TILA-84",
+        "name": "B-sali - Y203a",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f578-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4517-218101-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007815-7391240",
+    "locations": [
+      {
+        "id": "aalto-TILA-85",
+        "name": "C-sali - Y205",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f578-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4517-218101-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007815-7391243",
+    "locations": [
+      {
+        "id": "aalto-TILA-28816",
+        "name": "Jeti - A208d",
+        "building_id": "aalto-RAKENNUS-R004",
+        "building_name": "A Grid",
+        "address": "Otakaari 5, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f578-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4517-218101-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007815-7391246",
+    "locations": [
+      {
+        "id": "aalto-TILA-210",
+        "name": "213a - 213a",
+        "building_id": "aalto-RAKENNUS-R008",
+        "building_name": "Mechanical Engineering 1",
+        "address": "Otakaari 4, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f578-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4517-218101-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007815-7391249",
+    "locations": [
+      {
+        "id": "aalto-TILA-396",
+        "name": "T1 - C202",
+        "building_id": "aalto-RAKENNUS-R030",
+        "building_name": "Computer Science building",
+        "address": "Konemiehentie 2, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f578-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4517-218101-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007815-7391252",
+    "locations": [
+      {
+        "id": "aalto-TILA-487",
+        "name": "TU2 - 2005",
+        "building_id": "aalto-RAKENNUS-R037",
+        "building_name": "Maarintie 8",
+        "address": "Maarintie 8, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f578-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-4517-218101-5-01",
+    "groupName": "KT",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007815-7391255",
+    "locations": [
+      {
+        "id": "aalto-TILA-488",
+        "name": "AS2 - 2006",
+        "building_id": "aalto-RAKENNUS-R037",
+        "building_name": "Maarintie 8",
+        "address": "Maarintie 8, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f5a0-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-218103-4517-5-11111",
+    "groupName": "ET02",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007817-7391214",
+    "locations": [
+      {
+        "id": "aalto-TILA-44",
+        "name": "U2 - U157",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f5a0-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-218103-4517-5-11111",
+    "groupName": "ET02",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007817-7391215",
+    "locations": [
+      {
+        "id": "aalto-TILA-76",
+        "name": "D-sali - Y122",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f5a0-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-218103-4517-5-11111",
+    "groupName": "ET02",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007817-7391216",
+    "locations": [
+      {
+        "id": "aalto-TILA-77",
+        "name": "E-sali - Y124",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f5a0-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-218103-4517-5-11111",
+    "groupName": "ET02",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007817-7391217",
+    "locations": [
+      {
+        "id": "aalto-TILA-83",
+        "name": "A-sali (Aalto-sali) - Y202a",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f5a0-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-218103-4517-5-11111",
+    "groupName": "ET02",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007817-7391218",
+    "locations": [
+      {
+        "id": "aalto-TILA-84",
+        "name": "B-sali - Y203a",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f5a0-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-218103-4517-5-11111",
+    "groupName": "ET02",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007817-7391219",
+    "locations": [
+      {
+        "id": "aalto-TILA-85",
+        "name": "C-sali - Y205",
+        "building_id": "aalto-RAKENNUS-R001",
+        "building_name": "Undergraduate Centre",
+        "address": "Otakaari 1, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f5a0-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-218103-4517-5-11111",
+    "groupName": "ET02",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007817-7391220",
+    "locations": [
+      {
+        "id": "aalto-TILA-28816",
+        "name": "Jeti - A208d",
+        "building_id": "aalto-RAKENNUS-R004",
+        "building_name": "A Grid",
+        "address": "Otakaari 5, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f5a0-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-218103-4517-5-11111",
+    "groupName": "ET02",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007817-7391221",
+    "locations": [
+      {
+        "id": "aalto-TILA-210",
+        "name": "213a - 213a",
+        "building_id": "aalto-RAKENNUS-R008",
+        "building_name": "Mechanical Engineering 1",
+        "address": "Otakaari 4, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f5a0-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-218103-4517-5-11111",
+    "groupName": "ET02",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007817-7391222",
+    "locations": [
+      {
+        "id": "aalto-TILA-396",
+        "name": "T1 - C202",
+        "building_id": "aalto-RAKENNUS-R030",
+        "building_name": "Computer Science building",
+        "address": "Konemiehentie 2, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f5a0-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-218103-4517-5-11111",
+    "groupName": "ET02",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007817-7391223",
+    "locations": [
+      {
+        "id": "aalto-TILA-487",
+        "name": "TU2 - 2005",
+        "building_id": "aalto-RAKENNUS-R037",
+        "building_name": "Maarintie 8",
+        "address": "Maarintie 8, 02150 Espoo"
+      }
+    ]
+  },
+  {
+    "offeringId": "aalto-CU-1151001638-20260801:aalto-cur-P-c235f5a0-0fd6-11f1-8c99-0050569455c9",
+    "groupId": "aalto-ssg-218103-4517-5-11111",
+    "groupName": "ET02",
+    "type": "Exam",
+    "startIso": "2026-12-01T17:00:00+02:00",
+    "endIso": "2026-12-01T20:00:00+02:00",
+    "seriesId": "aalto-SE-ASIO-9007817-7391224",
+    "locations": [
+      {
+        "id": "aalto-TILA-488",
+        "name": "AS2 - 2006",
+        "building_id": "aalto-RAKENNUS-R037",
+        "building_name": "Maarintie 8",
+        "address": "Maarintie 8, 02150 Espoo"
+      }
+    ]
+  }
+]

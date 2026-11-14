@@ -1,6 +1,6 @@
+import type { CourseCode } from './CourseCode';
 // src/domain/valueObjects/Prerequisites.ts
 import type { LocalizedString } from './LocalizedString';
-import type { CourseCode } from './CourseCode';
 
 export class Prerequisites {
   readonly raw: LocalizedString;

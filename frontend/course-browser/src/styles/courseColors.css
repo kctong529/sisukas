@@ -1,0 +1,50 @@
+/* The 12 Calendar offering hues, shared by the four planning views.
+   This is course identity, not a status or study-group block color. */
+:root {
+  --course-palette-0: 234, 88, 12;
+  --course-palette-1: 21, 128, 61;
+  --course-palette-2: 124, 58, 237;
+  --course-palette-3: 2, 132, 199;
+  --course-palette-4: 245, 158, 11;
+  --course-palette-5: 219, 39, 119;
+  --course-palette-6: 13, 148, 136;
+  --course-palette-7: 79, 70, 229;
+  --course-palette-8: 190, 24, 93;
+  --course-palette-9: 101, 163, 13;
+  --course-palette-10: 180, 83, 9;
+  --course-palette-11: 8, 145, 178;
+}
+
+[data-course-color="0"],
+[data-offering-color="0"] { --course-rgb: var(--course-palette-0); }
+[data-course-color="1"],
+[data-offering-color="1"] { --course-rgb: var(--course-palette-1); }
+[data-course-color="2"],
+[data-offering-color="2"] { --course-rgb: var(--course-palette-2); }
+[data-course-color="3"],
+[data-offering-color="3"] { --course-rgb: var(--course-palette-3); }
+[data-course-color="4"],
+[data-offering-color="4"] { --course-rgb: var(--course-palette-4); }
+[data-course-color="5"],
+[data-offering-color="5"] { --course-rgb: var(--course-palette-5); }
+[data-course-color="6"],
+[data-offering-color="6"] { --course-rgb: var(--course-palette-6); }
+[data-course-color="7"],
+[data-offering-color="7"] { --course-rgb: var(--course-palette-7); }
+[data-course-color="8"],
+[data-offering-color="8"] { --course-rgb: var(--course-palette-8); }
+[data-course-color="9"],
+[data-offering-color="9"] { --course-rgb: var(--course-palette-9); }
+[data-course-color="10"],
+[data-offering-color="10"] { --course-rgb: var(--course-palette-10); }
+[data-course-color="11"],
+[data-offering-color="11"] { --course-rgb: var(--course-palette-11); }
+
+/* Course identity accent: neutral surfaces retain their usual body text color. */
+.course-identity-surface {
+  border-color: color-mix(in srgb, rgb(var(--course-rgb)) 65%, white);
+  background: color-mix(in srgb, rgb(var(--course-rgb)) 5%, white);
+}
+.course-identity-accent {
+  color: rgb(var(--course-rgb));
+}

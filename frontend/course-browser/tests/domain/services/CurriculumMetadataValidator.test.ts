@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+
 import { validateCurriculumMetadata } from '../../../src/domain/services/CurriculumMetadataValidator';
+
 import type { CurriculumType } from '../../../src/domain/models/Curriculum';
 import type { RawCurriculumData } from '../../../src/domain/parsers/CurriculumParser';
 

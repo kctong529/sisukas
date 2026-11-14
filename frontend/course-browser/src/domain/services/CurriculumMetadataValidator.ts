@@ -1,6 +1,7 @@
-import type { RawCurriculumData, RawCurriculumEntry } from '../parsers/CurriculumParser';
-import type { CurriculumType } from '../models/Curriculum';
 import { CourseCode } from '../valueObjects/CourseCode';
+
+import type { CurriculumType } from '../models/Curriculum';
+import type { RawCurriculumData, RawCurriculumEntry } from '../parsers/CurriculumParser';
 
 export type CurriculumDiagnosticKind =
   | 'invalid-code'

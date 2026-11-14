@@ -6,6 +6,8 @@ including connection pooling, error handling, and request/response parsing.
 """
 
 import logging
+from time import perf_counter
+from . import profiling
 from typing import Any, Dict, List, Optional
 import requests
 from .exceptions import (
@@ -74,31 +76,44 @@ class SisuClient:
         url = f"{self.base_url}{endpoint}"
         timeout = timeout or self.timeout
 
+        started = perf_counter()
+        status = "none"
+        outcome = "ok"
         try:
             logger.debug("GET %s with params=%s", url, params)
             response = self.session.get(
                 url, params=params, timeout=timeout)
+            status = str(response.status_code)
             response.raise_for_status()
             return response.json()
         except requests.HTTPError as exc:
+            outcome = "http_error"
             status_code = exc.response.status_code
             logger.error("HTTP error fetching %s: %s", url, exc)
             if status_code == 404:
                 raise SisuNotFoundError(
-                    f"Course unit {endpoint} not found") from exc
+                    f"Resource {endpoint} not found") from exc
             raise SisuHTTPError(
                 f"Failed to fetch {endpoint}: {status_code}",
                 status_code=status_code
             ) from exc
         except requests.Timeout as exc:
+            outcome = "timeout"
             logger.error("Timeout fetching %s", url)
             raise SisuTimeoutError(
                 f"Request to {endpoint} timed out after {timeout}s"
             ) from exc
         except requests.RequestException as exc:
+            outcome = "connection_error"
             logger.error("Request error fetching %s: %s", url, exc)
             raise SisuConnectionError(
                 f"Request failed for {endpoint}") from exc
+        finally:
+            profiling.log(
+                "upstream", resource=profiling.upstream_kind(endpoint),
+                status=status, outcome=outcome,
+                duration_ms=profiling.elapsed_ms(started),
+            )
 
     def fetch_course_unit(
         self,
@@ -176,9 +191,8 @@ class SisuClient:
         """
         Fetch study events (e.g. lectures, exercises) by their IDs
 
-        Returns basic event information including start/end times and
-        cancellation status. Location/venue data is not included in the
-        API response.
+        Returns event series with expanded occurrences, status flags,
+        and location IDs. Room details require a separate location lookup.
 
         Args:
             study_event_ids: List of study event IDs
@@ -291,6 +305,17 @@ class SisuClient:
         return self.get_json(
             "/course-unit-search",
             params=params,
+            timeout=timeout,
+        )
+
+    def fetch_location(
+        self,
+        location_id: str,
+        timeout: int | None = None,
+    ) -> Dict[str, Any]:
+        """Fetch location metadata, including embedded building details."""
+        return self.get_json(
+            f"/locations/v1/{location_id}",
             timeout=timeout,
         )
 

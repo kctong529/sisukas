@@ -1,12 +1,14 @@
-// src/lib/stores/periodTimelineStore.svelte.ts
-import { plansStore } from "./plansStore.svelte";
+import { PeriodTimelineService } from "@domain/services/PeriodTimelineService";
+
 import { academicPeriodStore } from "./academicPeriodStore";
+import { courseGradeStore } from "./courseGradeStore";
 import { courseIndexStore } from "./courseIndexStore.svelte";
 import { periodTimelineYearStore } from "./periodTimelineYearStore";
-import { courseGradeStore } from "./courseGradeStore";
-import { PeriodTimelineService } from "../../domain/services/PeriodTimelineService";
-import type { Course } from "../../domain/models/Course";
-import type { AcademicPeriod } from "../../domain/models/AcademicPeriod";
+// src/lib/stores/periodTimelineStore.svelte.ts
+import { plansStore } from "./plansStore.svelte";
+
+import type { AcademicPeriod } from "@domain/models/AcademicPeriod";
+import type { Course } from "@domain/models/Course";
 
 interface GradesData {
   grades?: Map<string, number>;

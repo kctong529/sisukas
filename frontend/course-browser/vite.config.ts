@@ -1,9 +1,10 @@
-import { defineConfig } from 'vitest/config'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
-import { VitePWA } from 'vite-plugin-pwa'
 import ViteYaml from '@modyfi/vite-plugin-yaml';
+import { svelte } from '@sveltejs/vite-plugin-svelte'
 import fs from 'fs'
 import path from 'path'
+import { VitePWA } from 'vite-plugin-pwa'
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 const keyPath = path.resolve('./localhost-key.pem')
 const certPath = path.resolve('./localhost.pem')
@@ -13,6 +14,7 @@ export default defineConfig(({ mode }) => ({
   base: "/",
   plugins: [
     svelte(),
+    tsconfigPaths(),
     ViteYaml(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -53,6 +55,11 @@ export default defineConfig(({ mode }) => ({
   ],
   test: {
     environment: 'jsdom',
+    include: ['tests/**/*.test.{ts,js}'],
+    exclude: [
+      ...configDefaults.exclude,
+      'tests/acceptance/**',
+    ],
   },
   resolve: process.env.VITEST
     ? { conditions: ['browser'] }

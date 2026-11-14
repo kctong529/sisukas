@@ -17,6 +17,8 @@
       ENABLE_DEBUG_PANELS && import.meta.env.VITE_DEBUG_BLOCK_STORE === 'true',
     PeriodTimelineStoreDebug:
       ENABLE_DEBUG_PANELS && import.meta.env.VITE_DEBUG_PERIOD_TIMELINE_STORE === 'true',
+    CalendarProjectionStoreDebug:
+      ENABLE_DEBUG_PANELS && import.meta.env.VITE_DEBUG_CALENDAR_PROJECTION_STORE === 'true',
     AuthDebugPanel:
       ENABLE_DEBUG_PANELS && import.meta.env.VITE_DEBUG_AUTH === 'true',
   };
@@ -28,6 +30,7 @@
     PlansStoreDebug: () => import('./PlansStoreDebug.svelte'),
     BlockStoreDebug: () => import('./BlockStoreDebug.svelte'),
     PeriodTimelineStoreDebug: () => import('./PeriodTimelineStoreDebug.svelte'),
+    CalendarProjectionStoreDebug: () => import('./CalendarProjectionStoreDebug.svelte'),
     AuthDebugPanel: () => import('./AuthDebugPanel.svelte'),
   };
 

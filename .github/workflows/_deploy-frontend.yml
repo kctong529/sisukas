@@ -58,10 +58,6 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: npm ci --ignore-scripts
 
-      - name: Compile Metadata
-        working-directory: ${{ env.WORKING_DIR }}
-        run: npm run compile-metadata
-      
       - name: Read frontend version
         id: frontend_version
         working-directory: ${{ env.WORKING_DIR }}
@@ -85,6 +81,7 @@ jobs:
           VITE_DEBUG_PLAN_STORE: ${{ inputs.debug }}
           VITE_DEBUG_BLOCK_STORE: ${{ inputs.debug }}
           VITE_DEBUG_PERIOD_TIMELINE_STORE: ${{ inputs.debug }}
+          VITE_DEBUG_CALENDAR_PROJECTION_STORE: ${{ inputs.debug }}
         run: |
           npm run build
           echo "result=success" >> $GITHUB_OUTPUT

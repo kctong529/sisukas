@@ -1,5 +1,6 @@
 // src/lib/stores/academicPeriodStore.ts
 import { writable } from 'svelte/store';
+
 import type { AcademicPeriod } from '../../domain/models/AcademicPeriod';
 
 function createAcademicPeriodStore() {

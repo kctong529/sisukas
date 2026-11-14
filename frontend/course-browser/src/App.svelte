@@ -1,38 +1,42 @@
 <!-- src/App.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Navigation from './components/Navigation.svelte';
-  import FilterContainer from './components/FilterContainer.svelte';
-  import CourseTable from './components/CourseTable.svelte';
-  import SearchControls from './components/SearchControls.svelte';
-  import NotificationContainer from './components/NotificationContainer.svelte';
-  import AuthModal from "./components/AuthModal.svelte";
-  import FavouritesView from "./components/FavouritesView.svelte";
-  import LegoView from './components/LegoView.svelte';
-  import PeriodTimeline from './components/PeriodTimeline.svelte';
-  import { authClient, useSession } from "./lib/authClient";
+
+  import AuthenticatedDataLifecycle from './app/auth/AuthenticatedDataLifecycle.svelte';
+  import AuthModal from "./components/auth/AuthModal.svelte";
+  import CalendarView from "./components/calendar/CalendarView.svelte";
+  import CourseTable from './components/courses/CourseTable.svelte';
+  import DebugPanels from './components/debug/DebugPanels.svelte';
+  import FavouritesView from "./components/favourites/FavouritesView.svelte";
+  import FilterContainer from './components/filters/FilterContainer.svelte';
+  import SearchControls from './components/filters/SearchControls.svelte';
+  import Navigation from "./components/layout/Navigation.svelte";
+  import NotificationContainer from "./components/notifications/NotificationContainer.svelte";
+  import PeriodTimeline from './components/period-timeline/PeriodTimeline.svelte';
+  import LegoView from './components/planning/LegoView.svelte';
   import { createRuleBlueprints, type RuleBlueprintKey } from './domain/filters/blueprints';
-  import type { BaseRuleBlueprint } from './domain/filters/blueprints';
+  import { FilterSerializer } from './domain/filters/helpers/FilterSerializer';
+  import { FilterService } from './domain/services/FilterService';
+  import { loadAcademicPeriods } from './infrastructure/loaders/AcademicPeriodLoader';
   import { loadCurricula } from './infrastructure/loaders/CurriculumLoader';
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
-  import { loadAcademicPeriods } from './infrastructure/loaders/AcademicPeriodLoader';
-  import { FilterService } from './domain/services/FilterService';
-  import { FilterSerializer } from './domain/filters/helpers/FilterSerializer';
   import { FiltersApiService } from './infrastructure/services/FiltersApiService';
   import { NotificationService } from './infrastructure/services/NotificationService';
-  import type { AcademicPeriod } from './domain/models/AcademicPeriod';
-  import type { FilterRuleGroups } from './domain/filters/FilterTypes';
-  import { courseIndexStore } from './lib/stores/courseIndexStore.svelte';
-  import type { CourseIndexMode } from './lib/stores/courseIndexStore.svelte';
+  import { authClient, useSession } from "./lib/authClient";
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
-  import DebugPanels from './components/debug/DebugPanels.svelte';
+  import { courseIndexStore } from './lib/stores/courseIndexStore.svelte';
+
+  import type { BaseRuleBlueprint } from './domain/filters/blueprints';
+  import type { FilterRuleGroups } from './domain/filters/FilterTypes';
+  import type { AcademicPeriod } from './domain/models/AcademicPeriod';
+  import type { CourseIndexMode } from './lib/stores/courseIndexStore.svelte';
 
   // -----------------------------
   // Local state (Svelte 5 runes)
   // -----------------------------
 
   const ui = $state({
-    currentView: 'courses' as 'courses' | 'favourites' | 'lego' | 'timeline',
+    currentView: 'courses' as 'courses' | 'favourites' | 'lego' | 'timeline' | 'calendar',
     showAuthModal: false,
 
     filteredInstanceIds: null as string[] | null,
@@ -334,6 +338,8 @@
   });
 </script>
 
+<AuthenticatedDataLifecycle pending={$session.isPending} userId={user?.id ?? null} />
+
 <main class="app-main">
   <Navigation
     currentView={ui.currentView}
@@ -347,7 +353,7 @@
   <DebugPanels />
 
   {#if ui.showAuthModal}
-    <AuthModal on:close={() => (ui.showAuthModal = false)} />
+    <AuthModal onclose={() => (ui.showAuthModal = false)} />
   {/if}
 
   <NotificationContainer />
@@ -407,6 +413,11 @@
       <LegoView />
     </div>
 
+    <!-- Calendar mounts only while selected, avoiding background requests. -->
+    {#if ui.currentView === 'calendar'}
+      <CalendarView />
+    {/if}
+
     <!-- Period Timeline View -->
     <div class="view" class:hidden={ui.currentView !== 'timeline'}>
       <PeriodTimeline />
@@ -441,19 +452,13 @@
     font-size: clamp(20px, 4vw, 48px);
   }
 
-  :global(h2) {
-    font-size: clamp(10px, 2vw, 24px);
-    font-weight: normal;
-    margin-top: clamp(-36px, -3vw, -12px);
-  }
-
   :global(h2 a) {
     color: #888;
     text-decoration: none;
   }
 
   :global(h2 a:hover) {
-    color: #d9534f;
+    color: var(--ui-danger);
   }
 
   #main-content {

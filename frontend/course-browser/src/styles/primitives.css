@@ -1,0 +1,147 @@
+/* Explicit opt-in classes: no implicit styling of all buttons/pages. */
+.ui-page-shell {
+  max-width: var(--ui-page-max-width);
+  margin: var(--ui-space-6) auto;
+  padding: 0 var(--ui-space-4);
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ui-text);
+}
+
+/* Shared view-header rhythm. Individual views own their toolbar contents. */
+.ui-view-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ui-space-4);
+  margin-bottom: var(--ui-space-4);
+}
+
+.ui-view-header__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ui-space-2);
+}
+
+/* Shared visible planning-view heading. Other h2 headings remain component-owned. */
+.ui-view-header > h2,
+.ui-view-header > .title-group > h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+/* Consistent geometry and keyboard focus across opt-in toolbar controls. */
+.ui-button,
+.ui-select,
+.ui-input {
+  box-sizing: border-box;
+  height: 32.5px;
+  min-height: 32.5px;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: var(--ui-radius-control);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--ui-text);
+  background: var(--ui-surface);
+  cursor: pointer;
+}
+
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.ui-select,
+.ui-input {
+  border-color: var(--ui-border);
+  appearance: none;
+  transition: border-color 0.2s;
+}
+
+.ui-select:hover:not(:disabled) {
+  border-color: var(--ui-primary);
+}
+
+.ui-button--primary {
+  color: white;
+  background: var(--ui-primary);
+  border-color: var(--ui-primary);
+}
+
+.ui-button--primary:hover:not(:disabled) {
+  background: var(--ui-primary-hover);
+  border-color: var(--ui-primary-hover);
+}
+
+.ui-button--secondary {
+  color: var(--ui-text);
+  background: var(--ui-surface);
+  border-color: var(--ui-border);
+}
+
+.ui-button--secondary:hover:not(:disabled) {
+  border-color: var(--ui-primary);
+  background: var(--ui-surface-hover);
+}
+
+/* Toggle buttons opt in through their accessible pressed state. */
+.ui-button--secondary[aria-pressed="true"] {
+  border-color: var(--ui-primary);
+  background: var(--ui-surface-hover);
+  color: var(--ui-primary);
+}
+
+.ui-button:focus-visible,
+.ui-select:focus-visible,
+.ui-input:focus-visible {
+  outline: 2px solid var(--ui-focus-ring);
+  outline-offset: 2px;
+}
+
+.ui-button:disabled,
+.ui-select:disabled,
+.ui-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* Square toolbar actions keep the same height as other controls. */
+.ui-button--icon {
+  width: 32.5px;
+  min-width: 32.5px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* Hide only the four visible planning-view titles on narrow screens.
+   Preserve heading semantics for screen readers and keep state-card headings visible. */
+@media (max-width: 583px) {
+  /* The title is visually hidden, so its flex wrapper must not reserve a
+     separate column or wrap the actions onto an extra row. Keep other
+     content (such as LEGO loading notices) in normal layout. */
+  .ui-view-header.ui-view-header > .title-group {
+    display: contents;
+  }
+
+  .ui-view-header > h2,
+  .ui-view-header > .title-group > h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}

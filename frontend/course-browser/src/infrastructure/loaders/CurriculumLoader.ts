@@ -1,11 +1,11 @@
-// src/infrastructure/loaders/CurriculumLoader.ts
-import type { CurriculaMap, CurriculumType } from '../../domain/models/Curriculum';
-import type { RawCurriculumData } from '../../domain/parsers/CurriculumParser';
-import { parseCurricula } from '../../domain/parsers/CurriculumParser';
+import majorYaml from '@data/major.yaml';
+import masterYaml from '@data/master.yaml';
+import minorYaml from '@data/minor.yaml';
+import { parseCurricula } from '@domain/parsers/CurriculumParser';
 
-import majorYaml from '../../data/major.yaml';
-import minorYaml from '../../data/minor.yaml';
-import masterYaml from '../../data/master.yaml';
+// src/infrastructure/loaders/CurriculumLoader.ts
+import type { CurriculaMap, CurriculumType } from '@domain/models/Curriculum';
+import type { RawCurriculumData } from '@domain/parsers/CurriculumParser';
 
 /**
  * Loads and processes major and minor curriculum data from YAML files (infrastructure)

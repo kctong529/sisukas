@@ -7,16 +7,35 @@ course data into domain objects.
 
 import logging
 from datetime import date
+from dataclasses import replace
 from typing import List, Dict, Any, Tuple, Optional
 from functools import lru_cache
+from time import perf_counter
 
-from .models import CourseOffering, StudyGroup, StudyEvent
+from . import profiling
+
+from .models import CourseOffering, StudyGroup, StudyEvent, StudyLocation
 from .client import SisuClient
+from .exceptions import SisuAPIError
 from .aalto_api_client import AaltoCourseApiClient
 from .historical import DateRange, extract_historical_realisation_ids_for_assessment_items
 from .historical_parsing import parse_course_unit_assessment_index
 
 logger = logging.getLogger(__name__)
+
+def _localized_name(values: dict | None) -> str | None:
+    """Choose a non-empty translation, preferring English when available."""
+    if not isinstance(values, dict):
+        return None
+    for language in ("en", "fi", "sv"):
+        value = values.get(language)
+        if isinstance(value, str) and value.strip():
+            return value
+    return next(
+        (value for value in values.values()
+         if isinstance(value, str) and value.strip()),
+        None,
+    )
 
 
 class SisuService:
@@ -30,6 +49,11 @@ class SisuService:
     def __init__(self, client: SisuClient):
         """Initialize the service with a Sisu client"""
         self.client = client
+        # Shared across location-enrichment calls on this service instance.
+        # Cache only successful lookups; exceptions are never retained.
+        self._cached_location = lru_cache(maxsize=2048)(
+            self._fetch_parsed_location
+        )
 
     @lru_cache(maxsize=128)
     def fetch_course_offering(
@@ -173,60 +197,169 @@ class SisuService:
             ])
         """
         results = {}
+        started = perf_counter()
+        cache_before = self.fetch_course_offering.cache_info() if profiling.enabled() else None
+        failed = 0
 
-        for course_unit_id, course_offering_id in requests:
+        for index, (course_unit_id, course_offering_id) in enumerate(requests):
             key = (course_unit_id, course_offering_id)
+            offering_started = perf_counter()
+            outcome = "ok"
             try:
                 results[key] = self.fetch_study_groups(
                     course_unit_id, course_offering_id
                 )
             except Exception as e:
+                outcome = "failed"
+                failed += 1
                 logger.error(
                     "Failed to fetch study groups %s/%s: %s",
                     course_unit_id, course_offering_id, e
                 )
                 results[key] = []
+            finally:
+                profiling.log(
+                    "offering", index=index, outcome=outcome,
+                    duration_ms=profiling.elapsed_ms(offering_started),
+                )
 
+        if cache_before is not None:
+            cache_after = self.fetch_course_offering.cache_info()
+            profiling.log(
+                "retrieval", count=len(requests), failed=failed,
+                cache_hits=cache_after.hits - cache_before.hits,
+                cache_misses=cache_after.misses - cache_before.misses,
+                duration_ms=profiling.elapsed_ms(started),
+            )
         return results
 
-    def _parse_study_groups(self, group_set_data: Dict[str, Any]
-                            ) -> List[StudyGroup]:
-        """
-        Convert a group set with subgroups into a list of StudyGroup instances
+    @staticmethod
+    def _parse_event_records(event_records: List[Dict[str, Any]]) -> List[StudyEvent]:
+        """Flatten SISU series into occurrences without losing metadata.
 
-        Args:
-            group_set_data: Raw API data for a study group set
-
-        Returns:
-            List of parsed StudyGroup objects
+        A non-null ``irregularLocationIds`` overrides the series locations.
+        This follows the intended field interpretation; real relocation
+        examples have not yet been verified against Aalto SISU.
         """
-        flattened_groups: List[StudyGroup] = []
+        study_events: List[StudyEvent] = []
+
+        for record in event_records:
+            default_locations = record.get("locationIds") or []
+            for occurrence in record.get("events", []):
+                override = occurrence.get("irregularLocationIds")
+                locations = default_locations if override is None else override
+                study_events.append(
+                    StudyEvent(
+                        start=occurrence["start"],
+                        end=occurrence["end"],
+                        series_id=record.get("id"),
+                        cancelled=occurrence.get("cancelled", False),
+                        excluded=occurrence.get("excluded", False),
+                        notice=occurrence.get("notice"),
+                        location_ids=list(locations),
+                    )
+                )
+
+        return study_events
+
+    def _parse_study_groups(
+        self, group_set_data: Dict[str, Any]
+    ) -> List[StudyGroup]:
+        """Convert SISU subgroups into flat groups of expanded occurrences."""
+        groups: List[StudyGroup] = []
         group_type = group_set_data.get("name", {}).get("en", "Unknown")
 
-        for sub_group_data in group_set_data.get("studySubGroups", []):
-            study_event_ids = sub_group_data.get("studyEventIds", [])
-
-            if not study_event_ids:
+        for subgroup in group_set_data.get("studySubGroups", []):
+            event_ids = subgroup.get("studyEventIds", [])
+            if not event_ids:
                 continue
 
-            event_records = self.client.fetch_study_events(study_event_ids)
-            study_events = [
-                StudyEvent(start=event["start"], end=event["end"])
-                for record in event_records
-                for event in record.get("events", [])
-            ]
-
-            flattened_groups.append(
+            event_records = self.client.fetch_study_events(event_ids)
+            groups.append(
                 StudyGroup(
-                    group_id=sub_group_data.get("id", ""),
-                    name=sub_group_data.get("name", {}).get("en", ""),
+                    group_id=subgroup.get("id", ""),
+                    name=subgroup.get("name", {}).get("en", ""),
                     type=group_type,
-                    study_events=study_events
+                    study_events=self._parse_event_records(event_records),
                 )
             )
 
-        return flattened_groups
-    
+        return groups
+
+    @staticmethod
+    def _parse_location(data: dict) -> StudyLocation:
+        """Normalize a location response; building details may be absent."""
+        building = data.get("building") or {}
+
+        return StudyLocation(
+            id=data["id"],
+            name=_localized_name(data.get("name")),
+            building_id=data.get("buildingId"),
+            building_name=_localized_name(building.get("name")),
+            address=(building.get("address") or {}).get("streetAddress"),
+        )
+
+    def _fetch_parsed_location(self, location_id: str) -> StudyLocation:
+        """Fetch and validate a SISU room before admitting it to the cache."""
+        location = self._parse_location(self.client.fetch_location(location_id))
+        if location.id != location_id:
+            raise ValueError("Mismatched location ID")
+        return location
+
+    def resolve_study_group_locations(
+        self, groups: list[StudyGroup]
+    ) -> list[StudyGroup]:
+        """Return copies of groups with best-effort resolved room metadata.
+
+        Each distinct location is fetched at most once per call. Successful
+        lookups are reused across calls on this service instance. A failed
+        lookup leaves the occurrence intact with its original location IDs.
+        Cached offerings and caller-owned objects are never mutated.
+        """
+        cache: dict[str, StudyLocation | None] = {}
+        resolved_groups: list[StudyGroup] = []
+        started = perf_counter()
+        lookups = 0
+        failed_lookups = 0
+        occurrences = 0
+
+        for group in groups:
+            resolved_events: list[StudyEvent] = []
+            for event in group.study_events:
+                occurrences += 1
+                locations: list[StudyLocation] = []
+                for location_id in event.location_ids:
+                    if location_id not in cache:
+                        lookups += 1
+                        try:
+                            cache[location_id] = self._cached_location(location_id)
+                        except (SisuAPIError, KeyError, TypeError, ValueError) as exc:
+                            failed_lookups += 1
+                            logger.warning(
+                                "Unable to resolve SISU location %s: %s",
+                                location_id, exc,
+                            )
+                            cache[location_id] = None
+                    if cache[location_id] is not None:
+                        locations.append(cache[location_id])
+                resolved_events.append(replace(event, locations=locations))
+            resolved_groups.append(replace(group, study_events=resolved_events))
+
+        profiling.log(
+            "locations", groups=len(groups), occurrences=occurrences,
+            distinct_locations=len(cache), lookups=lookups,
+            failed_lookups=failed_lookups,
+            duration_ms=profiling.elapsed_ms(started),
+        )
+        return resolved_groups
+
+    def fetch_study_groups_with_locations(
+        self, course_unit_id: str, course_offering_id: str
+    ) -> list[StudyGroup]:
+        """Fetch study groups with best-effort resolved location metadata."""
+        groups = self.fetch_study_groups(course_unit_id, course_offering_id)
+        return self.resolve_study_group_locations(groups)
+
     def resolve_course_snapshots_by_code(
         self,
         course_code: str,

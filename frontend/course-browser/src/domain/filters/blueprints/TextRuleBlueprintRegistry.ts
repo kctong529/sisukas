@@ -1,6 +1,7 @@
+import { TextFilterRule, type TextFilterRuleConfig, type TextRelation } from '../rules/TextFilterRule';
+
 // src/domain/filters/blueprints/TextRuleBlueprints.ts
 import type { Course } from '../../models/Course';
-import { TextFilterRule, type TextRelation, type TextFilterRuleConfig } from '../rules/TextFilterRule';
 import type { BaseRuleBlueprint } from './BaseRuleBlueprint';
 
 export abstract class TextRuleBlueprint implements BaseRuleBlueprint {
