@@ -301,7 +301,6 @@
   }
   /* Match the title/action header structure used by Favourites and LEGO. */
   .title-group { display: flex; flex-direction: column; gap: 0.5rem; }
-  .title-group h2 { margin: 0; font-size: 1.3rem; font-weight: 600; }
   /* WeekNavigation owns control sizing; the header owns the bottom spacing. */
   .header-section :global(.week-navigation) { margin-bottom: 0; }
   .header-actions { margin-left: auto; justify-content: flex-end; column-gap: 0.85rem; }

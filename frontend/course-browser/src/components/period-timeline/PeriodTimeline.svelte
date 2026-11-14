@@ -661,12 +661,6 @@
 <style>
   .period-timeline { color: var(--text-main); }
 
-  h2 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
-  }
-
   p {
     margin: 0;
   }
@@ -724,7 +718,8 @@
 
   .state-card h2 {
     font-size: 1.4rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
   }
 
   .state-card p {

@@ -610,12 +610,6 @@
     min-width: 0;
   }
 
-  h2 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
-  }
-
   h3 {
     margin: 0;
     font-size: 1rem;
@@ -1032,7 +1026,8 @@
 
   .state-card h2 {
     font-size: 1.4rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
   }
 
   .state-card p {
@@ -1072,18 +1067,5 @@
     justify-content: center;
     padding: 4rem;
     text-align: center;
-  }
-
-
-  @media (max-width: 410px) {
-    .header-section {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .plan-controls {
-      flex-direction: column;
-      width: 100%;
-    }
   }
 </style>

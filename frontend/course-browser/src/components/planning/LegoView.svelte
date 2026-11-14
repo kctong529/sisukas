@@ -308,12 +308,6 @@
   .title-group { display: flex; flex-direction: column; gap: 0.25rem; }
   .lego-header-actions { margin-left: auto; }
 
-  .title-group h2 {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 0;
-  }
-
   h3 {
     margin: 0;
     font-size: 1rem;
@@ -404,7 +398,8 @@
 
   .state-card h2 {
     font-size: 1.4rem;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
   }
 
   .state-card p {

@@ -23,6 +23,14 @@
   gap: var(--ui-space-2);
 }
 
+/* Shared visible planning-view heading. Other h2 headings remain component-owned. */
+.ui-view-header > h2,
+.ui-view-header > .title-group > h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
 /* Consistent geometry and keyboard focus across opt-in toolbar controls. */
 .ui-button,
 .ui-select,

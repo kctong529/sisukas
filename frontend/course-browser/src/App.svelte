@@ -452,12 +452,6 @@
     font-size: clamp(20px, 4vw, 48px);
   }
 
-  :global(h2) {
-    font-size: clamp(10px, 2vw, 24px);
-    font-weight: normal;
-    margin-top: clamp(-36px, -3vw, -12px);
-  }
-
   :global(h2 a) {
     color: #888;
     text-decoration: none;
