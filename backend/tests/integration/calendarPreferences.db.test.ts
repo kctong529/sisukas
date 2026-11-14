@@ -101,6 +101,62 @@ suite('Calendar preferences: PostgreSQL integration (Supabase Test only)', () =>
     await expect(service.setGroupHidden(owner, ownerPlan, missing, true)).rejects.toBeInstanceOf(CalendarOfferingNotInPlanError);
   });
 
+  it('isolates identical study-group IDs across different offerings', async () => {
+    const otherOffering = `calendar-it-other-${id}`;
+    const otherGroup = { courseOfferingId: otherOffering, studyGroupId: group.studyGroupId };
+    const otherOccurrence = {
+      ...otherGroup,
+      occurrenceKeyVersion: 1 as const,
+      occurrenceKey: JSON.stringify([
+        'series', otherOffering, otherGroup.studyGroupId, 'series-A', 1790000000000,
+      ]),
+    };
+
+    await db.insert(planInstances).values({ planId: ownerPlan, instanceId: otherOffering });
+    try {
+      await service.setGroupHidden(owner, ownerPlan, group, true);
+      await service.setOccurrenceVisibility(owner, ownerPlan, {
+        ...occurrence, visibility: 'hidden',
+      });
+
+      // The same group ID under another offering must not inherit A's preferences.
+      expect(await service.getPreferences(owner, ownerPlan)).toEqual({
+        hiddenGroups: [group],
+        occurrenceOverrides: [{ ...occurrence, visibility: 'hidden' }],
+      });
+
+      await service.setGroupHidden(owner, ownerPlan, otherGroup, true);
+      await service.setOccurrenceVisibility(owner, ownerPlan, {
+        ...otherOccurrence, visibility: 'visible',
+      });
+      const both = await service.getPreferences(owner, ownerPlan);
+      expect(both.hiddenGroups).toHaveLength(2);
+      expect(both.hiddenGroups).toEqual(expect.arrayContaining([group, otherGroup]));
+      expect(both.occurrenceOverrides).toHaveLength(2);
+      expect(both.occurrenceOverrides).toEqual(expect.arrayContaining([
+        { ...occurrence, visibility: 'hidden' },
+        { ...otherOccurrence, visibility: 'visible' },
+      ]));
+
+      // Resetting A must not remove or change B's preferences.
+      await service.setGroupHidden(owner, ownerPlan, group, false);
+      await service.resetOccurrenceVisibility(owner, ownerPlan, occurrence);
+      expect(await service.getPreferences(owner, ownerPlan)).toEqual({
+        hiddenGroups: [otherGroup],
+        occurrenceOverrides: [{ ...otherOccurrence, visibility: 'visible' }],
+      });
+    } finally {
+      await service.setGroupHidden(owner, ownerPlan, group, false);
+      await service.resetOccurrenceVisibility(owner, ownerPlan, occurrence);
+      await service.setGroupHidden(owner, ownerPlan, otherGroup, false);
+      await service.resetOccurrenceVisibility(owner, ownerPlan, otherOccurrence);
+      await db.delete(planInstances).where(and(
+        eq(planInstances.planId, ownerPlan),
+        eq(planInstances.instanceId, otherOffering),
+      ));
+    }
+  });
+
   it('retains dormant rows after offering removal and permits reset', async () => {
     await service.setGroupHidden(owner, ownerPlan, group, true);
     await service.setOccurrenceVisibility(owner, ownerPlan, { ...occurrence, visibility: 'visible' });

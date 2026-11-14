@@ -8,6 +8,7 @@ They create and delete fixture records. Never use Supabase Production.
 | Suite | What it tests | HTTP server | Authentication |
 | --- | --- | --- | --- |
 | `calendarPreferences.db.test.ts` | Service → Drizzle → PostgreSQL | None | Uses fixture user IDs directly |
+| `calendarPreferences.rls.test.ts` | Restricted-role Supabase Auth RLS (opt-in) | None | Simulated transaction-scoped JWT subject; no Better Auth session |
 | `calendarPreferences.http.test.ts` | Better Auth → Express → service → PostgreSQL | Starts a local, in-process Express server on an ephemeral port | Creates test users through Better Auth email/password signup and sends session cookies |
 
 The HTTP suite verifies authenticated session resolution and plan ownership
@@ -74,6 +75,26 @@ It does **not** intentionally require a separately running backend. If it only
 works when the development server is running, investigate the test auth/origin
 configuration rather than relying on that external process.
 
+**Restricted-role RLS enforcement (Supabase Test only):**
+
+```sh
+CALENDAR_RLS_TEST=yes npx vitest run \
+  tests/integration/calendarPreferences.rls.test.ts \
+  --no-file-parallelism
+```
+
+This suite creates two uniquely identified fixture users with **UUID-form IDs** so that
+`auth.uid()` can resolve them. It uses `SET LOCAL ROLE authenticated` (or `anon`)
+and transaction-scoped JWT claims on a dedicated PostgreSQL connection, then
+rolls back all restricted-role mutations. It tests both preference tables,
+positive owner access, foreign-row invisibility, forbidden inserts, updates,
+deletes, and missing identity. Fixture users and plans are deleted afterward.
+
+This verifies **Supabase Auth RLS policy semantics**, not that Better Auth
+sessions automatically inject Supabase JWT claims. The application backend
+still enforces plan ownership separately. The test requires the configured
+pooler login to be able to `SET ROLE` for the test roles.
+
 **Build and ordinary regression tests:**
 
 ```sh
@@ -83,8 +104,7 @@ npx vitest run \
   --exclude 'tests/integration/*'
 ```
 
-The RLS suite is separate: it exercises Supabase Auth and the Data API, not
-Better Auth through Drizzle.
+The legacy `tests/rls.*.test.ts` harness is separate: it exercises Supabase Auth and the Data API, not Better Auth through Drizzle. The new Calendar-specific suite above tests restricted PostgreSQL roles directly.
 
 ## Fixture lifecycle and troubleshooting
 
