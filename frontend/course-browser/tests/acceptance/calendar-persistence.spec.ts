@@ -1,4 +1,6 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import {
   anonymousStorageState,
@@ -11,6 +13,10 @@ import {
 // This is a real persistence test. It creates/deletes a temporary plan on Test.
 const enabled = process.env.SISUKAS_CALENDAR_WRITE_TEST === 'yes';
 const baseURL = process.env.SISUKAS_BASE_URL ?? 'https://test.sisukas.eu';
+// Captured separately with the existing auth-state setup script. Never commit.
+const secondAuthStatePath = resolve(
+  process.env.SISUKAS_CALENDAR_SECOND_STORAGE_STATE ?? 'playwright/.auth/test-user-b.json',
+);
 // The study-group response uses unitId:offeringId; plans store only offeringId.
 const offeringId = 'aalto-cur-P-c235f107-0fd6-11f1-8c99-0050569455c9';
 // Source group identity (for fixture provenance):
@@ -299,6 +305,100 @@ test('E05: failed visibility save shows an actionable error and retries successf
         await apiJson(page.request, origin, `/api/plans/${activeId}/activate`, 'PATCH');
       } finally {
         await apiJson(page.request, origin, `/api/plans/${fixtureId}`, 'DELETE');
+      }
+    }
+  }
+});
+
+
+// E04 exercises genuine Better Auth browser sessions, not a mocked JWT/user ID.
+// Both accounts must be dedicated staging users. The test provisions matching
+// offerings under independent temporary plans and cleans up each account.
+test('E04: visibility preferences do not leak across authenticated accounts', async ({ page, browser }) => {
+  test.skip(!existsSync(secondAuthStatePath),
+    'Capture Account B with SISUKAS_STORAGE_STATE=playwright/.auth/test-user-b.json');
+  if (secondAuthStatePath === authStatePath) {
+    throw new Error('E04 requires two different browser state files');
+  }
+
+  const accountB = await browser.newContext({
+    baseURL,
+    storageState: secondAuthStatePath,
+  });
+  const pageB = await accountB.newPage();
+  let fixtureA: Awaited<ReturnType<typeof prepareFixture>> | undefined;
+  let fixtureB: Awaited<ReturnType<typeof prepareFixture>> | undefined;
+  try {
+    fixtureA = await prepareFixture(page);
+    fixtureB = await prepareFixture(pageB);
+
+    // Guard against accidentally capturing the same Better Auth account twice.
+    // An existing active plan ID is stable and belongs to exactly one account.
+    expect(fixtureA.activeId, 'Account A and B must have different plan owners')
+      .not.toBe(fixtureB.activeId);
+    const [plansA, plansB] = await Promise.all([
+      apiJson<Plan[]>(page.request, fixtureA.origin, '/api/plans', 'GET'),
+      apiJson<Plan[]>(pageB.request, fixtureB.origin, '/api/plans', 'GET'),
+    ]);
+    const idsA = new Set(plansA.map(plan => plan.id));
+    expect(plansB.some(plan => idsA.has(plan.id)),
+      'Account A and B must not share any plan IDs').toBe(false);
+
+    for (const [targetPage, fixture] of [
+      [page, fixtureA],
+      [pageB, fixtureB],
+    ] as const) {
+      await apiJson(targetPage.request, fixture.origin,
+        `/api/plans/${fixture.fixtureId}/instances`, 'POST', { instanceId: offeringId });
+      await activateFixturePlan(targetPage, fixture.origin, fixture.fixtureId);
+    }
+
+    // A stores an explicit hidden preference; B has the same offering but
+    // inherits visible. Reloading both forces server-side hydration.
+    await setHidden(page, true);
+    await reloadAndExpect(page, true);
+    await reloadAndExpect(pageB, false);
+
+    // Cross-account API reads must not expose the other account's preference.
+    const foreignRead = await pageB.request.get(
+      new URL(`/api/plans/${fixtureA.fixtureId}/calendar`, fixtureA.origin).toString(),
+    );
+    expect(foreignRead.ok(), 'Account B must not read Account A preferences').toBe(false);
+
+    // Make a separate change under B and confirm it cannot alter A's data.
+    await setHidden(pageB, true);
+    await reloadAndExpect(pageB, true);
+    await reloadAndExpect(page, true);
+
+    await setHidden(pageB, false);
+    await reloadAndExpect(pageB, false);
+    await reloadAndExpect(page, true);
+  } finally {
+    // Cleanup is performed using each account's own API request context.
+    // Do not delete any pre-existing plan even when assertions fail.
+    try {
+      if (fixtureB) {
+        try {
+          await apiJson(pageB.request, fixtureB.origin,
+            `/api/plans/${fixtureB.activeId}/activate`, 'PATCH');
+        } finally {
+          await apiJson(pageB.request, fixtureB.origin,
+            `/api/plans/${fixtureB.fixtureId}`, 'DELETE');
+        }
+      }
+    } finally {
+      try {
+        if (fixtureA) {
+          try {
+            await apiJson(page.request, fixtureA.origin,
+              `/api/plans/${fixtureA.activeId}/activate`, 'PATCH');
+          } finally {
+            await apiJson(page.request, fixtureA.origin,
+              `/api/plans/${fixtureA.fixtureId}`, 'DELETE');
+          }
+        }
+      } finally {
+        await accountB.close();
       }
     }
   }
