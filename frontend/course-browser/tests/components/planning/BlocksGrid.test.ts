@@ -45,7 +45,7 @@ beforeEach(() => {
   vi.spyOn(runtime, 'entry').mockReturnValue(writable(ready));
   vi.spyOn(runtime, 'ensure').mockResolvedValue();
   vi.spyOn(blockStore, 'fetchForInstance').mockResolvedValue([]);
-  vi.spyOn(blockStore, 'autoPartitionForInstance').mockImplementation(() => {});
+  vi.spyOn(blockStore, 'autoPartitionForInstance').mockResolvedValue([]);
   begin = vi.spyOn(blockStore, 'beginDragSelect').mockResolvedValue({ previewColorIndex: 0 });
   remove = vi.spyOn(blockStore, 'removeBlockIfGroupIsAssigned').mockResolvedValue(false);
   create = vi.spyOn(blockStore, 'createBlock').mockResolvedValue(undefined as never);

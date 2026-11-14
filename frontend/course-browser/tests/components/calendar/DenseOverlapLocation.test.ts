@@ -6,6 +6,8 @@ import WeekGrid from '../../../src/components/calendar/WeekGrid.svelte';
 import { layoutCalendarWeek } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
 import { fixed } from '../../domain/services/calendar/layout/fixtures';
 
+import type { WeeklyCalendarSegment } from '../../../src/domain/services/calendar/layout/WeeklyCalendarLayout';
+
 const mounted: Array<ReturnType<typeof mount>> = [];
 const targets: HTMLElement[] = [];
 
@@ -32,9 +34,11 @@ it('shows time, classroom and building for overlapping events without visible se
     target,
     props: {
       layout: layoutCalendarWeek(entries, '2026-11-02'),
-      presentationForSegment: segment => ({
-        courseCode: null, courseTitle: segment.entry.source.studyGroupId,
-        groupLabel: 'Exercise H01', locationLabel: null,
+      presentationForSegment: (segment: WeeklyCalendarSegment) => ({
+          courseCode: null,
+          courseTitle: segment.entry.source.studyGroupId,
+          groupLabel: 'Exercise H01',
+          locationLabel: null,
       }),
     },
   }));
