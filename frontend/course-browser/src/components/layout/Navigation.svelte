@@ -473,7 +473,7 @@
     }
   }
 
-  @media (max-width: 440px) {
+  @media (max-width: 435px) {
     .nav-links,
     .nav-user {
       display: none;
