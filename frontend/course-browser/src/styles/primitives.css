@@ -117,6 +117,13 @@
 /* Hide only the four visible planning-view titles on narrow screens.
    Preserve heading semantics for screen readers and keep state-card headings visible. */
 @media (max-width: 583px) {
+  /* The title is visually hidden, so its flex wrapper must not reserve a
+     separate column or wrap the actions onto an extra row. Keep other
+     content (such as LEGO loading notices) in normal layout. */
+  .ui-view-header.ui-view-header > .title-group {
+    display: contents;
+  }
+
   .ui-view-header > h2,
   .ui-view-header > .title-group > h2 {
     position: absolute;
