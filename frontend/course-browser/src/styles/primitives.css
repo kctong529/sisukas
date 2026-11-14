@@ -113,3 +113,20 @@
   padding: 0;
   flex-shrink: 0;
 }
+
+/* Hide only the four visible planning-view titles on narrow screens.
+   Preserve heading semantics for screen readers and keep state-card headings visible. */
+@media (max-width: 583px) {
+  .ui-view-header > h2,
+  .ui-view-header > .title-group > h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
