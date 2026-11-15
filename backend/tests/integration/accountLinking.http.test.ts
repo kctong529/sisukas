@@ -161,7 +161,7 @@ suite('Account linking: Better Auth HTTP safeguards (Supabase Test only)', () =>
     await assertOwnerUnchanged();
   });
 
-  it('records whether the provider-identity pair has database-level uniqueness', async () => {
+  it('enforces database-level provider identity uniqueness', async () => {
     const result = await db.execute(sql`
       SELECT EXISTS (
         SELECT 1 FROM pg_index i
@@ -175,11 +175,45 @@ suite('Account linking: Better Auth HTTP safeguards (Supabase Test only)', () =>
               = ARRAY['account_id', 'provider_id']::name[]
       ) AS has_provider_identity_unique_index
     `);
-    // This is diagnostic, not an assertion that the currently absent index exists.
-    // A missing index is a design gap to address before enabling OAuth.
-    expect(typeof result.rows[0]?.has_provider_identity_unique_index).toBe('boolean');
-    if (!result.rows[0]?.has_provider_identity_unique_index) {
-      console.warn('[#215] No UNIQUE(provider_id, account_id) index: review before #216');
-    }
+    expect(result.rows[0]?.has_provider_identity_unique_index).toBe(true);
+  });
+
+  it('rejects assigning one provider identity to two users', async () => {
+    const providerId = 'test-uniqueness';
+    const externalId = `external-${randomUUID()}`;
+
+    let duplicateRejected = false;
+
+    await expect(
+      db.transaction(async (tx) => {
+        await tx.insert(account).values({
+          id: randomUUID(),
+          userId: alice.id,
+          providerId,
+          accountId: externalId,
+          updatedAt: new Date(),
+        });
+
+        try {
+          await tx.insert(account).values({
+            id: randomUUID(),
+            userId: bob.id,
+            providerId,
+            accountId: externalId,
+            updatedAt: new Date(),
+          });
+        } catch (error) {
+          duplicateRejected = true;
+          throw error;
+        }
+
+        // Force rollback if the constraint is unexpectedly absent.
+        throw new Error('Duplicate provider identity was accepted');
+      }),
+    ).rejects.toThrow();
+
+    expect(duplicateRejected).toBe(true);
+
+    await assertOwnerUnchanged();
   });
 });
