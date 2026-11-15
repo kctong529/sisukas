@@ -52,7 +52,7 @@
     "@rollup/pluginutils": "^5.4.0"
   },
   "dependencies": {
-    "better-auth": "^1.7.12",
+    "better-auth": "1.7.25",
     "bootstrap-icons": "^1.13.1",
     "pdfjs-dist": "^5.4.530"
   }

@@ -14,12 +14,11 @@
     "bench": "vitest bench"
   },
   "dependencies": {
-    "@esbuild-kit/core-utils": "^3.3.2",
-    "better-auth": "^1.4.10",
+    "better-auth": "1.7.25",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "0.45.4",
     "express": "^5.2.1",
     "pg": "^8.16.3",
     "resend": "^6.7.0"
