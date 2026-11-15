@@ -5,6 +5,7 @@ import { db } from "../db";
 import * as schema from "../db/schema";
 import { magicLink } from "better-auth/plugins";
 import { Resend } from "resend";
+import { accountLinkingPolicy } from "./accountLinkingPolicy";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -46,6 +47,10 @@ export const auth = betterAuth({
     "https://api.sisukas.eu",
     "https://api.test.sisukas.eu",
   ],
+
+  account: {
+    accountLinking: accountLinkingPolicy,
+  },
 
   emailAndPassword: {
     enabled: true,
