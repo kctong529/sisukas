@@ -18,6 +18,9 @@ describe("explicit Google linking", () => {
       provider: "google",
       callbackURL: "https://test.sisukas.eu/?account_link=google",
       errorCallbackURL: "https://test.sisukas.eu/?account_link=google",
+      additionalParams: {
+          prompt: "select_account",
+      },
     });
   });
 });

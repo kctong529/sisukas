@@ -6,5 +6,8 @@ export function linkGoogle(callbackURL: string) {
     provider: "google",
     callbackURL,
     errorCallbackURL: callbackURL,
+    additionalParams: {
+      prompt: "select_account",
+    },
   });
 }
