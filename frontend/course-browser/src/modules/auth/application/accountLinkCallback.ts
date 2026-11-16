@@ -76,6 +76,14 @@ export function consumeGoogleLinkReturn(
 
 export function googleLinkErrorMessage(errorCode: string): string {
   switch (errorCode) {
+    case "email_doesn't_match":
+    case "email_does_not_match":
+      return (
+        "This Google account uses a different email address. " +
+        "For now, you can only connect a Google account with " +
+        "the same email as your Sisukas account. " +
+        "Your existing account has not been changed."
+      );
     case "account_already_linked_to_different_user":
       return "This Google account is already connected to another Sisukas account. No accounts were merged.";
     case "access_denied":
