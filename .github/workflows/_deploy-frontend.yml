@@ -24,6 +24,10 @@ on:
       backend_url:
         required: true
         type: string
+      google_oauth_enabled:
+        required: false
+        type: boolean
+        default: false
       debug:
         required: false
         type: boolean
@@ -68,6 +72,7 @@ jobs:
         id: build
         working-directory: ${{ env.WORKING_DIR }}
         env:
+          VITE_GOOGLE_OAUTH_ENABLED: ${{ inputs.google_oauth_enabled }}
           VITE_ENVIRONMENT: ${{ inputs.environment }}   # "test" | "production"
           VITE_FILTERS_API: ${{ inputs.vite_filters_api }}
           VITE_WRAPPER_API: ${{ inputs.vite_wrapper_api }}

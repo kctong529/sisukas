@@ -46,6 +46,10 @@ on:
         required: false
         type: string
         default: europe-north1
+      google_oauth_enabled:
+        required: false
+        type: boolean
+        default: false
       debug:
         required: false
         type: boolean
@@ -64,6 +68,7 @@ jobs:
       frontend_url: ${{ inputs.frontend_url }}
       backend_url: ${{ inputs.backend_url }}
       debug: ${{ inputs.debug }}
+      google_oauth_enabled: ${{ inputs.google_oauth_enabled }}
     secrets: inherit
 
   deploy_backend:
@@ -77,6 +82,7 @@ jobs:
       frontend_url: ${{ inputs.frontend_url }}
       backend_url: ${{ inputs.backend_url }}
       sisu_wrapper_url: ${{ inputs.vite_wrapper_api }}
+      google_oauth_enabled: ${{ inputs.google_oauth_enabled }}
     secrets: inherit
 
   deploy_filters_api:
