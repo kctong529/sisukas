@@ -22,7 +22,7 @@
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
   import { FiltersApiService } from './infrastructure/services/FiltersApiService';
   import { NotificationService } from './infrastructure/services/NotificationService';
-  import { authClient, useSession } from "./lib/authClient";
+  import { authClient, canonicalUserId, useSession } from "@modules/auth";
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
   import { courseIndexStore } from './lib/stores/courseIndexStore.svelte';
 
@@ -74,7 +74,8 @@
   const loadingHistorical = $derived.by(() => courseIndexStore.state.historicalLoading);
 
   const user = $derived.by(() => $session.data?.user);
-  const isSignedIn = $derived.by(() => !!user);
+  const userId = $derived(canonicalUserId($session.data));
+  const isSignedIn = $derived.by(() => !!userId);
   const userName = $derived.by(() => user?.email ?? "");
 
   // -----------------------------
@@ -338,7 +339,7 @@
   });
 </script>
 
-<AuthenticatedDataLifecycle pending={$session.isPending} userId={user?.id ?? null} />
+<AuthenticatedDataLifecycle pending={$session.isPending} userId={userId} />
 
 <main class="app-main">
   <Navigation

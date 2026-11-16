@@ -10,7 +10,7 @@
   import { AcademicPeriodVisibility } from '@domain/services/AcademicPeriodVisibility';
   import { NotificationService } from '@infrastructure/services/NotificationService';
 
-  import { useSession } from '../../lib/authClient';
+  import { useSession } from "@modules/auth";
   import { COURSE_PREFIX_RGB } from "../../lib/coursePrefixColors";
   import { formatFinnishDate } from '../../lib/periodTimeline/formatFinnishDate';
   import { computeYearStats, formatAvg } from '../../lib/periodTimeline/yearStats';

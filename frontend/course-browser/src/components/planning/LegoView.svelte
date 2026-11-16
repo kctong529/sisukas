@@ -9,7 +9,7 @@
   import { getStudyGroupDataRuntime } from "@modules/study-groups";
 
   import { trapModalTab } from "../../lib/accessibility/trapModalTab";
-  import { useSession } from "../../lib/authClient";
+  import { useSession } from "@modules/auth";
   import { blockStore } from "../../lib/stores/blockStore";
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { plansStore } from "../../lib/stores/plansStore.svelte";

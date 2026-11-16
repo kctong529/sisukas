@@ -7,7 +7,7 @@ dotenv.config();
 
 import pool from './config/database';
 import { toNodeHandler } from "better-auth/node";
-import { auth } from './lib/auth';
+import { auth } from './modules/auth';
 import adminRoutes from './routes/admin';
 import usersRoutes from './routes/users';
 import favouritesRoutes from './routes/favourites';

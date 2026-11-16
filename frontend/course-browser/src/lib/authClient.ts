@@ -1,17 +1,2 @@
-import { magicLinkClient } from "better-auth/client/plugins";
-// src/lib/authClient.ts
-import { createAuthClient } from "better-auth/svelte";
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
-export const authClient = createAuthClient({
-  baseURL: `${BACKEND_URL}`,
-  fetchOptions: {
-    credentials: "include",
-  },
-  plugins: [
-    magicLinkClient()
-  ]
-});
-
-export const { signIn, signUp, signOut, useSession } = authClient;
+/** @deprecated Import from @modules/auth. */
+export { authClient, signIn, signUp, signOut, useSession } from "@modules/auth";

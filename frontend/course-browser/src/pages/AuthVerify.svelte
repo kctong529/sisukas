@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  import { authClient } from "../lib/authClient";
+  import { verifyMagicLink } from "@modules/auth";
 
   let token = "";
   let loading = false;
@@ -20,9 +20,7 @@
 
   async function handleVerify() {
     status = "loading";
-    const { error } = await authClient.magicLink.verify({
-      query: { token, callbackURL: "/" }
-    });
+    const { error } = await verifyMagicLink(token, "/");
 
     if (error && error.message) {
       errorMsg = error.message;

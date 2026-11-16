@@ -2,7 +2,7 @@
 <script lang="ts">
   import { NotificationService } from '@infrastructure/services/NotificationService';
 
-  import { useSession } from '../../lib/authClient';
+  import { useSession } from "@modules/auth";
   import { offeringTiming } from '../../lib/favourites/offeringTiming';
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { favouritesStore } from '../../lib/stores/favouritesStore';

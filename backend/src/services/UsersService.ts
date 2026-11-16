@@ -1,5 +1,5 @@
 // src/services/UsersService.ts
-import { auth } from '../lib/auth';
+import { auth } from '../modules/auth';
 import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';

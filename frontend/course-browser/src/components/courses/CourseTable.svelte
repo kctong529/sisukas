@@ -6,7 +6,7 @@
   import { CourseSnapshotsService } from '@infrastructure/services/CourseSnapshotsService';
   import { NotificationService } from '@infrastructure/services/NotificationService';
 
-  import { useSession } from '../../lib/authClient';
+  import { useSession } from "@modules/auth";
   import { courseIndexStore } from '../../lib/stores/courseIndexStore.svelte';
   import { favouritesStore } from '../../lib/stores/favouritesStore';
   import CoursePeriodBadge from './CoursePeriodBadge.svelte';
