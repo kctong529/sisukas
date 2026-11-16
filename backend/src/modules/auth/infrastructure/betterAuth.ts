@@ -5,6 +5,7 @@ import { db } from "../../../db";
 import * as schema from "../../../db/schema";
 import { magicLink } from "better-auth/plugins";
 import { accountLinkingPolicy } from "../config/accountLinkingPolicy";
+import { configuredSocialProviders } from "../config/socialProviders";
 import { trustedAuthOrigins } from "../config/trustedOrigins";
 import { sendMagicLink } from "./sendMagicLink";
 
@@ -24,6 +25,8 @@ export const auth = betterAuth({
   account: {
     accountLinking: accountLinkingPolicy,
   },
+
+  socialProviders: configuredSocialProviders(),
 
   emailAndPassword: {
     enabled: true,
