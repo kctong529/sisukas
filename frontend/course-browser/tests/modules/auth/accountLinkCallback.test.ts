@@ -29,8 +29,8 @@ describe("Google linking callback", () => {
 
   it("consumes a linking callback and preserves unrelated URL parts", () => {
     const s = storage();
-    savePendingGoogleLink(s, "user-123");
-    const result = consumeGoogleLinkReturn(new URL("https://test.sisukas.eu/?account_link=google&error=access_denied&error_description=private&view=calendar#week"), s);
+    savePendingGoogleLink(s, "user-123", 1000);
+    const result = consumeGoogleLinkReturn(new URL("https://test.sisukas.eu/?account_link=google&error=access_denied&error_description=private&view=calendar#week"), s, 2000);
     expect(result).toEqual({
       result: { originalUserId: "user-123", errorCode: "access_denied" },
       cleanUrl: "/?view=calendar#week",
@@ -42,9 +42,48 @@ describe("Google linking callback", () => {
     const s = storage();
     savePendingGoogleLink(s, "user-123");
     expect(consumeGoogleLinkReturn(new URL("https://test.sisukas.eu/?error=account_not_linked"), s).result).toBeNull();
-    expect(s.getItem("sisukas:google-link-pending")).toBe("user-123");
+    expect(
+        JSON.parse(s.getItem("sisukas:google-link-pending")!)
+    ).toEqual({
+        originalUserId: "user-123",
+        createdAt: expect.any(Number),
+    });
     clearPendingGoogleLink(s);
     expect(s.getItem("sisukas:google-link-pending")).toBeNull();
+  });
+
+  it("rejects expired or future-dated linking markers", () => {
+    for (const [createdAt, returnAt] of [[1000, 1000 + 16 * 60 * 1000], [2000, 1000]]) {
+      const s = storage();
+      savePendingGoogleLink(s, "user-123", createdAt);
+      const parsed = consumeGoogleLinkReturn(
+        new URL("https://test.sisukas.eu/?account_link=google"), s, returnAt,
+      );
+      expect(parsed.result?.originalUserId).toBeNull();
+      expect(s.getItem("sisukas:google-link-pending")).toBeNull();
+      expect(evaluateGoogleLinkReturn(parsed.result!, "user-123", true).success).toBe(false);
+    }
+  });
+
+  it("rejects corrupt or legacy marker values and consumes them", () => {
+    for (const value of ["user-123", "not-json", "{}", '{"originalUserId":"user-123"}']) {
+      const s = storage();
+      s.setItem("sisukas:google-link-pending", value);
+      const parsed = consumeGoogleLinkReturn(
+        new URL("https://test.sisukas.eu/?account_link=google"), s,
+      );
+      expect(parsed.result?.originalUserId).toBeNull();
+      expect(s.getItem("sisukas:google-link-pending")).toBeNull();
+    }
+  });
+
+  it("accepts a valid marker within the lifetime", () => {
+    const s = storage();
+    savePendingGoogleLink(s, "user-123", 1_000);
+    const parsed = consumeGoogleLinkReturn(
+      new URL("https://test.sisukas.eu/?account_link=google"), s, 1_000 + 14 * 60 * 1_000,
+    );
+    expect(evaluateGoogleLinkReturn(parsed.result!, "user-123", true).success).toBe(true);
   });
 
   it("does not infer a prior authenticated identity from URL parameters", () => {
@@ -58,6 +97,8 @@ describe("Google linking callback", () => {
     expect(evaluateGoogleLinkReturn(callback, "user-123", false).success).toBe(false);
     expect(evaluateGoogleLinkReturn({ ...callback, errorCode: "access_denied" }, "user-123", true).success).toBe(false);
     expect(evaluateGoogleLinkReturn(callback, "user-123", true).success).toBe(true);
+    expect(evaluateGoogleLinkReturn({ ...callback, errorCode: "account_already_linked_to_different_user" }, "user-123", true).success).toBe(false);
+    expect(evaluateGoogleLinkReturn({ ...callback, originalUserId: null }, "user-123", true).success).toBe(false);
   });
 
   it("maps conflicts and unknown codes without exposing raw error descriptions", () => {
