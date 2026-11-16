@@ -65,7 +65,7 @@ describe("Account settings dialog", () => {
         expect(target.textContent).toContain("oauth-test@sisukas.eu");
         expect(target.textContent).toContain("Email magic link");
         expect(button(target, "Connect Google").disabled).toBe(false);
-        expect(target.querySelector('img.google-mark')?.getAttribute("alt")).toBe("");
+        expect(target.querySelector('img[src*="firebasejs"]')).toBeNull();
     });
 
     it("shows a connected Google identity without a Connect action", async () => {

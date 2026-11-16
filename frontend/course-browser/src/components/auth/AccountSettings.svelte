@@ -156,14 +156,13 @@
       {:else if methods}
         <div class="method-row">
           <div class="method-description">
-            <strong><img class="google-mark" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" /> Google</strong>
+            <strong>Google</strong>
             <p>{methods.googleConnected ? "Connected to this account" : "Not connected"}</p>
           </div>
           {#if methods.googleConnected}
             <span class="method-status">Connected</span>
           {:else}
             <button type="button" disabled={linking} onclick={handleConnectGoogle}>
-              {#if !linking}<img class="google-mark" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />{/if}
               {linking ? "Connecting..." : "Connect Google"}
             </button>
           {/if}
@@ -257,7 +256,6 @@
     font-size: 0.875em;
     font-weight: 500;
   }
-  .google-mark { width: 18px; height: 18px; flex-shrink: 0; }
   .method-row button:disabled { cursor: wait; opacity: 0.65; }
   .load-error button { margin-top: 0.5rem; cursor: pointer; }
   button:focus-visible { outline: 2px solid var(--ui-focus-ring); outline-offset: 2px; }

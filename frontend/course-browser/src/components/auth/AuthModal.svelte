@@ -17,7 +17,10 @@
   let email = $state("");
   let message = $state("");
   let messageType = $state<"success" | "error" | null>(null);
-  let loading = $state(false);
+  type AuthOperation = "google" | "magic-link" | null;
+
+  let activeOperation = $state<AuthOperation>(null);
+  const loading = $derived(activeOperation !== null);
   let dialog: HTMLDialogElement;
 
   $effect(() => {
@@ -48,7 +51,7 @@
   async function handleGoogleSignIn() {
     if (loading) return;
 
-    loading = true;
+    activeOperation = "google";
     message = "";
     messageType = null;
 
@@ -63,7 +66,7 @@
       message = "Could not start Google sign-in.";
       messageType = "error";
     } finally {
-      loading = false;
+      activeOperation = null;
     }
   }
 
@@ -71,7 +74,7 @@
     event.preventDefault();
     if (loading || !email.trim()) return;
 
-    loading = true;
+    activeOperation = "magic-link";
     message = "";
     messageType = null;
 
@@ -89,7 +92,7 @@
       message = "Failed to send sign-in link.";
       messageType = "error";
     } finally {
-      loading = false;
+      activeOperation = null;
     }
   }
 </script>
@@ -125,18 +128,26 @@
     {/if}
 
     {#if googleSignInEnabled}
+      <!--
+        Replace the placeholder with Google's pre-approved light rectangular
+        SVG asset. See BRANDING.md for the required asset and its source.
+        Authentication remains handled by Better Auth, not Google Identity Services.
+      -->
       <button
         class="google-btn"
         type="button"
         disabled={loading}
+        aria-label={activeOperation === "google" ? "Starting Google sign-in" : "Continue with Google"}
         onclick={handleGoogleSignIn}
       >
-        {#if loading}
-          <span class="spinner"></span>
-        {:else}
-          <img class="google-mark" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />
+        <img
+          class="google-button-image"
+          src="/images/google-signin-light.svg"
+          alt=""
+        />
+        {#if activeOperation === "google"}
+          <span class="google-loading-overlay" aria-hidden="true">Connecting...</span>
         {/if}
-        Continue with Google
       </button>
       <p class="provider-note">Already use a magic link? Sign in with email first. Google cannot automatically link an existing account.</p>
       <div class="auth-divider" aria-hidden="true"><span>or use email</span></div>
@@ -160,7 +171,7 @@
         type="submit"
         disabled={loading || !email.trim()}
       >
-        {#if loading}
+        {#if activeOperation === "magic-link"}
           <span class="spinner"></span>
           Sending...
         {:else}
@@ -248,36 +259,46 @@
     font-size: 0.95rem;
   }
 
-  .google-mark { width: 18px; height: 18px; flex-shrink: 0; }
-
+  /* The button's complete appearance comes from Google's pre-approved asset. */
   .google-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
+    display: block;
+    position: relative;
     width: 100%;
-    padding: 0.8rem;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    background: #fff;
-    color: #1f1f1f;
-    font: inherit;
-    font-weight: 600;
+    max-width: 240px;
+    margin-inline: auto;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
     cursor: pointer;
+    line-height: 0;
   }
 
-  .google-btn:hover:not(:disabled) {
-    background: #f6f8fb;
+  .google-button-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
   }
 
-  .google-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
+  .google-btn:disabled { cursor: wait; }
+  .google-btn:disabled .google-button-image { opacity: 0.6; }
   .google-btn:focus-visible {
     outline: 2px solid var(--ui-focus-ring);
     outline-offset: 2px;
+  }
+
+  .google-loading-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.9);
+    color: #1f1f1f;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: normal;
   }
 
   .provider-note {
