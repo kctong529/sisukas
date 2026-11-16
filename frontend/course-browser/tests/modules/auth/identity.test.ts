@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { canonicalUserId } from "../../../src/modules/auth/application/identity";
 
 describe("canonical Sisukas identity", () => {

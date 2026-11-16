@@ -6,10 +6,10 @@
   import { buildAnalyticsPayload } from "@application/analytics/buildAnalyticsPayload";
   import { normalizeComputeSchedulePairsResponse } from "@application/analytics/normalizeComputeSchedulePairs";
   import { fetchTopKSchedulePairs } from "@infrastructure/services/AnalyticsService";
+  import { useSession } from "@modules/auth";
   import { getStudyGroupDataRuntime } from "@modules/study-groups";
 
   import { trapModalTab } from "../../lib/accessibility/trapModalTab";
-  import { useSession } from "@modules/auth";
   import { blockStore } from "../../lib/stores/blockStore";
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { plansStore } from "../../lib/stores/plansStore.svelte";

@@ -2,6 +2,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
+  import { canonicalUserId, signOut, useSession } from "@modules/auth";
+
   import AuthenticatedDataLifecycle from './app/auth/AuthenticatedDataLifecycle.svelte';
   import AuthModal from "./components/auth/AuthModal.svelte";
   import CalendarView from "./components/calendar/CalendarView.svelte";
@@ -22,7 +24,6 @@
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
   import { FiltersApiService } from './infrastructure/services/FiltersApiService';
   import { NotificationService } from './infrastructure/services/NotificationService';
-  import { canonicalUserId, signOut, useSession } from "@modules/auth";
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
   import { courseIndexStore } from './lib/stores/courseIndexStore.svelte';
 
