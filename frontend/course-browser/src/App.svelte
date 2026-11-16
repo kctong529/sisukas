@@ -22,7 +22,7 @@
   import { loadOrganizations } from './infrastructure/loaders/OrganizationLoader';
   import { FiltersApiService } from './infrastructure/services/FiltersApiService';
   import { NotificationService } from './infrastructure/services/NotificationService';
-  import { authClient, canonicalUserId, useSession } from "@modules/auth";
+  import { canonicalUserId, signOut, useSession } from "@modules/auth";
   import { academicPeriodStore } from './lib/stores/academicPeriodStore';
   import { courseIndexStore } from './lib/stores/courseIndexStore.svelte';
 
@@ -95,7 +95,7 @@
   }
 
   function handleSignOut() {
-    authClient.signOut();
+    void signOut();
   }
 
   // -----------------------------

@@ -7,7 +7,7 @@ import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { db } from '../../src/db';
 import { account, favourites, users } from '../../src/db/schema';
-import { auth } from '../../src/lib/auth';
+import { auth } from '../../src/modules/auth/infrastructure/betterAuth';
 import { verifyCalendarTestDatabase } from './testDatabase';
 
 // Explicit opt-in: inserts temporary users in Supabase TEST only.

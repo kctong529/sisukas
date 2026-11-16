@@ -11,7 +11,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { db } from '../../src/db';
 import { account, favourites, session, users } from '../../src/db/schema';
 import * as schema from '../../src/db/schema';
-import { accountLinkingPolicy } from '../../src/lib/accountLinkingPolicy';
+import { accountLinkingPolicy } from '../../src/modules/auth/config/accountLinkingPolicy';
 import { MockOAuthProvider, type OAuthIdentity } from '../helpers/mockOAuthProvider';
 import { OAuthTestClient } from '../helpers/oauthTestClient';
 import { verifyCalendarTestDatabase } from './testDatabase';

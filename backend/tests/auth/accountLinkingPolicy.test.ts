@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountLinkingPolicy } from "../../src/lib/accountLinkingPolicy";
+import { accountLinkingPolicy } from "../../src/modules/auth/config/accountLinkingPolicy";
 
 describe("account-linking security defaults (#215)", () => {
   it("allows deliberate linking but never implicit same-email linking", () => {

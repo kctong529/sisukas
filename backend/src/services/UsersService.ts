@@ -1,5 +1,5 @@
 // src/services/UsersService.ts
-import { auth } from '../modules/auth';
+import { createEmailPasswordUser } from '../modules/auth';
 import { db } from '../db';
 import { users } from '../db/schema';
 import { eq } from 'drizzle-orm';
@@ -35,13 +35,7 @@ export class UsersService {
 
   // Use Better Auth's built-in API to create a user
   static async createUser(data: { email: string; password: string; name: string }) {
-    return await auth.api.signUpEmail({
-      body: {
-        email: data.email,
-        password: data.password,
-        name: data.name,
-      },
-    });
+    return await createEmailPasswordUser(data);
   }
 
   static async updateUser(id: string, name: string) {

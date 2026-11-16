@@ -1,6 +1,6 @@
 <!-- src/components/AuthDebugPanel.svelte -->
 <script lang="ts">
-  import { authClient, signInWithMagicLink, useSession } from "@modules/auth";
+  import { signInWithMagicLink, signOut, useSession } from "@modules/auth";
 
   const session = useSession();
   const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
@@ -26,7 +26,7 @@
   }
 
   async function handleSignOut() {
-    await authClient.signOut();
+    await signOut();
   }
 
   function togglePanel() {
