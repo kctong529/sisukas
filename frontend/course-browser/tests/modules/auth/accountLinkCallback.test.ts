@@ -41,13 +41,9 @@ describe("Google linking callback", () => {
   it("does not consume an ordinary sign-in callback", () => {
     const s = storage();
     savePendingGoogleLink(s, "user-123");
+    const before = s.getItem("sisukas:google-link-pending");
     expect(consumeGoogleLinkReturn(new URL("https://test.sisukas.eu/?error=account_not_linked"), s).result).toBeNull();
-    expect(
-        JSON.parse(s.getItem("sisukas:google-link-pending")!)
-    ).toEqual({
-        originalUserId: "user-123",
-        createdAt: expect.any(Number),
-    });
+    expect(s.getItem("sisukas:google-link-pending")).toBe(before);
     clearPendingGoogleLink(s);
     expect(s.getItem("sisukas:google-link-pending")).toBeNull();
   });
@@ -99,6 +95,31 @@ describe("Google linking callback", () => {
     expect(evaluateGoogleLinkReturn(callback, "user-123", true).success).toBe(true);
     expect(evaluateGoogleLinkReturn({ ...callback, errorCode: "account_already_linked_to_different_user" }, "user-123", true).success).toBe(false);
     expect(evaluateGoogleLinkReturn({ ...callback, originalUserId: null }, "user-123", true).success).toBe(false);
+  });
+
+  it("explains email mismatch for either supported Better Auth error code", () => {
+    for (const errorCode of ["email_doesn't_match", "email_does_not_match"]) {
+      const result = evaluateGoogleLinkReturn(
+        { originalUserId: "user-123", errorCode },
+        "user-123",
+        false,
+      );
+      expect(result.success).toBe(false);
+      expect(result.message).toContain("different email address");
+      expect(result.message).toContain("same email");
+      expect(result.message).toContain("has not been changed");
+    }
+  });
+
+  it("does not trust an email-mismatch callback without a verified linking identity", () => {
+    const result = evaluateGoogleLinkReturn(
+      { originalUserId: null, errorCode: "email_does_not_match" },
+      "user-123",
+      false,
+    );
+    expect(result.success).toBe(false);
+    expect(result.message).toContain("Could not verify the original account identity");
+    expect(result.message).not.toContain("different email address");
   });
 
   it("maps conflicts and unknown codes without exposing raw error descriptions", () => {
