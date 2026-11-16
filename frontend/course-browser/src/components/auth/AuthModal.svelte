@@ -137,7 +137,7 @@
         class="google-btn"
         type="button"
         disabled={loading}
-        aria-label={activeOperation === "google" ? "Starting Google sign-in" : "Continue with Google"}
+        aria-label={activeOperation === "google" ? "Starting Google sign-in" : "Sign in with Google"}
         onclick={handleGoogleSignIn}
       >
         <img
