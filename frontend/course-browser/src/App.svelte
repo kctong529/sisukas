@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { canonicalUserId, signOut, useSession } from "@modules/auth";
+  import { canonicalUserId, parseOAuthCallbackError, signOut, useSession } from "@modules/auth";
 
   import AuthenticatedDataLifecycle from './app/auth/AuthenticatedDataLifecycle.svelte';
   import AuthModal from "./components/auth/AuthModal.svelte";
@@ -31,6 +31,7 @@
   import type { FilterRuleGroups } from './domain/filters/FilterTypes';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { CourseIndexMode } from './lib/stores/courseIndexStore.svelte';
+  import type { OAuthCallbackError } from "@modules/auth";
 
   // -----------------------------
   // Local state (Svelte 5 runes)
@@ -39,6 +40,7 @@
   const ui = $state({
     currentView: 'courses' as 'courses' | 'favourites' | 'lego' | 'timeline' | 'calendar',
     showAuthModal: false,
+    authCallbackError: null as OAuthCallbackError | null,
 
     filteredInstanceIds: null as string[] | null,
 
@@ -290,6 +292,14 @@
   // -----------------------------
 
   onMount(async () => {
+    // Read redirect errors before starting any asynchronous data loading.
+    const { error, cleanUrl } = parseOAuthCallbackError(new URL(window.location.href));
+    if (error) {
+      window.history.replaceState(window.history.state, "", cleanUrl);
+      ui.authCallbackError = error;
+      ui.showAuthModal = true;
+    }
+
     try {
       // Academic periods (sync)
       ui.periods = loadAcademicPeriods();
@@ -355,7 +365,13 @@
   <DebugPanels />
 
   {#if ui.showAuthModal}
-    <AuthModal onclose={() => (ui.showAuthModal = false)} />
+    <AuthModal
+      initialError={ui.authCallbackError?.message}
+      onclose={() => {
+        ui.showAuthModal = false;
+        ui.authCallbackError = null;
+      }}
+    />
   {/if}
 
   <NotificationContainer />
