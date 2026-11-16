@@ -65,6 +65,9 @@ describe("Account settings dialog", () => {
         expect(target.textContent).toContain("oauth-test@sisukas.eu");
         expect(target.textContent).toContain("Email magic link");
         expect(button(target, "Connect Google").disabled).toBe(false);
+        const logo = target.querySelector<HTMLImageElement>(".google-mark");
+        expect(logo?.getAttribute("src")).toBe("/images/google-g.png");
+        expect(logo?.getAttribute("alt")).toBe("");
         expect(target.querySelector('img[src*="firebasejs"]')).toBeNull();
     });
 
@@ -73,6 +76,7 @@ describe("Account settings dialog", () => {
         const { target } = render();
         await vi.waitFor(() => expect(target.textContent).toContain("Connected to this account"));
         expect([...target.querySelectorAll("button")].some((b) => b.textContent?.includes("Connect Google"))).toBe(false);
+        expect(target.querySelector(".google-mark")).not.toBeNull();
     });
 
     it("reports provider retrieval failures and retries", async () => {

@@ -156,7 +156,10 @@
       {:else if methods}
         <div class="method-row">
           <div class="method-description">
-            <strong>Google</strong>
+            <strong>
+              <img class="google-mark" src="/images/google-g.png" alt="" aria-hidden="true" />
+              Google
+            </strong>
             <p>{methods.googleConnected ? "Connected to this account" : "Not connected"}</p>
           </div>
           {#if methods.googleConnected}
@@ -234,6 +237,14 @@
   }
   .method-description { min-width: 0; flex: 1; font-size: 1em; }
   .method-description strong { display: flex; gap: 0.5rem; align-items: center; font-size: 1em; }
+  .google-mark {
+    display: block;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    object-fit: contain;
+    background: white;
+  }
   .method-description p { margin: 0.3rem 0 0; color: #586375; font-size: 0.875em; }
   .method-status { flex-shrink: 0; color: #586375; font-size: 0.875em; }
   .load-error { color: var(--ui-danger); }
