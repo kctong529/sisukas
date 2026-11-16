@@ -6,9 +6,10 @@
 
   type Props = {
     onclose?: () => void;
+    initialError?: string;
   };
 
-  let { onclose }: Props = $props();
+  let { onclose, initialError }: Props = $props();
 
   const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
   const session = useSession();
@@ -18,6 +19,13 @@
   let messageType = $state<"success" | "error" | null>(null);
   let loading = $state(false);
   let dialog: HTMLDialogElement;
+
+  $effect(() => {
+      if (initialError) {
+          message = initialError;
+          messageType = "error";
+      }
+  });
 
   onMount(() => {
     if (!dialog.open) dialog.showModal();
@@ -109,6 +117,13 @@
       <p class="subtitle">Sign in with your email or an available provider</p>
     </div>
 
+    {#if message && messageType === "error"}
+      <div class="message" role="alert">
+        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+        {message}
+      </div>
+    {/if}
+
     {#if googleSignInEnabled}
       <button
         class="google-btn"
@@ -155,9 +170,9 @@
       </button>
     </form>
 
-    {#if message}
-      <div class="message" class:success={messageType === "success"} role={messageType === "error" ? "alert" : "status"}>
-        <i class:bi-check-circle={messageType === "success"} class:bi-exclamation-circle={messageType === "error"} class="bi" aria-hidden="true"></i>
+    {#if message && messageType === "success"}
+      <div class="message success" role="status">
+        <i class="bi bi-check-circle" aria-hidden="true"></i>
         {message}
       </div>
     {/if}

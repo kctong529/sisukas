@@ -19,6 +19,7 @@ describe("Google sign-in method", () => {
     expect(social).toHaveBeenCalledExactlyOnceWith({
       provider: "google",
       callbackURL: "https://test.sisukas.eu/",
+      errorCallbackURL: "https://test.sisukas.eu/",
     });
   });
 
