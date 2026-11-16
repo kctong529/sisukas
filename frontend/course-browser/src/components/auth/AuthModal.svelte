@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  import { signInWithMagicLink, useSession } from "@modules/auth";
+  import { googleSignInEnabled, signInWithGoogle, signInWithMagicLink, useSession } from "@modules/auth";
 
   type Props = {
     onclose?: () => void;
@@ -35,6 +35,28 @@
 
   function handleDialogClose() {
     onclose?.();
+  }
+
+  async function handleGoogleSignIn() {
+    if (loading) return;
+
+    loading = true;
+    message = "";
+    messageType = null;
+
+    try {
+      const { error } = await signInWithGoogle(`${FRONTEND_URL}/`);
+      if (error) {
+        message = error.message ?? "Could not start Google sign-in.";
+        messageType = "error";
+      }
+      // On success, Better Auth redirects the browser to Google.
+    } catch {
+      message = "Could not start Google sign-in.";
+      messageType = "error";
+    } finally {
+      loading = false;
+    }
   }
 
   async function handleMagicLink(event: SubmitEvent) {
@@ -84,8 +106,26 @@
         <i class="bi bi-person-lock"></i>
       </div>
       <h2 id="modal-title">Sign in to Sisukas</h2>
-      <p class="subtitle">Enter your email to receive a magic link</p>
+      <p class="subtitle">Sign in with your email or an available provider</p>
     </div>
+
+    {#if googleSignInEnabled}
+      <button
+        class="google-btn"
+        type="button"
+        disabled={loading}
+        onclick={handleGoogleSignIn}
+      >
+        {#if loading}
+          <span class="spinner"></span>
+        {:else}
+          <i class="bi bi-google" aria-hidden="true"></i>
+        {/if}
+        Continue with Google
+      </button>
+      <p class="provider-note">Already use a magic link? Sign in with email first. Google cannot automatically link an existing account.</p>
+      <div class="auth-divider" aria-hidden="true"><span>or use email</span></div>
+    {/if}
 
     <form class="form-group" onsubmit={handleMagicLink}>
       <div class="input-wrapper">
@@ -191,6 +231,59 @@
     color: #666;
     margin-top: 0.5rem;
     font-size: 0.95rem;
+  }
+
+  .google-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    color: #243247;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .google-btn:hover:not(:disabled) {
+    background: #f6f8fb;
+  }
+
+  .google-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .google-btn:focus-visible {
+    outline: 2px solid var(--ui-focus-ring);
+    outline-offset: 2px;
+  }
+
+  .provider-note {
+    margin: -0.75rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: #586375;
+  }
+
+  .auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: #64748b;
+    font-size: 0.85rem;
+  }
+
+  .auth-divider::before,
+  .auth-divider::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: #cbd5e1;
   }
 
   /* Form Elements */
