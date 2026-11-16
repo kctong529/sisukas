@@ -1,9 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const sourceRoot = fileURLToPath(new URL("../../../src/", import.meta.url));
+const sourceRoot = resolve(process.cwd(), "src");
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
