@@ -180,6 +180,13 @@ suite('Account linking: real OAuth callbacks (Supabase Test only)', () => {
     mock.setIdentity({ ...social, email: bob.email });
     await bob.client.oauth(mock.providerId, 'link');
     expect(await providerAccounts(social.id)).toEqual([{ userId: alice.id, accountId: social.id }]);
+    // Neither account may be deleted or reassigned by a conflicting provider callback.
+    expect(await db.select({ id: users.id, email: users.email }).from(users)
+      .where(eq(users.id, alice.id))).toEqual([{ id: alice.id, email: alice.email }]);
+    expect(await db.select({ id: users.id, email: users.email }).from(users)
+      .where(eq(users.id, bob.id))).toEqual([{ id: bob.id, email: bob.email }]);
+    expect(await db.select({ providerId: account.providerId }).from(account)
+      .where(eq(account.userId, bob.id))).not.toContainEqual({ providerId: mock.providerId });
   });
 
   it('rejects explicit linking when provider email differs', async () => {
@@ -204,6 +211,8 @@ suite('Account linking: real OAuth callbacks (Supabase Test only)', () => {
     mock.setIdentity(social, { cancelled: true });
     await user.client.oauth(mock.providerId, 'link');
     expect(await providerAccounts(social.id)).toHaveLength(0);
+    expect(await db.select({ id: users.id }).from(users)
+      .where(eq(users.id, user.id))).toEqual([{ id: user.id }]);
   });
 
   it('requires authenticated linking and rejects invalid callback state', async () => {
