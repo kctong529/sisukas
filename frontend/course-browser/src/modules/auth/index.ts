@@ -9,3 +9,13 @@ export { signInWithMagicLink, verifyMagicLink } from "./application/magicLink";
 export { signOut } from "./application/session";
 export { googleSignInEnabled } from "./config/availableMethods";
 export { useSession } from "./infrastructure/authClient";
+export { linkGoogle } from "./application/linkGoogle";
+export {
+  clearPendingGoogleLink,
+  consumeGoogleLinkReturn,
+  evaluateGoogleLinkReturn,
+  googleLinkCallbackURL,
+  googleLinkErrorMessage,
+  savePendingGoogleLink,
+} from "./application/accountLinkCallback";
+export type { GoogleLinkReturn } from "./application/accountLinkCallback";

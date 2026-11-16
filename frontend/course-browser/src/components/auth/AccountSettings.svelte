@@ -1,19 +1,34 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  import { type ConnectedMethods, getConnectedMethods } from "@modules/auth";
+  import {
+    clearPendingGoogleLink,
+    type ConnectedMethods,
+    evaluateGoogleLinkReturn,
+    getConnectedMethods,
+    googleLinkCallbackURL,
+    type GoogleLinkReturn,
+    linkGoogle,
+    savePendingGoogleLink,
+  } from "@modules/auth";
 
   type Props = {
     email: string;
+    userId: string;
+    linkReturn?: GoogleLinkReturn | null;
     onclose?: () => void;
   };
 
-  let { email, onclose }: Props = $props();
+  let { email, userId, linkReturn = null, onclose }: Props = $props();
 
   let dialog: HTMLDialogElement;
   let loading = $state(true);
   let error = $state<string | null>(null);
   let methods = $state<ConnectedMethods | null>(null);
+  let linking = $state(false);
+  let linkNotice = $state<string | null>(null);
+  let linkSucceeded = $state(false);
+
 
   // A closed dialog must not be updated by a pending provider request.
   let disposed = false;
@@ -27,13 +42,42 @@
 
     try {
       const result = await getConnectedMethods();
-      if (!disposed && currentRequest === requestId) methods = result;
+      if (!disposed && currentRequest === requestId) {
+        methods = result;
+        if (linkReturn) {
+          // Callback parameters are only routing hints, never proof of success.
+          const outcome = evaluateGoogleLinkReturn(linkReturn, userId, result.googleConnected);
+          linkSucceeded = outcome.success;
+          linkNotice = outcome.message;
+        }
+      }
     } catch {
       if (!disposed && currentRequest === requestId) {
         error = "Could not load connected sign-in methods.";
       }
     } finally {
       if (!disposed && currentRequest === requestId) loading = false;
+    }
+  }
+
+  async function handleConnectGoogle() {
+    if (linking || loading || methods?.googleConnected || !userId) return;
+    linking = true;
+    linkNotice = null;
+    try {
+      savePendingGoogleLink(window.sessionStorage, userId);
+      const callback = googleLinkCallbackURL(import.meta.env.VITE_FRONTEND_URL);
+      const { error } = await linkGoogle(callback);
+      if (error) {
+        clearPendingGoogleLink(window.sessionStorage);
+        linkNotice = "Could not start Google linking. Please try again.";
+      }
+      // Otherwise Better Auth navigates to Google.
+    } catch {
+      clearPendingGoogleLink(window.sessionStorage);
+      linkNotice = "Could not start Google linking. Please try again.";
+    } finally {
+      linking = false;
     }
   }
 
@@ -84,6 +128,10 @@
       <p class="account-email">{email}</p>
     </section>
 
+    {#if linkNotice}
+      <p class:link-success={linkSucceeded} role="status">{linkNotice}</p>
+    {/if}
+
     <section aria-labelledby="sign-in-methods-title">
       <h3 id="sign-in-methods-title">Sign-in methods</h3>
       <div class="method-row">
@@ -107,9 +155,13 @@
             <strong><i class="bi bi-google" aria-hidden="true"></i> Google</strong>
             <p>{methods.googleConnected ? "Connected to this account" : "Not connected"}</p>
           </div>
-          <span class="method-status">
-            {methods.googleConnected ? "Connected" : "Not connected"}
-          </span>
+          {#if methods.googleConnected}
+            <span class="method-status">Connected</span>
+          {:else}
+            <button type="button" disabled={linking} onclick={handleConnectGoogle}>
+              {linking ? "Connecting..." : "Connect"}
+            </button>
+          {/if}
         </div>
       {/if}
     </section>
@@ -172,6 +224,9 @@
   .method-description p { margin: 0.3rem 0 0; color: #586375; font-size: 0.85rem; }
   .method-status { flex-shrink: 0; color: #586375; font-size: 0.8rem; }
   .load-error { color: var(--ui-danger); }
+  .link-success { color: #176942; }
+  .method-row button { cursor: pointer; padding: 0.4rem 0.75rem; }
+  .method-row button:disabled { cursor: wait; opacity: 0.65; }
   .load-error button { margin-top: 0.5rem; cursor: pointer; }
   button:focus-visible { outline: 2px solid var(--ui-focus-ring); outline-offset: 2px; }
 </style>

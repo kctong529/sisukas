@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { canonicalUserId, parseOAuthCallbackError, signOut, useSession } from "@modules/auth";
+  import { canonicalUserId, consumeGoogleLinkReturn, parseOAuthCallbackError, signOut, useSession } from "@modules/auth";
 
   import AuthenticatedDataLifecycle from './app/auth/AuthenticatedDataLifecycle.svelte';
   import AccountSettings from "./components/auth/AccountSettings.svelte";
@@ -32,7 +32,7 @@
   import type { FilterRuleGroups } from './domain/filters/FilterTypes';
   import type { AcademicPeriod } from './domain/models/AcademicPeriod';
   import type { CourseIndexMode } from './lib/stores/courseIndexStore.svelte';
-  import type { OAuthCallbackError } from "@modules/auth";
+  import type { GoogleLinkReturn, OAuthCallbackError } from "@modules/auth";
 
   // -----------------------------
   // Local state (Svelte 5 runes)
@@ -42,6 +42,8 @@
     currentView: 'courses' as 'courses' | 'favourites' | 'lego' | 'timeline' | 'calendar',
     showAuthModal: false,
     showAccountSettings: false,
+    pendingGoogleLinkReturn: null as GoogleLinkReturn | null,
+    accountLinkReturn: null as GoogleLinkReturn | null,
     authCallbackError: null as OAuthCallbackError | null,
 
     filteredInstanceIds: null as string[] | null,
@@ -110,6 +112,23 @@
 
   $effect(() => {
     if (!isSignedIn) ui.showAccountSettings = false;
+  });
+
+  // Wait for the session to resolve before returning to Account settings.
+  $effect(() => {
+    if (!ui.pendingGoogleLinkReturn || $session.isPending) return;
+    const result = ui.pendingGoogleLinkReturn;
+    ui.pendingGoogleLinkReturn = null;
+    if (isSignedIn) {
+      ui.accountLinkReturn = result;
+      ui.showAccountSettings = true;
+    } else {
+      ui.authCallbackError = {
+        code: "link_session_missing",
+        message: "Your Sisukas session is no longer available. Sign in again to check connected methods.",
+      };
+      ui.showAuthModal = true;
+    }
   });
 
   // -----------------------------
@@ -304,11 +323,21 @@
 
   onMount(async () => {
     // Read redirect errors before starting any asynchronous data loading.
-    const { error, cleanUrl } = parseOAuthCallbackError(new URL(window.location.href));
-    if (error) {
-      window.history.replaceState(window.history.state, "", cleanUrl);
-      ui.authCallbackError = error;
-      ui.showAuthModal = true;
+    const callbackUrl = new URL(window.location.href);
+    const { result: linkReturn, cleanUrl: linkCleanUrl } = consumeGoogleLinkReturn(
+      callbackUrl,
+      window.sessionStorage,
+    );
+    if (linkReturn) {
+      window.history.replaceState(window.history.state, "", linkCleanUrl);
+      ui.pendingGoogleLinkReturn = linkReturn;
+    } else {
+      const { error, cleanUrl } = parseOAuthCallbackError(callbackUrl);
+      if (error) {
+        window.history.replaceState(window.history.state, "", cleanUrl);
+        ui.authCallbackError = error;
+        ui.showAuthModal = true;
+      }
     }
 
     try {
@@ -389,7 +418,12 @@
   {#if ui.showAccountSettings && isSignedIn}
     <AccountSettings
       email={userName}
-      onclose={() => { ui.showAccountSettings = false; }}
+      userId={userId!}
+      linkReturn={ui.accountLinkReturn}
+      onclose={() => {
+        ui.showAccountSettings = false;
+        ui.accountLinkReturn = null;
+      }}
     />
   {/if}
 
