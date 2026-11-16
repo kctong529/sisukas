@@ -134,7 +134,7 @@
         {#if loading}
           <span class="spinner"></span>
         {:else}
-          <i class="bi bi-google" aria-hidden="true"></i>
+          <img class="google-mark" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="" />
         {/if}
         Continue with Google
       </button>
@@ -248,6 +248,8 @@
     font-size: 0.95rem;
   }
 
+  .google-mark { width: 18px; height: 18px; flex-shrink: 0; }
+
   .google-btn {
     display: flex;
     align-items: center;
@@ -258,7 +260,7 @@
     border: 1px solid #cbd5e1;
     border-radius: 6px;
     background: #fff;
-    color: #243247;
+    color: #1f1f1f;
     font: inherit;
     font-weight: 600;
     cursor: pointer;
