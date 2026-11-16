@@ -24,6 +24,11 @@
     mobileMenuOpen = false;
   }
   
+  function handleAccountSettings() {
+    dispatch('accountsettings');
+    mobileMenuOpen = false;
+  }
+
   function handleSignOut() {
     dispatch('signout');
     mobileMenuOpen = false;
@@ -113,7 +118,7 @@
     <div class="nav-user">
       {#if isSignedIn}
         <div class="user-menu">
-          <button class="nav-link user-link" aria-label={`Signed in as ${userName}`}>
+          <button class="nav-link user-link" on:click={handleAccountSettings} aria-label={`Account settings for ${userName}`} title="Account settings">
             <i class="bi bi-person-circle" aria-hidden="true"></i>
             <span class="user-name">{userName}</span>
           </button>
@@ -209,6 +214,10 @@
           <i class="bi bi-person-circle"></i>
           <span>{userName}</span>
         </div>
+        <button class="mobile-nav-link" on:click={handleAccountSettings}>
+          <i class="bi bi-gear" aria-hidden="true"></i>
+          <span>Account settings</span>
+        </button>
         <button class="mobile-nav-link sign-out" on:click={handleSignOut}>
           <i class="bi bi-box-arrow-right"></i>
           <span>Sign Out</span>

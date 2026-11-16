@@ -5,6 +5,7 @@
   import { canonicalUserId, parseOAuthCallbackError, signOut, useSession } from "@modules/auth";
 
   import AuthenticatedDataLifecycle from './app/auth/AuthenticatedDataLifecycle.svelte';
+  import AccountSettings from "./components/auth/AccountSettings.svelte";
   import AuthModal from "./components/auth/AuthModal.svelte";
   import CalendarView from "./components/calendar/CalendarView.svelte";
   import CourseTable from './components/courses/CourseTable.svelte';
@@ -40,6 +41,7 @@
   const ui = $state({
     currentView: 'courses' as 'courses' | 'favourites' | 'lego' | 'timeline' | 'calendar',
     showAuthModal: false,
+    showAccountSettings: false,
     authCallbackError: null as OAuthCallbackError | null,
 
     filteredInstanceIds: null as string[] | null,
@@ -97,9 +99,18 @@
     ui.showAuthModal = true;
   }
 
+  function handleAccountSettings() {
+    if (isSignedIn) ui.showAccountSettings = true;
+  }
+
   function handleSignOut() {
+    ui.showAccountSettings = false;
     void signOut();
   }
+
+  $effect(() => {
+    if (!isSignedIn) ui.showAccountSettings = false;
+  });
 
   // -----------------------------
   // Filters
@@ -359,6 +370,7 @@
     {userName}
     on:navigate={handleNavigation}
     on:signin={handleSignIn}
+    on:accountsettings={handleAccountSettings}
     on:signout={handleSignOut}
   />
 
@@ -371,6 +383,13 @@
         ui.showAuthModal = false;
         ui.authCallbackError = null;
       }}
+    />
+  {/if}
+
+  {#if ui.showAccountSettings && isSignedIn}
+    <AccountSettings
+      email={userName}
+      onclose={() => { ui.showAccountSettings = false; }}
     />
   {/if}
 
