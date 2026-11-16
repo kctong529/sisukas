@@ -7,7 +7,7 @@ import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { db } from '../../src/db';
 import { plans, users } from '../../src/db/schema';
-import { auth } from '../../src/lib/auth';
+import { auth } from '../../src/modules/auth/infrastructure/betterAuth';
 import { extractSession } from '../../src/middleware/auth';
 import plansRoutes from '../../src/routes/plans';
 import calendarPreferencesRoutes from '../../src/routes/calendarPreferences';

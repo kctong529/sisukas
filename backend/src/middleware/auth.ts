@@ -1,16 +1,15 @@
 // src/middleware/auth.ts
 import { NextFunction, Request, Response } from 'express';
-import { auth } from '../lib/auth';
+import { resolveAuthenticatedSession, toAuthenticatedIdentity } from '../modules/auth';
 
 // In-memory store for admin sessions with expiration
 const adminSessions = new Map<string, { expiresAt: number }>();
 
 export async function extractSession(req: Request, res: Response, next: NextFunction) {
-  const session = await auth.api.getSession({
-    headers: req.headers as any,
-  });
+  const session = await resolveAuthenticatedSession(req.headers as unknown as Headers);
   res.locals.session = session?.session || null;
   res.locals.user = session?.user || null;
+  res.locals.identity = toAuthenticatedIdentity(session?.user);
   res.locals.isAuthenticated = !!session?.user;
   next();
 }

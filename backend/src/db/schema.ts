@@ -74,7 +74,13 @@ export const account = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (t) => [index("account_userId_idx").on(t.userId)],
+  (t) => [
+    index("account_userId_idx").on(t.userId),
+    uniqueIndex("account_provider_identity_unique").on(
+        t.providerId,
+        t.accountId,
+    ),
+  ],
 );
 
 export const verification = pgTable(

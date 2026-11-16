@@ -6,8 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import pool from './config/database';
-import { toNodeHandler } from "better-auth/node";
-import { auth } from './lib/auth';
+import { authHttpHandler } from './modules/auth';
 import adminRoutes from './routes/admin';
 import usersRoutes from './routes/users';
 import favouritesRoutes from './routes/favourites';
@@ -64,7 +63,7 @@ app.use(
 );
 
 app.use(cookieParser());
-app.all('/api/auth/{*any}', toNodeHandler(auth));
+app.all('/api/auth/{*any}', authHttpHandler);
 app.use(express.json());
 
 // Routes

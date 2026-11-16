@@ -2,7 +2,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  import { authClient, useSession } from "../../lib/authClient";
+  import { signInWithMagicLink, useSession } from "@modules/auth";
 
   type Props = {
     onclose?: () => void;
@@ -46,10 +46,7 @@
     messageType = null;
 
     try {
-      const { error } = await authClient.signIn.magicLink({
-        email,
-        callbackURL: `${FRONTEND_URL}/`,
-      });
+      const { error } = await signInWithMagicLink(email, `${FRONTEND_URL}/`);
 
       if (error) {
         message = error.message ?? "Failed to send sign-in link.";

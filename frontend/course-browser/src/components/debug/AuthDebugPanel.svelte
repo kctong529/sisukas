@@ -1,6 +1,6 @@
 <!-- src/components/AuthDebugPanel.svelte -->
 <script lang="ts">
-  import { authClient, useSession } from '../../lib/authClient';
+  import { signInWithMagicLink, signOut, useSession } from "@modules/auth";
 
   const session = useSession();
   const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL;
@@ -14,10 +14,7 @@
     loading = true;
     message = '';
 
-    const { error } = await authClient.signIn.magicLink({
-      email,
-      callbackURL: `${FRONTEND_URL}/`,
-    });
+    const { error } = await signInWithMagicLink(email, `${FRONTEND_URL}/`);
 
     if (error && error.message) {
       message = error.message;
@@ -29,7 +26,7 @@
   }
 
   async function handleSignOut() {
-    await authClient.signOut();
+    await signOut();
   }
 
   function togglePanel() {

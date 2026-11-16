@@ -1,9 +1,4 @@
-// src/lib/auth.ts
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "../db";
-import * as schema from "../db/schema";
-import { magicLink } from "better-auth/plugins";
+/** Email delivery for Better Auth magic links. OAuth providers live elsewhere. */
 import { Resend } from "resend";
 
 const isDev = process.env.NODE_ENV === "development";
@@ -28,32 +23,7 @@ function looksLikeResendKey(key: string | undefined): boolean {
 const resendApiKey = process.env.RESEND_API_KEY?.trim();
 const resend = looksLikeResendKey(resendApiKey) ? new Resend(resendApiKey) : null;
 
-export const auth = betterAuth({
-  database: drizzleAdapter(db, {
-    provider: "pg",
-    schema: {
-      ...schema,
-      user: schema.users,
-    },
-  }),
-  baseURL: `${process.env.BACKEND_URL}/api/auth`,
-  trustedOrigins: [
-    "http://localhost:5173",
-    "https://localhost:5173",
-    "https://sisukas-test.fly.dev",
-    "https://sisukas.eu",
-    "https://test.sisukas.eu",
-    "https://api.sisukas.eu",
-    "https://api.test.sisukas.eu",
-  ],
-
-  emailAndPassword: {
-    enabled: true,
-  },
-
-  plugins: [
-    magicLink({
-      sendMagicLink: async ({ email, token, url }) => {
+export async function sendMagicLink({ email, token, url }: { email: string; token: string; url: string }) {
         const frontendVerifyUrl = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
 
         // Local dev / contributor mode: no valid key => print link and don't fail.
@@ -121,19 +91,4 @@ export const auth = betterAuth({
 
           throw new Error("Failed to send magic link email");
         }
-      },
-    }),
-  ],
-
-  advanced: {
-    defaultCookieAttributes: {
-      httpOnly: true,
-      ...(isDev && {
-        secure: true,
-        sameSite: "none",
-      }),
-    },
-  },
-});
-
-console.log("Auth initialized:", typeof auth, typeof auth.handler);
+}

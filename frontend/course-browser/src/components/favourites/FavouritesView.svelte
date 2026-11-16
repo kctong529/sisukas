@@ -1,8 +1,8 @@
 <!-- src/components/favourites/FavouritesView.svelte -->
 <script lang="ts">
   import { NotificationService } from '@infrastructure/services/NotificationService';
+  import { useSession } from "@modules/auth";
 
-  import { useSession } from '../../lib/authClient';
   import { offeringTiming } from '../../lib/favourites/offeringTiming';
   import { courseIndexStore } from "../../lib/stores/courseIndexStore.svelte";
   import { favouritesStore } from '../../lib/stores/favouritesStore';
